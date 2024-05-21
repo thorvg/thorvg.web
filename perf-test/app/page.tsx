@@ -1,17 +1,8 @@
 'use client'
-import { Fragment, useState, useEffect } from 'react'
-import { Listbox, ListboxOption, ListboxOptions, Transition } from '@headlessui/react'
-// @ts-ignore
+import { Listbox, ListboxOption, ListboxOptions, Transition } from '@headlessui/react';
+import { Fragment, useEffect, useState } from 'react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
-
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-
-// dynamic import nextjs
-import dynamic from 'next/dynamic';
-
-// @ts-ignore
-// const DotLottieReact = dynamic(() => import('@lottiefiles/dotlottie-react'), { ssr: false });
-
 import { Player } from '@lottiefiles/react-lottie-player';
 
 const animationLinks = [
@@ -154,6 +145,7 @@ export default function Home() {
   useEffect(() => {
     // @ts-ignore
     import("@thorvg/lottie-player");
+    loadProfiler();
 
     let count: number = countOptions[0].name;
     if (window.location.search) {
@@ -183,6 +175,16 @@ export default function Home() {
       loadAnimationByCount(count);
     }, 500);
   }, []);
+
+  const loadProfiler = () => {
+    const script = document.createElement("script");
+    script.src = "https://mrdoob.github.io/stats.js/build/stats.min.js";
+    document.body.appendChild(script);
+
+    const profilerScript = document.createElement("script");
+    profilerScript.src = "/profiler.js";
+    document.body.appendChild(profilerScript);
+  }
 
   const loadAnimationByCount = async (_count = count.name) => {
     const newAnimationList = [];
