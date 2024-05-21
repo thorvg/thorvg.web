@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Player } from '@lottiefiles/react-lottie-player';
+import { isMobile } from 'react-device-detect';
 
 const animationLinks = [
   'lottie/1643-exploding-star.json',
@@ -123,8 +124,6 @@ const playerOptions = [
   { id: 3, name: 'lottie-web' },
 ];
 
-const size = { width: 180, height: 180 };
-
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ')
 }
@@ -136,6 +135,8 @@ function setQueryStringParameter(name: string, value: any) {
 }
 
 export default function Home() {
+  const size = isMobile ? { width: 150, height: 150 } : { width: 180, height: 180};
+  
   const [count, setCount] = useState(countOptions[0]);
   const [player, setPlayer] = useState(playerOptions[0]);
   const [playerId, setPlayerId] = useState(1);
@@ -145,14 +146,15 @@ export default function Home() {
   useEffect(() => {
     // @ts-ignore
     import("@thorvg/lottie-player");
-    loadProfiler();
 
     let count: number = countOptions[0].name;
+    let seed: string = '';
+
     if (window.location.search) {
       const params = new URLSearchParams(window.location.search);
       const player = params.get('player');
       count = parseInt(params.get('count') ?? '20');
-      const seed = params.get('seed');
+      seed = params.get('seed') ?? '';
 
       if (count) {
         const _count = countOptions.find((c) => c.name === count) || countOptions[0];
@@ -164,26 +166,24 @@ export default function Home() {
         setPlayer(_player);
         setPlayerId(_player.id);
       }
+    }
+    
+    setTimeout(() => {
+      loadProfiler();
 
       if (seed) {
         loadSeed(seed);
         return;
       }
-    }
-    
-    setTimeout(() => {
+
       loadAnimationByCount(count);
     }, 500);
   }, []);
 
   const loadProfiler = () => {
     const script = document.createElement("script");
-    script.src = "https://mrdoob.github.io/stats.js/build/stats.min.js";
+    script.src = "/profiler.js";
     document.body.appendChild(script);
-
-    const profilerScript = document.createElement("script");
-    profilerScript.src = "/profiler.js";
-    document.body.appendChild(profilerScript);
   }
 
   const loadAnimationByCount = async (_count = count.name) => {
@@ -217,7 +217,7 @@ export default function Home() {
     console.log(nameList);
     const newAnimationList = nameList.map((name: string) => {
       const _anim = animationLinks.find((anim) => anim === `lottie/${name.trim()}.json`) || animationLinks[0];
-      
+
       return {
         name: name,
         lottieURL: `https://raw.githubusercontent.com/thorvg/thorvg/main/examples/resources/${_anim}`,
@@ -247,11 +247,13 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-gray-900 pt-4 pb-24 sm:pb-32 sm:pt-8">
+    <div className="bg-gray-900 pt-4 pb-24 sm:pb-32 sm:pt-8 pt-12">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:mx-0">
           <div className="mt-6 flex w-full gap-x-4 align-middle flex-row">
-            <h1 className='text-justify	text-center leading-[52px]'>Selected Player: </h1>
+
+            <h1 className='text-justify text-center leading-[52px] sm:block hidden'>Player: </h1>
+
             <Listbox value={player} onChange={(v) => {
               setPlayer(v);
               setQueryStringParameter('player', v.name);
@@ -411,10 +413,10 @@ export default function Home() {
         </div>
         <ul
           role="list"
-          className="animation-list mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-4 xl:grid-cols-5"
+          className="animation-list mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:mx-0 lg:max-w-none sm:grid-cols-4 xl:grid-cols-5 grid-cols-2"
         >
           {animationList.map((anim: any, index: number) => (
-            <li key={`${anim.name}-${anim.lottieURL}-${playerId}-${index}`} className={`${anim.name}-${index}`}>
+            <li key={`${anim.name}-${anim.lottieURL}-${playerId}-${index}`} className={`${anim.name}-${index} max-w-[${size.width}px]`}>
               {
                 playerId == 1 &&
                 (
@@ -432,7 +434,7 @@ export default function Home() {
                 playerId === 2 && (
                   <DotLottieReact
                     src={anim.lottieURL as string}
-                    className="aspect-[14/13] w-full rounded-2xl object-cover"
+                    // className="aspect-[14/13] w-full rounded-2xl object-cover"
                     style={{width: size.width, height: size.height}}
                     loop 
                     autoplay
@@ -449,8 +451,8 @@ export default function Home() {
                   ></Player>
                 )
               }
-              <h3 className="mt-6 text-lg font-semibold leading-8 tracking-tight text-white">{anim.name}</h3>
-              <p className="text-sm leading-6 text-gray-500">{anim.location}</p>
+              <h3 className={`mt-6 text-lg font-semibold leading-8 tracking-tight text-white max-w-[${size.width}px] overflow-hidden`}>{anim.name}</h3>
+              <p className={`text-sm leading-6 text-gray-500 max-w-[${size.width}px] overflow-hidden`}>{anim.location}</p>
             </li>
           ))}
         </ul>
