@@ -160,6 +160,7 @@ export default function Home() {
       const params = new URLSearchParams(window.location.search);
       const player = params.get('player');
       count = parseInt(params.get('count') ?? '20');
+      const seed = params.get('seed');
 
       if (count) {
         const _count = countOptions.find((c) => c.name === count) || countOptions[0];
@@ -171,14 +172,19 @@ export default function Home() {
         setPlayer(_player);
         setPlayerId(_player.id);
       }
+
+      if (seed) {
+        loadSeed(seed);
+        return;
+      }
     }
     
     setTimeout(() => {
-      setAnimationAll(count);
+      loadAnimationByCount(count);
     }, 500);
   }, []);
 
-  const setAnimationAll = async (_count = count.name) => {
+  const loadAnimationByCount = async (_count = count.name) => {
     const newAnimationList = [];
 
     for (let i = 0; i < _count; i++) {
@@ -193,8 +199,32 @@ export default function Home() {
 
     // @ts-ignore
     await setAnimationList([]);
-    setAnimationList(newAnimationList);
+    await setAnimationList(newAnimationList);
+
+    saveCurrentSeed(newAnimationList);
   };
+
+  const saveCurrentSeed = (animationList: any[]) => {
+    const nameList = animationList.map((v: any) => v.name).join(',');
+    const seed = btoa(nameList);
+    setQueryStringParameter('seed', seed);
+  }
+
+  const loadSeed = (seed: string) => {
+    const nameList = atob(seed).split(',');
+    console.log(nameList);
+    const newAnimationList = nameList.map((name: string) => {
+      const _anim = animationLinks.find((anim) => anim === `lottie/${name.trim()}.json`) || animationLinks[0];
+      
+      return {
+        name: name,
+        lottieURL: `https://raw.githubusercontent.com/thorvg/thorvg/main/examples/resources/${_anim}`,
+        location: `Type: ${_anim.split('/').pop()?.split('.')[1] || 'Unknown'}`,
+      };
+    });
+
+    setAnimationList(newAnimationList);
+  }
 
   const spawnAnimation = () => {
     if (!text.trimEnd().trimStart()) {
@@ -344,6 +374,7 @@ export default function Home() {
                 type="submit"
                 className="flex-none rounded-md bg-[#00deb5] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                 onClick={() => {
+                  setQueryStringParameter('seed', '');
                   window.location.reload();
                 }}
               >
