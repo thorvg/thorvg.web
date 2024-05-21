@@ -5,6 +5,8 @@ import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { isMobile } from 'react-device-detect';
+import reactLottiePlayerPkg from "@lottiefiles/react-lottie-player/package.json";
+import dotLottieReactPkg from "@lottiefiles/dotlottie-react/package.json";
 
 const animationLinks = [
   'lottie/1643-exploding-star.json',
@@ -120,8 +122,8 @@ const countOptions = [
 
 const playerOptions = [
   { id: 1, name: 'thorvg-player' },
-  { id: 2, name: 'dotlottie-web' },
-  { id: 3, name: 'lottie-web' },
+  { id: 2, name: `dotlottie-web@${dotLottieReactPkg.dependencies["@lottiefiles/dotlottie-web"]}` },
+  { id: 3, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
 ];
 
 function classNames(...classes: any) {
