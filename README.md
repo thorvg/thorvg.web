@@ -1,8 +1,13 @@
+# ThroVG for Web
+<p align="center">
+  <img width="800" height="auto" src="https://github.com/thorvg/thorvg/blob/main/res/logo/512/thorvg-banner.png">
+</p>
+
 # @thorvg/lottie-player
 
 A Lottie Player which uses [ThorVG](https://github.com/thorvg/thorvg) as a renderer, provides a web component for easily embedding and playing [Lottie](https://airbnb.io/lottie) animations.
 
-# Installation
+## Installation
 
 - Import from CDN
 ```html
@@ -14,7 +19,7 @@ A Lottie Player which uses [ThorVG](https://github.com/thorvg/thorvg) as a rende
 npm install @thorvg/lottie-player
 ```
 
-# Usage
+## Usage
 ### With HTML (Basic Usage)
 
 Once you import from CDN, you can access `<lottie-player/>`
@@ -108,8 +113,8 @@ export default function Home() {
 </script>
 ```
 
-# API
-## Properties
+## API
+### Properties
 
 | Property | Description | Type | Default Value | Required |
 | --- | --- | --- | --- | --- |
@@ -122,7 +127,7 @@ export default function Home() {
 | mode | Play mode. Setting the mode to PlayMode.Bounce plays the animation in an indefinite cycle, forwards and then backwards. | PlayMode | PlayMode.Normal | N |
 | intermission | Duration (in milliseconds) to pause before playing each cycle in a looped animation. Set this parameter to 0 (no pause) or any positive number. | number | 1 | N |
 
-## Events
+### Events
 
 You can adapt the event with the following code example
 
@@ -148,7 +153,7 @@ player.addEventListener('load', () => {
 | frame | A new frame is entered |
 
 
-## Methods
+### Methods
 
 **Method** : `load(src: string | object)`
 
@@ -285,7 +290,7 @@ player.addEventListener('load', () => {
 
 **Return Type** : `LibraryVersion`
 
-# Examples
+## Examples
 
 Please check these examples in various environments.
 
