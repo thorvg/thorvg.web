@@ -220,7 +220,7 @@ export default function Home() {
     const nameList = atob(seed).split(',');
     console.log(nameList);
     const newAnimationList = nameList.map((name: string) => {
-      const _anim = animations.find((anim) => anim === `lottie/${name.trim()}.json`) || animations[0];
+      const _anim = animations.find((anim) => anim === `${name.trim()}.json`) || animations[0];
 
       return {
         name: name,
