@@ -256,7 +256,7 @@ export default function Home() {
         <div className="mx-auto max-w-2xl lg:mx-0">
           <div className="mt-6 flex w-full gap-x-4 align-middle flex-row">
 
-            <h1 className='text-justify text-center leading-[52px] sm:block hidden'>Player: </h1>
+            <h1 className='text-justify text-center text-white leading-[52px] sm:block hidden'>Player: </h1>
 
             <Listbox value={player} onChange={(v) => {
               setPlayer(v);
