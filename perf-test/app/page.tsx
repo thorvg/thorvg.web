@@ -2,11 +2,14 @@
 import { Listbox, ListboxOption, ListboxOptions, Transition } from '@headlessui/react';
 import { Fragment, useEffect, useState } from 'react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { DotLottieReact, setWasmUrl as setDotLottieWasmUrl } from '@lottiefiles/dotlottie-react';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { isMobile } from 'react-device-detect';
 import reactLottiePlayerPkg from "@lottiefiles/react-lottie-player/package.json";
 import dotLottieReactPkg from "@lottiefiles/dotlottie-react/package.json";
+import dotLottieWasmUrl from "../node_modules/@lottiefiles/dotlottie-web/dist/dotlottie-player.wasm";
+
+setDotLottieWasmUrl(dotLottieWasmUrl);
 
 const animations = [
   '1643-exploding-star.json',
