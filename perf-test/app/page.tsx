@@ -8,6 +8,9 @@ import { isMobile } from 'react-device-detect';
 import reactLottiePlayerPkg from "@lottiefiles/react-lottie-player/package.json";
 import dotLottieReactPkg from "@lottiefiles/dotlottie-react/package.json";
 import dotLottieWasmUrl from "../node_modules/@lottiefiles/dotlottie-web/dist/dotlottie-player.wasm";
+import SkottiePlayer, { setCanvasKit } from '../components/SkottiePlayer';
+import skottieWasmUrl from "../node_modules/canvaskit-wasm/bin/full/canvaskit.wasm";
+import InitCanvasKit from 'canvaskit-wasm/bin/full/canvaskit';
 
 setDotLottieWasmUrl(dotLottieWasmUrl);
 
@@ -129,6 +132,7 @@ const playerOptions = [
   { id: 1, name: 'thorvg-player' },
   { id: 2, name: `dotlottie-web@${dotLottieReactPkg.dependencies["@lottiefiles/dotlottie-web"]}` },
   { id: 3, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
+  { id: 4, name: 'skia/skottie' },
 ];
 
 function classNames(...classes: any) {
@@ -138,11 +142,12 @@ function classNames(...classes: any) {
 function setQueryStringParameter(name: string, value: any) {
   const params = new URLSearchParams(window.location.search);
   params.set(name, value);
-  window.history.replaceState({}, "", decodeURIComponent(`${window.location.pathname}?${params}`));
+  window.history.replaceState({}, '', decodeURIComponent(`${window.location.pathname}?${params}`));
 }
 
 export default function Home() {
   const size = isMobile ? { width: 150, height: 150 } : { width: 180, height: 180};
+  let initialized = false;
   
   const [count, setCount] = useState(countOptions[0]);
   const [player, setPlayer] = useState(playerOptions[0]);
@@ -151,11 +156,17 @@ export default function Home() {
   const [animationList, setAnimationList] = useState<any>([]);
 
   useEffect(() => {
+    if (initialized) {
+      return;
+    }
+    initialized = true;
+
     // @ts-ignore
     import("@thorvg/lottie-player");
 
     let count: number = countOptions[0].name;
     let seed: string = '';
+    let playerId = 1;
 
     if (window.location.search) {
       const params = new URLSearchParams(window.location.search);
@@ -170,12 +181,17 @@ export default function Home() {
 
       if (player) {
         const _player = playerOptions.find((p) => p.name === player) || playerOptions[0];
+        playerId = _player.id;
         setPlayer(_player);
         setPlayerId(_player.id);
       }
     }
     
-    setTimeout(() => {
+    setTimeout(async () => {
+      if (playerId === 4) {
+        await loadCanvasKit();
+      }
+
       loadProfiler();
 
       if (seed) {
@@ -186,6 +202,13 @@ export default function Home() {
       loadAnimationByCount(count);
     }, 500);
   }, []);
+
+  const loadCanvasKit = async () => {
+    const canvasKit = await InitCanvasKit({
+      locateFile: (_) => skottieWasmUrl,
+    });
+    setCanvasKit(canvasKit);
+  }
 
   const loadProfiler = () => {
     const script = document.createElement("script");
@@ -441,7 +464,6 @@ export default function Home() {
                 playerId === 2 && (
                   <DotLottieReact
                     src={anim.lottieURL as string}
-                    // className="aspect-[14/13] w-full rounded-2xl object-cover"
                     style={{width: size.width, height: size.height}}
                     loop 
                     autoplay
@@ -457,6 +479,15 @@ export default function Home() {
                     src={anim.lottieURL}
                     style={{ height: size.height, width: size.width }}
                   ></Player>
+                )
+              }
+              {
+                playerId == 4 && (
+                  <SkottiePlayer
+                    lottieURL={anim.lottieURL}
+                    width={size.width}
+                    height={size.height}
+                  />
                 )
               }
               <h3 className={`mt-6 text-lg font-semibold leading-8 tracking-tight text-white max-w-[${size.width}px] overflow-hidden`}>{anim.name}</h3>
