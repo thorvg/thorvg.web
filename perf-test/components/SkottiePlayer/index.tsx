@@ -45,32 +45,29 @@ export default function Skottie ({ lottieURL, width, height }: Props) {
       throw new Error('[Skia] Failed to create canvas surface');
     }
 
+    let beginTime = Date.now() / 1000;
+
     const canvas = surface.getCanvas();
     const damageRect = Float32Array.of(0, 0, 0, 0);
     const bounds = canvasKit.LTRBRect(0, 0, width, height);
-
-    const t_rate = 1.0 / (MAX_FRAMES - 1);
-    let seek = 0;
-    let frame = 0;
-    
     const clearColor = canvasKit.TRANSPARENT;
 
     function drawFrame() {
-      let damage = animation.seek(seek, damageRect);
+
+      let currentTime = Date.now() / 1000;
+      let currentFrame = (currentTime - beginTime) / animation.duration();
+
+      if (currentFrame > 1) {
+        currentFrame = 0;
+        beginTime = currentTime;
+      }
+
+      let damage = animation.seek(currentFrame, damageRect);
       if (damage[2] > damage[0] && damage[3] > damage[1]) {
         canvas.clear(clearColor);
         animation.render(canvas, bounds);
         surface?.flush();
       }
-
-      seek += t_rate;
-      frame++;
-
-      if (frame >= MAX_FRAMES) {
-        seek = 0;
-        frame = 0;
-      }
-
       window.requestAnimationFrame(drawFrame);
     };
 
