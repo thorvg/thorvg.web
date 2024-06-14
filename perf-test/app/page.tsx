@@ -120,6 +120,7 @@ const animations = [
 const urlPrefix = 'https://raw.githubusercontent.com/thorvg/thorvg/main/examples/resources/lottie/';
 
 const countOptions = [
+  { id: 0, name: 10 },
   { id: 1, name: 20 },
   { id: 2, name: 50 },
   { id: 3, name: 100 },
@@ -149,7 +150,7 @@ export default function Home() {
   const size = isMobile ? { width: 150, height: 150 } : { width: 180, height: 180};
   let initialized = false;
   
-  const [count, setCount] = useState(countOptions[0]);
+  const [count, setCount] = useState(countOptions[1]);
   const [player, setPlayer] = useState(playerOptions[0]);
   const [playerId, setPlayerId] = useState(1);
   const [text, setText] = useState('');
@@ -164,7 +165,7 @@ export default function Home() {
     // @ts-ignore
     import("@thorvg/lottie-player");
 
-    let count: number = countOptions[0].name;
+    let count: number = countOptions[1].name;
     let seed: string = '';
     let playerId = 1;
 
@@ -175,7 +176,7 @@ export default function Home() {
       seed = params.get('seed') ?? '';
 
       if (count) {
-        const _count = countOptions.find((c) => c.name === count) || countOptions[0];
+        const _count = countOptions.find((c) => c.name === count) || countOptions[1];
         setCount(_count);
       }
 
