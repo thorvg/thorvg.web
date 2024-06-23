@@ -385,6 +385,11 @@ export class LottiePlayer extends LitElement {
   }
 
   private _render(): void {
+    const dpr = window.devicePixelRatio || 1;
+    const { width, height } = this._canvas!.getBoundingClientRect();
+    this._canvas!.width = width * dpr;
+    this._canvas!.height = height * dpr;
+
     this._TVG.resize(this._canvas!.width, this._canvas!.height);
     this._viewport();
     const isUpdated = this._TVG.update();
