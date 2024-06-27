@@ -40,6 +40,11 @@ export interface LibraryVersion {
   THORVG_VERSION: string
 }
 
+// Define rendering configurations
+export type RenderConfig = {
+  enableDevicePixelRatio?: boolean;
+}
+
 // Define file type which can be exported
 export enum ExportableType {
   GIF = 'gif',
@@ -175,6 +180,13 @@ export class LottiePlayer extends LitElement {
   */
   @property({ type: MimeType })
   public mimeType: MimeType = MimeType.JSON;
+
+  /**
+  * Rendering configurations.
+  * @since 1.0
+  */
+  @property({ type: Object })
+  readonly renderConfig?: RenderConfig;
 
   /**
    * Animation speed.
@@ -385,10 +397,12 @@ export class LottiePlayer extends LitElement {
   }
 
   private _render(): void {
-    const dpr = window.devicePixelRatio || 1;
-    const { width, height } = this._canvas!.getBoundingClientRect();
-    this._canvas!.width = width * dpr;
-    this._canvas!.height = height * dpr;
+    if (this.renderConfig?.enableDevicePixelRatio) {
+      const dpr = window.devicePixelRatio;
+      const { width, height } = this._canvas!.getBoundingClientRect();
+      this._canvas!.width = width * dpr;
+      this._canvas!.height = height * dpr;
+    }
 
     this._TVG.resize(this._canvas!.width, this._canvas!.height);
     this._viewport();
