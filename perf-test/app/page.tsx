@@ -468,7 +468,6 @@ export default function Home() {
                     style={{width: size.width, height: size.height}}
                     loop 
                     autoplay
-                    renderConfig={{devicePixelRatio: 1}}
                   />
                 )
               }
