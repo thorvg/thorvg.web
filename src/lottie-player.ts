@@ -186,7 +186,7 @@ export class LottiePlayer extends LitElement {
   * @since 1.0
   */
   @property({ type: Object })
-  readonly renderConfig?: RenderConfig;
+  public renderConfig?: RenderConfig;
 
   /**
    * Animation speed.
@@ -397,7 +397,7 @@ export class LottiePlayer extends LitElement {
   }
 
   private _render(): void {
-    if (this.renderConfig?.enableDevicePixelRatio) {
+    if (this.renderConfig?.enableDevicePixelRatio && this.currentState === PlayerState.Playing) {
       const dpr = window.devicePixelRatio;
       const { width, height } = this._canvas!.getBoundingClientRect();
       this._canvas!.width = width * dpr;
