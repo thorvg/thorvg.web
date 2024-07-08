@@ -458,6 +458,7 @@ export default function Home() {
                     style={{width: size.width, height: size.height}}
                     loop 
                     autoplay
+                    renderConfig={JSON.stringify({enableDevicePixelRatio: true})}
                   />
                 )
               }
