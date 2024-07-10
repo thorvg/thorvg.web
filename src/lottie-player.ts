@@ -398,7 +398,7 @@ export class LottiePlayer extends LitElement {
 
   private _render(): void {
     if (this.renderConfig?.enableDevicePixelRatio && this.currentState === PlayerState.Playing) {
-      const dpr = window.devicePixelRatio;
+      const dpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
       const { width, height } = this._canvas!.getBoundingClientRect();
       this._canvas!.width = width * dpr;
       this._canvas!.height = height * dpr;
