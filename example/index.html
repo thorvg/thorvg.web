@@ -69,6 +69,10 @@
         animation.addEventListener('frame', function(e) {
           frameRange.value = e.detail.frame / animation.totalFrame * 100;
         });
+
+        animation.addEventListener('error', function(e) {
+          console.log(e);
+        });
       }
 
       function pauseAnimation() {

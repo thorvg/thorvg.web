@@ -269,7 +269,7 @@ export class LottiePlayer extends LitElement {
 
   private _TVG?: TvgModule;
   private _canvas?: HTMLCanvasElement;
-  private _imageData?: ImageData;
+  // private _imageData?: ImageData;
   private _beginTime: number = Date.now();
   private _counter: number = 1;
   private _timer?: ReturnType<typeof setInterval>;
@@ -344,7 +344,7 @@ export class LottiePlayer extends LitElement {
   }
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    this._canvas = this.shadowRoot!.querySelector('#thorvg-canvas') as HTMLCanvasElement;
+    this._canvas = this.querySelector('#thorvg-canvas') as HTMLCanvasElement;
     this._canvas.width = this._canvas.offsetWidth;
     this._canvas.height = this._canvas.offsetHeight;
 
@@ -363,7 +363,7 @@ export class LottiePlayer extends LitElement {
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     this.style.display = 'block';
-    return super.createRenderRoot();
+    return this;
   }
 
   private async _animLoop(){
@@ -373,7 +373,7 @@ export class LottiePlayer extends LitElement {
 
     if (await this._update()) {
       this._render();
-      window.requestAnimationFrame(this._animLoop.bind(this));
+      // window.requestAnimationFrame(this._animLoop.bind(this));
     }
   }
 
@@ -392,20 +392,20 @@ export class LottiePlayer extends LitElement {
   }
 
   private _flush(): void {
-    const context = this._canvas!.getContext('2d');
-    context!.putImageData(this._imageData!, 0, 0);
+    // const context = this._canvas!.getContext('webgpu');
+    // context!.putImageData(this._imageData!, 0, 0);
   }
 
   private _render(): void {
-    if (this.renderConfig?.enableDevicePixelRatio && this.currentState === PlayerState.Playing) {
-      const dpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
-      const { width, height } = this._canvas!.getBoundingClientRect();
-      this._canvas!.width = width * dpr;
-      this._canvas!.height = height * dpr;
-    }
+    // if (this.renderConfig?.enableDevicePixelRatio && this.currentState === PlayerState.Playing) {
+    //   const dpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
+    //   const { width, height } = this._canvas!.getBoundingClientRect();
+    //   this._canvas!.width = width * dpr;
+    //   this._canvas!.height = height * dpr;
+    // }
 
     this._TVG.resize(this._canvas!.width, this._canvas!.height);
-    this._viewport();
+    // this._viewport();
     const isUpdated = this._TVG.update();
 
     if (!isUpdated) {
@@ -418,7 +418,7 @@ export class LottiePlayer extends LitElement {
       return;
     }
 
-    this._imageData = new ImageData(clampedBuffer, this._canvas!.width, this._canvas!.height);
+    // this._imageData = new ImageData(clampedBuffer, this._canvas!.width, this._canvas!.height);
     this._flush();
   }
 

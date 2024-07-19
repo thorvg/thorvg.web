@@ -68,13 +68,13 @@ export default [
         },
       }),
       nodeResolve(),
-      terser({
-        compress: true,
-        mangle: true,
-        output: {
-          comments: false,
-        },
-      }),
+      // terser({
+      //   compress: false,
+      //   mangle: true,
+      //   output: {
+      //     comments: true,
+      //   },
+      // }),
     ],
   },
   {
