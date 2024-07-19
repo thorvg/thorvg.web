@@ -1,4 +1,4 @@
 [submodule "thorvg"]
 	path = thorvg
-	url = git@github.com:thorvg/thorvg.git
-	branch = v0.13.x
+	url = git@github.com:tinyjin/thorvg.git
+	branch = jinny/webgpu-player
