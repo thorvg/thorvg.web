@@ -68,7 +68,7 @@ const animations = [
   'happy_holidays.json',
   'happy_trio.json',
   'hola.json',
-  'hold_animation.json',
+  'holdanimation.json',
   'hourglass.json',
   'insta_camera.json',
   'isometric.json',
