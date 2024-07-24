@@ -222,11 +222,15 @@ export default function Home() {
 
     for (let i = 0; i < _count; i++) {
       const _anim = animations[Math.floor(Math.random() * animations.length)];
+      const lottieURL = `${urlPrefix}${_anim}`;
+
+      const response = await fetch(lottieURL);
+      const contentLength = response.headers.get('content-length');
 
       newAnimationList.push({
         name: _anim.split('/').pop()?.split('.')[0] || 'Unknown',
-        lottieURL: `${urlPrefix}${_anim}`,
-        location: `Type: ${_anim.split('/').pop()?.split('.')[1] || 'Unknown'}`,
+        lottieURL,
+        fileSize: `Size: ${contentLength ? (parseInt(contentLength) / 1024).toFixed(2) : 0}KB`,
       });
     }
 
@@ -243,20 +247,27 @@ export default function Home() {
     setQueryStringParameter('seed', seed);
   }
 
-  const loadSeed = (seed: string) => {
+  const loadSeed = async (seed: string) => {
     const nameList = atob(seed).split(',');
-    console.log(nameList);
-    const newAnimationList = nameList.map((name: string) => {
-      const _anim = animations.find((anim) => anim === `${name.trim()}.json`) || animations[0];
+    const newAnimationList = [];
 
-      return {
-        name: name,
-        lottieURL: `${urlPrefix}${_anim}`,
-        location: `Type: ${_anim.split('/').pop()?.split('.')[1] || 'Unknown'}`,
-      };
-    });
+    for (let i = 0; i < nameList.length; i++) {
+      const _anim = animations.find((anim) => anim === `${nameList[i]}.json`) || animations[0];
+      const lottieURL = `${urlPrefix}${_anim}`;
 
-    setAnimationList(newAnimationList);
+      const response = await fetch(lottieURL);
+      const contentLength = response.headers.get('content-length');
+
+      newAnimationList.push({
+        name: _anim.split('/').pop()?.split('.')[0] || 'Unknown',
+        lottieURL,
+        fileSize: `Size: ${contentLength ? (parseInt(contentLength) / 1024).toFixed(2) : 0}KB`,
+      });
+    }
+
+    // @ts-ignore
+    await setAnimationList([]);
+    await setAnimationList(newAnimationList);
   }
 
   const spawnAnimation = () => {
@@ -269,7 +280,7 @@ export default function Home() {
     const randomIndex = Math.floor(Math.random() * animationList.length);
     animationList[randomIndex].lottieURL = text;
     animationList[randomIndex].name = text.split('/').pop()?.split('.')[0] || 'Unknown';
-    animationList[randomIndex].location = `Type: ${text.split('/').pop()?.split('.')[1] || 'Unknown'}`;
+    animationList[randomIndex].fileSize = `Type: ${text.split('/').pop()?.split('.')[1] || 'Unknown'}`;
     setAnimationList(animationList.slice());
 
     setTimeout(() => {
@@ -492,7 +503,7 @@ export default function Home() {
                 )
               }
               <h3 className={`mt-6 text-lg font-semibold leading-8 tracking-tight text-white max-w-[${size.width}px] overflow-hidden`}>{anim.name}</h3>
-              <p className={`text-sm leading-6 text-gray-500 max-w-[${size.width}px] overflow-hidden`}>{anim.location}</p>
+              <p className={`text-sm leading-6 text-gray-500 max-w-[${size.width}px] overflow-hidden`}>{anim.fileSize}</p>
             </li>
           ))}
         </ul>
