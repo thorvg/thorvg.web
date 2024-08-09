@@ -130,7 +130,7 @@ const countOptions = [
 ];
 
 const playerOptions = [
-  { id: 1, name: 'thorvg-player' },
+  { id: 1, name: 'thorvg-player(WGPU)' },
   { id: 2, name: `dotlottie-web@${dotLottieReactPkg.dependencies["@lottiefiles/dotlottie-web"]}` },
   { id: 3, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
   { id: 4, name: 'skia/skottie' },
@@ -458,7 +458,7 @@ export default function Home() {
                     style={{width: size.width, height: size.height}}
                     loop 
                     autoplay
-                    renderConfig={JSON.stringify({enableDevicePixelRatio: true})}
+                    // renderConfig={JSON.stringify({enableDevicePixelRatio: true})}
                   />
                 )
               }

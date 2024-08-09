@@ -17,13 +17,13 @@ const globals = {
 export default [
   {
     input: "./src/lottie-player.ts",
-    treeshake: false,
+    treeshake: true,
     output: [
       {
         file: './dist/lottie-player.js',
         format: "umd",
         name,
-        minifyInternalExports: true,
+        minifyInternalExports: false,
         inlineDynamicImports: true,
         sourcemap: true,
         globals,
@@ -49,9 +49,9 @@ export default [
     plugins: [
       bakedEnv({ THORVG_VERSION: process.env.THORVG_VERSION }),
       nodePolyfills(),
-      commonjs({
-        include: /node_modules/
-      }),
+      // commonjs({
+      //   include: /node_modules/
+      // }),
       swc({
         include: /\.[mc]?[jt]sx?$/,
         exclude: /node_modules/,
@@ -64,22 +64,15 @@ export default [
             declaration: true,
             dynamicImport: true,
           },
-          target: "es5",
+          target: "esnext",
         },
       }),
       nodeResolve(),
-      terser({
-        compress: true,
-        mangle: true,
-        output: {
-          comments: false,
-        },
-      }),
     ],
   },
   {
     input: "./src/lottie-player.ts",
-    treeshake: false,
+    treeshake: true,
     output: [
       {
         file: './dist/lottie-player.d.ts',

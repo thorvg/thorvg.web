@@ -24,16 +24,16 @@ import { html, PropertyValueMap, LitElement, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 // @ts-ignore: WASM Glue code doesn't have type & Only available on build progress
-import Module from '../dist/thorvg-wasm';
+import Module from '../dist/thorvg-wasm.js';
 import { THORVG_VERSION } from './version';
 
 type LottieJson = Map<PropertyKey, any>;
 type TvgModule = any;
 
 let _module: any;
-(async () => {  
-  _module = await Module();
-})();
+// (async () => {  
+//   _module = await Module();
+// })();
 
 // Define library version
 export interface LibraryVersion {
@@ -269,64 +269,64 @@ export class LottiePlayer extends LitElement {
 
   private _TVG?: TvgModule;
   private _canvas?: HTMLCanvasElement;
-  private _imageData?: ImageData;
+  // private _imageData?: ImageData;
   private _beginTime: number = Date.now();
   private _counter: number = 1;
-  private _timer?: ReturnType<typeof setInterval>;
+  // private _timer?: ReturnType<typeof setInterval>;
   private _observer?: IntersectionObserver;
   private _observable: boolean = false;
 
-  private async _init(): Promise<void> {
-    if (!_module) {
-      //NOTE: ThorVG Module has not loaded
-      return;
-    }
+  // private async _init(): Promise<void> {
+  //   if (!_module) {
+  //     //NOTE: ThorVG Module has not loaded
+  //     return;
+  //   }
 
-    if (!this._timer) {
-      //NOTE: ThorVG Module has loaded, but called this function again
-      return;
-    }
+  //   if (!this._timer) {
+  //     //NOTE: ThorVG Module has loaded, but called this function again
+  //     return;
+  //   }
 
-    clearInterval(this._timer);
-    this._timer = undefined;
+  //   clearInterval(this._timer);
+  //   this._timer = undefined;
 
-    this._TVG = new _module.TvgLottieAnimation();
+  //   this._TVG = new _module.TvgLottieAnimation();
 
-    if (this.src) {
-      this.load(this.src, this.mimeType);
-    }
-  }
+  //   if (this.src) {
+  //     this.load(this.src, this.mimeType);
+  //   }
+  // }
 
-  private _viewport(): void {
-    const { left, right, top, bottom } = this.getBoundingClientRect();
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
+  // private _viewport(): void {
+  //   const { left, right, top, bottom } = this.getBoundingClientRect();
+  //   const windowWidth = window.innerWidth;
+  //   const windowHeight = window.innerHeight;
 
-    let x = 0;
-    let y = 0;
-    let width = this._canvas!.width;
-    let height = this._canvas!.height;
+  //   let x = 0;
+  //   let y = 0;
+  //   let width = this._canvas!.width;
+  //   let height = this._canvas!.height;
 
-    if (left < 0) {
-      x = Math.abs(left);
-      width -= x;
-    }
+  //   if (left < 0) {
+  //     x = Math.abs(left);
+  //     width -= x;
+  //   }
 
-    if (top < 0) {
-      y = Math.abs(top);
-      height -= y;
-    }
+  //   if (top < 0) {
+  //     y = Math.abs(top);
+  //     height -= y;
+  //   }
 
-    if (right > windowWidth) {
-      width -= right - windowWidth;
-    }
+  //   if (right > windowWidth) {
+  //     width -= right - windowWidth;
+  //   }
 
-    if (bottom > windowHeight) {
-      height -= bottom - windowHeight;
-    }
+  //   if (bottom > windowHeight) {
+  //     height -= bottom - windowHeight;
+  //   }
 
-    this._TVG.viewport(x, y, width, height);
-  }
+  //   this._TVG.viewport(x, y, width, height);
+  // }
 
   private _observerCallback(entries: IntersectionObserverEntry[]) {
     const entry = entries[0];
@@ -344,7 +344,20 @@ export class LottiePlayer extends LitElement {
   }
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    this._canvas = this.shadowRoot!.querySelector('#thorvg-canvas') as HTMLCanvasElement;
+    function randomString(length: number): string
+    {
+        var rtn = "";
+
+        do {
+            rtn += btoa("" + Math.floor(Math.random() * 100000)).substring(0, length);
+        }
+        while(rtn.length < length);
+
+        return rtn;
+    }
+    this._canvas = this.querySelector('.thorvg') as HTMLCanvasElement;
+    const seed = randomString(6).replaceAll('-', '').substring(0, 6);
+    this._canvas.id = `thorvg-${seed}`;
     this._canvas.width = this._canvas.offsetWidth;
     this._canvas.height = this._canvas.offsetHeight;
 
@@ -352,18 +365,35 @@ export class LottiePlayer extends LitElement {
     this._observer.observe(this);
 
     if (!this._TVG) {
-      this._timer = setInterval(this._init.bind(this), 100);
-      return;
+      // this._init();
+      
+      // this._timer = setInterval(this._init.bind(this), 100);
+      // return;
     }
 
-    if (this.src) {
-      this.load(this.src, this.mimeType);
-    }
+    // setTimeout(() => {
+
+    // }, 500);
+    
+
+    (async () => {
+      console.log('hello');
+      const module = await Module();
+      console.log('hello2');
+      this._TVG = new module.TvgLottieAnimation();
+      console.log('hell3');
+      // await this._TVG.resize(500, 500);
+      console.log('hello4');
+
+      if (this.src) {
+        await this.load(this.src, this.mimeType);
+      }
+    })();
   }
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     this.style.display = 'block';
-    return super.createRenderRoot();
+    return this;
   }
 
   private async _animLoop(){
@@ -371,32 +401,41 @@ export class LottiePlayer extends LitElement {
       return;
     }
 
-    if (await this._update()) {
-      this._render();
-      window.requestAnimationFrame(this._animLoop.bind(this));
-    }
+    // console.log("loop");
+    await this._update();
+    await this._render();
+    window.requestAnimationFrame(this._animLoop.bind(this));
+    // if (await this._update()) {
+    //   await this._render();
+    //   window.requestAnimationFrame(this._animLoop.bind(this));
+    // }
   }
 
-  private _loadBytes(data: Uint8Array, rPath: string = ''): void {
-    const isLoaded = this._TVG.load(data, this.mimeType, this._canvas!.width, this._canvas!.height, rPath);
+  private async _loadBytes(data: Uint8Array, rPath: string = ''): Promise<void> {
+    console.log('load bytes');
+    console.log('id:' + this._canvas!.id);
+    // await this._TVG.resize(this._canvas!.width, this._canvas!.height);
+    const isLoaded = await this._TVG.load(data, this.mimeType, this._canvas!.width, this._canvas!.height, `#${this._canvas!.id}`, rPath);
+    console.log('hello');
+    console.log(isLoaded);
     if (!isLoaded) {
-      throw new Error('Unable to load an image. Error: ', this._TVG.error());
+      throw new Error('Unable to load an image. Error: ', await this._TVG.error());
     }
 
-    this._render();
+    await this._render();
     this.dispatchEvent(new CustomEvent(PlayerEvent.Load));
     
     if (this.autoPlay) {
-      this.play();
+      await this.play();
     }
   }
 
-  private _flush(): void {
-    const context = this._canvas!.getContext('2d');
-    context!.putImageData(this._imageData!, 0, 0);
-  }
+  // private _flush(): void {
+  //   const context = this._canvas!.getContext('2d');
+  //   context!.putImageData(this._imageData!, 0, 0);
+  // }
 
-  private _render(): void {
+  private async _render(): Promise<void> {
     if (this.renderConfig?.enableDevicePixelRatio && this.currentState === PlayerState.Playing) {
       const dpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
       const { width, height } = this._canvas!.getBoundingClientRect();
@@ -404,22 +443,27 @@ export class LottiePlayer extends LitElement {
       this._canvas!.height = height * dpr;
     }
 
-    this._TVG.resize(this._canvas!.width, this._canvas!.height);
-    this._viewport();
-    const isUpdated = this._TVG.update();
+    // this._viewport();
+    const isUpdated = await this._TVG.update();
 
     if (!isUpdated) {
       return;
     }
 
-    const buffer = this._TVG.render();
-    const clampedBuffer = new Uint8ClampedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-    if (clampedBuffer.length < 1) {
-      return;
-    }
+    await this._TVG.render();
+    
 
-    this._imageData = new ImageData(clampedBuffer, this._canvas!.width, this._canvas!.height);
-    this._flush();
+    // this._imageData = new ImageData(clampedBuffer, this._canvas!.width, this._canvas!.height);
+    // this._flush();
+
+    // const buffer = this._TVG.render();
+    // const clampedBuffer = new Uint8ClampedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    // if (clampedBuffer.length < 1) {
+    //   return;
+    // }
+
+    // this._imageData = new ImageData(clampedBuffer, this._canvas!.width, this._canvas!.height);
+    // this._flush();
   }
 
   private async _update(): Promise<boolean> {
@@ -450,7 +494,7 @@ export class LottiePlayer extends LitElement {
         }
 
         await _wait(this.intermission);
-        this.play();
+        await this.play();
         return true;
       }
 
@@ -484,8 +528,10 @@ export class LottiePlayer extends LitElement {
       this.dispatchEvent(new CustomEvent(PlayerEvent.Ready));
 
       this.mimeType = mimeType;
-      this._loadBytes(bytes);
+      await this._loadBytes(bytes);
     } catch (err) {
+      console.log('err---');
+      console.log(err);
       this.currentState = PlayerState.Error;
       this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
     }
@@ -495,12 +541,14 @@ export class LottiePlayer extends LitElement {
    * Start playing animation.
    * @since 1.0
    */
-  public play(): void {
+  public async play(): Promise<void> {
     if (this.mimeType !== MimeType.JSON) {
       return;
     }
-
-    this.totalFrame = this._TVG.totalFrame();
+    console.log("play");
+    this.totalFrame = await this._TVG.totalFrame();
+    console.log("this.totalFrame");
+    console.log(this.totalFrame);
     if (this.totalFrame < 1) {
       return;
     }
@@ -708,7 +756,7 @@ export class LottiePlayer extends LitElement {
 
   public render(): TemplateResult {
     return html`
-      <canvas id="thorvg-canvas" style="width: 100%; height: 100%;" />
+      <canvas class="thorvg" style="width: 100%; height: 100%;" />
     `;
   }
 }

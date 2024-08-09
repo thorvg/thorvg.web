@@ -22,17 +22,17 @@
           <input type="checkbox" id="reverseCheckbox" onchange="toggleReverse(event)">
         </div>
           
-        <div>
+        <div hidden>
           <label for="loopCheckbox">Loop</label>
           <input type="checkbox" id="loopCheckbox" onchange="toggleLoop(event)" checked>
         </div>
         
-        <div>
+        <div hidden>
           <label for="speedRange">Speed</label>
           <input type="range" id="speedRange" min="0.1" max="2" step="0.1" value="1" onchange="changeSpeed(this.value)">
         </div>
         
-        <div>
+        <div hidden>
           <label for="frameRange">Frame</label>
           <input type="range" id="frameRange" min="1" max="100" step="1" value="1" onchange="seekFrame(this.value)">
         </div>
@@ -58,8 +58,9 @@
         animation.autoPlay = true;
         animation.loop = true;
         animation.src = "https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json";
-        animation.style.width = "500px";
-        animation.style.height = "500px";
+        // animation.src = "http://127.0.0.1:5501/example/threads.json";
+        animation.style.width = "1000px";
+        animation.style.height = "1000px";
 
         lottie.appendChild(animation);
 
@@ -68,6 +69,10 @@
 
         animation.addEventListener('frame', function(e) {
           frameRange.value = e.detail.frame / animation.totalFrame * 100;
+        });
+
+        animation.addEventListener('error', function(e) {
+          console.log(e);
         });
       }
 
@@ -161,6 +166,43 @@
 
         animation.save(ext);
       }
+  </script>
+  <script src="https://mrdoob.github.io/stats.js/build/stats.min.js"></script>
+  <script>
+    var statsFPS = new Stats();
+    statsFPS.showPanel(0); // 0: fps
+    statsFPS.dom.style.cssText =
+      "position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000";
+    document.body.appendChild(statsFPS.dom);
+
+    var statsMS = new Stats();
+    statsMS.showPanel(1); // 1: ms
+    statsMS.dom.style.cssText =
+      "position:fixed;top:0;left:80px;cursor:pointer;opacity:0.9;z-index:10000";
+    document.body.appendChild(statsMS.dom);
+
+    var statsMB;
+    if (self.performance && self.performance.memory) {
+      statsMB = new Stats();
+      statsMB.showPanel(2); // 2: mb
+      statsMB.dom.style.cssText =
+        "position:fixed;top:0;left:160px;cursor:pointer;opacity:0.9;z-index:10000";
+      document.body.appendChild(statsMB.dom);
+    }
+
+    function animate() {
+      statsFPS.begin();
+      statsMS.begin();
+      if (statsMB) statsMB.begin();
+
+      statsFPS.end();
+      statsMS.end();
+      if (statsMB) statsMB.end();
+
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
   </script>
   </body>
 </html>
