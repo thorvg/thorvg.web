@@ -11,13 +11,14 @@ const name = 'lottie-player';
 const globals = {
   url: "url",
   lit: "lit",
+  uuid: "uuid",
   "lit/decorators.js": "lit/decorators.js",
 };
 
 export default [
   {
     input: "./src/lottie-player.ts",
-    treeshake: false,
+    treeshake: true,
     output: [
       {
         file: './dist/lottie-player.js',
@@ -64,7 +65,7 @@ export default [
             declaration: true,
             dynamicImport: true,
           },
-          target: "es5",
+          target: "esnext",
         },
       }),
       nodeResolve(),
@@ -79,7 +80,7 @@ export default [
   },
   {
     input: "./src/lottie-player.ts",
-    treeshake: false,
+    treeshake: true,
     output: [
       {
         file: './dist/lottie-player.d.ts',
