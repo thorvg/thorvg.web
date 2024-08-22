@@ -36,6 +36,16 @@ type TvgModule = any;
 const wasmUrl = 'https://jinui.s3.ap-northeast-2.amazonaws.com/thorvg-wasm.wasm';
 
 let _module: any;
+(async () => {
+  _module = await Module({
+    locateFile: (path: string, prefix: string) => {
+      if (path.endsWith('.wasm')) {
+        return wasmUrl;
+      }
+      return prefix + path;
+    }
+  });
+})();
 
 // Define library version
 export interface LibraryVersion {
@@ -272,26 +282,30 @@ export class LottiePlayer extends LitElement {
   private _imageData?: ImageData;
   private _beginTime: number = Date.now();
   private _counter: number = 1;
+  private _timer?: ReturnType<typeof setInterval>;
   private _observer?: IntersectionObserver;
   private _observable: boolean = false;
 
   private async _init(): Promise<void> {
-    if (_module) {
+    if (!_module) {
+      //NOTE: ThorVG Module has not loaded
       return;
     }
 
-    // Match WASM binary with the renderer type
-    _module = await Module({
-      locateFile: (path: string, prefix: string) => {
-        if (path.endsWith('.wasm')) {
-          return wasmUrl;
-        }
-        return prefix + path;
-      }
-    });
+    if (!this._timer) {
+      //NOTE: ThorVG Module has loaded, but called this function again
+      return;
+    }
+
+    clearInterval(this._timer);
+    this._timer = undefined;
 
     const engine = this.renderConfig?.renderer || Renderer.SW;
     this._TVG = new _module.TvgLottieAnimation(engine, `#${this._canvas!.id}`);
+
+    if (this.src) {
+      this.load(this.src, this.mimeType);
+    }
   }
 
   private async _viewport(): Promise<void> {
@@ -349,6 +363,11 @@ export class LottiePlayer extends LitElement {
 
     this._observer = new IntersectionObserver(this._observerCallback);
     this._observer.observe(this);
+
+    if (!this._TVG) {
+      this._timer = setInterval(this._init.bind(this), 100);
+      return;
+    }
 
     if (this.src) {
       this.load(this.src, this.mimeType);
