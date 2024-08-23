@@ -132,7 +132,7 @@ const countOptions = [
 const playerOptions = [
   { id: 1, name: 'thorvg-player' },
   { id: 2, name: `dotlottie-web@${dotLottieReactPkg.dependencies["@lottiefiles/dotlottie-web"]}` },
-  //{ id: 3, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
+  { id: 3, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
   //{ id: 4, name: 'skia/skottie' },
 ];
 
