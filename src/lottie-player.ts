@@ -33,7 +33,7 @@ type TvgModule = any;
 
 // NOTE: Currently WASM binaries are not available in the public NPM.
 // TODO: Will change these URLs before next deployment.
-const wasmUrl = 'https://jinui.s3.ap-northeast-2.amazonaws.com/thorvg-wasm.wasm';
+const wasmUrl = 'http://127.0.0.1:5500/dist/thorvg-wasm.wasm';
 
 let _module: any;
 (async () => {
@@ -45,6 +45,8 @@ let _module: any;
       return prefix + path;
     }
   });
+  // @ts-ignore
+  window._module = _module;
 })();
 
 // Define library version
@@ -301,7 +303,21 @@ export class LottiePlayer extends LitElement {
     this._timer = undefined;
 
     const engine = this.renderConfig?.renderer || Renderer.SW;
-    this._TVG = new _module.TvgLottieAnimation(engine, `#${this._canvas!.id}`);
+
+    if (document.querySelector('.thorvg')!.id !== this._canvas?.id) {
+      await _wait(1000);
+    }
+    this._TVG = await (new _module.TvgLottieAnimation(engine, `#${this._canvas!.id}`));
+
+    console.log(this._canvas!.id);
+    console.log(_module.TvgLottieAnimation);
+    console.log(this._TVG);
+
+    if (this.renderConfig?.renderer === Renderer.WG) {
+      await this._TVG.wgpuInit();
+    }
+
+    console.log('TvgLottieAnimation');
 
     if (this.src) {
       this.load(this.src, this.mimeType);
@@ -357,7 +373,7 @@ export class LottiePlayer extends LitElement {
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     this._canvas = this.querySelector('.thorvg') as HTMLCanvasElement;
     
-    this._canvas.id = uuidv4().replaceAll('-', '').substring(0, 6);
+    this._canvas.id = 'thorvg-' + uuidv4().replaceAll('-', '').substring(0, 6);
     this._canvas.width = this._canvas.offsetWidth;
     this._canvas.height = this._canvas.offsetHeight;
 
@@ -369,9 +385,9 @@ export class LottiePlayer extends LitElement {
       return;
     }
 
-    if (this.src) {
-      this.load(this.src, this.mimeType);
-    }
+    // if (this.src) {
+    //   this.load(this.src, this.mimeType);
+    // }
   }
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
@@ -499,15 +515,19 @@ export class LottiePlayer extends LitElement {
    */
   public async load(src: string | object, mimeType: MimeType = MimeType.JSON): Promise<void> {
     try {
-      await this._init();
+      // await this._init();
       const bytes = await _parseSrc(src, mimeType);
       this.dispatchEvent(new CustomEvent(PlayerEvent.Ready));
 
       this.mimeType = mimeType;
       await this._loadBytes(bytes);
     } catch (err) {
+      console.log(err);
       this.currentState = PlayerState.Error;
-      this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
+      this.dispatchEvent(new CustomEvent(PlayerEvent.Error, {
+        detail: err,
+        // detail: await this._TVG.error(),
+      }));
     }
   }
 

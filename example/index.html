@@ -60,6 +60,15 @@
         animation.src = "https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json";
         animation.style.width = "500px";
         animation.style.height = "500px";
+        animation.renderConfig = {
+          renderer: 'wg'
+        };
+
+        animation.addEventListener('error', async function(err) {
+          console.log('Error');
+          console.log(err);
+          // console.log(await animation.error());
+        });
 
         lottie.appendChild(animation);
 
