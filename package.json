@@ -1,6 +1,6 @@
 {
   "name": "@thorvg/lottie-player",
-  "version": "1.0.0-beta.33",
+  "version": "1.0.0-beta.36",
   "description": "A web lottie player using ThorVG as a renderer",
   "main": "./dist/lottie-player.cjs.js",
   "module": "./dist/lottie-player.esm.js",
@@ -20,7 +20,7 @@
   "scripts": {
     "build": "npm run clean && npm run copy:wasm && THORVG_VERSION=$(sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//') rollup -c --bundleConfigAsCjs && rm -rf ./dist/thorvg-wasm.js",
     "build:watch": "npm run clean && npm run copy:wasm && rollup -c --bundleConfigAsCjs --watch",
-    "copy:wasm": "cp ./thorvg/build_wasm32_all/src/bindings/wasm/thorvg-wasm.{js,wasm} ./dist ./dist",
+    "copy:wasm": "cp ./thorvg/build_wasm32_all/src/bindings/wasm/thorvg-wasm.{js,wasm} ./dist",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint ./src --ext .ts,.tsx,.js",
