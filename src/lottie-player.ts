@@ -31,7 +31,8 @@ import { THORVG_VERSION } from './version';
 type LottieJson = Map<PropertyKey, any>;
 type TvgModule = any;
 
-const wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg-wasm.wasm';
+const wasmUrl = './thorvg-wasm.wasm';
+// const wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg-wasm.wasm';
 
 let _module: any;
 (async () => {
@@ -301,6 +302,15 @@ export class LottiePlayer extends LitElement {
    */
   @property({ type: Number })
   public currentState: PlayerState = PlayerState.Loading;
+
+  /**
+   * original size of the animation (readonly)
+   * @since 1.0
+   */
+  @property({ type: Float32Array })
+  public get size(): Float32Array {
+    return Float32Array.from(this._TVG?.size() || [0, 0]);
+  }
 
   private _TVG?: TvgModule;
   private _canvas?: HTMLCanvasElement;
@@ -654,13 +664,13 @@ export class LottiePlayer extends LitElement {
     _module = null;
   }
 
-  /**
-   * original size of the animation (readonly)
-   * @since 1.0
-   */
-  public async getSize(): Promise<Float32Array> {
-    return Float32Array.from((await this._TVG?.size()) || [0, 0]);
-  }
+  // /**
+  //  * original size of the animation (readonly)
+  //  * @since 1.0
+  //  */
+  // public async getSize(): Promise<Float32Array> {
+  //   return Float32Array.from((await this._TVG?.size()) || [0, 0]);
+  // }
 
   /**
    * Sets the repeating of the animation.
