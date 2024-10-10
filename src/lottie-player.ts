@@ -302,6 +302,15 @@ export class LottiePlayer extends LitElement {
   @property({ type: Number })
   public currentState: PlayerState = PlayerState.Loading;
 
+  /**
+   * original size of the animation (readonly)
+   * @since 1.0
+   */
+  @property({ type: Float32Array })
+  public get size(): Float32Array {
+    return Float32Array.from(this._TVG?.size() || [0, 0]);
+  }
+
   private _TVG?: TvgModule;
   private _canvas?: HTMLCanvasElement;
   private _imageData?: ImageData;
@@ -335,7 +344,7 @@ export class LottiePlayer extends LitElement {
     }
   }
 
-  private async _viewport(): Promise<void> {
+  private _viewport(): void {
     const { left, right, top, bottom } = this.getBoundingClientRect();
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
@@ -363,7 +372,7 @@ export class LottiePlayer extends LitElement {
       height -= bottom - windowHeight;
     }
 
-    await this._TVG.viewport(x, y, width, height);
+    this._TVG.viewport(x, y, width, height);
   }
 
   private _observerCallback(entries: IntersectionObserverEntry[]) {
@@ -417,17 +426,17 @@ export class LottiePlayer extends LitElement {
     }
   }
 
-  private async _loadBytes(data: Uint8Array, rPath: string = ''): Promise<void> {
-    const isLoaded = await this._TVG.load(data, this.mimeType, this._canvas!.width, this._canvas!.height, rPath);
+  private _loadBytes(data: Uint8Array, rPath: string = ''): void {
+    const isLoaded = this._TVG.load(data, this.mimeType, this._canvas!.width, this._canvas!.height, rPath);
     if (!isLoaded) {
-      throw new Error('Unable to load an image. Error: ', await this._TVG.error());
+      throw new Error('Unable to load an image. Error: ', this._TVG.error());
     }
 
-    await this._render();
+    this._render();
     this.dispatchEvent(new CustomEvent(PlayerEvent.Load));
     
     if (this.autoPlay) {
-      await this.play();
+      this.play();
     }
   }
 
@@ -436,7 +445,7 @@ export class LottiePlayer extends LitElement {
     context!.putImageData(this._imageData!, 0, 0);
   }
 
-  private async _render(): Promise<void> {
+  private _render(): void {
     if (this.renderConfig?.enableDevicePixelRatio) {
       const dpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
       const { width, height } = this._canvas!.getBoundingClientRect();
@@ -444,9 +453,9 @@ export class LottiePlayer extends LitElement {
       this._canvas!.height = height * dpr;
     }
 
-    await this._TVG.resize(this._canvas!.width, this._canvas!.height);
-    await this._viewport();
-    const isUpdated = await this._TVG.update();
+    this._TVG.resize(this._canvas!.width, this._canvas!.height);
+    this._viewport();
+    const isUpdated = this._TVG.update();
 
     if (!isUpdated) {
       return;
@@ -454,11 +463,11 @@ export class LottiePlayer extends LitElement {
 
     // webgpu
     if (this.renderConfig?.renderer === Renderer.WG) {
-      await this._TVG.render();
+      this._TVG.render();
       return;
     }
 
-    const buffer = await this._TVG.render();
+    const buffer = this._TVG.render();
     const clampedBuffer = new Uint8ClampedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength);
     if (clampedBuffer.length < 1) {
       return;
@@ -473,7 +482,7 @@ export class LottiePlayer extends LitElement {
       return false;
     }
 
-    const duration = await this._TVG.duration();
+    const duration = this._TVG.duration();
     const currentTime = Date.now() / 1000;
     this.currentFrame = (currentTime - this._beginTime) / duration * this.totalFrame * this.speed;
     if (this.direction === -1) {
@@ -509,13 +518,13 @@ export class LottiePlayer extends LitElement {
         frame: this.currentFrame,
       },
     }));
-    return await this._TVG.frame(this.currentFrame);
+    return this._TVG.frame(this.currentFrame);
   }
 
-  private async _frame(curFrame: number): Promise<void> {
+  private _frame(curFrame: number): void {
     this.pause();
     this.currentFrame = curFrame;
-    await this._TVG.frame(curFrame);
+    this._TVG.frame(curFrame);
   }
 
   /**
@@ -542,12 +551,12 @@ export class LottiePlayer extends LitElement {
    * Start playing animation.
    * @since 1.0
    */
-  public async play(): Promise<void> {
+  public play(): void {
     if (this.mimeType !== MimeType.JSON) {
       return;
     }
 
-    this.totalFrame = await this._TVG.totalFrame();
+    this.totalFrame = this._TVG.totalFrame();
     if (this.totalFrame < 1) {
       return;
     }
@@ -655,14 +664,6 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * original size of the animation (readonly)
-   * @since 1.0
-   */
-  public async getSize(): Promise<Float32Array> {
-    return Float32Array.from((await this._TVG?.size()) || [0, 0]);
-  }
-
-  /**
    * Sets the repeating of the animation.
    * @param value Whether to enable repeating. Boolean true enables repeating.
    * @since 1.0
@@ -719,7 +720,7 @@ export class LottiePlayer extends LitElement {
    * @param target File type to export
    * @since 1.0
    */
-  public async save(target: ExportableType): Promise<void> {
+  public save(target: ExportableType): void {
     if (!this._TVG) {
       return;
     }
@@ -737,9 +738,9 @@ export class LottiePlayer extends LitElement {
       return;
     }
 
-    const isExported = await this._TVG.save(target);
+    const isExported = this._TVG.save(target);
     if (!isExported) {
-      throw new Error('Unable to save. Error: ', await this._TVG.error());
+      throw new Error('Unable to save. Error: ', this._TVG.error());
     }
 
     const data = _module.FS.readFile(fileName);
