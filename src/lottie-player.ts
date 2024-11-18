@@ -69,12 +69,6 @@ export type RenderConfig = {
   renderer?: Renderer;
 }
 
-// Define file type which can be exported
-export enum ExportableType {
-  GIF = 'gif',
-  PNG = 'png',
-}
-
 // Define mime type which player can load
 export enum MimeType {
   JSON = 'json',
@@ -714,43 +708,47 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Save current animation to other file type
-   * @param target File type to export
+   * Save current animation to png image
    * @since 1.0
    */
-  public save(target: ExportableType): void {
+  public save2png(): void {
     if (!this._TVG) {
       return;
     }
 
-    const fileName = `output.${target}`;
+    this._canvas!.toBlob((blob: Blob | null) => {
+      if (!blob) {
+        return;
+      }
 
-    if (target === ExportableType.PNG) {
-      this._canvas!.toBlob((blob: Blob | null) => {
-        if (!blob) {
-          return;
-        }
+      _downloadFile('output.png', blob);
+    }, 'image/png');
+  }
 
-        _downloadFile('output.png', blob);
-      }, 'image/png');
+  /**
+   * Save current animation to gif image
+   * @since 1.0
+   */
+  public async save2gif(src: string): Promise<void> {
+    if (!this._TVG) {
       return;
     }
 
-    const isExported = this._TVG.save(target);
+    const bytes = await _parseSrc(src, MimeType.JSON);
+    const isExported = this._TVG.save(bytes, 'gif');
     if (!isExported) {
       throw new Error('Unable to save. Error: ', this._TVG.error());
     }
 
-    const data = _module.FS.readFile(fileName);
-
-    if (target === ExportableType.GIF && data.length < 6) {
+    const data = _module.FS.readFile('output.gif');
+    if (data.length < 6) {
       throw new Error(
         `Unable to save the GIF data. The generated file size is invalid.`
       );
     }
 
     const blob = new Blob([data], {type: 'application/octet-stream'});
-    _downloadFile(fileName, blob);
+    _downloadFile('output.gif', blob);
   }
 
   /**
