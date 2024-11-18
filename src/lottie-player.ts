@@ -72,7 +72,6 @@ export type RenderConfig = {
 // Define file type which can be exported
 export enum ExportableType {
   GIF = 'gif',
-  TVG = 'tvg',
   PNG = 'png',
 }
 
@@ -82,7 +81,6 @@ export enum MimeType {
   JPG = 'jpg',
   PNG = 'png',
   SVG = 'svg',
-  TVG = 'tvg',
 }
 
 // Define valid player states
@@ -748,12 +746,6 @@ export class LottiePlayer extends LitElement {
     if (target === ExportableType.GIF && data.length < 6) {
       throw new Error(
         `Unable to save the GIF data. The generated file size is invalid.`
-      );
-    }
-
-    if (target === ExportableType.TVG && data.length < 33) {
-      throw new Error(
-        `Unable to save the TVG data. The generated file size is invalid.`
       );
     }
 
