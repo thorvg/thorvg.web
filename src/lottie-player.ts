@@ -31,7 +31,7 @@ import { THORVG_VERSION } from './version';
 type LottieJson = Map<PropertyKey, any>;
 type TvgModule = any;
 
-const wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg-wasm.wasm';
+const wasmUrl = '/dist/thorvg-wasm.wasm';
 
 let _module: any;
 (async () => {
@@ -75,6 +75,7 @@ export enum MimeType {
   JPG = 'jpg',
   PNG = 'png',
   SVG = 'svg',
+  TVG = 'tvg', // for LDF
 }
 
 // Define valid player states
@@ -331,9 +332,21 @@ export class LottiePlayer extends LitElement {
     await _initModule(engine);
     this._TVG = new _module.TvgLottieAnimation(engine, `#${this._canvas!.id}`);
 
+    // @ts-ignore
+    window._TVG = this._TVG;
+
     if (this.src) {
       this.load(this.src, this.mimeType);
     }
+  }
+
+  private _scroll(): void {
+    this._canvas?.addEventListener('wheel', (e) => {
+      const { deltaX, deltaY } = e;
+      // console.log(deltaX, deltaY);
+
+      this._TVG.scroll(deltaX, deltaY / 5);
+    });
   }
 
   private _viewport(): void {
@@ -430,6 +443,9 @@ export class LottiePlayer extends LitElement {
     if (this.autoPlay) {
       this.play();
     }
+
+    this._scroll();
+    this._TVG.initAnim();
   }
 
   private _flush(): void {
@@ -474,8 +490,15 @@ export class LottiePlayer extends LitElement {
       return false;
     }
 
-    const duration = this._TVG.duration();
-    const currentTime = Date.now() / 1000;
+    const duration = 100;
+    const currentTime = Date.now() % 2000;
+    console.log(currentTime);
+    this._TVG.frameAllAnimation(currentTime);
+
+    // if (duration == 100) {
+    //   return true;
+    // }
+
     this.currentFrame = (currentTime - this._beginTime) / duration * this.totalFrame * this.speed;
     if (this.direction === -1) {
       this.currentFrame = this.totalFrame - this.currentFrame;
@@ -535,6 +558,8 @@ export class LottiePlayer extends LitElement {
       await this._loadBytes(bytes);
     } catch (err) {
       this.currentState = PlayerState.Error;
+      console.error(err);
+      console.error(this._TVG.error());
       this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
     }
   }
@@ -544,27 +569,27 @@ export class LottiePlayer extends LitElement {
    * @since 1.0
    */
   public play(): void {
-    if (this.mimeType !== MimeType.JSON) {
-      return;
-    }
+    // if (this.mimeType !== MimeType.JSON) {
+    //   return;
+    // }
 
-    this.totalFrame = this._TVG.totalFrame();
-    if (this.totalFrame < 1) {
-      return;
-    }
+    // this.totalFrame = this._TVG.totalFrame();
+    // if (this.totalFrame < 1) {
+    //   return;
+    // }
 
-    this._beginTime = Date.now() / 1000;
-    if (this.currentState === PlayerState.Playing) {
-      return;
-    }
+    // this._beginTime = Date.now() / 1000;
+    // if (this.currentState === PlayerState.Playing) {
+    //   return;
+    // }
 
     if (this._observable) {
       this.currentState = PlayerState.Playing;
       window.requestAnimationFrame(this._animLoop.bind(this));
-      return;
+      // return;
     }
 
-    this.currentState = PlayerState.Frozen;
+    // this.currentState = PlayerState.Frozen;
   }
 
   /**

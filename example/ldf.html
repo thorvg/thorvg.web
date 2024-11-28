@@ -7,7 +7,7 @@
     <script src="../dist/lottie-player.js"></script>
   </head>
   <body>
-    <div style="margin-top: 60px;">
+    <div>
       <div>
         <button onclick="playAnimation()">Play</button>
         <button onclick="pauseAnimation()">Pause</button>
@@ -57,10 +57,17 @@
 
         animation.autoPlay = true;
         animation.loop = true;
-        animation.src = "https://raw.githubusercontent.com/thorvg/thorvg/main/examples/resources/lottie/masking.json";
-        animation.style.width = "1000px";
-        animation.style.height = "1000px";
-        animation.renderConfig = { renderer: 'wg' };
+        // animation.src = "http://127.0.0.1:5500/dist/ex.svg";
+        // animation.mimeType = 'svg';
+        animation.mimeType = 'tvg';
+        animation.src = "http://127.0.0.1:5500/dist/poc.tvg";
+        // animation.src = "http://127.0.0.1:5500/dist/ttt.tvg";
+        animation.style.width = "1400px";
+        animation.style.height = "1800px";
+        animation.style.border = "2px solid grey";
+        animation.style.background = "black";
+        animation.style.margin = "0 auto";
+        // animation.style.backgroundColor = "red";
 
         lottie.appendChild(animation);
 
@@ -69,6 +76,10 @@
 
         animation.addEventListener('frame', function(e) {
           frameRange.value = e.detail.frame / animation.totalFrame * 100;
+        });
+
+        animation.addEventListener('error', function(e) {
+          console.log(e);
         });
       }
 
@@ -105,7 +116,6 @@
           return;
         }
 
-        animation.term();
         animation.destroy();
         animation = undefined;
       }
@@ -164,43 +174,5 @@
         animation.save(ext);
       }
   </script>
-
-<script src="https://mrdoob.github.io/stats.js/build/stats.min.js"></script>
-<script>
-  var statsFPS = new Stats();
-  statsFPS.showPanel(0); // 0: fps
-  statsFPS.dom.style.cssText =
-    "position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000";
-  document.body.appendChild(statsFPS.dom);
-
-  var statsMS = new Stats();
-  statsMS.showPanel(1); // 1: ms
-  statsMS.dom.style.cssText =
-    "position:fixed;top:0;left:80px;cursor:pointer;opacity:0.9;z-index:10000";
-  document.body.appendChild(statsMS.dom);
-
-  var statsMB;
-  if (self.performance && self.performance.memory) {
-    statsMB = new Stats();
-    statsMB.showPanel(2); // 2: mb
-    statsMB.dom.style.cssText =
-      "position:fixed;top:0;left:160px;cursor:pointer;opacity:0.9;z-index:10000";
-    document.body.appendChild(statsMB.dom);
-  }
-
-  function animate() {
-    statsFPS.begin();
-    statsMS.begin();
-    if (statsMB) statsMB.begin();
-
-    statsFPS.end();
-    statsMS.end();
-    if (statsMB) statsMB.end();
-
-    requestAnimationFrame(animate);
-  }
-
-  requestAnimationFrame(animate);
-</script>
   </body>
 </html>
