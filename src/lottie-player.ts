@@ -54,6 +54,7 @@ export interface LibraryVersion {
 export enum Renderer {
   SW = 'sw',
   WG = 'wg',
+  GL = 'gl',
 }
 
 // Define initialization status
@@ -453,8 +454,8 @@ export class LottiePlayer extends LitElement {
       return;
     }
 
-    // webgpu
-    if (this.renderConfig?.renderer === Renderer.WG) {
+    // webgpu & webgl
+    if (this.renderConfig?.renderer === Renderer.WG || this.renderConfig?.renderer === Renderer.GL) {
       this._TVG.render();
       return;
     }
