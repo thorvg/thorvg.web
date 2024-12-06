@@ -130,10 +130,11 @@ const countOptions = [
 ];
 
 const playerOptions = [
-  { id: 1, name: 'thorvg-player' },
-  //{ id: 2, name: `dotlottie-web@${dotLottieReactPkg.dependencies["@lottiefiles/dotlottie-web"]}` },
-  //{ id: 3, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
-  //{ id: 4, name: 'skia/skottie' },
+  { id: 1, name: 'ThorVG(Software)' },
+  { id: 2, name: 'ThorVG(WebGPU)' },
+  //{ id: 3, name: `dotlottie-web@${dotLottieReactPkg.dependencies["@lottiefiles/dotlottie-web"]}` },
+  //{ id: 4, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
+  //{ id: 5, name: 'skia/skottie' },
 ];
 
 function classNames(...classes: any) {
@@ -463,7 +464,24 @@ export default function Home() {
                 )
               }
               {
-                playerId === 2 && (
+                playerId == 2 &&
+                (
+                  <lottie-player 
+                    src={anim.lottieURL}
+                    background="transparent" 
+                    className="aspect-[14/13] w-full rounded-2xl object-cover"
+                    style={{width: size.width, height: size.height}}
+                    loop 
+                    autoplay
+                    renderConfig={JSON.stringify({
+                      enableDevicePixelRatio: true,
+                      renderer: 'wg'
+                    })}
+                  />
+                )
+              }
+              {
+                playerId === 3 && (
                   <DotLottieReact
                     src={anim.lottieURL as string}
                     style={{width: size.width, height: size.height}}
