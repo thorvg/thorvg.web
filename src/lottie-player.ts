@@ -198,7 +198,11 @@ const _initModule = async (engine: Renderer) => {
   }
 
   _initStatus = InitStatus.REQUESTED;
-  await _module.init();
+  for (let i = 0; i < 2; i++) { // try to wait 2 times, adapter once and device once
+    while (!_module.init()) {
+      await _wait(100);
+    }
+  }
   _initStatus = InitStatus.INITIALIZED;
 }
 
