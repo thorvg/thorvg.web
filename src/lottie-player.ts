@@ -31,19 +31,9 @@ import { THORVG_VERSION } from './version';
 type LottieJson = Map<PropertyKey, any>;
 type TvgModule = any;
 
-const wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg-wasm.wasm';
-
+const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg-wasm.wasm';
 let _module: any;
-(async () => {
-  _module = await Module({
-    locateFile: (path: string, prefix: string) => {
-      if (path.endsWith('.wasm')) {
-        return wasmUrl;
-      }
-      return prefix + path;
-    }
-  });
-})();
+let _moduleRequested: boolean = false;
 
 // Define library version
 export interface LibraryVersion {
@@ -212,6 +202,13 @@ export class LottiePlayer extends LitElement {
   public src?: string;
 
   /**
+   * Custom WASM URL for ThorVG engine
+   * @since 1.0
+   */
+  @property({ type: String })
+  public wasmUrl?: string;
+
+  /**
   * File mime type.
   * @since 1.0
   */
@@ -314,9 +311,23 @@ export class LottiePlayer extends LitElement {
   private _observable: boolean = false;
 
   private async _init(): Promise<void> {
+    // Ensure module is loaded only once
+    if (_moduleRequested) {
+      while (!_module) {
+        await _wait(100);
+      }
+    }
+
     if (!_module) {
-      //NOTE: ThorVG Module has not loaded
-      return;
+      _moduleRequested = true;
+      _module = await Module({
+        locateFile: (path: string, prefix: string) => {
+          if (path.endsWith('.wasm')) {
+            return this.wasmUrl || _wasmUrl;
+          }
+          return prefix + path;
+        }
+      });
     }
 
     if (!this._timer) {
