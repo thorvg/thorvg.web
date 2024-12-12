@@ -60,6 +60,7 @@ export enum Renderer {
 // Define initialization status
 export enum InitStatus {
   IDLE = 'idle',
+  FAILED = 'failed',
   REQUESTED = 'requested',
   INITIALIZED = 'initialized',
 }
@@ -198,8 +199,21 @@ const _initModule = async (engine: Renderer) => {
   }
 
   _initStatus = InitStatus.REQUESTED;
-  await _module.init();
-  _initStatus = InitStatus.INITIALIZED;
+  while (true) {
+    const res = _module.init();
+    switch (res) {
+      case 0:
+        _initStatus = InitStatus.INITIALIZED;
+        return;
+      case 1:
+        _initStatus = InitStatus.FAILED;
+        return;
+      case 2:
+        await _wait(100);
+        break;
+      default:
+    }
+  }
 }
 
 @customElement('lottie-player')
@@ -330,6 +344,12 @@ export class LottiePlayer extends LitElement {
     const engine = this.renderConfig?.renderer || Renderer.SW;
 
     await _initModule(engine);
+    if (_initStatus === InitStatus.FAILED) {
+      this.currentState = PlayerState.Error;
+      this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
+      return;
+    }
+
     this._TVG = new _module.TvgLottieAnimation(engine, `#${this._canvas!.id}`);
 
     if (this.src) {
