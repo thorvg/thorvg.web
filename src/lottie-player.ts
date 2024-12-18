@@ -23,15 +23,13 @@
 import { html, PropertyValueMap, LitElement, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { v4 as uuidv4 } from 'uuid';
-
-// @ts-ignore: WASM Glue code doesn't have type & Only available on build progress
-import Module from '../dist/thorvg-wasm';
 import { THORVG_VERSION } from './version';
 
 type LottieJson = Map<PropertyKey, any>;
 type TvgModule = any;
+type WasmModule = (moduleArg?: {}) => Promise<any>;
 
-const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg-wasm.wasm';
+const _wasmPath = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/';
 let _module: any;
 let _moduleRequested: boolean = false;
 
@@ -216,11 +214,11 @@ export class LottiePlayer extends LitElement {
   public src?: string;
 
   /**
-   * Custom WASM URL for ThorVG engine
+   * Custom WASM Path for ThorVG engine
    * @since 1.0
    */
   @property({ type: String })
-  public wasmUrl?: string;
+  public wasmPath?: string;
 
   /**
   * File mime type.
@@ -315,6 +313,28 @@ export class LottiePlayer extends LitElement {
     return Float32Array.from(this._TVG?.size() || [0, 0]);
   }
 
+  private async getWasmModule(): Promise<WasmModule> {
+    switch (this.renderConfig?.renderer) {
+      case Renderer.WG:
+        return (await import((this.wasmPath ?? _wasmPath) + 'thorvg-webgpu-wasm.js')).default;
+      case Renderer.GL:
+        return (await import((this.wasmPath ?? _wasmPath) + 'thorvg-webgl-wasm.js')).default;
+      default:
+        return (await import((this.wasmPath ?? _wasmPath) + 'thorvg-software-wasm.js')).default;
+    }
+  }
+
+  private get _wasmFile(): string {
+    switch (this.renderConfig?.renderer) {
+      case Renderer.WG:
+        return 'thorvg-webgpu-wasm.wasm';
+      case Renderer.GL:
+        return 'thorvg-webgl-wasm.wasm';
+      default:
+        return 'thorvg-software-wasm.wasm';
+    }
+  }
+
   private _TVG?: TvgModule;
   private _canvas?: HTMLCanvasElement;
   private _imageData?: ImageData;
@@ -334,10 +354,11 @@ export class LottiePlayer extends LitElement {
 
     if (!_module) {
       _moduleRequested = true;
-      _module = await Module({
+      const WasmModule = await this.getWasmModule();
+      _module = await WasmModule({
         locateFile: (path: string, prefix: string) => {
           if (path.endsWith('.wasm')) {
-            return this.wasmUrl || _wasmUrl;
+            return (this.wasmPath ?? _wasmPath) + this._wasmFile;
           }
           return prefix + path;
         }
