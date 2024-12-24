@@ -18,7 +18,11 @@ const globals = {
 export default [
   {
     input: "./src/lottie-player.ts",
-    treeshake: true,
+    treeshake: {
+      moduleSideEffects: false,
+      propertyReadSideEffects: false,
+      tryCatchDeoptimization: false
+    },
     output: [
       {
         file: './dist/lottie-player.js',
@@ -28,6 +32,7 @@ export default [
         inlineDynamicImports: true,
         sourcemap: true,
         globals,
+        hoistTransitiveImports: true,
       },
       {
         file: pkg.main,
@@ -70,7 +75,12 @@ export default [
       }),
       nodeResolve(),
       terser({
-        compress: true,
+        compress: {
+          pure_getters: true,
+          passes: 3,
+          drop_console: true,
+          drop_debugger: true
+        },
         mangle: true,
         output: {
           comments: false,
