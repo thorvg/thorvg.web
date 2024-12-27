@@ -175,8 +175,8 @@ const _downloadFile = (fileName: string, blob: Blob) => {
 
 let _initStatus = InitStatus.IDLE;
 const _initModule = async (engine: Renderer) => {
-  if (engine === Renderer.SW) {
-    //NOTE: thorvg software renderer doesn't do anything in the module init(). Skip ASAP.
+  if (engine !== Renderer.WG) {
+    //NOTE: thorvg software/webgl renderer doesn't do anything in the module init(). Skip ASAP.
     return;
   }
 
