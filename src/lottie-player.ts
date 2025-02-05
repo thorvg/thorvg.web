@@ -175,6 +175,14 @@ const _downloadFile = (fileName: string, blob: Blob) => {
 
 let _initStatus = InitStatus.IDLE;
 const _initModule = async (engine: Renderer) => {
+  // 사이드모듈 wasm
+  await fetch('./thorvg-webp-loader.wasm')
+    .then(response => response.arrayBuffer())
+    .then(buffer => {
+        _module.FS.writeFile('/thorvg-webp-loader.wasm', new Uint8Array(buffer));
+        console.log('Downloaded file saved to /thorvg-webp-loader.wasm');
+    });
+
   if (engine !== Renderer.WG) {
     //NOTE: thorvg software/webgl renderer doesn't do anything in the module init(). Skip ASAP.
     return;

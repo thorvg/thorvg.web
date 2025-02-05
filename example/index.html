@@ -55,16 +55,20 @@
         const lottie = document.querySelector('.lottie');
         animation = document.createElement('lottie-player');
 
-        animation.autoPlay = true;
+        animation.autoPlay = false;
         animation.loop = true;
-        animation.src = "https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json";
+        // animation.src = "https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json";
+        animation.src = "http://127.0.0.1:5500/example/1.webp";
         animation.style.width = "500px";
         animation.style.height = "500px";
+        animation.wasmUrl = "/dist/thorvg-wasm.wasm";
 
         lottie.appendChild(animation);
 
         animation = document.querySelector('lottie-player');
         const frameRange = document.querySelector('#frameRange');
+
+        animation.load(animation.src, 'webp')
 
         animation.addEventListener('frame', function(e) {
           frameRange.value = e.detail.frame / animation.totalFrame * 100;

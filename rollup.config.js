@@ -78,8 +78,8 @@ export default [
         compress: {
           pure_getters: true,
           passes: 3,
-          drop_console: true,
-          drop_debugger: true
+          // drop_console: true,
+          // drop_debugger: true
         },
         mangle: true,
         output: {
