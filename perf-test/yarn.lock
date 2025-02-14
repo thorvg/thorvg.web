@@ -532,10 +532,10 @@
   resolved "https://registry.npmjs.org/@tanstack/virtual-core/-/virtual-core-3.5.0.tgz"
   integrity sha512-KnPRCkQTyqhanNC0K63GBG3wA8I+D1fQuVnAvcBF8f13akOKeQp1gSbu6f77zCxhEk727iV5oQnbHLYzHrECLg==
 
-"@thorvg/lottie-player@^1.0.0-pre.12":
-  version "1.0.0-pre.12"
-  resolved "https://registry.npmjs.org/@thorvg/lottie-player/-/lottie-player-1.0.0-pre.12.tgz"
-  integrity sha512-Z2xZ7Bw2b3YXJOmKMIIhpt2H3tjO9IJgok45FoJUvYgwDXtuIJ5X8soTa4H6YTdaTThDJaugJup2RCQM66tjHQ==
+"@thorvg/lottie-player@^1.0.0-pre.13":
+  version "1.0.0-pre.13"
+  resolved "https://registry.npmjs.org/@thorvg/lottie-player/-/lottie-player-1.0.0-pre.13.tgz"
+  integrity sha512-ddEzhcAP2yb2edKLz/yecPKTDmteAEK7peL0A24tkfuKB2Zu7e1r0FzQlIsfwAqWlZU+qkinBa7dFFjfuiAD1g==
   dependencies:
     lit "^3.1.0"
     url "^0.11.3"
