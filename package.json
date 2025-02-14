@@ -1,6 +1,6 @@
 {
   "name": "@thorvg/lottie-player",
-  "version": "1.0.0-pre.12",
+  "version": "1.0.0-pre.13",
   "description": "A web lottie player using ThorVG as a renderer",
   "main": "./dist/lottie-player.cjs.js",
   "module": "./dist/lottie-player.esm.js",
