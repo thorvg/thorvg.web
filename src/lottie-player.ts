@@ -64,6 +64,7 @@ export type RenderConfig = {
 // Define mime type which player can load
 export enum MimeType {
   JSON = 'json',
+  LOT = 'lot',
   JPG = 'jpg',
   PNG = 'png',
   SVG = 'svg',
@@ -148,7 +149,7 @@ const _parseSrc = async (src: string | object | ArrayBuffer, mimeType: MimeType)
       data = JSON.stringify(data);
       return encoder.encode(data);
     case 'string':
-      if (mimeType === MimeType.JSON) {
+      if (mimeType === MimeType.JSON || mimeType === MimeType.LOT) {
         data = await _parseJSON(data);
         return encoder.encode(data);
       }
