@@ -61,8 +61,8 @@ export type RenderConfig = {
   renderer?: Renderer;
 }
 
-// Define mime type which player can load
-export enum MimeType {
+// Define file type which player can load
+export enum FileType {
   JSON = 'json',
   LOT = 'lot',
   JPG = 'jpg',
@@ -136,7 +136,7 @@ const _parseJSON = async (data: string): Promise<string> => {
   return data;
 }
 
-const _parseSrc = async (src: string | object | ArrayBuffer, mimeType: MimeType): Promise<Uint8Array> => {
+const _parseSrc = async (src: string | object | ArrayBuffer, fileType: FileType): Promise<Uint8Array> => {
   const encoder = new TextEncoder();
   let data = src;
 
@@ -149,7 +149,7 @@ const _parseSrc = async (src: string | object | ArrayBuffer, mimeType: MimeType)
       data = JSON.stringify(data);
       return encoder.encode(data);
     case 'string':
-      if (mimeType === MimeType.JSON || mimeType === MimeType.LOT) {
+      if (fileType === FileType.JSON || fileType === FileType.LOT) {
         data = await _parseJSON(data);
         return encoder.encode(data);
       }
@@ -224,11 +224,11 @@ export class LottiePlayer extends LitElement {
   public wasmUrl?: string;
 
   /**
-  * File mime type.
+  * File type.
   * @since 1.0
   */
-  @property({ type: MimeType })
-  public mimeType: MimeType = MimeType.JSON;
+  @property({ type: FileType })
+  public fileType: FileType = FileType.JSON;
 
   /**
   * Rendering configurations.
@@ -365,7 +365,7 @@ export class LottiePlayer extends LitElement {
     this._TVG = new _module.TvgLottieAnimation(engine, `#${this._canvas!.id}`);
 
     if (this.src) {
-      this.load(this.src, this.mimeType);
+      this.load(this.src, this.fileType);
     }
   }
 
@@ -431,7 +431,7 @@ export class LottiePlayer extends LitElement {
     }
 
     if (this.src) {
-      this.load(this.src, this.mimeType);
+      this.load(this.src, this.fileType);
     }
   }
 
@@ -452,7 +452,7 @@ export class LottiePlayer extends LitElement {
   }
 
   private _loadBytes(data: Uint8Array, rPath: string = ''): void {
-    const isLoaded = this._TVG.load(data, this.mimeType, this._canvas!.width, this._canvas!.height, rPath);
+    const isLoaded = this._TVG.load(data, this.fileType, this._canvas!.width, this._canvas!.height, rPath);
     if (!isLoaded) {
       throw new Error('Unable to load an image. Error: ', this._TVG.error());
     }
@@ -555,16 +555,16 @@ export class LottiePlayer extends LitElement {
   /**
    * Configure and load
    * @param src Lottie animation JSON data or URL to JSON.
-   * @param mimeType The MIME type of the data to be loaded, defaults to JSON
+   * @param fileType The file type of the data to be loaded, defaults to JSON
    * @since 1.0
    */
-  public async load(src: string | object, mimeType: MimeType = MimeType.JSON): Promise<void> {
+  public async load(src: string | object, fileType: FileType = FileType.JSON): Promise<void> {
     try {
       await this._init();
-      const bytes = await _parseSrc(src, mimeType);
+      const bytes = await _parseSrc(src, fileType);
       this.dispatchEvent(new CustomEvent(PlayerEvent.Ready));
 
-      this.mimeType = mimeType;
+      this.fileType = fileType;
       await this._loadBytes(bytes);
     } catch (err) {
       this.currentState = PlayerState.Error;
@@ -577,7 +577,7 @@ export class LottiePlayer extends LitElement {
    * @since 1.0
    */
   public play(): void {
-    if (this.mimeType !== MimeType.JSON && this.mimeType !== MimeType.LOT) {
+    if (this.fileType !== FileType.JSON && this.fileType !== FileType.LOT) {
       return;
     }
 
@@ -767,7 +767,7 @@ export class LottiePlayer extends LitElement {
       return;
     }
 
-    const bytes = await _parseSrc(src, MimeType.JSON);
+    const bytes = await _parseSrc(src, FileType.JSON);
     const isExported = this._TVG.save(bytes, 'gif');
     if (!isExported) {
       throw new Error('Unable to save. Error: ', this._TVG.error());
