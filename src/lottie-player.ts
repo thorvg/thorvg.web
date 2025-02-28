@@ -577,7 +577,7 @@ export class LottiePlayer extends LitElement {
    * @since 1.0
    */
   public play(): void {
-    if (this.mimeType !== MimeType.JSON) {
+    if (this.mimeType !== MimeType.JSON && this.mimeType !== MimeType.LOT) {
       return;
     }
 
