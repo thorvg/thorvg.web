@@ -228,7 +228,6 @@ export default function Home() {
       newAnimationList.push({
         name: _anim.split('/').pop()?.split('.')[0] || 'Unknown',
         lottieURL: `${urlPrefix}${_anim}`,
-        location: `Type: ${_anim.split('/').pop()?.split('.')[1] || 'Unknown'}`,
       });
     }
 
@@ -254,7 +253,6 @@ export default function Home() {
       return {
         name: name,
         lottieURL: `${urlPrefix}${_anim}`,
-        location: `Type: ${_anim.split('/').pop()?.split('.')[1] || 'Unknown'}`,
       };
     });
 
@@ -271,7 +269,6 @@ export default function Home() {
     const randomIndex = Math.floor(Math.random() * animationList.length);
     animationList[randomIndex].lottieURL = text;
     animationList[randomIndex].name = text.split('/').pop()?.split('.')[0] || 'Unknown';
-    animationList[randomIndex].location = `Type: ${text.split('/').pop()?.split('.')[1] || 'Unknown'}`;
     setAnimationList(animationList.slice());
 
     setTimeout(() => {
@@ -513,7 +510,6 @@ export default function Home() {
                 )
               }
               <h3 className={`mt-6 text-lg font-semibold leading-8 tracking-tight text-white max-w-[${size.width}px] overflow-hidden`}>{anim.name}</h3>
-              <p className={`text-sm leading-6 text-gray-500 max-w-[${size.width}px] overflow-hidden`}>{anim.location}</p>
             </li>
           ))}
         </ul>
