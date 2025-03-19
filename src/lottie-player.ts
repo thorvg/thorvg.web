@@ -763,18 +763,18 @@ export class LottiePlayer extends LitElement {
    * @since 1.0
    */
   public async save2gif(src: string): Promise<void> {
-    if (!this._TVG) {
-      return;
-    }
-
+    const saver = new _module.TvgLottieAnimation(Renderer.SW, `#${this._canvas!.id}`);
     const bytes = await _parseSrc(src, FileType.JSON);
-    const isExported = this._TVG.save(bytes, 'gif');
+    const isExported = saver.save(bytes, 'gif');
     if (!isExported) {
-      throw new Error('Unable to save. Error: ', this._TVG.error());
+      const error = saver.error();
+      saver.delete();
+      throw new Error('Unable to save. Error: ', error);
     }
 
     const data = _module.FS.readFile('output.gif');
     if (data.length < 6) {
+      saver.delete();
       throw new Error(
         `Unable to save the GIF data. The generated file size is invalid.`
       );
@@ -782,6 +782,7 @@ export class LottiePlayer extends LitElement {
 
     const blob = new Blob([data], {type: 'application/octet-stream'});
     _downloadFile('output.gif', blob);
+    saver.delete();
   }
 
   /**
