@@ -2,19 +2,9 @@
 import { Listbox, ListboxOption, ListboxOptions, Transition } from '@headlessui/react';
 import { Fragment, useEffect, useState } from 'react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
-import { DotLottieReact, setWasmUrl as setDotLottieWasmUrl } from '@lottiefiles/dotlottie-react';
-import { Player } from '@lottiefiles/react-lottie-player';
-import { isMobile } from 'react-device-detect';
-import reactLottiePlayerPkg from "@lottiefiles/react-lottie-player/package.json";
-import dotLottieReactPkg from "@lottiefiles/dotlottie-react/package.json";
-import dotLottieWasmUrl from "../node_modules/@lottiefiles/dotlottie-web/dist/dotlottie-player.wasm";
-import SkottiePlayer, { setCanvasKit } from '../components/SkottiePlayer';
-import skottieWasmUrl from "../node_modules/canvaskit-wasm/bin/full/canvaskit.wasm";
-import InitCanvasKit from 'canvaskit-wasm/bin/full/canvaskit';
+import { isDesktop } from 'react-device-detect';
 // import wasmUrl from "../node_modules/@thorvg/lottie-player/dist/thorvg-wasm.wasm";
 const wasmUrl = '/thorvg-wasm.wasm';
-
-setDotLottieWasmUrl(dotLottieWasmUrl);
 
 const animations = [
   '1643-exploding-star.json',
@@ -117,47 +107,42 @@ const animations = [
   'water_filling.json',
   'waves.json',
   'yarn_loading.json'
-];
+] as const;
 
-const urlPrefix = 'https://raw.githubusercontent.com/thorvg/thorvg/main/examples/resources/lottie/';
-
-const countOptions = [
-  { id: 0, name: 10 },
-  { id: 1, name: 20 },
-  { id: 2, name: 50 },
-  { id: 3, name: 100 },
-  //{ id: 4, name: 200 },
-  //{ id: 5, name: 500 },
-  //{ id: 6, name: 1000 },
-];
-
-const playerOptions = [
-  { id: 1, name: 'ThorVG(Software)' },
-  { id: 2, name: 'ThorVG(WebGPU)' },
-  //{ id: 3, name: `dotlottie-web@${dotLottieReactPkg.dependencies["@lottiefiles/dotlottie-web"]}` },
-  //{ id: 4, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
-  //{ id: 5, name: 'skia/skottie' },
-];
-
-function classNames(...classes: any) {
-  return classes.filter(Boolean).join(' ')
+enum PlayerOption {
+  ThorVG_Software = 'ThorVG(Software)',
+  ThorVG_WebGPU = 'ThorVG(WebGPU)',
 }
 
-function setQueryStringParameter(name: string, value: any) {
+interface Animation {
+  name: string;
+  lottieURL: string;
+}
+
+const DEFAULT_COUNT = 20;
+const EXAMPLE_URL_PREFIX = 'https://raw.githubusercontent.com/thorvg/thorvg/main/examples/resources/lottie/';
+const COUNT_OPTIONS = [10, 20, 50, 100] as const;
+
+function classNames(...classes: any) {
+  return classes.filter(Boolean).join(' ');
+}
+
+function setQueryStringParameter(name: string, value: string) {
   const params = new URLSearchParams(window.location.search);
   params.set(name, value);
   window.history.replaceState({}, '', decodeURIComponent(`${window.location.pathname}?${params}`));
 }
 
+let initialized = false;
 export default function Home() {
-  const size = isMobile ? { width: 150, height: 150 } : { width: 180, height: 180};
-  let initialized = false;
-  
-  const [count, setCount] = useState(countOptions[1]);
-  const [player, setPlayer] = useState(playerOptions[0]);
-  const [playerId, setPlayerId] = useState(1);
+  const size = isDesktop ? 180 : 150;
+
+  const [count, setCount] = useState(DEFAULT_COUNT);
+  const [player, setPlayer] = useState<PlayerOption>(PlayerOption.ThorVG_Software);
+  const [activePlayer, setActivePlayer] = useState<PlayerOption>(PlayerOption.ThorVG_Software);
+
   const [text, setText] = useState('');
-  const [animationList, setAnimationList] = useState<any>([]);
+  const [animationList, setAnimationList] = useState<Animation[]>([]);
 
   useEffect(() => {
     if (initialized) {
@@ -165,37 +150,30 @@ export default function Home() {
     }
     initialized = true;
 
+    let seed: string | null = null;
+    let count = DEFAULT_COUNT;
+    if (window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const playerString = params.get('player');
+      const countString = params.get('count');
+      seed = params.get('seed');
+
+      if (countString) {
+        count = parseInt(countString);
+        setCount(count);
+      }
+
+      if (playerString) {
+        const player = playerString as PlayerOption;
+        setPlayer(player);
+        setActivePlayer(player);
+      }
+    }
+
     // @ts-ignore
     import("/public/lottie-player.js");
 
-    let count: number = countOptions[1].name;
-    let seed: string = '';
-    let playerId = 1;
-
-    if (window.location.search) {
-      const params = new URLSearchParams(window.location.search);
-      const player = params.get('player');
-      count = parseInt(params.get('count') ?? '20');
-      seed = params.get('seed') ?? '';
-
-      if (count) {
-        const _count = countOptions.find((c) => c.name === count) || countOptions[1];
-        setCount(_count);
-      }
-
-      if (player) {
-        const _player = playerOptions.find((p) => p.name === player) || playerOptions[0];
-        playerId = _player.id;
-        setPlayer(_player);
-        setPlayerId(_player.id);
-      }
-    }
-    
-    setTimeout(async () => {
-      if (playerId === 4) {
-        await loadCanvasKit();
-      }
-
+    requestAnimationFrame(async () => {
       loadProfiler();
 
       if (seed) {
@@ -204,15 +182,8 @@ export default function Home() {
       }
 
       loadAnimationByCount(count);
-    }, 500);
-  }, []);
-
-  const loadCanvasKit = async () => {
-    const canvasKit = await InitCanvasKit({
-      locateFile: (_) => skottieWasmUrl,
     });
-    setCanvasKit(canvasKit);
-  }
+  }, []);
 
   const loadProfiler = () => {
     const script = document.createElement("script");
@@ -220,44 +191,44 @@ export default function Home() {
     document.body.appendChild(script);
   }
 
-  const loadAnimationByCount = async (_count = count.name) => {
+  const loadAnimationByCount = async (count = DEFAULT_COUNT) => {
     const newAnimationList = [];
 
-    for (let i = 0; i < _count; i++) {
+    for (let i = 0; i < count; i++) {
       const _anim = animations[Math.floor(Math.random() * animations.length)];
 
       newAnimationList.push({
         name: _anim.split('/').pop()?.split('.')[0] || 'Unknown',
-        lottieURL: `${urlPrefix}${_anim}`,
+        lottieURL: `${EXAMPLE_URL_PREFIX}${_anim}`,
       });
     }
 
-    // @ts-ignore
-    await setAnimationList([]);
-    await setAnimationList(newAnimationList);
-
+    setAnimationList([...newAnimationList]);
     saveCurrentSeed(newAnimationList);
   };
 
-  const saveCurrentSeed = (animationList: any[]) => {
-    const nameList = animationList.map((v: any) => v.name).join(',');
+  const saveCurrentSeed = (animationList: Animation[]) => {
+    const nameList = animationList.map((animation) => animation.name).join(',');
     const seed = btoa(nameList);
     setQueryStringParameter('seed', seed);
   }
 
   const loadSeed = (seed: string) => {
     const nameList = atob(seed).split(',');
-    console.log(nameList);
     const newAnimationList = nameList.map((name: string) => {
-      const _anim = animations.find((anim) => anim === `${name.trim()}.json`) || animations[0];
-
+      const anim = animations.find((anim) => anim === `${name.trim()}.json`) || animations[0];
       return {
         name: name,
-        lottieURL: `${urlPrefix}${_anim}`,
+        lottieURL: `${EXAMPLE_URL_PREFIX}${anim}`,
       };
     });
 
     setAnimationList(newAnimationList);
+  }
+
+  const setNewOption = () => {
+    setQueryStringParameter('seed', '');
+    window.location.reload();
   }
 
   const spawnAnimation = () => {
@@ -272,9 +243,18 @@ export default function Home() {
     animationList[randomIndex].name = text.split('/').pop()?.split('.')[0] || 'Unknown';
     setAnimationList(animationList.slice());
 
-    setTimeout(() => {
-      document.querySelector(`.${animationList[randomIndex].name}-${randomIndex}`)?.scrollIntoView({ behavior: 'smooth' });
-    }, 150);
+    requestAnimationFrame(() => {
+      const animationSelector = `.${animationList[randomIndex].name}-${randomIndex} > lottie-player`;
+      const targetPlayer = document.querySelector(animationSelector);
+
+      if (targetPlayer) {
+        targetPlayer.scrollIntoView({ behavior: 'smooth' });
+        // @ts-ignore
+        targetPlayer.destroy();
+        // @ts-ignore
+        targetPlayer.load(text);
+      }
+    });
   };
 
   return (
@@ -285,15 +265,15 @@ export default function Home() {
 
             <h1 className='text-justify text-center text-white leading-[52px] sm:block hidden'>Player: </h1>
 
-            <Listbox value={player} onChange={(v) => {
-              setPlayer(v);
-              setQueryStringParameter('player', v.name);
+            <Listbox value={player} onChange={(selectedPlayer) => {
+              setPlayer(selectedPlayer as PlayerOption);
+              setQueryStringParameter('player', selectedPlayer);
             }}>
       {({ open }) => (
         <>
           <div className="relative">
             <Listbox.Button className="relative w-full cursor-default rounded-md bg-white/5 py-3.5 pl-3 pr-10 text-left text-white shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
-              <span className="block truncate">{player.name}</span>
+              <span className="block truncate">{player}</span>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </span>
@@ -307,10 +287,10 @@ export default function Home() {
               leaveTo="opacity-0"
             >
               <ListboxOptions className="absolute w-full z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                {playerOptions.map((player) => (
+                {Object.values(PlayerOption).map((player) => (
                   <ListboxOption
-                    key={player.id}
-                    className={({ active }: any) =>
+                    key={player}
+                    className={({ active }: { active: boolean }) =>
                       classNames(
                         active ? 'bg-indigo-600 text-white' : 'text-gray-900',
                         'relative cursor-default select-none py-2 pl-3 pr-9'
@@ -321,7 +301,7 @@ export default function Home() {
                     {({ selected, active }) => (
                       <>
                         <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>
-                          {player.name}
+                          {player}
                         </span>
 
                         {selected ? (
@@ -345,15 +325,15 @@ export default function Home() {
       )}
     </Listbox>
 
-    <Listbox value={count} onChange={(v) => {
-      setCount(v);
-      setQueryStringParameter('count', v.name);
+    <Listbox value={count} onChange={(selectedCount) => {
+      setCount(selectedCount);
+      setQueryStringParameter('count', selectedCount.toString());
     }}>
       {({ open }) => (
         <>
           <div className="relative">
             <Listbox.Button className="relative w-full cursor-default rounded-md bg-white/5 py-3.5 pl-3 pr-10 text-left text-white shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
-              <span className="block truncate">{count.name}</span>
+              <span className="block truncate">{count}</span>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </span>
@@ -367,10 +347,10 @@ export default function Home() {
               leaveTo="opacity-0"
             >
               <ListboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                {countOptions.map((option) => (
+                {COUNT_OPTIONS.map((option) => (
                   <ListboxOption
-                    key={option.id}
-                    className={({ active }: any) =>
+                    key={option}
+                    className={({ active }: { active: boolean }) =>
                       classNames(
                         active ? 'bg-indigo-600 text-white' : 'text-gray-900',
                         'relative cursor-default select-none py-2 pl-3 pr-9'
@@ -381,10 +361,10 @@ export default function Home() {
                     {({ selected, active }) => (
                       <>
                         <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>
-                          {option.name}
+                          {option}
                         </span>
 
-                        {selected ? (
+                        {selected && (
                           <span
                             className={classNames(
                               active ? 'text-white' : 'text-indigo-600',
@@ -393,7 +373,7 @@ export default function Home() {
                           >
                             <CheckIcon className="h-5 w-5" aria-hidden="true" />
                           </span>
-                        ) : null}
+                        )}
                       </>
                     )}
                   </ListboxOption>
@@ -404,18 +384,15 @@ export default function Home() {
         </>
       )}
     </Listbox>
-              
-              <button
-                type="submit"
-                className="flex-none rounded-md bg-[#00deb5] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                onClick={() => {
-                  setQueryStringParameter('seed', '');
-                  window.location.reload();
-                }}
-              >
-                Set
-              </button>
-          </div>
+
+      <button
+        type="submit"
+        className="flex-none rounded-md bg-[#00deb5] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+        onClick={setNewOption}
+      >
+        Set
+      </button>
+      </div>
 
           <div className="mt-6 flex w-full gap-x-4">
               <label htmlFor="animation-url" className="sr-only">
@@ -446,71 +423,24 @@ export default function Home() {
           role="list"
           className="animation-list mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:mx-0 lg:max-w-none sm:grid-cols-4 xl:grid-cols-5 grid-cols-2"
         >
-          {animationList.map((anim: any, index: number) => (
-            <li key={`${anim.name}-${anim.lottieURL}-${playerId}-${index}`} className={`${anim.name}-${index} max-w-[${size.width}px]`}>
+          {animationList.map((anim: Animation, index: number) => (
+            <li key={`${anim.lottieURL}-${index}`} className={`${anim.name}-${index} max-w-[${size}px]`}>
               {
-                playerId == 1 &&
-                (
-                  <lottie-player 
-                    src={anim.lottieURL}
-                    background="transparent" 
-                    className="aspect-[14/13] w-full rounded-2xl object-cover"
-                    style={{width: size.width, height: size.height}}
-                    loop 
-                    autoplay
-                    wasmUrl={wasmUrl}
-                    renderConfig={JSON.stringify({enableDevicePixelRatio: true})}
-                  />
-                )
+                <lottie-player 
+                  src={anim.lottieURL}
+                  background="transparent" 
+                  className="aspect-[14/13] w-full rounded-2xl object-cover"
+                  style={{width: size, height: size}}
+                  loop 
+                  autoplay
+                  wasmUrl={wasmUrl}
+                  renderConfig={JSON.stringify({
+                    enableDevicePixelRatio: true,
+                    renderer: activePlayer === PlayerOption.ThorVG_Software ? 'sw' : 'wg',
+                  })}
+                />
               }
-              {
-                playerId == 2 &&
-                (
-                  <lottie-player 
-                    src={anim.lottieURL}
-                    background="transparent" 
-                    className="aspect-[14/13] w-full rounded-2xl object-cover"
-                    style={{width: size.width, height: size.height}}
-                    loop 
-                    autoplay
-                    wasmUrl={wasmUrl}
-                    renderConfig={JSON.stringify({
-                      enableDevicePixelRatio: true,
-                      renderer: 'wg'
-                    })}
-                  />
-                )
-              }
-              {
-                playerId === 3 && (
-                  <DotLottieReact
-                    src={anim.lottieURL as string}
-                    style={{width: size.width, height: size.height}}
-                    loop 
-                    autoplay
-                  />
-                )
-              }
-              {
-                playerId === 3 && (
-                  <Player
-                    autoplay
-                    loop
-                    src={anim.lottieURL}
-                    style={{ height: size.height, width: size.width }}
-                  ></Player>
-                )
-              }
-              {
-                playerId == 4 && (
-                  <SkottiePlayer
-                    lottieURL={anim.lottieURL}
-                    width={size.width}
-                    height={size.height}
-                  />
-                )
-              }
-              <h3 className={`mt-6 text-lg font-semibold leading-8 tracking-tight text-white max-w-[${size.width}px] overflow-hidden`}>{anim.name}</h3>
+              <h3 className={`mt-6 text-lg font-semibold leading-8 tracking-tight text-white max-w-[${size}px] overflow-hidden`}>{anim.name}</h3>
             </li>
           ))}
         </ul>
