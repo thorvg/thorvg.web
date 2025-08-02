@@ -27,7 +27,7 @@ elif [[ "$BACKEND" == "gl-lite" ]]; then
   sed "s|EMSDK:|$EMSDK|g" ./cross/wasm32_gl.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, png" -Dextra="" -Dthreads=false -Dbindings="wasm_beta" -Dpartial=false -Dengines="gl" -Dfile="false" --cross-file /tmp/.wasm_cross.txt build_wasm
 else
-  sed "s|EMSDK:|$EMSDK|g" ./cross/wasm32.txt > /tmp/.wasm_cross.txt
+  sed "s|EMSDK:|$EMSDK|g; s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts'|g" ./cross/wasm32.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="all" -Dsavers="all" -Dthreads=false -Dbindings="wasm_beta" -Dpartial=false -Dengines="all" --cross-file /tmp/.wasm_cross.txt build_wasm
 fi
 

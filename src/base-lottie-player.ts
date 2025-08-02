@@ -23,16 +23,14 @@
 import { html, PropertyValueMap, LitElement, type TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
 
-// @ts-ignore: WASM Glue code doesn't have type & Only available on build progress
-import Module from 'thorvg';
+import Module, { type MainModule, type TvgLottieAnimation } from '../dist/thorvg';
 
 type LottieJson = Map<PropertyKey, any>;
-type TvgModule = any;
 
 const THORVG_VERSION = '__THORVG_VERSION__';
 const DEFAULT_RENDERER = '__RENDERER__';
 const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg.wasm';
-export let wasmModule: any;
+export let wasmModule: MainModule | null = null;
 let _moduleRequested: boolean = false;
 
 // Define library version
@@ -181,6 +179,11 @@ const _initModule = async (engine: Renderer) => {
   }
 
   _initStatus = InitStatus.REQUESTED;
+
+  if(!wasmModule) {
+    return;
+  }
+
   while (true) {
     const res = wasmModule.init();
     switch (res) {
@@ -303,7 +306,7 @@ export class BaseLottiePlayer extends LitElement {
     return Float32Array.from(this.TVG?.size() || [0, 0]);
   }
 
-  protected TVG?: TvgModule;
+  protected TVG: TvgLottieAnimation | null = null;
   protected canvas?: HTMLCanvasElement;
   protected config?: RenderConfig;
   private _imageData?: ImageData;
@@ -385,7 +388,7 @@ export class BaseLottiePlayer extends LitElement {
       height -= bottom - windowHeight;
     }
 
-    this.TVG.viewport(x, y, width, height);
+    this.TVG!.viewport(x, y, width, height);
   }
 
   private _observerCallback(entries: IntersectionObserverEntry[]) {
@@ -440,6 +443,10 @@ export class BaseLottiePlayer extends LitElement {
   }
 
   private _loadBytes(data: Uint8Array): void {
+    if (!this.TVG) {
+      throw new Error(`TVG is not initialized`);
+    }
+
     const isLoaded = this.TVG.load(data, this.fileType, this.canvas!.width, this.canvas!.height);
     if (!isLoaded) {
       throw new Error(`Unable to load an image. Error: ${this.TVG.error()}`);
@@ -459,6 +466,10 @@ export class BaseLottiePlayer extends LitElement {
   }
 
   private _render(): void {
+    if (!this.TVG) {
+      return;
+    }
+
     if (this.config?.enableDevicePixelRatio) {
       const dpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
       const { width, height } = this.canvas!.getBoundingClientRect();
@@ -481,7 +492,7 @@ export class BaseLottiePlayer extends LitElement {
     }
 
     const buffer = this.TVG.render();
-    const clampedBuffer = new Uint8ClampedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    const clampedBuffer = new Uint8ClampedArray(buffer, 0, buffer.byteLength);
     if (clampedBuffer.length < 1) {
       return;
     }
@@ -491,6 +502,10 @@ export class BaseLottiePlayer extends LitElement {
   }
 
   private async _update(): Promise<boolean> {
+    if (!this.TVG) {
+      return false;
+    }
+
     if (this.currentState !== PlayerState.Playing) {
       return false;
     }
@@ -535,6 +550,10 @@ export class BaseLottiePlayer extends LitElement {
   }
 
   private _frame(curFrame: number): void {
+    if (!this.TVG) {
+      return;
+    }
+    
     this.pause();
     this.currentFrame = curFrame;
     this.TVG.frame(curFrame);
@@ -565,6 +584,10 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   public play(): void {
+    if (!this.TVG) {
+      return;
+    }
+
     if (this.fileType !== FileType.JSON && this.fileType !== FileType.LOT) {
       return;
     }
@@ -672,6 +695,10 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   public term(): void {
+    if (!wasmModule) {
+      return;
+    }
+
     wasmModule.term();
     wasmModule = null;
   }

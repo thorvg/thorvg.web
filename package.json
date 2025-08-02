@@ -30,7 +30,8 @@
     "access": "public"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "!dist/thorvg.d.ts"
   ],
   "types": "./dist/lottie-player.d.ts",
   "scripts": {

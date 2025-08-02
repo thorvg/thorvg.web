@@ -3,7 +3,7 @@
 echo "EMSDK: $EMSDK"
 
 rm -rf build_wasm && sh ./wasm_build.sh $EMSDK/
-mv thorvg/build_wasm/src/bindings/wasm/thorvg.{wasm,js} ./dist
+mv thorvg/build_wasm/src/bindings/wasm/thorvg.{wasm,js,d.ts} ./dist
 
 rm -rf build_wasm && sh ./wasm_build.sh sw $EMSDK/
 mkdir -p ./dist/sw
