@@ -19,7 +19,7 @@
   "types": "./dist/lottie-player.d.ts",
   "scripts": {
     "build": "npm run clean && npm run copy:wasm && npm run copy:js && THORVG_VERSION=$(sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//') rollup -c --bundleConfigAsCjs && rm -rf ./dist/thorvg-wasm.js",
-    "build:watch": "npm run clean && npm run copy:wasm && rollup -c --bundleConfigAsCjs --watch",
+    "build:watch": "npm run clean && npm run copy:wasm && npm run copy:js && THORVG_VERSION=$(sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//') rollup -c --bundleConfigAsCjs --watch",
     "copy:wasm": "cp ./thorvg/build_wasm/src/bindings/wasm/thorvg-wasm.wasm ./dist",
     "copy:js": "cp ./thorvg/build_wasm/src/bindings/wasm/thorvg-wasm.js ./dist",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
