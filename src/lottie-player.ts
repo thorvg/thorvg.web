@@ -25,13 +25,14 @@ import { customElement, property } from 'lit/decorators.js';
 
 // @ts-ignore: WASM Glue code doesn't have type & Only available on build progress
 import Module from '../dist/thorvg-wasm';
+import type { MainModule, TvgLottieAnimation } from '../emit_tsd/src/bindings/wasm/thorvg-wasm';
 import { THORVG_VERSION } from './version';
 
 type LottieJson = Map<PropertyKey, any>;
-type TvgModule = any;
+type TvgModule = TvgLottieAnimation;
 
 const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg-wasm.wasm';
-let _module: any;
+let _module: MainModule | null = null;
 let _moduleRequested: boolean = false;
 
 // Define library version
@@ -190,7 +191,7 @@ const _initModule = async (engine: Renderer) => {
 
   _initStatus = InitStatus.REQUESTED;
   while (true) {
-    const res = _module.init();
+    const res = _module!.init();
     switch (res) {
       case 0:
         _initStatus = InitStatus.INITIALIZED;
@@ -319,7 +320,7 @@ export class LottiePlayer extends LitElement {
     return Float32Array.from(this._TVG?.size() || [0, 0]);
   }
 
-  private _TVG?: TvgModule;
+  private _TVG: TvgModule | null = null;
   private _canvas?: HTMLCanvasElement;
   private _imageData?: ImageData;
   private _beginTime: number = Date.now();
@@ -365,7 +366,7 @@ export class LottiePlayer extends LitElement {
       return;
     }
 
-    this._TVG = new _module.TvgLottieAnimation(engine, `#${this._canvas!.id}`);
+    this._TVG = new _module!.TvgLottieAnimation(engine, `#${this._canvas!.id}`);
 
     if (this.src) {
       this.load(this.src, this.fileType);
@@ -400,7 +401,7 @@ export class LottiePlayer extends LitElement {
       height -= bottom - windowHeight;
     }
 
-    this._TVG.viewport(x, y, width, height);
+    this._TVG!.viewport(x, y, width, height);
   }
 
   private _observerCallback(entries: IntersectionObserverEntry[]) {
@@ -455,9 +456,9 @@ export class LottiePlayer extends LitElement {
   }
 
   private _loadBytes(data: Uint8Array): void {
-    const isLoaded = this._TVG.load(data, this.fileType, this._canvas!.width, this._canvas!.height);
+    const isLoaded = this._TVG!.load(data, this.fileType, this._canvas!.width, this._canvas!.height);
     if (!isLoaded) {
-      throw new Error(`Unable to load an image. Error: ${this._TVG.error()}`);
+      throw new Error(`Unable to load an image. Error: ${this._TVG!.error()}`);
     }
 
     this._render();
@@ -481,9 +482,9 @@ export class LottiePlayer extends LitElement {
       this._canvas!.height = height * dpr;
     }
 
-    this._TVG.resize(this._canvas!.width, this._canvas!.height);
+    this._TVG!.resize(this._canvas!.width, this._canvas!.height);
     this._viewport();
-    const isUpdated = this._TVG.update();
+    const isUpdated = this._TVG!.update();
 
     if (!isUpdated) {
       return;
@@ -491,11 +492,11 @@ export class LottiePlayer extends LitElement {
 
     // webgpu & webgl
     if (this.renderConfig?.renderer === Renderer.WG || this.renderConfig?.renderer === Renderer.GL) {
-      this._TVG.render();
+      this._TVG!.render();
       return;
     }
 
-    const buffer = this._TVG.render();
+    const buffer = this._TVG!.render();
     const clampedBuffer = new Uint8ClampedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength);
     if (clampedBuffer.length < 1) {
       return;
@@ -510,7 +511,7 @@ export class LottiePlayer extends LitElement {
       return false;
     }
 
-    const duration = this._TVG.duration();
+    const duration = this._TVG!.duration();
     const currentTime = Date.now() / 1000;
     this.currentFrame = (currentTime - this._beginTime) / duration * this.totalFrame * this.speed;
     if (this.direction === -1) {
@@ -546,13 +547,13 @@ export class LottiePlayer extends LitElement {
         frame: this.currentFrame,
       },
     }));
-    return this._TVG.frame(this.currentFrame);
+    return this._TVG!.frame(this.currentFrame);
   }
 
   private _frame(curFrame: number): void {
     this.pause();
     this.currentFrame = curFrame;
-    this._TVG.frame(curFrame);
+    this._TVG!.frame(curFrame);
   }
 
   /**
@@ -580,6 +581,9 @@ export class LottiePlayer extends LitElement {
    * @since 1.0
    */
   public play(): void {
+    if (!this._TVG) {
+      return;
+    }
     if (this.fileType !== FileType.JSON && this.fileType !== FileType.LOT) {
       return;
     }
@@ -687,6 +691,10 @@ export class LottiePlayer extends LitElement {
    * @since 1.0
    */
   public term(): void {
+    if (!_module) {
+      return;
+    }
+
     _module.term();
     _module = null;
   }
@@ -766,6 +774,10 @@ export class LottiePlayer extends LitElement {
    * @since 1.0
    */
   public async save2gif(src: string): Promise<void> {
+    if (!_module) {
+      throw new Error(`Unable to save. Module is not initialized.`);
+    }
+
     const saver = new _module.TvgLottieAnimation(Renderer.SW, `#${this._canvas!.id}`);
     const bytes = await _parseSrc(src, FileType.JSON);
     const isExported = saver.save(bytes, 'gif');
