@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "ThorVG Web - Performance Test",
-  description: "Lottie animation performance tester accross another web players",
+  title: 'ThorVG Web - Performance Test',
+  description: 'Lottie animation performance tester accross another web players',
 };
 
 export default function RootLayout({

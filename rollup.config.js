@@ -1,32 +1,32 @@
-import { swc } from "rollup-plugin-swc3";
-import { dts } from "rollup-plugin-dts";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
-import commonjs from "@rollup/plugin-commonjs";
-import { terser } from "rollup-plugin-terser";
+import { swc } from 'rollup-plugin-swc3';
+import { dts } from 'rollup-plugin-dts';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import { terser } from 'rollup-plugin-terser';
 import nodePolyfills from 'rollup-plugin-polyfill-node';
 import bakedEnv from 'rollup-plugin-baked-env';
 import pkg from './package.json';
 
 const name = 'lottie-player';
 const globals = {
-  url: "url",
-  lit: "lit",
-  uuid: "uuid",
-  "lit/decorators.js": "lit/decorators.js",
+  url: 'url',
+  lit: 'lit',
+  uuid: 'uuid',
+  'lit/decorators.js': 'lit/decorators.js',
 };
 
 export default [
   {
-    input: "./src/lottie-player.ts",
+    input: './src/lottie-player.ts',
     treeshake: {
       moduleSideEffects: false,
       propertyReadSideEffects: false,
-      tryCatchDeoptimization: false
+      tryCatchDeoptimization: false,
     },
     output: [
       {
         file: './dist/lottie-player.js',
-        format: "umd",
+        format: 'umd',
         name,
         minifyInternalExports: true,
         inlineDynamicImports: true,
@@ -37,7 +37,7 @@ export default [
       {
         file: pkg.main,
         name,
-        format: "cjs",
+        format: 'cjs',
         minifyInternalExports: true,
         inlineDynamicImports: true,
         sourcemap: true,
@@ -45,7 +45,7 @@ export default [
       },
       {
         file: pkg.module,
-        format: "esm",
+        format: 'esm',
         name,
         inlineDynamicImports: true,
         sourcemap: true,
@@ -56,21 +56,21 @@ export default [
       bakedEnv({ THORVG_VERSION: process.env.THORVG_VERSION }),
       nodePolyfills(),
       commonjs({
-        include: /node_modules/
+        include: /node_modules/,
       }),
       swc({
         include: /\.[mc]?[jt]sx?$/,
         exclude: /node_modules/,
-        tsconfig: "tsconfig.json",
+        tsconfig: 'tsconfig.json',
         jsc: {
           parser: {
-            syntax: "typescript",
+            syntax: 'typescript',
             tsx: false,
             decorators: true,
             declaration: true,
             dynamicImport: true,
           },
-          target: "esnext",
+          target: 'esnext',
         },
       }),
       nodeResolve(),
@@ -79,7 +79,7 @@ export default [
           pure_getters: true,
           passes: 3,
           drop_console: true,
-          drop_debugger: true
+          drop_debugger: true,
         },
         mangle: true,
         output: {
@@ -89,16 +89,14 @@ export default [
     ],
   },
   {
-    input: "./src/lottie-player.ts",
+    input: './src/lottie-player.ts',
     treeshake: true,
     output: [
       {
         file: './dist/lottie-player.d.ts',
-        format: "esm",
-      }
+        format: 'esm',
+      },
     ],
-    plugins: [
-      dts(),
-    ],
-  }
+    plugins: [dts()],
+  },
 ];

@@ -1,6 +1,7 @@
 [![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player)
 
 # ThroVG for Web
+
 <p align="center">
   <img width="800" height="auto" src="https://github.com/thorvg/thorvg/blob/main/res/logo/512/thorvg-banner.png">
 </p>
@@ -12,23 +13,26 @@ A Lottie Player which uses [ThorVG](https://github.com/thorvg/thorvg) as a rende
 ## Installation
 
 - Import from CDN
+
 ```html
 <script src="https://unpkg.com/@thorvg/lottie-player@latest/dist/lottie-player.js"></script>
 ```
 
 - Install from [NPM](https://www.npmjs.com/package/@thorvg/lottie-player)
+
 ```sh
 npm install @thorvg/lottie-player
 ```
 
 ## Usage
+
 ### With HTML (Basic Usage)
 
 Once you import from CDN, you can access `<lottie-player/>`
 
 ```html
-<lottie-player 
-  autoPlay 
+<lottie-player
+  autoPlay
   loop
   mode="normal"
   src="https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json"
@@ -58,31 +62,33 @@ declare namespace JSX {
 ```
 
 Then you will be able to use this as same as above
+
 ```js
 import '@thorvg/lottie-player';
 
-<lottie-player 
-  autoPlay 
+<lottie-player
+  autoPlay
   loop
   mode="normal"
   src="https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json"
   style="width: 500px; height: 500px;"
->
-</lottie-player>
+></lottie-player>;
 ```
 
 ### With SSR Framework
+
 We should be careful when using on SSR frameworks such as NextJS, NuxtJS and Svelte, as it means the library must to be rendered on browser/client side.
 
 - NextJS
+
 ```ts
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 export default function Home() {
   // ...
 
   useEffect(() => {
-    import("@thorvg/lottie-player");
+    import('@thorvg/lottie-player');
   });
 
   // ...
@@ -90,21 +96,21 @@ export default function Home() {
 ```
 
 - NuxtJS
+
 ```html
-<template>
-  {/* ... */}
-</template>
+<template> {/* ... */} </template>
 
 <script>
   export default {
     mounted() {
-      import("@thorvg/lottie-player");
-    }
-  }
+      import('@thorvg/lottie-player');
+    },
+  };
 </script>
 ```
 
 - Svelte
+
 ```html
 <script>
   import { onMount } from 'svelte';
@@ -116,18 +122,19 @@ export default function Home() {
 ```
 
 ## API
+
 ### Properties
 
-| Property | Description | Type | Default Value | Required |
-| --- | --- | --- | --- | --- |
-| src | A graphic resource to play. It could be an internal/external URL or JSON string for Lottie. | string | undefined | Y |
-| speed | Animation speed (for Lottie) | number | 1 | N |
-| autoplay | When set to true, automatically plays the animation on loading it (for Lottie) | boolean | false | N |
-| count | Number of times to loop the animation | number | undefined | N |
-| loop | When set to true, loops the animation. The count property defines the number of times to loop the animation. Setting the count property to 0 and setting the loop to true, loops the animation indefinitely. | boolean | false | N |
-| direction | Direction of the animation. Set to 1 to play the animation forward or set to -1 to play it backward. | number (1 or -1) | 1 | N |
-| mode | Play mode. Setting the mode to PlayMode.Bounce plays the animation in an indefinite cycle, forwards and then backwards. | PlayMode | PlayMode.Normal | N |
-| intermission | Duration (in milliseconds) to pause before playing each cycle in a looped animation. Set this parameter to 0 (no pause) or any positive number. | number | 1 | N |
+| Property     | Description                                                                                                                                                                                                  | Type             | Default Value   | Required |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | --------------- | -------- |
+| src          | A graphic resource to play. It could be an internal/external URL or JSON string for Lottie.                                                                                                                  | string           | undefined       | Y        |
+| speed        | Animation speed (for Lottie)                                                                                                                                                                                 | number           | 1               | N        |
+| autoplay     | When set to true, automatically plays the animation on loading it (for Lottie)                                                                                                                               | boolean          | false           | N        |
+| count        | Number of times to loop the animation                                                                                                                                                                        | number           | undefined       | N        |
+| loop         | When set to true, loops the animation. The count property defines the number of times to loop the animation. Setting the count property to 0 and setting the loop to true, loops the animation indefinitely. | boolean          | false           | N        |
+| direction    | Direction of the animation. Set to 1 to play the animation forward or set to -1 to play it backward.                                                                                                         | number (1 or -1) | 1               | N        |
+| mode         | Play mode. Setting the mode to PlayMode.Bounce plays the animation in an indefinite cycle, forwards and then backwards.                                                                                      | PlayMode         | PlayMode.Normal | N        |
+| intermission | Duration (in milliseconds) to pause before playing each cycle in a looped animation. Set this parameter to 0 (no pause) or any positive number.                                                              | number           | 1               | N        |
 
 ### Events
 
@@ -141,19 +148,18 @@ player.addEventListener('load', () => {
 });
 ```
 
-| Name | Description |
-| --- | --- |
-| load | A graphic resource is loaded |
-| error | An animation data can’t be parsed. |
-| ready | Animation data is loaded and player is ready |
-| play | Animation starts playing |
-| pause | Animation is paused |
-| stop | Animation is stopped |
-| freeze | Animation is paused due to player being invisible |
-| loop | An animation loop is completed |
-| complete | Animation is complete (all loops completed) |
-| frame | A new frame is entered |
-
+| Name     | Description                                       |
+| -------- | ------------------------------------------------- |
+| load     | A graphic resource is loaded                      |
+| error    | An animation data can’t be parsed.                |
+| ready    | Animation data is loaded and player is ready      |
+| play     | Animation starts playing                          |
+| pause    | Animation is paused                               |
+| stop     | Animation is stopped                              |
+| freeze   | Animation is paused due to player being invisible |
+| loop     | An animation loop is completed                    |
+| complete | Animation is complete (all loops completed)       |
+| frame    | A new frame is entered                            |
 
 ### Methods
 
@@ -235,7 +241,6 @@ player.addEventListener('load', () => {
 
 **Purpose** : Set animation direction
 
-
 **Parameters**
 | Name | Type | Description
 | --- | --- | --- |
@@ -248,7 +253,6 @@ player.addEventListener('load', () => {
 **Method** : `setSpeed(value: number)`
 
 **Purpose** : Set speed of animation
-
 
 **Parameters**
 | Name | Type | Description
@@ -282,7 +286,6 @@ player.addEventListener('load', () => {
 | value | `ExportableType` | File type to export
 
 **Return Type** : `void`
-
 
 ---
 

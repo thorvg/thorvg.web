@@ -37,7 +37,7 @@ let _moduleRequested: boolean = false;
 
 // Define library version
 export interface LibraryVersion {
-  THORVG_VERSION: string
+  THORVG_VERSION: string;
 }
 
 // Define renderer type
@@ -59,7 +59,7 @@ export enum InitStatus {
 export type RenderConfig = {
   enableDevicePixelRatio?: boolean;
   renderer?: Renderer;
-}
+};
 
 // Define file type which player can load
 export enum FileType {
@@ -77,7 +77,7 @@ export enum PlayerState {
   Loading = 'loading', // Player is loading
   Paused = 'paused', // Player is paused
   Playing = 'playing', // Player is playing
-  Stopped = 'stopped',  // Player is stopped
+  Stopped = 'stopped', // Player is stopped
   Frozen = 'frozen', // Player is paused due to player being invisible
 }
 
@@ -114,16 +114,14 @@ const _parseLottieFromURL = async (url: string): Promise<LottieJson> => {
 
     return json;
   } catch (err) {
-    throw new Error(
-      `An error occurred while trying to load the Lottie file from URL`
-    );
+    throw new Error(`An error occurred while trying to load the Lottie file from URL`);
   }
-}
+};
 
 const _parseImageFromURL = async (url: string): Promise<ArrayBuffer> => {
   const response = await fetch(url);
   return response.arrayBuffer();
-}
+};
 
 const _parseJSON = async (data: string): Promise<string> => {
   try {
@@ -134,9 +132,12 @@ const _parseJSON = async (data: string): Promise<string> => {
   }
 
   return data;
-}
+};
 
-const _parseSrc = async (src: string | object | ArrayBuffer, fileType: FileType): Promise<Uint8Array> => {
+const _parseSrc = async (
+  src: string | object | ArrayBuffer,
+  fileType: FileType
+): Promise<Uint8Array> => {
   const encoder = new TextEncoder();
   let data = src;
 
@@ -159,10 +160,10 @@ const _parseSrc = async (src: string | object | ArrayBuffer, fileType: FileType)
     default:
       throw new Error('Invalid src type');
   }
-}
+};
 
 const _wait = (timeToDelay: number) => {
-  return new Promise((resolve) => setTimeout(resolve, timeToDelay))
+  return new Promise(resolve => setTimeout(resolve, timeToDelay));
 };
 
 const _downloadFile = (fileName: string, blob: Blob) => {
@@ -172,7 +173,7 @@ const _downloadFile = (fileName: string, blob: Blob) => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-}
+};
 
 let _initStatus = InitStatus.IDLE;
 const _initModule = async (engine: Renderer) => {
@@ -205,14 +206,14 @@ const _initModule = async (engine: Renderer) => {
       default:
     }
   }
-}
+};
 
 @customElement('lottie-player')
 export class LottiePlayer extends LitElement {
   /**
-  * Lottie animation JSON data or URL to JSON.
-  * @since 1.0
-  */
+   * Lottie animation JSON data or URL to JSON.
+   * @since 1.0
+   */
   @property({ type: String })
   public src?: string;
 
@@ -224,16 +225,16 @@ export class LottiePlayer extends LitElement {
   public wasmUrl?: string;
 
   /**
-  * File type.
-  * @since 1.0
-  */
+   * File type.
+   * @since 1.0
+   */
   @property({ type: FileType })
   public fileType: FileType = FileType.JSON;
 
   /**
-  * Rendering configurations.
-  * @since 1.0
-  */
+   * Rendering configurations.
+   * @since 1.0
+   */
   @property({ type: Object })
   public renderConfig?: RenderConfig;
 
@@ -341,7 +342,7 @@ export class LottiePlayer extends LitElement {
             return this.wasmUrl || _wasmUrl;
           }
           return prefix + path;
-        }
+        },
       });
     }
 
@@ -415,9 +416,11 @@ export class LottiePlayer extends LitElement {
     }
   }
 
-  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+  protected firstUpdated(
+    _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
+  ): void {
     this._canvas = this.querySelector('.thorvg') as HTMLCanvasElement;
-    
+
     this._canvas.id = `thorvg-${uuidv4().replaceAll('-', '').substring(0, 6)}`;
     this._canvas.width = this._canvas.offsetWidth;
     this._canvas.height = this._canvas.offsetHeight;
@@ -440,7 +443,7 @@ export class LottiePlayer extends LitElement {
     return this;
   }
 
-  private async _animLoop(){
+  private async _animLoop() {
     if (!this._TVG) {
       return;
     }
@@ -452,14 +455,20 @@ export class LottiePlayer extends LitElement {
   }
 
   private _loadBytes(data: Uint8Array, rPath: string = ''): void {
-    const isLoaded = this._TVG.load(data, this.fileType, this._canvas!.width, this._canvas!.height, rPath);
+    const isLoaded = this._TVG.load(
+      data,
+      this.fileType,
+      this._canvas!.width,
+      this._canvas!.height,
+      rPath
+    );
     if (!isLoaded) {
       throw new Error('Unable to load an image. Error: ', this._TVG.error());
     }
 
     this._render();
     this.dispatchEvent(new CustomEvent(PlayerEvent.Load));
-    
+
     if (this.autoPlay) {
       this.play();
     }
@@ -472,7 +481,7 @@ export class LottiePlayer extends LitElement {
 
   private _render(): void {
     if (this.renderConfig?.enableDevicePixelRatio) {
-      const dpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
+      const dpr = 1 + (window.devicePixelRatio - 1) * 0.75;
       const { width, height } = this._canvas!.getBoundingClientRect();
       this._canvas!.width = width * dpr;
       this._canvas!.height = height * dpr;
@@ -487,13 +496,20 @@ export class LottiePlayer extends LitElement {
     }
 
     // webgpu & webgl
-    if (this.renderConfig?.renderer === Renderer.WG || this.renderConfig?.renderer === Renderer.GL) {
+    if (
+      this.renderConfig?.renderer === Renderer.WG ||
+      this.renderConfig?.renderer === Renderer.GL
+    ) {
       this._TVG.render();
       return;
     }
 
     const buffer = this._TVG.render();
-    const clampedBuffer = new Uint8ClampedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    const clampedBuffer = new Uint8ClampedArray(
+      buffer.buffer,
+      buffer.byteOffset,
+      buffer.byteLength
+    );
     if (clampedBuffer.length < 1) {
       return;
     }
@@ -509,7 +525,7 @@ export class LottiePlayer extends LitElement {
 
     const duration = this._TVG.duration();
     const currentTime = Date.now() / 1000;
-    this.currentFrame = (currentTime - this._beginTime) / duration * this.totalFrame * this.speed;
+    this.currentFrame = ((currentTime - this._beginTime) / duration) * this.totalFrame * this.speed;
     if (this.direction === -1) {
       this.currentFrame = this.totalFrame - this.currentFrame;
     }
@@ -518,7 +534,11 @@ export class LottiePlayer extends LitElement {
       (this.direction === 1 && this.currentFrame >= this.totalFrame) ||
       (this.direction === -1 && this.currentFrame <= 0)
     ) {
-      const totalCount = this.count ? this.mode === PlayMode.Bounce ? this.count * 2 : this.count : 0;
+      const totalCount = this.count
+        ? this.mode === PlayMode.Bounce
+          ? this.count * 2
+          : this.count
+        : 0;
       if (this.loop || (totalCount && this._counter < totalCount)) {
         if (this.mode === PlayMode.Bounce) {
           this.direction = this.direction === 1 ? -1 : 1;
@@ -538,11 +558,13 @@ export class LottiePlayer extends LitElement {
       this.currentState = PlayerState.Stopped;
     }
 
-    this.dispatchEvent(new CustomEvent(PlayerEvent.Frame, {
-      detail: {
-        frame: this.currentFrame,
-      },
-    }));
+    this.dispatchEvent(
+      new CustomEvent(PlayerEvent.Frame, {
+        detail: {
+          frame: this.currentFrame,
+        },
+      })
+    );
     return this._TVG.frame(this.currentFrame);
   }
 
@@ -674,7 +696,7 @@ export class LottiePlayer extends LitElement {
       this._observer.disconnect();
       this._observer = undefined;
     }
-    
+
     this.dispatchEvent(new CustomEvent(PlayerEvent.Destroyed));
     this.remove();
   }
@@ -775,12 +797,10 @@ export class LottiePlayer extends LitElement {
     const data = _module.FS.readFile('output.gif');
     if (data.length < 6) {
       saver.delete();
-      throw new Error(
-        `Unable to save the GIF data. The generated file size is invalid.`
-      );
+      throw new Error(`Unable to save the GIF data. The generated file size is invalid.`);
     }
 
-    const blob = new Blob([data], {type: 'application/octet-stream'});
+    const blob = new Blob([data], { type: 'application/octet-stream' });
     _downloadFile('output.gif', blob);
     saver.delete();
   }
@@ -796,8 +816,6 @@ export class LottiePlayer extends LitElement {
   }
 
   public render(): TemplateResult {
-    return html`
-      <canvas class="thorvg" style="width: 100%; height: 100%;" />
-    `;
+    return html` <canvas class="thorvg" style="width: 100%; height: 100%;" /> `;
   }
 }

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { CanvasKit } from "canvaskit-wasm";
+import { useEffect, useRef, useState } from 'react';
+import { CanvasKit } from 'canvaskit-wasm';
 import { v4 as uuidv4 } from 'uuid';
 
 let canvasKit: CanvasKit | undefined = undefined;
@@ -8,7 +8,7 @@ export const setCanvasKit = (ck: CanvasKit) => {
     return;
   }
   canvasKit = ck;
-}
+};
 
 interface Props {
   lottieURL: string;
@@ -16,7 +16,7 @@ interface Props {
   height: number;
 }
 
-export default function Skottie ({ lottieURL, width, height }: Props) {
+export default function Skottie({ lottieURL, width, height }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [id, setId] = useState<string>('');
   let initialized = false;
@@ -43,7 +43,7 @@ export default function Skottie ({ lottieURL, width, height }: Props) {
     const bounds = canvasKit!.LTRBRect(0, 0, width * dpr, height * dpr);
     canvasRef.current!.width = width * dpr;
     canvasRef.current!.height = height * dpr;
-    
+
     let beginTime = Date.now() / 1000;
     let surface = canvasKit!.MakeSWCanvasSurface(id);
     let canvas = surface!.getCanvas();
@@ -66,12 +66,10 @@ export default function Skottie ({ lottieURL, width, height }: Props) {
         surface?.flush();
       }
       window.requestAnimationFrame(drawFrame);
-    };
+    }
 
     window.requestAnimationFrame(drawFrame);
-  }
+  };
 
-  return (
-    <canvas id={id} ref={canvasRef} style={{ width, height }} />
-  );
+  return <canvas id={id} ref={canvasRef} style={{ width, height }} />;
 }
