@@ -25,7 +25,9 @@
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint ./src --ext .ts,.tsx,.js",
-    "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix"
+    "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
+    "format": "prettier --write \"**/*.{html,css,ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{html,css,ts,tsx,js,jsx,json.md}\""
   },
   "repository": {
     "type": "git",
@@ -55,6 +57,7 @@
     "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-wc": "^2.0.4",
+    "prettier": "^3.6.2",
     "rollup": "^4.6.0",
     "rollup-plugin-baked-env": "^1.0.1",
     "rollup-plugin-dts": "^6.1.0",

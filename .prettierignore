@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+yarn.lock
+package-lock.json
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+
+# ThorVG specific
+thorvg/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Logs
+*.log
+
+# Coverage reports
+coverage/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# WebAssembly files
+*.wasm
+
+# Public files
+public/
