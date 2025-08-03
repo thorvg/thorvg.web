@@ -279,11 +279,11 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-gray-900 pt-4 pb-24 sm:pb-32 sm:pt-8 pt-12">
+    <div className="bg-gray-900 pb-24 pt-12 pt-4 sm:pb-32 sm:pt-8">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:mx-0">
-          <div className="mt-6 flex w-full gap-x-4 align-middle flex-row">
-            <h1 className="text-justify text-center text-white leading-[52px] sm:block hidden">
+          <div className="mt-6 flex w-full flex-row gap-x-4 align-middle">
+            <h1 className="hidden text-center text-justify leading-[52px] text-white sm:block">
               Player:{' '}
             </h1>
 
@@ -311,7 +311,7 @@ export default function Home() {
                       leaveFrom="opacity-100"
                       leaveTo="opacity-0"
                     >
-                      <ListboxOptions className="absolute w-full z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                      <ListboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                         {playerOptions.map(player => (
                           <ListboxOption
                             key={player.id}
@@ -462,7 +462,7 @@ export default function Home() {
         </div>
         <ul
           role="list"
-          className="animation-list mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:mx-0 lg:max-w-none sm:grid-cols-4 xl:grid-cols-5 grid-cols-2"
+          className="animation-list mx-auto mt-20 grid max-w-2xl grid-cols-1 grid-cols-2 gap-x-8 gap-y-14 sm:grid-cols-2 sm:grid-cols-4 lg:mx-0 lg:max-w-none xl:grid-cols-5"
         >
           {animationList.map((anim: any, index: number) => (
             <li
