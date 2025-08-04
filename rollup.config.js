@@ -11,7 +11,6 @@ const name = 'lottie-player';
 const globals = {
   url: "url",
   lit: "lit",
-  uuid: "uuid",
   "lit/decorators.js": "lit/decorators.js",
 };
 
