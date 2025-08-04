@@ -27,7 +27,7 @@
     "lint": "eslint ./src --ext .ts,.tsx,.js",
     "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
     "format": "prettier --write \"**/*.{html,css,ts,tsx,js,jsx,json,md}\"",
-    "format:check": "prettier --check \"**/*.{html,css,ts,tsx,js,jsx,json.md}\""
+    "format:check": "prettier --check \"**/*.{html,css,ts,tsx,js,jsx,json,md}\""
   },
   "repository": {
     "type": "git",
