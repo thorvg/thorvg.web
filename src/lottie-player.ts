@@ -454,7 +454,7 @@ export class LottiePlayer extends LitElement {
   private _loadBytes(data: Uint8Array, rPath: string = ''): void {
     const isLoaded = this._TVG.load(data, this.fileType, this._canvas!.width, this._canvas!.height, rPath);
     if (!isLoaded) {
-      throw new Error('Unable to load an image. Error: ', this._TVG.error());
+      throw new Error(`Unable to load an image. Error: ${this._TVG.error()}`);
     }
 
     this._render();
@@ -769,7 +769,7 @@ export class LottiePlayer extends LitElement {
     if (!isExported) {
       const error = saver.error();
       saver.delete();
-      throw new Error('Unable to save. Error: ', error);
+      throw new Error(`Unable to save. Error: ${error}`);
     }
 
     const data = _module.FS.readFile('output.gif');
