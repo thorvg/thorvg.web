@@ -78,7 +78,116 @@ export default [
         compress: {
           pure_getters: true,
           passes: 3,
-          drop_console: true,
+          drop_debugger: true
+        },
+        mangle: true,
+        output: {
+          comments: false,
+        },
+      }),
+    ],
+  },
+  {
+    input: "./src/worker/lottie-player.worker.ts",
+    output: [
+      {
+        file: './dist/lottie-player.worker.js',
+        format: "esm",
+        sourcemap: true,
+      },
+    ],
+    plugins: [
+      bakedEnv({ THORVG_VERSION: process.env.THORVG_VERSION }),
+      nodePolyfills(),
+      commonjs({
+        include: /node_modules/
+      }),
+      swc({
+        include: /\.[mc]?[jt]sx?$/,
+        exclude: /node_modules/,
+        tsconfig: "tsconfig.json",
+        jsc: {
+          parser: {
+            syntax: "typescript",
+            tsx: false,
+            decorators: true,
+            declaration: true,
+            dynamicImport: true,
+          },
+          target: "esnext",
+        },
+      }),
+      nodeResolve(),
+      terser({
+        compress: {
+          pure_getters: true,
+          passes: 3,
+          drop_debugger: true
+        },
+        mangle: true,
+        output: {
+          comments: false,
+        },
+      }),
+    ],
+  },
+  {
+    input: "./src/worker/lottie-player.ts",
+    output: [
+      {
+        file: './dist/lottie-player-worker.js',
+        format: "umd",
+        name: 'LottiePlayerWorker',
+        sourcemap: true,
+        globals,
+        minifyInternalExports: true,
+        inlineDynamicImports: true,
+        hoistTransitiveImports: true,
+      },
+      {
+        file: './dist/lottie-player-worker.cjs.js',
+        format: "cjs",
+        name: 'LottiePlayerWorker',
+        sourcemap: true,
+        globals,
+        minifyInternalExports: true,
+        inlineDynamicImports: true,
+        hoistTransitiveImports: true,
+      },
+      {
+        file: './dist/lottie-player-worker.esm.js',
+        format: "esm",
+        name: 'LottiePlayerWorker',
+        sourcemap: true,
+        globals,
+      },
+    ],
+    plugins: [
+      bakedEnv({ THORVG_VERSION: process.env.THORVG_VERSION }),
+      nodePolyfills(),
+      commonjs({
+        include: /node_modules/
+      }),
+      swc({
+        include: /\.[mc]?[jt]sx?$/,
+        exclude: /node_modules/,
+        tsconfig: "tsconfig.json",
+        jsc: {
+          parser: {
+            syntax: "typescript",
+            tsx: false,
+            decorators: true,
+            declaration: true,
+            dynamicImport: true,
+          },
+          target: "esnext",
+        },
+      }),
+      nodeResolve(),
+      terser({
+        compress: {
+          pure_getters: true,
+          passes: 3,
           drop_debugger: true
         },
         mangle: true,
@@ -94,6 +203,32 @@ export default [
     output: [
       {
         file: './dist/lottie-player.d.ts',
+        format: "esm",
+      }
+    ],
+    plugins: [
+      dts(),
+    ],
+  },
+  {
+    input: "./src/worker/lottie-player.ts",
+    treeshake: true,
+    output: [
+      {
+        file: './dist/lottie-player-worker.d.ts',
+        format: "esm",
+      }
+    ],
+    plugins: [
+      dts(),
+    ],
+  },
+  {
+    input: "./src/worker/lottie-player.worker.ts",
+    treeshake: true,
+    output: [
+      {
+        file: './dist/lottie-player.worker.d.ts',
         format: "esm",
       }
     ],
