@@ -148,8 +148,14 @@ function setQueryStringParameter(name: string, value: any) {
   window.history.replaceState({}, '', decodeURIComponent(`${window.location.pathname}?${params}`));
 }
 
+const MIN_WIDTH = 50;
+const MAX_WIDTH = 180;
+const RANGE = MAX_WIDTH - MIN_WIDTH;
+
 export default function Home() {
-  const size = isMobile ? { width: 150, height: 150 } : { width: 180, height: 180};
+  const [size, setSize] = useState(isMobile ? { width: 150, height: 150 } : { width: MAX_WIDTH, height: MAX_WIDTH });
+  const percent = (size.width - MIN_WIDTH) / RANGE * 100;
+  
   let initialized = false;
   
   const [count, setCount] = useState(countOptions[1]);
@@ -205,6 +211,10 @@ export default function Home() {
       loadAnimationByCount(count);
     }, 500);
   }, []);
+
+  const handleSliderChange = (value: number) => {
+    setSize({ width: value, height: value });
+  };
 
   const loadCanvasKit = async () => {
     const canvasKit = await InitCanvasKit({
@@ -280,7 +290,7 @@ export default function Home() {
     <div className="bg-gray-900 pt-4 pb-24 sm:pb-32 sm:pt-8 pt-12">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:mx-0">
-          <div className="mt-6 flex w-full gap-x-4 align-middle flex-row">
+          <div className="mt-6 flex w-full flex-wrap gap-x-4 gap-y-4 align-middle flex-row">
 
             <h1 className='text-justify text-center text-white leading-[52px] sm:block hidden'>Player: </h1>
 
@@ -414,6 +424,20 @@ export default function Home() {
               >
                 Set
               </button>
+              <div className="text-white w-full sm:flex-1 sm:min-w-[240px]">
+                <label className="block mb-2">Box Size: {size.width}px</label>
+                <input
+                  type="range"
+                  min={50}
+                  max={180}
+                  value={size.width}
+                  onChange={(e) => handleSliderChange(Number(e.target.value))}
+                  className="slider"
+                  style={{
+                    background: `linear-gradient(to right, #00deb5 0%, #00deb5 ${percent}%, #444 ${percent}%, #444 100%)`,
+                  }}
+                />
+              </div>
           </div>
 
           <div className="mt-6 flex w-full gap-x-4">
@@ -443,10 +467,11 @@ export default function Home() {
         </div>
         <ul
           role="list"
-          className="animation-list mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:mx-0 lg:max-w-none sm:grid-cols-4 xl:grid-cols-5 grid-cols-2"
+          className="animation-list mx-auto mt-20 grid gap-x-8 gap-y-14 lg:mx-0 lg:max-w-none justify-items-center"
+          style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${size.width}px, 1fr))` }}
         >
           {animationList.map((anim: any, index: number) => (
-            <li key={`${anim.name}-${anim.lottieURL}-${playerId}-${index}`} className={`${anim.name}-${index} max-w-[${size.width}px]`}>
+            <li key={`${anim.name}-${anim.lottieURL}-${playerId}-${index}`} className={`${anim.name}-${index}`} style={{ maxWidth: size.width }}>
               {
                 playerId == 1 &&
                 (
@@ -509,7 +534,7 @@ export default function Home() {
                   />
                 )
               }
-              <h3 className={`mt-6 text-lg font-semibold leading-8 tracking-tight text-white max-w-[${size.width}px] overflow-hidden`}>{anim.name}</h3>
+              <h3 className="mt-6 text-lg font-semibold leading-8 tracking-tight text-white overflow-hidden text-ellipsis whitespace-nowrap">{anim.name}</h3>
             </li>
           ))}
         </ul>
