@@ -45,8 +45,9 @@ input[type="range"].slider::-webkit-slider-thumb {
   appearance: none;
   width: 20px;
   height: 20px;
-  background: #00D6B4;
+  background: #00deb5;
   border-radius: 50%;
+  border: none;
   cursor: pointer;
 }
 
@@ -54,8 +55,8 @@ input[type="range"].slider::-moz-range-thumb {
   appearance: none;
   width: 20px;
   height: 20px;
-  background: #00D6B4;
-  border: none;
+  background: #00deb5;
   border-radius: 50%;
+  border: none;
   cursor: pointer;
 }

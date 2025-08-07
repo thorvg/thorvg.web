@@ -470,7 +470,7 @@ export default function Home() {
           className="animation-list mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:mx-0 lg:max-w-none sm:grid-cols-4 xl:grid-cols-5 grid-cols-2"
         >
           {animationList.map((anim: any, index: number) => (
-            <li key={`${anim.name}-${anim.lottieURL}-${playerId}-${index}`} className={`${anim.name}-${index} max-w-[${size.width}px]`}>
+            <li key={`${anim.name}-${anim.lottieURL}-${playerId}-${index}`} className={`${anim.name}-${index}`} style={{ maxWidth: `${size.width}px` }}>
               {
                 playerId == 1 &&
                 (
@@ -533,7 +533,7 @@ export default function Home() {
                   />
                 )
               }
-              <h3 className={`mt-6 text-lg font-semibold leading-8 tracking-tight text-white max-w-[${size.width}px] overflow-hidden`}>{anim.name}</h3>
+              <h3 className={`mt-6 text-lg font-semibold leading-8 tracking-tight text-white overflow-hidden text-ellipsis whitespace-nowrap`}>{anim.name}</h3>
             </li>
           ))}
         </ul>
