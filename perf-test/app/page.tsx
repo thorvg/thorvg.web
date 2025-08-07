@@ -149,7 +149,15 @@ function setQueryStringParameter(name: string, value: any) {
 }
 
 export default function Home() {
-  const size = isMobile ? { width: 150, height: 150 } : { width: 180, height: 180};
+  const [size, setSize] = useState(isMobile ? { width: 150, height: 150 } : { width: 180, height: 180 });
+
+  const minSize = 50;
+  const maxSize = 180;
+  const percent = ((size.width - minSize) / (maxSize - minSize)) * 100;
+  const sliderStyle = {
+      background: `linear-gradient(to right, #00deb5 0%, #00deb5 ${percent}%, #444 ${percent}%, #444 100%)`,
+  };
+  
   let initialized = false;
   
   const [count, setCount] = useState(countOptions[1]);
@@ -205,6 +213,10 @@ export default function Home() {
       loadAnimationByCount(count);
     }, 500);
   }, []);
+
+  const handleSliderChange = (value: number) => {
+    setSize({ width: value, height: value });
+  };
 
   const loadCanvasKit = async () => {
     const canvasKit = await InitCanvasKit({
@@ -414,6 +426,18 @@ export default function Home() {
               >
                 Set
               </button>
+              <div className="text-white w-full max-w-md">
+                <label className="block mb-2">Box Size: {size.width}px</label>
+                <input
+                  type="range"
+                  min={minSize}
+                  max={maxSize}
+                  value={size.width}
+                  onChange={(e) => handleSliderChange(Number(e.target.value))}
+                  className="slider"
+                  style={sliderStyle}
+                />
+              </div>
           </div>
 
           <div className="mt-6 flex w-full gap-x-4">
