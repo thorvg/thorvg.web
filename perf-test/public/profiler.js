@@ -24,10 +24,32 @@ export async function startProfiler(options = {}) {
 
   const root = document.createElement("div");
   root.style.cssText =
-    "position:fixed;top:8px;left:8px;display:flex;gap:4px;z-index:" +
+    "position:fixed;top:8px;left:8px;z-index:" +
     zIndex +
-    ";";
+    ";display:flex;align-items:flex-start;gap:4px;";
   document.body.appendChild(root);
+
+  const container = document.createElement("div");
+  container.style.cssText = "display:flex;cursor:pointer;";
+  root.appendChild(container);
+
+  const toggle = document.createElement("button");
+  toggle.textContent = "▾";
+  toggle.setAttribute("aria-label", "Toggle stats");
+  toggle.style.cssText =
+    "display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:9999px;border:none;background:rgba(255,255,255,0.7);color:#000;font-weight:700;cursor:pointer;";
+  root.appendChild(toggle);
+
+  let collapsed = false;
+  const setCollapsed = (v) => {
+    collapsed = v;
+    container.style.display = v ? "none" : "flex";
+    toggle.textContent = v ? "▸" : "▾";
+  };
+  toggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setCollapsed(!collapsed);
+  });
 
   const instances = [];
 
@@ -35,7 +57,7 @@ export async function startProfiler(options = {}) {
     const s = new Stats();
     s.showPanel(panelIndex);
     Object.assign(s.dom.style, { cursor: "pointer", opacity: "0.9" });
-    root.appendChild(s.dom);
+    container.appendChild(s.dom);
     instances.push(s);
     return s;
   };
