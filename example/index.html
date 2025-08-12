@@ -14,9 +14,8 @@
         <button onclick="stopAnimation()">Stop</button>
         <button onclick="createAnimation()">Create</button>
         <button onclick="destroyAnimation()">Destroy</button>
-        <button onclick="save('gif')">save2gif</button>
-        <button onclick="save('tvg')">save2tvg</button>
-        <button onclick="save('png')">save2png</button>
+        <button onclick="save2gif()">save2gif</button>
+        <button onclick="save2png()">save2png</button>
         <div>
           <label for="reverseCheckbox">Reverse</label>
           <input type="checkbox" id="reverseCheckbox" onchange="toggleReverse(event)">
@@ -153,14 +152,22 @@
         }
       }
 
-      function save(ext) {
+      function save2gif() {
         if (!animation) {
           alert('Animation is not created yet');
           return;
         }
-
-        animation.save(ext);
+        animation.save2gif(animation.src);
       }
+
+      function save2png() {
+        if (!animation) {
+          alert('Animation is not created yet');
+          return;
+        }
+        animation.save2png();
+      }
+
   </script>
   </body>
 </html>
