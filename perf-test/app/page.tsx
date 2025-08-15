@@ -296,7 +296,7 @@ export default function Home() {
     <div className="bg-gray-900 pt-4 pb-24 sm:pb-32 sm:pt-8 pt-12">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:mx-0">
-          <div className="mt-6 flex w-full gap-x-4 align-middle flex-row">
+          <div className="mt-6 flex w-full flex-wrap gap-x-4 gap-y-4 align-middle flex-row">
 
             <h1 className='text-justify text-center text-white leading-[52px] sm:block hidden'>Player: </h1>
 
@@ -430,7 +430,7 @@ export default function Home() {
               >
                 Set
               </button>
-              <div className="text-white w-full max-w-md">
+              <div className="text-white w-full sm:flex-1 sm:min-w-[240px]">
                 <label className="block mb-2">Box Size: {size.width}px</label>
                 <input
                   type="range"
