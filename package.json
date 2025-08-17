@@ -55,7 +55,7 @@
     "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-wc": "^2.0.4",
-    "rollup": "^4.6.0",
+    "rollup": "^4.46.2",
     "rollup-plugin-baked-env": "^1.0.1",
     "rollup-plugin-dts": "^6.1.0",
     "rollup-plugin-polyfill-node": "^0.13.0",
