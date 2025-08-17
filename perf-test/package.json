@@ -16,7 +16,7 @@
     "@thorvg/lottie-player": "^1.0.0-pre.26",
     "canvaskit-wasm": "^0.39.1",
     "i": "^0.3.7",
-    "next": "14.2.26",
+    "next": "14.2.30",
     "npm": "^10.8.0",
     "react": "^18",
     "react-device-detect": "^2.2.3",
