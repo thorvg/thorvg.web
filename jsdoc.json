@@ -1,0 +1,52 @@
+{
+  "source": {
+    "include": ["src", "README.md"],
+    "includePattern": ".+\\.(js|ts)$",
+    "excludePattern": "(node_modules|dist)"
+  },
+  "sourceType": "module",
+  "plugins": [
+    "plugins/markdown",
+    "node_modules/better-docs/category",
+    "node_modules/better-docs/typescript"
+  ],
+  "templates": {
+    "cleverLinks": true,
+    "monospaceLinks": true,
+    "default": {
+      "outputSourceFiles": true,
+      "includeDate": false,
+      "useLongnameInNav": false
+    },
+    "better-docs": {
+      "name": "ThorVG Web",
+      "title": "ThorVG Web API Documentation",
+      "hideGenerator": false,
+      "navLinks": [
+        {
+          "label": "GitHub",
+          "href": "https://github.com/thorvg/thorvg.web"
+        },
+        {
+          "label": "NPM", 
+          "href": "https://www.npmjs.com/package/@thorvg/lottie-player"
+        }
+      ]
+    }
+  },
+  "opts": {
+    "template": "node_modules/better-docs",
+    "encoding": "utf8",
+    "destination": "./docs",
+    "recurse": true,
+    "verbose": false,
+    "readme": "./README.md"
+  },
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc", "closure"]
+  },
+  "typescript": {
+    "strictMode": false
+  }
+}

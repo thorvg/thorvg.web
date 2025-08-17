@@ -35,70 +35,129 @@ const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg-was
 let _module: any;
 let _moduleRequested: boolean = false;
 
-// Define library version
+/**
+ * Library version information
+ * @interface LibraryVersion
+ * @property {string} THORVG_VERSION - ThorVG engine version
+ */
 export interface LibraryVersion {
   THORVG_VERSION: string
 }
 
-// Define renderer type
+/**
+ * Renderer type for ThorVG engine
+ * @enum {string}
+ */
 export enum Renderer {
+  /** Software renderer */
   SW = 'sw',
+  /** WebGPU renderer */
   WG = 'wg',
+  /** WebGL renderer */
   GL = 'gl',
 }
 
-// Define initialization status
+/**
+ * Module initialization status
+ * @enum {string}
+ */
 export enum InitStatus {
+  /** Not yet initialized */
   IDLE = 'idle',
+  /** Initialization failed */
   FAILED = 'failed',
+  /** Initialization requested */
   REQUESTED = 'requested',
+  /** Successfully initialized */
   INITIALIZED = 'initialized',
 }
 
-// Define rendering configurations
+/**
+ * Rendering configuration options
+ * @typedef {Object} RenderConfig
+ * @property {boolean} [enableDevicePixelRatio] - Enable device pixel ratio for high DPI displays
+ * @property {Renderer} [renderer] - Renderer type to use
+ */
 export type RenderConfig = {
   enableDevicePixelRatio?: boolean;
   renderer?: Renderer;
 }
 
-// Define file type which player can load
+/**
+ * Supported file types
+ * @enum {string}
+ */
 export enum FileType {
+  /** Lottie JSON format */
   JSON = 'json',
+  /** Compiled Lottie format */
   LOT = 'lot',
+  /** JPEG image */
   JPG = 'jpg',
+  /** PNG image */
   PNG = 'png',
+  /** SVG vector graphics */
   SVG = 'svg',
 }
 
-// Define valid player states
+/**
+ * Player states
+ * @enum {string}
+ */
 export enum PlayerState {
-  Destroyed = 'destroyed', // Player is destroyed by `destroy()` method
-  Error = 'error', // An error occurred
-  Loading = 'loading', // Player is loading
-  Paused = 'paused', // Player is paused
-  Playing = 'playing', // Player is playing
-  Stopped = 'stopped',  // Player is stopped
-  Frozen = 'frozen', // Player is paused due to player being invisible
+  /** Player is destroyed by `destroy()` method */
+  Destroyed = 'destroyed',
+  /** An error occurred */
+  Error = 'error',
+  /** Player is loading */
+  Loading = 'loading',
+  /** Player is paused */
+  Paused = 'paused',
+  /** Player is playing */
+  Playing = 'playing',
+  /** Player is stopped */
+  Stopped = 'stopped',
+  /** Player is paused due to player being invisible */
+  Frozen = 'frozen',
 }
 
-// Define play modes
+/**
+ * Animation play modes
+ * @enum {string}
+ */
 export enum PlayMode {
+  /** Animation plays forward and then backward in a cycle */
   Bounce = 'bounce',
+  /** Animation plays forward only */
   Normal = 'normal',
 }
 
-// Define player events
+/**
+ * Player events
+ * @enum {string}
+ */
 export enum PlayerEvent {
+  /** Animation is complete (all loops completed) */
   Complete = 'complete',
+  /** Player is destroyed */
   Destroyed = 'destroyed',
+  /** An animation data can't be parsed */
   Error = 'error',
+  /** A new frame is entered */
   Frame = 'frame',
+  /** Animation is paused due to player being invisible */
   Freeze = 'freeze',
+  /** A graphic resource is loaded */
   Load = 'load',
+  /** An animation loop is completed */
   Loop = 'loop',
+  /** Animation is paused */
   Pause = 'pause',
+  /** Animation starts playing */
   Play = 'play',
+  /** Animation data is loaded and player is ready */
   Ready = 'ready',
+  /** Animation is stopped */
   Stop = 'stop',
 }
 
@@ -207,109 +266,157 @@ const _initModule = async (engine: Renderer) => {
   }
 }
 
+/**
+ * ThorVG Lottie Player Web Component
+ * 
+ * @class LottiePlayer
+ * @extends {LitElement}
+ * @customElement lottie-player
+ * 
+ * @fires load - A graphic resource is loaded
+ * @fires error - An animation data can't be parsed
+ * @fires ready - Animation data is loaded and player is ready
+ * @fires play - Animation starts playing
+ * @fires pause - Animation is paused
+ * @fires stop - Animation is stopped
+ * @fires freeze - Animation is paused due to player being invisible
+ * @fires loop - An animation loop is completed
+ * @fires complete - Animation is complete (all loops completed)
+ * @fires frame - A new frame is entered
+ * @fires destroyed - Player is destroyed
+ * 
+ * @example
+ * ```html
+ * <lottie-player 
+ *   autoPlay 
+ *   loop
+ *   mode="normal"
+ *   src="https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json"
+ *   style="width: 500px; height: 500px;"
+ * >
+ * </lottie-player>
+ * ```
+ */
 @customElement('lottie-player')
 export class LottiePlayer extends LitElement {
   /**
-  * Lottie animation JSON data or URL to JSON.
-  * @since 1.0
-  */
+   * A graphic resource to play. It could be an internal/external URL or JSON string for Lottie.
+   * @type {string}
+   * @default undefined
+   */
   @property({ type: String })
   public src?: string;
 
   /**
    * Custom WASM URL for ThorVG engine
-   * @since 1.0
+   * @type {string}
+   * @default 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg-wasm.wasm'
    */
   @property({ type: String })
   public wasmUrl?: string;
 
   /**
-  * File type.
-  * @since 1.0
-  */
+   * File type of the resource
+   * @type {FileType}
+   * @default FileType.JSON
+   */
   @property({ type: FileType })
   public fileType: FileType = FileType.JSON;
 
   /**
-  * Rendering configurations.
-  * @since 1.0
-  */
+   * Rendering configurations
+   * @type {RenderConfig}
+   * @default undefined
+   */
   @property({ type: Object })
   public renderConfig?: RenderConfig;
 
   /**
-   * Animation speed.
-   * @since 1.0
+   * Animation speed (for Lottie)
+   * @type {number}
+   * @default 1
    */
   @property({ type: Number })
   public speed: number = 1.0;
 
   /**
-   * Autoplay animation on load.
-   * @since 1.0
+   * When set to true, automatically plays the animation on loading it (for Lottie)
+   * @type {boolean}
+   * @default false
    */
   @property({ type: Boolean })
   public autoPlay: boolean = false;
 
   /**
-   * Number of times to loop animation.
-   * @since 1.0
+   * Number of times to loop the animation
+   * @type {number}
+   * @default undefined
    */
   @property({ type: Number })
   public count?: number;
 
   /**
-   * Whether to loop animation.
-   * @since 1.0
+   * When set to true, loops the animation. The count property defines the number of times to loop the animation.
+   * Setting the count property to 0 and setting the loop to true, loops the animation indefinitely.
+   * @type {boolean}
+   * @default false
    */
   @property({ type: Boolean })
   public loop: boolean = false;
 
   /**
-   * Direction of animation.
-   * @since 1.0
+   * Direction of the animation. Set to 1 to play the animation forward or set to -1 to play it backward.
+   * @type {number}
+   * @default 1
    */
   @property({ type: Number })
   public direction: number = 1;
 
   /**
-   * Play mode.
-   * @since 1.0
+   * Play mode. Setting the mode to PlayMode.Bounce plays the animation in an indefinite cycle, forwards and then backwards.
+   * @type {PlayMode}
+   * @default PlayMode.Normal
    */
   @property()
   public mode: PlayMode = PlayMode.Normal;
 
   /**
-   * Intermission
-   * @since 1.0
+   * Duration (in milliseconds) to pause before playing each cycle in a looped animation.
+   * Set this parameter to 0 (no pause) or any positive number.
+   * @type {number}
+   * @default 1
    */
   @property()
   public intermission: number = 1;
 
   /**
-   * total frame of current animation (readonly)
-   * @since 1.0
+   * Total frame of current animation
+   * @type {number}
+   * @readonly
    */
   @property({ type: Number })
   public totalFrame: number = 0;
 
   /**
-   * current frame of current animation (readonly)
-   * @since 1.0
+   * Current frame of current animation
+   * @type {number}
+   * @readonly
    */
   @property({ type: Number })
   public currentFrame: number = 0;
 
   /**
-   * Player state
-   * @since 1.0
+   * Current player state
+   * @type {PlayerState}
+   * @readonly
    */
   @property({ type: Number })
   public currentState: PlayerState = PlayerState.Loading;
 
   /**
-   * original size of the animation (readonly)
-   * @since 1.0
+   * Original size of the animation [width, height]
+   * @type {Float32Array}
+   * @readonly
    */
   @property({ type: Float32Array })
   public get size(): Float32Array {
@@ -553,10 +660,14 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Configure and load
-   * @param src Lottie animation JSON data or URL to JSON.
-   * @param fileType The file type of the data to be loaded, defaults to JSON
-   * @since 1.0
+   * Load and play Lottie animation
+   * @method load
+   * @param {string|object} src - URL, or a JSON string or object representing a Lottie animation to play
+   * @param {FileType} [fileType=FileType.JSON] - The file type of the data to be loaded
+   * @returns {Promise<void>}
+   * @fires load - When the resource is successfully loaded
+   * @fires ready - When the animation data is loaded and player is ready
+   * @fires error - When the animation data can't be parsed
    */
   public async load(src: string | object, fileType: FileType = FileType.JSON): Promise<void> {
     try {
@@ -573,8 +684,10 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Start playing animation.
-   * @since 1.0
+   * Play loaded animation
+   * @method play
+   * @returns {void}
+   * @fires play - When animation starts playing
    */
   public play(): void {
     if (this.fileType !== FileType.JSON && this.fileType !== FileType.LOT) {
@@ -601,8 +714,10 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Pause animation.
-   * @since 1.0
+   * Pause playing animation
+   * @method pause
+   * @returns {void}
+   * @fires pause - When animation is paused
    */
   public pause(): void {
     this.currentState = PlayerState.Paused;
@@ -610,8 +725,10 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Stop animation.
-   * @since 1.0
+   * Stop current animation
+   * @method stop
+   * @returns {void}
+   * @fires stop - When animation is stopped
    */
   public stop(): void {
     this.currentState = PlayerState.Stopped;
@@ -623,8 +740,11 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Freeze animation.
-   * @since 1.0
+   * Freeze animation (internal use - called when player becomes invisible)
+   * @method freeze
+   * @private
+   * @returns {void}
+   * @fires freeze - When animation is frozen
    */
   public freeze(): void {
     this.currentState = PlayerState.Frozen;
@@ -632,9 +752,14 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Seek to a given frame
-   * @param frame Frame number to move
-   * @since 1.0
+   * Move to a given frame
+   * @method seek
+   * @param {number} frame - The frame number to move, shouldn't be less than 0 and greater than totalFrame
+   * @returns {Promise<void>}
+   * @example
+   * // You can easily check total frame of animation
+   * const totalFrames = player.totalFrame;
+   * player.seek(totalFrames / 2); // Seek to middle
    */
   public async seek(frame: number): Promise<void> {
     this._frame(frame);
@@ -643,10 +768,11 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Adjust the canvas size.
-   * @param width The width to resize
-   * @param height The height to resize
-   * @since 1.0
+   * Adjust the canvas size
+   * @method resize
+   * @param {number} width - The width to resize
+   * @param {number} height - The height to resize
+   * @returns {void}
    */
   public resize(width: number, height: number) {
     this._canvas!.width = width;
@@ -658,8 +784,10 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Destroy animation and lottie-player element.
-   * @since 1.0
+   * Destroy animation and lottie-player element
+   * @method destroy
+   * @returns {void}
+   * @fires destroyed - When player is destroyed
    */
   public destroy(): void {
     if (!this._TVG) {
@@ -681,7 +809,9 @@ export class LottiePlayer extends LitElement {
 
   /**
    * Terminate module and release resources
-   * @since 1.0
+   * @method term
+   * @private
+   * @returns {void}
    */
   public term(): void {
     _module.term();
@@ -689,9 +819,10 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Sets the repeating of the animation.
-   * @param value Whether to enable repeating. Boolean true enables repeating.
-   * @since 1.0
+   * Enable animation loop
+   * @method setLooping
+   * @param {boolean} value - true enables looping, while false disables looping
+   * @returns {void}
    */
   public setLooping(value: boolean): void {
     if (!this._TVG) {
@@ -702,9 +833,10 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Animation play direction.
-   * @param value Direction values. (1: forward, -1: backward)
-   * @since 1.0
+   * Set animation direction
+   * @method setDirection
+   * @param {number} value - Direction values. 1 to play the animation forward, -1 to play it backward
+   * @returns {void}
    */
   public setDirection(value: number): void {
     if (!this._TVG) {
@@ -715,9 +847,10 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Set animation play speed.
-   * @param value Playback speed. (any positive number)
-   * @since 1.0
+   * Set speed of animation
+   * @method setSpeed
+   * @param {number} value - Playback speed. The value must be any positive integer
+   * @returns {void}
    */
   public setSpeed(value: number): void {
     if (!this._TVG) {
@@ -728,9 +861,10 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Set a background color. (default: 0x00000000)
-   * @param value Hex(#fff) or string(red) of background color
-   * @since 1.0
+   * Set a background color
+   * @method setBgColor
+   * @param {string} value - Color values. Hex(#fff) or string('red') to set background color
+   * @returns {void}
    */
   public setBgColor(value: string): void {
     if (!this._TVG) {
@@ -741,8 +875,10 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Save current animation to png image
-   * @since 1.0
+   * Export current animation to PNG image
+   * @method save2png
+   * @returns {void}
+   * @deprecated Use save() method with ExportableType parameter instead
    */
   public save2png(): void {
     if (!this._TVG) {
@@ -759,8 +895,11 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Save current animation to gif image
-   * @since 1.0
+   * Export current animation to GIF image
+   * @method save2gif
+   * @param {string} src - Source animation data
+   * @returns {Promise<void>}
+   * @deprecated Use save() method with ExportableType parameter instead
    */
   public async save2gif(src: string): Promise<void> {
     const saver = new _module.TvgLottieAnimation(Renderer.SW, `#${this._canvas!.id}`);
@@ -786,8 +925,9 @@ export class LottiePlayer extends LitElement {
   }
 
   /**
-   * Return thorvg version
-   * @since 1.0
+   * Return current ThorVG version
+   * @method getVersion
+   * @returns {LibraryVersion} Version information
    */
   public getVersion(): LibraryVersion {
     return {
