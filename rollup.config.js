@@ -4,8 +4,10 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import { terser } from "rollup-plugin-terser";
 import nodePolyfills from 'rollup-plugin-polyfill-node';
-import bakedEnv from 'rollup-plugin-baked-env';
+import replace from '@rollup/plugin-replace';
+import alias from '@rollup/plugin-alias';
 import pkg from './package.json';
+import path from 'path';
 
 const name = 'lottie-player';
 const globals = {
@@ -13,10 +15,78 @@ const globals = {
   lit: "lit",
   "lit/decorators.js": "lit/decorators.js",
 };
+const commonOutput = {
+  name,
+  minifyInternalExports: true,
+  inlineDynamicImports: true,
+  sourcemap: true,
+  globals,
+};
 
-export default [
-  {
+const PresetModule = {
+  Default: "lottie-player",
+  SW: "lottie-player-sw",
+  GL: "lottie-player-gl",
+  SW_LITE: "lottie-player-sw-lite",
+  GL_LITE: "lottie-player-gl-lite",
+}
+
+const presetMap = {
+  [PresetModule.Default]: {
+    path: '/dist',
+    renderer: 'sw',
     input: "./src/lottie-player.ts",
+    output: {
+      umd: './dist/lottie-player.js',
+      cjs: pkg.main,
+      esm: pkg.module,
+    }
+  },
+  [PresetModule.SW]: {
+    path: '/dist/sw',
+    renderer: 'sw',
+    input: "./src/lottie-preset-player.ts",
+    output: {
+      umd: './dist/sw/lottie-player.js',
+      cjs: pkg.exports['./sw'].require,
+      esm: pkg.exports['./sw'].import,
+    }
+  },
+  [PresetModule.GL]: {
+    path: '/dist/gl',
+    renderer: 'gl',
+    input: "./src/lottie-preset-player.ts",
+    output: {
+      umd: './dist/gl/lottie-player.js',
+      cjs: pkg.exports['./gl'].require,
+      esm: pkg.exports['./gl'].import,
+    }
+  },
+  [PresetModule.SW_LITE]: {
+    path: '/dist/sw-lite',
+    renderer: 'sw',
+    input: "./src/lottie-preset-player.ts",
+    output: {
+      umd: './dist/sw-lite/lottie-player.js',
+      cjs: pkg.exports['./sw-lite'].require,
+      esm: pkg.exports['./sw-lite'].import,
+    }
+  },
+  [PresetModule.GL_LITE]: {
+    path: '/dist/gl-lite',
+    renderer: 'gl',
+    input: "./src/lottie-preset-player.ts",
+    output: {
+      umd: './dist/gl-lite/lottie-player.js',
+      cjs: pkg.exports['./gl-lite'].require,
+      esm: pkg.exports['./gl-lite'].import,
+    }
+  },
+}
+
+const createLottieConfig = (preset) => {
+  return {
+    input: presetMap[preset].input,
     treeshake: {
       moduleSideEffects: false,
       propertyReadSideEffects: false,
@@ -24,35 +94,37 @@ export default [
     },
     output: [
       {
-        file: './dist/lottie-player.js',
+        file: presetMap[preset].output.umd,
         format: "umd",
-        name,
-        minifyInternalExports: true,
-        inlineDynamicImports: true,
-        sourcemap: true,
-        globals,
         hoistTransitiveImports: true,
+        ...commonOutput, 
       },
       {
-        file: pkg.main,
-        name,
+        file: presetMap[preset].output.cjs,
         format: "cjs",
-        minifyInternalExports: true,
-        inlineDynamicImports: true,
-        sourcemap: true,
-        globals,
+        ...commonOutput,
       },
       {
-        file: pkg.module,
+        file: presetMap[preset].output.esm,
         format: "esm",
-        name,
-        inlineDynamicImports: true,
-        sourcemap: true,
-        globals,
+        ...commonOutput,
       },
     ],
     plugins: [
-      bakedEnv({ THORVG_VERSION: process.env.THORVG_VERSION }),
+      alias({
+        entries: [
+          { find: 'thorvg', replacement: path.join('..', presetMap[preset].path, 'thorvg')  },
+        ]
+      }),
+      replace({
+        include: ['src/**/*.ts'],
+        preventAssignment: true,
+        values: {
+          '/dist': presetMap[preset].path,
+          '__THORVG_VERSION__': process.env.THORVG_VERSION,
+          '__RENDERER__': presetMap[preset].renderer,
+        },
+      }),
       nodePolyfills(),
       commonjs({
         include: /node_modules/
@@ -86,7 +158,15 @@ export default [
         },
       }),
     ],
-  },
+  };
+}
+
+export default [
+  createLottieConfig(PresetModule.Default),
+  createLottieConfig(PresetModule.SW),
+  createLottieConfig(PresetModule.GL),
+  createLottieConfig(PresetModule.SW_LITE),
+  createLottieConfig(PresetModule.GL_LITE),
   {
     input: "./src/lottie-player.ts",
     treeshake: true,
