@@ -32,7 +32,16 @@ type TvgModule = any;
 
 const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg-wasm.wasm';
 let _module: any;
-let _moduleRequested: boolean = false;
+let _resolveModuleLoaded: (value: unknown) => void;
+let _moduleLoaded = new Promise((resolve) => {
+  _resolveModuleLoaded = resolve;
+});
+const _resetModule = () => {
+  _module = null;
+  _moduleLoaded = new Promise((resolve) => {
+    _resolveModuleLoaded = resolve;
+  })
+};
 
 // Define library version
 export interface LibraryVersion {
@@ -324,20 +333,11 @@ export class LottiePlayer extends LitElement {
   private _imageData?: ImageData;
   private _beginTime: number = Date.now();
   private _counter: number = 1;
-  private _timer?: ReturnType<typeof setInterval>;
   private _observer?: IntersectionObserver;
   private _observable: boolean = false;
 
   private async _init(): Promise<void> {
-    // Ensure module is loaded only once
-    if (_moduleRequested) {
-      while (!_module) {
-        await _wait(100);
-      }
-    }
-
     if (!_module) {
-      _moduleRequested = true;
       _module = await Module({
         locateFile: (path: string, prefix: string) => {
           if (path.endsWith('.wasm')) {
@@ -346,15 +346,8 @@ export class LottiePlayer extends LitElement {
           return prefix + path;
         }
       });
+      _resolveModuleLoaded(true);
     }
-
-    if (!this._timer) {
-      //NOTE: ThorVG Module has loaded, but called this function again
-      return;
-    }
-
-    clearInterval(this._timer);
-    this._timer = undefined;
 
     const engine = this.renderConfig?.renderer || Renderer.SW;
 
@@ -429,7 +422,7 @@ export class LottiePlayer extends LitElement {
     this._observer.observe(this);
 
     if (!this._TVG) {
-      this._timer = setInterval(this._init.bind(this), 100);
+      this._init();
       return;
     }
 
@@ -563,7 +556,7 @@ export class LottiePlayer extends LitElement {
    */
   public async load(src: string | object, fileType: FileType = FileType.JSON): Promise<void> {
     try {
-      await this._init();
+      await _moduleLoaded;
       const bytes = await _parseSrc(src, fileType);
       this.dispatchEvent(new CustomEvent(PlayerEvent.Ready));
 
@@ -688,7 +681,7 @@ export class LottiePlayer extends LitElement {
    */
   public term(): void {
     _module.term();
-    _module = null;
+    _resetModule();
   }
 
   /**
