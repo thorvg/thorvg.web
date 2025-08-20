@@ -471,7 +471,8 @@ export default function Home() {
         </div>
         <ul
           role="list"
-          className="animation-list mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:mx-0 lg:max-w-none sm:grid-cols-4 xl:grid-cols-5 grid-cols-2"
+          className="animation-list mx-auto mt-20 grid gap-x-8 gap-y-14 lg:mx-0 lg:max-w-none justify-items-center"
+          style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${size.width}px, 1fr))` }}
         >
           {animationList.map((anim: any, index: number) => (
             <li key={`${anim.name}-${anim.lottieURL}-${playerId}-${index}`} className={`${anim.name}-${index}`} style={{ maxWidth: `${size.width}px` }}>
