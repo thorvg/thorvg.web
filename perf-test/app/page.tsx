@@ -11,7 +11,7 @@ import dotLottieWasmUrl from "../node_modules/@lottiefiles/dotlottie-web/dist/do
 import SkottiePlayer, { setCanvasKit } from '../components/SkottiePlayer';
 import skottieWasmUrl from "../node_modules/canvaskit-wasm/bin/full/canvaskit.wasm";
 import InitCanvasKit from 'canvaskit-wasm/bin/full/canvaskit';
-import wasmUrl from "../node_modules/@thorvg/lottie-player/dist/thorvg-wasm.wasm";
+import wasmUrl from "../node_modules/@thorvg/lottie-player/dist/thorvg.wasm";
 
 setDotLottieWasmUrl(dotLottieWasmUrl);
 
