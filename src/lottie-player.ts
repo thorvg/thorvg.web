@@ -454,8 +454,8 @@ export class LottiePlayer extends LitElement {
     }
   }
 
-  private _loadBytes(data: Uint8Array, rPath: string = ''): void {
-    const isLoaded = this._TVG.load(data, this.fileType, this._canvas!.width, this._canvas!.height, rPath);
+  private _loadBytes(data: Uint8Array): void {
+    const isLoaded = this._TVG.load(data, this.fileType, this._canvas!.width, this._canvas!.height);
     if (!isLoaded) {
       throw new Error(`Unable to load an image. Error: ${this._TVG.error()}`);
     }
