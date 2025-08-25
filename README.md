@@ -115,6 +115,65 @@ export default function Home() {
 </script>
 ```
 
+## Player Preset Variants
+
+ThorVG Lottie Player provides multiple presets optimized for different use cases. Each preset can be selected based on bundle size and performance requirements.
+
+### Standard Presets
+- **Software Renderer (SW)**: CPU-based rendering with all loaders supported
+- **WebGL Renderer (GL)**: GPU-accelerated rendering with all loaders supported
+
+### Lite Presets
+- **Software Lite (SW-Lite)**: CPU-based rendering with minimal loaders (PNG only)
+- **OpenGL Lite (GL-Lite)**: GPU-accelerated rendering with minimal loaders (PNG only)
+
+### Preset Comparison
+
+| Preset | Renderer | Loaders | Bundle Size | Use Case |
+|--------|----------|---------|-------------|----------|
+| `sw` | Software | lottie, jpg, png, webp, ttf | ~640KB | Full-featured applications |
+| `gl` | OpenGL | lottie, jpg, png, webp, ttf | ~625KB | Hardware-accelerated rendering |
+| `sw-lite` | Software | lottie, png | ~243KB | Lightweight applications |
+| `gl-lite` | OpenGL | lottie, png | ~236KB | Lightweight with hardware acceleration |
+
+### Preset Usage
+
+#### CDN Usage
+```html
+<!-- Default version -->
+<script src="https://unpkg.com/@thorvg/lottie-player@latest/dist/lottie-player.js"></script>
+
+<!-- Software Renderer (Standard) -->
+<script src="https://unpkg.com/@thorvg/lottie-player@latest/dist/sw/lottie-player.js"></script>
+
+<!-- OpenGL Renderer (Standard) -->
+<script src="https://unpkg.com/@thorvg/lottie-player@latest/dist/gl/lottie-player.js"></script>
+
+<!-- Software Renderer (Lite) -->
+<script src="https://unpkg.com/@thorvg/lottie-player@latest/dist/sw-lite/lottie-player.js"></script>
+
+<!-- OpenGL Renderer (Lite) -->
+<script src="https://unpkg.com/@thorvg/lottie-player@latest/dist/gl-lite/lottie-player.js"></script>
+```
+
+#### NPM Usage
+```ts
+// Default version
+import '@thorvg/lottie-player';
+
+// Software Renderer (Standard)
+import '@thorvg/lottie-player/sw';
+
+// OpenGL Renderer (Standard)  
+import '@thorvg/lottie-player/gl';
+
+// Software Renderer (Lite)
+import '@thorvg/lottie-player/sw-lite';
+
+// OpenGL Renderer (Lite)
+import '@thorvg/lottie-player/gl-lite';
+```
+
 ## API
 ### Properties
 
@@ -294,9 +353,20 @@ player.addEventListener('load', () => {
 
 ## Examples
 
+### Framework-specific Examples
+
 Please check these examples in various environments.
 
 - [VanillaJS Usage](https://codesandbox.io/p/sandbox/thorvg-lottieplayer-vanillajs-t737qm)
 - [React Usage](https://codesandbox.io/p/devbox/thorvg-lottieplayer-react-hkkrq3)
 - [VueJS Usage](https://codesandbox.io/p/devbox/thorvg-lottieplayer-vue-758h3l)
 - [Svelte Usage](https://codesandbox.io/p/devbox/thorvg-lottieplayer-svelte-xd4zp6)
+
+### Local Examples
+Check the usage of each preset in the `example/` directory:
+
+- [Software Renderer (Standard)](example/software.html) - CPU-based rendering with all loaders
+- [OpenGL Renderer (Standard)](example/webgl.html) - GPU-accelerated rendering with all loaders  
+- [Software Renderer (Lite)](example/software-lite.html) - CPU-based rendering with PNG only
+- [OpenGL Renderer (Lite)](example/webgl-lite.html) - GPU-accelerated rendering with PNG only
+- [WebGPU Renderer](example/webgpu.html) - Latest WebGPU rendering engine
