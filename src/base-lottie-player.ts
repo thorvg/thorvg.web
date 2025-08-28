@@ -440,7 +440,7 @@ export class BaseLottiePlayer extends LitElement {
   }
 
   private _loadBytes(data: Uint8Array): void {
-    const isLoaded = this.TVG.load(data, this.fileType, this.canvas!.width, this.canvas!.height);
+    const isLoaded = this.TVG.load(data, this.fileType, this.canvas!.width, this.canvas!.height, '');
     if (!isLoaded) {
       throw new Error(`Unable to load an image. Error: ${this.TVG.error()}`);
     }
