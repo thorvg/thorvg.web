@@ -33,7 +33,20 @@ const THORVG_VERSION = '__THORVG_VERSION__';
 const DEFAULT_RENDERER = '__RENDERER__';
 const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg.wasm';
 export let wasmModule: any;
-let _moduleRequested: boolean = false;
+
+let _resolveModuleLoaded: () => void;
+let _rejectModuleLoaded: (reason?: any) => void;
+const createModuleLoadedPromise = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    _resolveModuleLoaded = resolve;
+    _rejectModuleLoaded = reject;
+  });
+};
+let _moduleLoaded = createModuleLoadedPromise();
+const _resetModule = () => {
+  wasmModule = null;
+  _moduleLoaded = createModuleLoadedPromise();
+};
 
 // Define library version
 export interface LibraryVersion {
@@ -309,51 +322,43 @@ export class BaseLottiePlayer extends LitElement {
   private _imageData?: ImageData;
   private _beginTime: number = Date.now();
   private _counter: number = 1;
-  private _timer?: ReturnType<typeof setInterval>;
   private _observer?: IntersectionObserver;
   private _observable: boolean = false;
 
   private async _init(): Promise<void> {
-    // Ensure module is loaded only once
-    if (_moduleRequested) {
-      while (!wasmModule) {
-        await _wait(100);
-      }
-    }
-
-    if (!wasmModule) {
-      _moduleRequested = true;
-      wasmModule = await Module({
-        locateFile: (path: string, prefix: string) => {
-          if (path.endsWith('.wasm')) {
-            return this.wasmUrl || _wasmUrl;
+    try {
+      if (!wasmModule) {
+        wasmModule = await Module({
+          locateFile: (path: string, prefix: string) => {
+            if (path.endsWith('.wasm')) {
+              return this.wasmUrl || _wasmUrl;
+            }
+            return prefix + path;
           }
-          return prefix + path;
-        }
-      });
-    }
+        });
+      }
 
-    if (!this._timer) {
-      //NOTE: ThorVG Module has loaded, but called this function again
-      return;
-    }
+      const engine = this.config?.renderer || (DEFAULT_RENDERER as Renderer);
 
-    clearInterval(this._timer);
-    this._timer = undefined;
+      await _initModule(engine);
+      if (_initStatus === InitStatus.FAILED) {
+        this.currentState = PlayerState.Error;
+        this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
+        _rejectModuleLoaded(new Error("Failed to initialize ThorVG module"));
+        return;
+      }
+      _resolveModuleLoaded();
 
-    const engine = this.config?.renderer || (DEFAULT_RENDERER as Renderer);
-
-    await _initModule(engine);
-    if (_initStatus === InitStatus.FAILED) {
+      this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`);
+      
+      if (this.src) {
+        this.load(this.src, this.fileType);
+      }
+    } catch (err) {
       this.currentState = PlayerState.Error;
       this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
-      return;
-    }
-
-    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`);
-
-    if (this.src) {
-      this.load(this.src, this.fileType);
+      _rejectModuleLoaded(err);
+      throw err;
     }
   }
 
@@ -414,7 +419,7 @@ export class BaseLottiePlayer extends LitElement {
     this._observer.observe(this);
 
     if (!this.TVG) {
-      this._timer = setInterval(this._init.bind(this), 100);
+      this._init();
       return;
     }
 
@@ -548,7 +553,7 @@ export class BaseLottiePlayer extends LitElement {
    */
   public async load(src: string | object, fileType: FileType = FileType.JSON): Promise<void> {
     try {
-      await this._init();
+      await _moduleLoaded;
       const bytes = await parseSrc(src, fileType);
       this.dispatchEvent(new CustomEvent(PlayerEvent.Ready));
 
@@ -673,7 +678,7 @@ export class BaseLottiePlayer extends LitElement {
    */
   public term(): void {
     wasmModule.term();
-    wasmModule = null;
+    _resetModule();
   }
 
   /**
