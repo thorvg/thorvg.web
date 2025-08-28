@@ -1,0 +1,43 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/lottie-player.ts", "./src/base-lottie-player.ts", "./src/lottie-preset-player.ts"],
+  "out": "./docs",
+  "tsconfig": "./tsconfig.json",
+  "plugin": [],
+  "theme": "default",
+  "name": "@thorvg/thorvg.web",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludeNotDocumented": false,
+  "readme": "./README.md",
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "categorizeByGroup": true,
+  "groupOrder": [
+    "Others",
+    "*"
+  ],
+  "sort": ["source-order"],
+  "visibilityFilters": {
+    "protected": false,
+    "private": false,
+    "inherited": true,
+    "external": true
+  },
+  "searchInComments": true,
+  "cleanOutputDir": true,
+  "hideGenerator": false,
+  "disableSources": false,
+  "gitRevision": "main",
+  "gitRemote": "origin",
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": false
+  }
+}
