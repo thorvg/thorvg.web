@@ -131,9 +131,9 @@ ThorVG Lottie Player provides multiple presets optimized for different use cases
 
 | Preset | Renderer | Loaders | Bundle Size | Use Case |
 |--------|----------|---------|-------------|----------|
-| `sw` | Software | lottie, jpg, png, webp, ttf | ~687KB | Full-featured applications |
+| `sw` | Software | lottie, jpg, png, webp, ttf | ~687KB | Full-featured applications with CPU rendering |
 | `gl` | WebGL | lottie, jpg, png, webp, ttf | ~694KB | Full-featured applications with WebGL acceleration |
-| `sw-lite` | Software | lottie, png | ~288KB | Lightweight applications |
+| `sw-lite` | Software | lottie, png | ~288KB | Lightweight applications with CPU rendering |
 | `gl-lite` | WebGL | lottie, png | ~294KB | Lightweight applications with WebGL acceleration |
 
 ### Preset Usage
@@ -365,8 +365,8 @@ Please check these examples in various environments.
 ### Local Examples
 Check the usage of each preset in the `example/` directory:
 
-- [Software Renderer (Standard)](example/software.html) - CPU-based rendering with full Lottie support
-- [WebGL Renderer (Standard)](example/webgl.html) - GPU-accelerated rendering with full Lottie support
-- [Software Renderer (Lite)](example/software-lite.html) - CPU-based rendering with basic Lottie support
-- [WebGL Renderer (Lite)](example/webgl-lite.html) - GPU-accelerated rendering with basic Lottie support
-- [WebGPU Renderer](example/webgpu.html) - Latest WebGPU rendering engine
+- [Software Renderer (Standard)](example/software.html) - Full Lottie support with CPU rendering
+- [WebGL Renderer (Standard)](example/webgl.html) - Full Lottie support with WebGL acceleration
+- [Software Renderer (Lite)](example/software-lite.html) - Basic Lottie support with CPU rendering
+- [WebGL Renderer (Lite)](example/webgl-lite.html) - Basic Lottie support with WebGL acceleration
+- [WebGPU Renderer](example/webgpu.html) - Full Lottie support with WebGPU acceleration
