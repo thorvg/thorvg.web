@@ -120,12 +120,12 @@ export default function Home() {
 ThorVG Lottie Player provides multiple presets optimized for different use cases. Each preset can be selected based on bundle size and performance requirements.
 
 ### Standard Presets
-- **Software Renderer (SW)**: A CPU-based renderer with full Lottie specification support
-- **WebGL Renderer (GL)**: GPU-accelerated renderer with full Lottie specification support
+- **SW**: A CPU-based renderer with full Lottie specification support
+- **GL**: A WebGL accelerated renderer with full Lottie specification support
 
 ### Lite Presets
-- **Software Lite (SW-Lite)**: A CPU-based renderer that supports basic Lottie specification (PNG only; Fonts and Expressions are not supported)
-- **WebGL Lite (GL-Lite)**: GPU-accelerated renderer that supports basic Lottie specification (PNG only; Fonts and Expressions are not supported)
+- **SW-Lite**: A CPU-based renderer that supports basic Lottie specification (PNG only; Fonts and Expressions are not supported)
+- **GL-Lite**: A WebGL accelerated renderer that supports basic Lottie specification (PNG only; Fonts and Expressions are not supported)
 
 ### Preset Comparison
 
