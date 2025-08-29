@@ -129,10 +129,10 @@ ThorVG Lottie Player provides multiple presets optimized for different use cases
 
 ### Preset Comparison
 
-| Preset | Renderer | Loaders | Bundle Size | Use Case |
+| Preset | Renderer | Features | Bundle Size | Use Case |
 |--------|----------|---------|-------------|----------|
-| `sw` | Software | lottie, jpg, png, webp, ttf | ~687KB | Full-featured applications with CPU rendering |
-| `gl` | WebGL | lottie, jpg, png, webp, ttf | ~694KB | Full-featured applications with WebGL acceleration |
+| `sw` | Software | lottie + expressions, jpg, png, webp, ttf | ~687KB | Full-featured applications with CPU rendering |
+| `gl` | WebGL | lottie + expressions, jpg, png, webp, ttf | ~694KB | Full-featured applications with WebGL acceleration |
 | `sw-lite` | Software | lottie, png | ~288KB | Lightweight applications with CPU rendering |
 | `gl-lite` | WebGL | lottie, png | ~294KB | Lightweight applications with WebGL acceleration |
 
