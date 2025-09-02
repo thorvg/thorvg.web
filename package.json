@@ -25,7 +25,9 @@
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint ./src --ext .ts,.tsx,.js",
-    "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix"
+    "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
+    "test:builds": "node scripts/test-cross-framework/build.js",
+    "test:builds:react": "node scripts/test-cross-framework/build.js react"
   },
   "repository": {
     "type": "git",
