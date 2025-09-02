@@ -231,6 +231,29 @@ async function main() {
   for (const arg of args) {
     if (arg === "--verbose" || arg === "-v") {
       options.verbose = true;
+    } else if (arg === "--help" || arg === "-h") {
+      console.log(`
+      Cross-Framework Build Tester for thorvg.web
+
+      Usage: node build.js [frameworks...] [options]
+
+      Frameworks:
+        react        Test React framework
+        vue          Test Vue framework
+        svelte       Test Svelte framework
+        angular      Test Angular framework
+        (auto-detect all frameworks if none specified)
+
+      Options:
+        --verbose, -v    Enable verbose output
+        --help, -h       Show this help message
+
+      Examples:
+        node build.js                     # Test all frameworks
+        node build.js react               # Test only React
+        node build.js react vue --verbose # Test React and Vue with verbose output
+      `);
+      process.exit(0);
     } else if (!arg.startsWith("-")) {
       frameworks.push(arg);
     }
