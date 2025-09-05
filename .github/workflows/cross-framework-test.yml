@@ -2,10 +2,23 @@ name: Cross-Framework Build Test
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
+      - test/cross-framework-build # ✅ test 브랜치 푸시 시 실행
   pull_request:
-    branches: [main, master]
+    branches:
+      - main
+      - master # ✅ test → main/master PR 시 실행
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
