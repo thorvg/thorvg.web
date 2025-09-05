@@ -42,8 +42,8 @@
     "lint": "eslint ./src --ext .ts,.tsx,.js",
     "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
     "version": "sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'",
-    "test:builds": "node scripts/test-cross-framework/build.js",
-    "test:builds:react": "node scripts/test-cross-framework/build.js react"
+    "examples:build:all": "node scripts/test-cross-framework/build.js",
+    "examples:build:react": "node scripts/test-cross-framework/build.js react"
   },
   "repository": {
     "type": "git",
