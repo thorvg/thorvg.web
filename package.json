@@ -42,10 +42,10 @@
     "lint": "eslint ./src --ext .ts,.tsx,.js",
     "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
     "version": "sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'",
-    "example:build:all": "node scripts/test-cross-framework/build.js",
-    "example:build:react": "node scripts/test-cross-framework/build.js react",
-    "example:build:vue": "node scripts/test-cross-framework/build.js vue",
-    "example:build:svelte": "node scripts/test-cross-framework/build.js svelte"
+    "example:build:all": "node scripts/cross-framework-test/index.js",
+    "example:build:react": "node scripts/cross-framework-test/index.js react",
+    "example:build:vue": "node scripts/cross-framework-test/index.js vue",
+    "example:build:svelte": "node scripts/cross-framework-test/index.js svelte"
   },
   "repository": {
     "type": "git",
