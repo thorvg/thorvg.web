@@ -3,7 +3,8 @@ import "@thorvg/lottie-player";
 </script>
 
 <template>
-  <div>
+  <div className="app">
+    <h1 className="app_title">ThorVG Vue Usage Example</h1>
     <lottie-player
       autoplay
       loop
