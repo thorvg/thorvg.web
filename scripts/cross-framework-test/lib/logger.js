@@ -18,12 +18,10 @@ class Logger {
   static log(message, type = "info") {
     const timestamp = new Date().toISOString();
     const color = this.colors[type] || this.colors.info;
+
     console.log(`${color}[${timestamp}] ${message}${this.colors.reset}`);
   }
 
-  /**
-   * Convenience methods for different log types
-   */
   static success(message) {
     this.log(message, "success");
   }

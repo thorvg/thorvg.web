@@ -2,14 +2,11 @@ const path = require("path");
 const { execSync } = require("child_process");
 
 const Logger = require("./logger");
-const FileSystemUtils = require("./file-system-utils");
-const ResultsReporter = require("./results-reporter");
+const FileSystem = require("./file-system");
+const Reporter = require("./reporter");
 
-const { DEFAULT_CONFIG, FRAMEWORK_CONFIGS } = require("./config");
+const { DEFAULT_CONFIG, FRAMEWORK_CONFIGS } = require("../constant/config");
 
-/**
- * Main class for cross-framework build testing
- */
 class CrossFrameworkBuildTester {
   constructor(options = {}) {
     this.results = { successful: [], failed: [], skipped: [] };
@@ -23,190 +20,167 @@ class CrossFrameworkBuildTester {
   }
 
   /**
-   * Validate a framework directory and record results
-   * @param {string} frameworkName - Name of the framework to validate
-   * @returns {boolean} True if framework is valid for testing
+   * @param {string|string[]|null} frameworks - Specific frameworks to test, or null for auto-discovery
+   * @returns {number} Exit code (0 for success, 1 for failures)
    */
-  validateFramework(frameworkName) {
-    const validation = FileSystemUtils.validateFrameworkDirectory(
-      this.options.examplesDir,
-      frameworkName
+  execute(frameworks = null) {
+    // 1. testing
+    this.logger.info("🚀 Starting cross-framework build testing...");
+    const frameworksToTest = this._getFrameworksToTest(frameworks);
+    this.logger.info(
+      `Found frameworks to test: ${frameworksToTest.join(", ")}`
     );
+    this._executeBuildTestsForFrameworks(frameworksToTest); // Orchestrate builds for each framework
 
-    if (!validation.valid) {
-      this.results.skipped.push({
-        framework: frameworkName,
-        reason: validation.reason,
-        timestamp: new Date().toISOString(),
-      });
-      this.logger.warning(`${frameworkName}: ${validation.reason}`);
-      return false;
-    }
+    // 2. Display results
+    const reporter = new Reporter(this.results, this.logger);
+    reporter.displaySummary();
 
-    return true;
+    // 3. Determine exit code
+    return this.results.failed.length === 0 ? 0 : 1;
   }
 
   /**
-   * Execute build test for a specific framework
-   * @param {string} frameworkName - Name of the framework to test
+   * @private
+   * @param {string|string[]|null} frameworks - User-specified frameworks or null for auto-discovery
+   * @returns {string[]} Array of framework names to test
    */
-  async executeBuildTest(frameworkName) {
+  _getFrameworksToTest(frameworks) {
+    if (frameworks) {
+      return Array.isArray(frameworks) ? frameworks : [frameworks];
+    }
+    return FileSystem.discoverFrameworks(this.options.examplesDir);
+  }
+
+  /**
+   * Orchestrate build tests for all specified frameworks
+   * @private
+   * @param {string[]} frameworksToTest - Array of framework names to test
+   */
+  _executeBuildTestsForFrameworks(frameworksToTest) {
+    for (const framework of frameworksToTest) {
+      const validation = FileSystem.validateFrameworkDirectory(
+        this.options.examplesDir,
+        framework
+      );
+
+      if (!validation.valid) {
+        this._recordBuildResult(framework, "skipped", validation.reason);
+        continue;
+      }
+
+      this.logger.info(`Testing ${framework} build...`);
+
+      try {
+        this._buildSingleFramework(framework);
+        this._recordBuildResult(framework, "successful");
+      } catch (error) {
+        this._recordBuildResult(framework, "failed", null, error.message);
+      } finally {
+        this._restoreWorkingDirectory();
+      }
+    }
+  }
+
+  /**
+   * @private
+   * @param {string} frameworkName - Name of the framework to build
+   * @throws {Error} If build process fails
+   */
+  _buildSingleFramework(frameworkName) {
     const frameworkPath = path.join(this.options.examplesDir, frameworkName);
+    /**
+     *  <CONFIG EXAMPLE>
+     * {
+     *   buildCommand: "npm run build",
+     *   packageManager: "npm",
+     *   timeout: DEFAULT_CONFIG.DEFAULT_TIMEOUT,
+     *   description: "framework build configuration",
+     * }
+     */
     const config = FRAMEWORK_CONFIGS[frameworkName];
 
     if (!config) {
-      this.recordSkipped(
-        frameworkName,
-        "No configuration found for this framework"
-      );
-      return;
+      throw new Error(`No configuration found for framework: ${frameworkName}`);
     }
 
-    try {
-      this.logger.info(`Testing ${frameworkName} build...`);
+    // Change to framework directory
+    process.chdir(frameworkPath);
 
-      process.chdir(frameworkPath); // Change to framework directory
-      this.installDepsIfNeeded(frameworkName, frameworkPath, config); // Install dependencies if needed
-      this.runBuildCommand(frameworkName, config); // Execute build command
-
-      // Record success
-      this.results.successful.push(frameworkName);
-      this.logger.success(`✅ ${frameworkName} build successful!`);
-    } catch (error) {
-      this.recordFailed(frameworkName, error.message);
-    } finally {
-      this.restoreWorkingDirectory();
-    }
-  }
-
-  /**
-   * Install dependencies if node_modules doesn't exist
-   * @param {string} frameworkName - Name of the framework
-   * @param {string} frameworkPath - Path to framework directory
-   * @param {object} config - Framework configuration
-   */
-  installDepsIfNeeded(frameworkName, frameworkPath, config) {
-    if (!FileSystemUtils.hasNodeModules(frameworkPath)) {
+    // Install dependencies if needed
+    if (!FileSystem.hasNodeModules(frameworkPath)) {
       this.logger.info(`Installing dependencies for ${frameworkName}...`);
-      execSync(`${config.packageManager} install`, {
-        stdio: this.options.verbose ? "inherit" : "pipe",
-        timeout: config.timeout,
-      });
+      this._executeShellCommand(`${config.packageManager} install`, config);
     }
+
+    // Execute build command
+    this.logger.info(`Building ${frameworkName}...`);
+    this._executeShellCommand(config.buildCommand, config);
   }
 
   /**
-   * Run the build command for a framework
-   * @param {string} frameworkName - Name of the framework
-   * @param {object} config - Framework configuration
+   * @private
+   * @param {string} command - Command to execute
+   * @param {object} config - Framework configuration with timeout property
+   * @param {boolean} [condition=true] - Whether to execute the command (default: true)
    */
-  runBuildCommand(frameworkName, config) {
-    this.logger.info(`Building ${frameworkName}...`);
-    execSync(config.buildCommand, {
+  _executeShellCommand(command, config, condition = true) {
+    if (!condition) return;
+
+    execSync(command, {
       stdio: this.options.verbose ? "inherit" : "pipe",
       timeout: config.timeout,
     });
   }
 
   /**
-   * Record a skipped framework with reason
+   * @private
    * @param {string} frameworkName - Name of the framework
-   * @param {string} reason - Reason for skipping
+   * @param {string} status - Status: 'successful', 'skipped', or 'failed'
+   * @param {string} [reason] - Reason for skipping (only for 'skipped' status)
+   * @param {string} [errorMessage] - Error message (only for 'failed' status)
    */
-  recordSkipped(frameworkName, reason) {
-    this.results.skipped.push({
-      framework: frameworkName,
-      reason,
-      timestamp: new Date().toISOString(),
-    });
-    this.logger.warning(`${frameworkName}: ${reason}`);
+  _recordBuildResult(
+    frameworkName,
+    status,
+    reason = null,
+    errorMessage = null
+  ) {
+    switch (status) {
+      case "successful":
+        this.results.successful.push(frameworkName);
+        this.logger.success(
+          `✅ ${frameworkName} build completed successfully!`
+        );
+        break;
+      case "skipped":
+        this.results.skipped.push({
+          framework: frameworkName,
+          reason,
+          timestamp: new Date().toISOString(),
+        });
+        this.logger.warning(`⏭️ ${frameworkName} build skipped: ${reason}`);
+        break;
+      case "failed":
+        this.results.failed.push({
+          framework: frameworkName,
+          error: errorMessage,
+          timestamp: new Date().toISOString(),
+        });
+        this.logger.error(`❌ ${frameworkName} build failed: ${errorMessage}`);
+        break;
+    }
   }
 
   /**
-   * Record a failed framework with error
-   * @param {string} frameworkName - Name of the framework
-   * @param {string} errorMessage - Error message
+   * @private
    */
-  recordFailed(frameworkName, errorMessage) {
-    this.results.failed.push({
-      framework: frameworkName,
-      error: errorMessage,
-      timestamp: new Date().toISOString(),
-    });
-    this.logger.error(`❌ ${frameworkName} build failed: ${errorMessage}`);
-  }
-
-  /**
-   * Safely restore the original working directory
-   */
-  restoreWorkingDirectory() {
+  _restoreWorkingDirectory() {
     try {
       process.chdir(this.originalCwd);
     } catch (error) {
       this.logger.warning(`Failed to restore directory: ${error.message}`);
     }
-  }
-
-  /**
-   * Main execution method for running build tests
-   * @param {string|string[]|null} frameworks - Specific frameworks to test, or null for auto-discovery
-   * @returns {number} Exit code (0 for success, 1 for failures)
-   */
-  run(frameworks = null) {
-    this.logger.info("🚀 Starting cross-framework build testing...");
-
-    const frameworksToTest = this.resolveFrameworksToTest(frameworks);
-    this.logger.info(
-      `Found frameworks to test: ${frameworksToTest.join(", ")}`
-    );
-
-    this.executeTests(frameworksToTest); // Execute tests for each framework
-    this.displayResults(); // Generate and display results
-
-    return this.determineExitCode();
-  }
-
-  /**
-   * Resolve which frameworks to test based on input
-   * @param {string|string[]|null} frameworks - User-specified frameworks or null for auto-discovery
-   * @returns {string[]} Array of framework names to test
-   */
-  resolveFrameworksToTest(frameworks) {
-    if (frameworks) {
-      return Array.isArray(frameworks) ? frameworks : [frameworks];
-    }
-
-    // Auto-discover frameworks
-    return FileSystemUtils.discoverFrameworks(this.options.examplesDir);
-  }
-
-  /**
-   * Execute build tests for all specified frameworks
-   * @param {string[]} frameworksToTest - Array of framework names to test
-   */
-  executeTests(frameworksToTest) {
-    for (const framework of frameworksToTest) {
-      const isValid = this.validateFramework(framework);
-      if (isValid) {
-        this.executeBuildTest(framework);
-      }
-    }
-  }
-
-  /**
-   * Display test results summary
-   */
-  displayResults() {
-    const reporter = new ResultsReporter(this.results, this.logger);
-    reporter.displaySummary();
-  }
-
-  /**
-   * Determine exit code based on test results
-   * @returns {number} 0 if all tests passed, 1 if any failed
-   */
-  determineExitCode() {
-    return this.results.failed.length === 0 ? 0 : 1;
   }
 }
 

@@ -1,9 +1,6 @@
 const Logger = require("./logger");
 const CrossFrameworkBuildTester = require("./build-tester");
 
-/**
- * Command Line Interface for the build tester
- */
 class CLI {
   constructor() {
     this.args = process.argv.slice(2);
@@ -12,64 +9,84 @@ class CLI {
   }
 
   /**
-   * Parse command line arguments
+   * @returns {number} Exit code
    */
-  parseArguments() {
+  execute() {
+    this._parseArguments();
+
+    const tester = new CrossFrameworkBuildTester(this.options);
+    const exitCode = tester.execute(
+      this.frameworks.length > 0 ? this.frameworks : null
+    );
+
+    return exitCode;
+  }
+
+  /**
+   * Parse command line arguments
+   * @private
+   */
+  _parseArguments() {
     for (const arg of this.args) {
-      if (this.isVerboseFlag(arg)) {
+      if (this._isVerboseFlag(arg)) {
         this.options.verbose = true;
-      } else if (this.isHelpFlag(arg)) {
-        this.showHelp();
+      } else if (this._isHelpFlag(arg)) {
+        this._showHelp();
         process.exit(0);
-      } else if (this.isFrameworkArgument(arg)) {
+      } else if (this._isFrameworkArgument(arg)) {
         this.frameworks.push(arg);
       } else {
-        this.handleUnknownArgument(arg);
+        this._handleUnknownArgument(arg);
       }
     }
   }
 
   /**
    * Check if argument is a verbose flag
+   * @private
    * @param {string} arg - Command line argument
    * @returns {boolean} True if verbose flag
    */
-  isVerboseFlag(arg) {
+  _isVerboseFlag(arg) {
     return arg === "--verbose" || arg === "-v";
   }
 
   /**
    * Check if argument is a help flag
+   * @private
    * @param {string} arg - Command line argument
    * @returns {boolean} True if help flag
    */
-  isHelpFlag(arg) {
+  _isHelpFlag(arg) {
     return arg === "--help" || arg === "-h";
   }
 
   /**
    * Check if argument is a framework name
+   * @private
    * @param {string} arg - Command line argument
    * @returns {boolean} True if framework argument
    */
-  isFrameworkArgument(arg) {
+  _isFrameworkArgument(arg) {
     return !arg.startsWith("-");
   }
 
   /**
    * Handle unknown command line arguments
+   * @private
    * @param {string} arg - Unknown argument
    */
-  handleUnknownArgument(arg) {
+  _handleUnknownArgument(arg) {
     Logger.warning(`Unknown argument: ${arg}`);
-    this.showHelp();
+    this._showHelp();
     process.exit(1);
   }
 
   /**
    * Display help information
+   * @private
    */
-  showHelp() {
+  _showHelp() {
     const helpText = `
       Cross-Framework Build Tester for thorvg.web
 
@@ -93,21 +110,6 @@ class CLI {
     `.trim();
 
     console.log(helpText);
-  }
-
-  /**
-   * Execute the CLI command
-   * @returns {number} Exit code
-   */
-  execute() {
-    this.parseArguments();
-
-    const tester = new CrossFrameworkBuildTester(this.options);
-    const exitCode = tester.run(
-      this.frameworks.length > 0 ? this.frameworks : null
-    );
-
-    return exitCode;
   }
 }
 

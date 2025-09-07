@@ -4,12 +4,12 @@ const path = require("path");
 /**
  * File system utilities for framework directory operations
  */
-class FileSystemUtils {
+class FileSystem {
   /**
    * Check if a framework directory exists and has required files
    * @param {string} examplesDir - Base examples directory
    * @param {string} frameworkName - Name of the framework to check
-   * @returns {boolean} True if directory exists and has package.json
+   * @returns {{valid: boolean, reason: string}}
    */
   static validateFrameworkDirectory(examplesDir, frameworkName) {
     const frameworkPath = path.join(examplesDir, frameworkName);
@@ -53,4 +53,4 @@ class FileSystemUtils {
   }
 }
 
-module.exports = FileSystemUtils;
+module.exports = FileSystem;

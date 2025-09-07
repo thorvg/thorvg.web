@@ -1,7 +1,7 @@
 /**
  * Handles formatting and displaying test results
  */
-class ResultsReporter {
+class Reporter {
   constructor(results, logger) {
     this.results = results;
     this.logger = logger;
@@ -13,10 +13,17 @@ class ResultsReporter {
   displaySummary() {
     this.logger.info("\n📊 Build Test Summary:");
 
+    this.displayAllResults();
+    this.displayTotals();
+  }
+
+  /**
+   * Display all test results (successful, failed, skipped)
+   */
+  displayAllResults() {
     this.displaySuccessfulResults();
     this.displayFailedResults();
     this.displaySkippedResults();
-    this.displayTotals();
   }
 
   /**
@@ -25,7 +32,7 @@ class ResultsReporter {
   displaySuccessfulResults() {
     if (this.results.successful.length > 0) {
       this.logger.success(
-        `✅ Successful: ${this.results.successful.join(", ")}`
+        `📊✅ Successful: [${this.results.successful.join(", ")}]`
       );
     }
   }
@@ -36,7 +43,7 @@ class ResultsReporter {
   displayFailedResults() {
     if (this.results.failed.length > 0) {
       this.logger.error(
-        `❌ Failed: ${this.results.failed.map(f => f.framework).join(", ")}`
+        `📊❌ Failed: ${this.results.failed.map(f => f.framework).join(", ")}`
       );
       this.results.failed.forEach(failure => {
         this.logger.error(`   ${failure.framework}: ${failure.error}`);
@@ -70,4 +77,4 @@ class ResultsReporter {
   }
 }
 
-module.exports = ResultsReporter;
+module.exports = Reporter;

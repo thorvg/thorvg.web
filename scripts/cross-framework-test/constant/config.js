@@ -1,8 +1,5 @@
 const path = require("path");
 
-/**
- * Default configuration constants
- */
 const DEFAULT_CONFIG = {
   EXAMPLES_DIR: path.join(__dirname, "..", "..", "..", "example"),
   DEFAULT_TIMEOUT: 300000, // 5 minutes
@@ -32,6 +29,7 @@ const FRAMEWORK_CONFIGS = {
     timeout: DEFAULT_CONFIG.DEFAULT_TIMEOUT,
     description: "Svelte build configuration",
   },
+
   // Add more frameworks as they are added
 };
 
