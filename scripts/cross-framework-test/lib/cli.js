@@ -99,11 +99,11 @@ class CLI {
    * Execute the CLI command
    * @returns {number} Exit code
    */
-  async execute() {
+  execute() {
     this.parseArguments();
 
     const tester = new CrossFrameworkBuildTester(this.options);
-    const exitCode = await tester.run(
+    const exitCode = tester.run(
       this.frameworks.length > 0 ? this.frameworks : null
     );
 

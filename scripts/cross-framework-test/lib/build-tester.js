@@ -27,7 +27,7 @@ class CrossFrameworkBuildTester {
    * @param {string} frameworkName - Name of the framework to validate
    * @returns {boolean} True if framework is valid for testing
    */
-  async validateFramework(frameworkName) {
+  validateFramework(frameworkName) {
     const validation = FileSystemUtils.validateFrameworkDirectory(
       this.options.examplesDir,
       frameworkName
@@ -66,8 +66,8 @@ class CrossFrameworkBuildTester {
       this.logger.info(`Testing ${frameworkName} build...`);
 
       process.chdir(frameworkPath); // Change to framework directory
-      await this.installDepsIfNeeded(frameworkName, frameworkPath, config); // Install dependencies if needed
-      await this.runBuildCommand(frameworkName, config); // Execute build command
+      this.installDepsIfNeeded(frameworkName, frameworkPath, config); // Install dependencies if needed
+      this.runBuildCommand(frameworkName, config); // Execute build command
 
       // Record success
       this.results.successful.push(frameworkName);
@@ -85,7 +85,7 @@ class CrossFrameworkBuildTester {
    * @param {string} frameworkPath - Path to framework directory
    * @param {object} config - Framework configuration
    */
-  async installDepsIfNeeded(frameworkName, frameworkPath, config) {
+  installDepsIfNeeded(frameworkName, frameworkPath, config) {
     if (!FileSystemUtils.hasNodeModules(frameworkPath)) {
       this.logger.info(`Installing dependencies for ${frameworkName}...`);
       execSync(`${config.packageManager} install`, {
@@ -100,7 +100,7 @@ class CrossFrameworkBuildTester {
    * @param {string} frameworkName - Name of the framework
    * @param {object} config - Framework configuration
    */
-  async runBuildCommand(frameworkName, config) {
+  runBuildCommand(frameworkName, config) {
     this.logger.info(`Building ${frameworkName}...`);
     execSync(config.buildCommand, {
       stdio: this.options.verbose ? "inherit" : "pipe",
@@ -152,7 +152,7 @@ class CrossFrameworkBuildTester {
    * @param {string|string[]|null} frameworks - Specific frameworks to test, or null for auto-discovery
    * @returns {number} Exit code (0 for success, 1 for failures)
    */
-  async run(frameworks = null) {
+  run(frameworks = null) {
     this.logger.info("🚀 Starting cross-framework build testing...");
 
     const frameworksToTest = this.resolveFrameworksToTest(frameworks);
@@ -160,7 +160,7 @@ class CrossFrameworkBuildTester {
       `Found frameworks to test: ${frameworksToTest.join(", ")}`
     );
 
-    await this.executeTests(frameworksToTest); // Execute tests for each framework
+    this.executeTests(frameworksToTest); // Execute tests for each framework
     this.displayResults(); // Generate and display results
 
     return this.determineExitCode();
@@ -184,11 +184,11 @@ class CrossFrameworkBuildTester {
    * Execute build tests for all specified frameworks
    * @param {string[]} frameworksToTest - Array of framework names to test
    */
-  async executeTests(frameworksToTest) {
+  executeTests(frameworksToTest) {
     for (const framework of frameworksToTest) {
-      const isValid = await this.validateFramework(framework);
+      const isValid = this.validateFramework(framework);
       if (isValid) {
-        await this.executeBuildTest(framework);
+        this.executeBuildTest(framework);
       }
     }
   }

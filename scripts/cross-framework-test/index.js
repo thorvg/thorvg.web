@@ -9,9 +9,9 @@ const Logger = require("./lib/logger");
 /**
  * Main entry point
  */
-async function main() {
+function main() {
   const cli = new CLI();
-  const exitCode = await cli.execute();
+  const exitCode = cli.execute();
   process.exit(exitCode);
 }
 
