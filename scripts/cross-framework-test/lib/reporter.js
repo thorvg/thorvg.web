@@ -43,7 +43,7 @@ class Reporter {
   displayFailedResults() {
     if (this.results.failed.length > 0) {
       this.logger.error(
-        `📊❌ Failed: ${this.results.failed.map(f => f.framework).join(", ")}`
+        `📊❌ Failed: [${this.results.failed.map(f => f.framework).join(", ")}]`
       );
       this.results.failed.forEach(failure => {
         this.logger.error(`   ${failure.framework}: ${failure.error}`);
