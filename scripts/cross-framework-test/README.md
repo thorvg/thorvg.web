@@ -9,14 +9,15 @@ All paths are relative to the **project root directory**:
 ```
 scripts/cross-framework-test/
 ├── index.js              # Main entry point
+├── constant/
+│   └── config.js             # Config and framework settings
 ├── lib/
-│   ├── config.js             # Config and framework settings
-│   ├── logger.js             # Logging utility
-│   ├── file-system-utils.js  # File system utility
 │   ├── build-tester.js       # Main build testing logic
-│   ├── results-reporter.js   # Results formatting and output
-│   └── cli.js                # Command line interface
-└── README.md            # This file
+│   ├── cli.js                # Command line interface
+│   ├── file-system.js        # File system utilities
+│   ├── logger.js             # Logging utility
+│   └── reporter.js           # Results formatting and output
+└── README.md             # This file
 ```
 
 ## Usage
@@ -51,7 +52,7 @@ node scripts/cross-framework-test/index.js --help
 
 ### Adding New Framework
 
-You can add new frameworks in the `config.js` file:
+You can add new frameworks in the `constant/config.js` file:
 
 ```javascript
 const FRAMEWORK_CONFIGS = {
@@ -65,39 +66,22 @@ const FRAMEWORK_CONFIGS = {
 };
 ```
 
-## Output Example
-
-```
-[2025-09-06T14:43:36.376Z] 🚀 Starting cross-framework build testing...
-[2025-09-06T14:43:36.379Z] Found frameworks to test: react, vue, svelte
-[2025-09-06T14:43:36.380Z] Testing react build...
-[2025-09-06T14:43:37.768Z] ✅ react build successful!
-[2025-09-06T14:43:37.768Z] Testing vue build...
-[2025-09-06T14:43:38.123Z] ✅ vue build successful!
-[2025-09-06T14:43:38.124Z]
-📊 Build Test Summary:
-[2025-09-06T14:43:38.124Z] ✅ Successful: react, vue
-[2025-09-06T14:43:38.124Z] ⏭️  Skipped: svelte (Directory does not exist)
-[2025-09-06T14:43:38.124Z]
-Total tested: 3
-```
-
 ## Development
 
 ### Module Structure
 
 Each module follows the single responsibility principle and can be tested and reused independently:
 
-- **`config.js`** - Configuration management
-- **`logger.js`** - Color-coded timestamp logging
-- **`file-system-utils.js`** - File system operations
-- **`build-tester.js`** - Build testing logic
-- **`results-reporter.js`** - Results formatting
-- **`cli.js`** - Command line interface
+- **`constant/config.js`** - Configuration management
+- **`lib/logger.js`** - Color-coded timestamp logging
+- **`lib/file-system.js`** - File system operations
+- **`lib/build-tester.js`** - Build testing logic
+- **`lib/reporter.js`** - Results formatting
+- **`lib/cli.js`** - Command line interface
 - **`index.js`** - Main entry point
 
 ### Adding New Frameworks
 
-1. Add framework configuration to `config.js`
+1. Add framework configuration to `constant/config.js`
 2. Create framework project in `example/` directory
 3. Ensure `package.json` file exists
