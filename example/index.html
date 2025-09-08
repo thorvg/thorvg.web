@@ -14,6 +14,7 @@
         <button onclick="stopAnimation()">Stop</button>
         <button onclick="createAnimation()">Create</button>
         <button onclick="destroyAnimation()">Destroy</button>
+        <button onclick="termAnimation()">Term</button>
         <button onclick="save2gif()">save2gif</button>
         <button onclick="save2png()">save2png</button>
         <div>
@@ -56,7 +57,7 @@
 
         animation.autoPlay = true;
         animation.loop = true;
-        animation.src = "https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json";
+        animation.src = "http://127.0.0.1:5500/example/sample.json";
         animation.style.width = "500px";
         animation.style.height = "500px";
         animation.wasmUrl = "/dist/thorvg.wasm";
@@ -105,6 +106,16 @@
         }
 
         animation.destroy();
+        // animation = undefined;
+      }
+
+      function termAnimation() {
+        if (!animation) {
+          alert('No animation to destroy');
+          return;
+        }
+
+        animation.term();
         animation = undefined;
       }
 

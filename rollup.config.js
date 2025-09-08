@@ -149,8 +149,8 @@ const createLottieConfig = (preset) => {
         compress: {
           pure_getters: true,
           passes: 3,
-          drop_console: true,
-          drop_debugger: true
+          // drop_console: true,
+          // drop_debugger: true
         },
         mangle: true,
         output: {
@@ -163,10 +163,10 @@ const createLottieConfig = (preset) => {
 
 export default [
   createLottieConfig(PresetModule.Default),
-  createLottieConfig(PresetModule.SW),
-  createLottieConfig(PresetModule.GL),
-  createLottieConfig(PresetModule.SW_LITE),
-  createLottieConfig(PresetModule.GL_LITE),
+  // createLottieConfig(PresetModule.SW),
+  // createLottieConfig(PresetModule.GL),
+  // createLottieConfig(PresetModule.SW_LITE),
+  // createLottieConfig(PresetModule.GL_LITE),
   {
     input: "./src/lottie-player.ts",
     treeshake: true,
