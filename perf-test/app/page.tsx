@@ -21,7 +21,7 @@ const animations = [
   '5344-honey-sack-hud.json',
   '11555.json',
   '27746-joypixels-partying-face-emoji-animation.json',
-  'a_mountain.json',
+  'R_QPKIVi.json',
   'abstract_circle.json',
   'alien.json',
   'anubis.json',
