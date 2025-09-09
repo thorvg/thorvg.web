@@ -9,6 +9,8 @@ import alias from '@rollup/plugin-alias';
 import pkg from './package.json';
 import path from 'path';
 
+const isNode = process.env.NODE_ENV === 'node';
+
 const name = 'lottie-player';
 const globals = {
   url: "url",
@@ -125,7 +127,7 @@ const createLottieConfig = (preset) => {
           '__RENDERER__': presetMap[preset].renderer,
         },
       }),
-      nodePolyfills(),
+      ...(isNode ? [] : [nodePolyfills()]),
       commonjs({
         include: /node_modules/
       }),
