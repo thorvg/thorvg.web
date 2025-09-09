@@ -36,9 +36,11 @@
   "scripts": {
     "build": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs && npm run clean:post",
     "build:watch": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
+    "build:node": "NODE_ENV=node npm run build",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
     "clean:post": "find ./dist -name 'thorvg.js' -type f -delete",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
     "lint": "eslint ./src --ext .ts,.tsx,.js",
     "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
     "version": "sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'"
@@ -65,19 +67,24 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^6.0.2",
     "@swc/core": "^1.3.99",
+    "@types/jest": "^30.0.0",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "canvas": "^3.1.2",
     "eslint": "^8.0.1",
     "eslint-config-standard-with-typescript": "^40.0.0",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-wc": "^2.0.4",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
     "rollup": "^4.46.2",
     "rollup-plugin-dts": "^6.1.0",
     "rollup-plugin-polyfill-node": "^0.13.0",
     "rollup-plugin-swc3": "^0.10.4",
     "rollup-plugin-terser": "^7.0.2",
-    "typescript": "*"
+    "ts-jest": "^29.4.1",
+    "typescript": "^5.9.2"
   },
   "dependencies": {
     "lit": "^3.1.0",
