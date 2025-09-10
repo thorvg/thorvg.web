@@ -269,7 +269,7 @@ player.addEventListener('load', () => {
 
 ---
 
-**Method** : `destory()`
+**Method** : `destroy()`
 
 **Purpose** : Destroy animation and lottie-player element
 
@@ -320,7 +320,7 @@ player.addEventListener('load', () => {
 
 **Method** : `setBgColor(value: string)`
 
-**Purpose** : Set a backgroud color
+**Purpose** : Set a background color
 
 **Parameters**
 | Name | Type | Description
