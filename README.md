@@ -260,7 +260,7 @@ player.addEventListener('load', () => {
 **Parameters**
 | Name | Type | Description
 | --- | --- | --- |
-| src | `number` | The frame number to move, shouldn't be less than 0 and greater than `totalFrame`
+| frame | `number` | The frame number to move, shouldn't be less than 0 and greater than `totalFrame`
 
 **Return Type** : `void`
 
@@ -269,7 +269,7 @@ player.addEventListener('load', () => {
 
 ---
 
-**Method** : `destory()`
+**Method** : `destroy()`
 
 **Purpose** : Destroy animation and lottie-player element
 
@@ -320,7 +320,7 @@ player.addEventListener('load', () => {
 
 **Method** : `setBgColor(value: string)`
 
-**Purpose** : Set a backgroud color
+**Purpose** : Set a background color
 
 **Parameters**
 | Name | Type | Description
@@ -338,7 +338,7 @@ player.addEventListener('load', () => {
 **Parameters**
 | Name | Type | Description
 | --- | --- | --- |
-| value | `ExportableType` | File type to export
+| target | `ExportableType` | File type to export
 
 **Return Type** : `void`
 
