@@ -362,6 +362,27 @@ Please check these examples in various environments.
 - [VueJS Usage](https://codesandbox.io/p/devbox/thorvg-lottieplayer-vue-758h3l)
 - [Svelte Usage](https://codesandbox.io/p/devbox/thorvg-lottieplayer-svelte-xd4zp6)
 
+### Build Testing
+
+Test framework compatibility by running builds across different frontend frameworks:
+
+```bash
+# Test all frameworks
+npm run example:build:all
+
+# Test specific framework
+npm run example:build:react
+npm run example:build:vue
+npm run example:build:svelte
+
+# Or run directly
+node scripts/cross-framework-test/index.js react
+```
+
+This will automatically detect framework projects in the `example/` directory and test their build processes.
+
+The build testing script is located in `scripts/cross-framework-test/`.
+
 ### Local Examples
 Check the usage of each preset in the `example/` directory:
 
