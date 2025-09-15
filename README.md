@@ -367,21 +367,12 @@ Please check these examples in various environments.
 Test framework compatibility by running builds across different frontend frameworks:
 
 ```bash
-# Test all frameworks
-npm run example:build:all
-
-# Test specific framework
-npm run example:build:react
-npm run example:build:vue
-npm run example:build:svelte
-
-# Or run directly
-node scripts/cross-framework-test/index.js react
+$ ./scripts/cross-framework-build-test.sh
 ```
 
 This will automatically detect framework projects in the `example/` directory and test their build processes.
 
-The build testing script is located in `scripts/cross-framework-test/`.
+The build testing script is located in `scripts/cross-framework-build-test/`.
 
 ### Local Examples
 Check the usage of each preset in the `example/` directory:
