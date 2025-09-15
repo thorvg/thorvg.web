@@ -41,11 +41,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint ./src --ext .ts,.tsx,.js",
     "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
-    "version": "sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'",
-    "example:build:all": "node scripts/cross-framework-test/index.js",
-    "example:build:react": "node scripts/cross-framework-test/index.js react",
-    "example:build:vue": "node scripts/cross-framework-test/index.js vue",
-    "example:build:svelte": "node scripts/cross-framework-test/index.js svelte"
+    "version": "sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'"
   },
   "repository": {
     "type": "git",
