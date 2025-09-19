@@ -729,6 +729,21 @@ export class BaseLottiePlayer extends LitElement {
   }
 
   /**
+   * Set rendering quality.
+   * @param value Quality value (1-100). Higher values are likely to support better quality but may impact performance.
+   * @since 1.0
+   */
+  public setQuality(value: number): void {
+    if (!this.TVG) {
+      return;
+    }
+
+    if (this.TVG.quality(value) && this.currentState !== PlayerState.Playing) {
+      this._render();
+    }
+  }
+
+  /**
    * Return thorvg version
    * @since 1.0
    */

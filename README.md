@@ -331,6 +331,19 @@ player.addEventListener('load', () => {
 
 ---
 
+**Method** : `setQuality(value: number)`
+
+**Purpose** : Set rendering quality for animations
+
+**Parameters**
+| Name | Type | Description
+| --- | --- | --- |
+| value | `number` | Quality value (1-100). Higher values are likely to support better quality but may impact performance.
+
+**Return Type** : `void`
+
+---
+
 **Method** : `save(target: ExportableType)`
 
 **Purpose** : Export current animation to other file type
