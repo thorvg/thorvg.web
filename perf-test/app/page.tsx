@@ -143,7 +143,7 @@ function setQueryStringParameter(name: string, value: any) {
 }
 
 function isWebGPUAvailable() {
-	return typeof navigator.gpu !== 'undefined';
+  return typeof navigator.gpu !== 'undefined';
 }
 
 function createAvailablePlayerOptions() {
@@ -160,7 +160,7 @@ function createAvailablePlayerOptions() {
   }
   
   return playerOptions;
-};
+}
 
 export default function Home() {
   const size = isMobile ? { width: 150, height: 150 } : { width: 180, height: 180};
