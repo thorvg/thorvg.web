@@ -143,7 +143,7 @@ function setQueryStringParameter(name: string, value: any) {
 }
 
 function isWebGPUAvailable() {
-  return typeof navigator.gpu !== 'undefined';
+  return !!navigator.gpu;
 }
 
 function createAvailablePlayerOptions() {
