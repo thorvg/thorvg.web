@@ -142,10 +142,6 @@ function setQueryStringParameter(name: string, value: any) {
   window.history.replaceState({}, '', decodeURIComponent(`${window.location.pathname}?${params}`));
 }
 
-function isWebGPUAvailable() {
-  return !!navigator.gpu;
-}
-
 function createAvailablePlayerOptions() {
   let playerOptions = [
     { id: 1, name: 'ThorVG(Software)' },
@@ -155,7 +151,7 @@ function createAvailablePlayerOptions() {
     //{ id: 5, name: 'skia/skottie' },
   ];
 
-  if (!isWebGPUAvailable()) {
+  if (!navigator.gpu) {
     playerOptions = playerOptions.filter(({ name }) => name !== 'ThorVG(WebGPU)');
   }
   
