@@ -130,13 +130,7 @@ const countOptions = [
   //{ id: 6, name: 1000 },
 ];
 
-const playerOptions = [
-  { id: 1, name: 'ThorVG(Software)' },
-  { id: 2, name: 'ThorVG(WebGPU)' },
-  //{ id: 3, name: `dotlottie-web@${dotLottieReactPkg.dependencies["@lottiefiles/dotlottie-web"]}` },
-  //{ id: 4, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
-  //{ id: 5, name: 'skia/skottie' },
-];
+const playerOptions = createAvailablePlayerOptions();
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ')
@@ -146,6 +140,22 @@ function setQueryStringParameter(name: string, value: any) {
   const params = new URLSearchParams(window.location.search);
   params.set(name, value);
   window.history.replaceState({}, '', decodeURIComponent(`${window.location.pathname}?${params}`));
+}
+
+function createAvailablePlayerOptions() {
+  let playerOptions = [
+    { id: 1, name: 'ThorVG(Software)' },
+    { id: 2, name: 'ThorVG(WebGPU)' },
+    //{ id: 3, name: `dotlottie-web@${dotLottieReactPkg.dependencies["@lottiefiles/dotlottie-web"]}` },
+    //{ id: 4, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
+    //{ id: 5, name: 'skia/skottie' },
+  ];
+
+  if (!navigator.gpu) {
+    playerOptions = playerOptions.filter(({ name }) => name !== 'ThorVG(WebGPU)');
+  }
+  
+  return playerOptions;
 }
 
 export default function Home() {
