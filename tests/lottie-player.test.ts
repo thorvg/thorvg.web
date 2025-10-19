@@ -148,7 +148,6 @@ describe("LottiePlayer", () => {
 
     describe("term", () => {
         it("should terminate module", () => {
-            // I got TypeError cannot read properties of undefined reading refcount when calling term() in the test environment
             expect(() => lottiePlayer.term()).not.toThrow();
         });
     })
