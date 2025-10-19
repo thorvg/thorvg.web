@@ -20,6 +20,11 @@
  * SOFTWARE.
  */
 
+/**
+ * @module
+ * @mergeModuleWith <project>
+ */
+
 import { customElement, property } from 'lit/decorators.js';
 import { BaseLottiePlayer, FileType, RenderConfig, Renderer, parseSrc, wasmModule } from './base-lottie-player';
 
@@ -32,10 +37,15 @@ const _downloadFile = (fileName: string, blob: Blob) => {
   document.body.removeChild(link);
 }
 
+/**
+ * A web component for playing Lottie animations with ThorVG engine.
+ * Provides methods to control playback, rendering, and export animations.
+ */
 @customElement('lottie-player')
 export class LottiePlayer extends BaseLottiePlayer {
   /**
    * Sets the rendering configurations.
+   * @param {RenderConfig} value - The rendering configuration object
    * @since 1.0
    */
   @property({ type: Object })
@@ -45,6 +55,7 @@ export class LottiePlayer extends BaseLottiePlayer {
 
   /**
    * Gets the current rendering configuration.
+   * @returns {RenderConfig} The current rendering configuration
    * @since 1.0
    */
   public get renderConfig(): RenderConfig {
@@ -53,6 +64,7 @@ export class LottiePlayer extends BaseLottiePlayer {
 
   /**
    * Save current animation to png image
+   * @returns {void}
    * @since 1.0
    */
   public save2png(): void {
@@ -71,6 +83,9 @@ export class LottiePlayer extends BaseLottiePlayer {
 
   /**
    * Save current animation to gif image
+   * @param {string} src - The source of the animation data
+   * @returns {Promise<void>}
+   * @throws {Error} If unable to save the animation as GIF
    * @since 1.0
    */
   public async save2gif(src: string): Promise<void> {

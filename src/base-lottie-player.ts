@@ -20,6 +20,11 @@
  * SOFTWARE.
  */
 
+/**
+ * @module
+ * @mergeModuleWith <project>
+ */
+
 import { html, PropertyValueMap, LitElement, type TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
 
@@ -33,19 +38,32 @@ const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg.was
 export let wasmModule: MainModule | null = null;
 let _moduleRequested: boolean = false;
 
-// Define library version
+/**
+ * Library version information
+ * @since 1.0
+ */
 export interface LibraryVersion {
+  /** ThorVG engine version */
   THORVG_VERSION: string
 }
 
-// Define renderer type
+/**
+ * Rendering engine types available for the Lottie player
+ * @since 1.0
+ */
 export enum Renderer {
+  /** Software renderer - CPU-based rendering */
   SW = 'sw',
+  /** WebGPU renderer - GPU-accelerated rendering using WebGPU */
   WG = 'wg',
+  /** WebGL renderer - GPU-accelerated rendering using WebGL */
   GL = 'gl',
 }
 
-// Define initialization status
+/**
+ * Initialization status of the ThorVG module
+ * @internal
+ */
 export enum InitStatus {
   IDLE = 'idle',
   FAILED = 'failed',
@@ -53,50 +71,92 @@ export enum InitStatus {
   INITIALIZED = 'initialized',
 }
 
-// Define rendering configurations
+/**
+ * Rendering configuration options
+ * @since 1.0
+ */
 export type RenderConfig = {
+  /** Enable device pixel ratio for high-DPI displays */
   enableDevicePixelRatio?: boolean;
+  /** Renderer type to use */
   renderer?: Renderer;
 }
 
-// Define file type which player can load
+/**
+ * Supported file types that can be loaded by the player
+ * @since 1.0
+ */
 export enum FileType {
+  /** Lottie JSON format */
   JSON = 'json',
+  /** Lottie LOT format */
   LOT = 'lot',
+  /** JPEG image format */
   JPG = 'jpg',
+  /** PNG image format */
   PNG = 'png',
+  /** SVG vector format */
   SVG = 'svg',
 }
 
-// Define valid player states
+/**
+ * Player state enumeration
+ * @since 1.0
+ */
 export enum PlayerState {
-  Destroyed = 'destroyed', // Player is destroyed by `destroy()` method
-  Error = 'error', // An error occurred
-  Loading = 'loading', // Player is loading
-  Paused = 'paused', // Player is paused
-  Playing = 'playing', // Player is playing
-  Stopped = 'stopped',  // Player is stopped
-  Frozen = 'frozen', // Player is paused due to player being invisible
+  /** Player has been destroyed by `destroy()` method */
+  Destroyed = 'destroyed',
+  /** An error occurred during loading or playback */
+  Error = 'error',
+  /** Player is loading the animation */
+  Loading = 'loading',
+  /** Player is paused */
+  Paused = 'paused',
+  /** Player is actively playing */
+  Playing = 'playing',
+  /** Player is stopped */
+  Stopped = 'stopped',
+  /** Player is paused because it's not visible */
+  Frozen = 'frozen',
 }
 
-// Define play modes
+/**
+ * Animation play mode
+ * @since 1.0
+ */
 export enum PlayMode {
+  /** Plays animation forward then backward repeatedly */
   Bounce = 'bounce',
+  /** Plays animation forward and repeats from beginning */
   Normal = 'normal',
 }
 
-// Define player events
+/**
+ * Player events that can be listened to
+ * @since 1.0
+ */
 export enum PlayerEvent {
+  /** Fired when animation completes */
   Complete = 'complete',
+  /** Fired when player is destroyed */
   Destroyed = 'destroyed',
+  /** Fired when an error occurs */
   Error = 'error',
+  /** Fired on each frame update */
   Frame = 'frame',
+  /** Fired when player is frozen (hidden) */
   Freeze = 'freeze',
+  /** Fired when animation is loaded */
   Load = 'load',
+  /** Fired when animation loops */
   Loop = 'loop',
+  /** Fired when animation is paused */
   Pause = 'pause',
+  /** Fired when animation starts playing */
   Play = 'play',
+  /** Fired when player is ready */
   Ready = 'ready',
+  /** Fired when animation is stopped */
   Stop = 'stop',
 }
 
@@ -205,101 +265,99 @@ const _generateUID = () => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
+/**
+ * Base class for Lottie player web component
+ * @ignore
+ */
 export class BaseLottiePlayer extends LitElement {
   /**
-  * Lottie animation JSON data or URL to JSON.
-  * @since 1.0
+  * Lottie animation JSON data or URL to JSON
   */
   @property({ type: String })
   public src?: string;
 
   /**
    * Custom WASM URL for ThorVG engine
-   * @since 1.0
    */
   @property({ type: String })
   public wasmUrl?: string;
 
   /**
-  * File type.
-  * @since 1.0
+  * File type of the animation
   */
   @property({ type: FileType })
   public fileType: FileType = FileType.JSON;
 
   /**
-   * Animation speed.
-   * @since 1.0
+   * Animation playback speed (1.0 = normal speed)
    */
   @property({ type: Number })
   public speed: number = 1.0;
 
   /**
-   * Autoplay animation on load.
-   * @since 1.0
+   * Autoplay animation on load
    */
   @property({ type: Boolean })
   public autoPlay: boolean = false;
 
   /**
-   * Number of times to loop animation.
-   * @since 1.0
+   * Number of times to loop animation
    */
   @property({ type: Number })
   public count?: number;
 
   /**
-   * Whether to loop animation.
-   * @since 1.0
+   * Whether to loop animation indefinitely
    */
   @property({ type: Boolean })
   public loop: boolean = false;
 
   /**
-   * Direction of animation.
-   * @since 1.0
+   * Direction of animation (1 = forward, -1 = backward)
    */
   @property({ type: Number })
   public direction: number = 1;
 
   /**
-   * Play mode.
-   * @since 1.0
+   * Play mode for the animation
+   * Setting the mode to PlayMode.Bounce plays the animation in an indefinite cycle, forwards and then backwards.
    */
   @property()
   public mode: PlayMode = PlayMode.Normal;
 
   /**
-   * Intermission
-   * @since 1.0
+   * Duration in milliseconds to pause between loops
+   * Duration (in milliseconds) to pause before playing each cycle in a looped animation.
+   * Set this parameter to 0 (no pause) or any positive number.
    */
   @property()
   public intermission: number = 1;
 
   /**
-   * total frame of current animation (readonly)
-   * @since 1.0
+   * Total number of frames in the current animation
+   * @readonly
    */
   @property({ type: Number })
   public totalFrame: number = 0;
 
   /**
-   * current frame of current animation (readonly)
-   * @since 1.0
+   * Current frame number
+   * @readonly
    */
   @property({ type: Number })
   public currentFrame: number = 0;
 
   /**
-   * Player state
-   * @since 1.0
+   * Current state of the player
+   * @readonly
    */
   @property({ type: Number })
   public currentState: PlayerState = PlayerState.Loading;
 
   /**
-   * original size of the animation (readonly)
-   * @since 1.0
+   * Original size of the animation [width, height]
+   * @readonly
+   * @returns {Float32Array} Animation dimensions
    */
   @property({ type: Float32Array })
   public get size(): Float32Array {
@@ -560,9 +618,11 @@ export class BaseLottiePlayer extends LitElement {
   }
 
   /**
-   * Configure and load
-   * @param src Lottie animation JSON data or URL to JSON.
-   * @param fileType The file type of the data to be loaded, defaults to JSON
+   * Load an animation
+   * @param {string | object} src - Lottie animation JSON data or URL to JSON
+   * @param {FileType} fileType - The file type of the data to be loaded
+   * @returns {Promise<void>}
+   * @throws {Error} If unable to load the animation
    * @since 1.0
    */
   public async load(src: string | object, fileType: FileType = FileType.JSON): Promise<void> {
@@ -644,7 +704,8 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Seek to a given frame
-   * @param frame Frame number to move
+   * @param {number} frame - Frame number to move
+   * @returns {Promise<void>}
    * @since 1.0
    */
   public async seek(frame: number): Promise<void> {
@@ -655,8 +716,8 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Adjust the canvas size.
-   * @param width The width to resize
-   * @param height The height to resize
+   * @param {number} width - The width to resize
+   * @param {number} height - The height to resize
    * @since 1.0
    */
   public resize(width: number, height: number) {
@@ -705,7 +766,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Sets the repeating of the animation.
-   * @param value Whether to enable repeating. Boolean true enables repeating.
+   * @param {boolean} value - Whether to enable repeating. Boolean true enables repeating.
    * @since 1.0
    */
   public setLooping(value: boolean): void {
@@ -718,7 +779,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Animation play direction.
-   * @param value Direction values. (1: forward, -1: backward)
+   * @param {number} value - Direction values. (1: forward, -1: backward)
    * @since 1.0
    */
   public setDirection(value: number): void {
@@ -731,7 +792,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Set animation play speed.
-   * @param value Playback speed. (any positive number)
+   * @param {number} value - Playback speed. (any positive number)
    * @since 1.0
    */
   public setSpeed(value: number): void {
@@ -744,7 +805,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Set a background color. (default: 0x00000000)
-   * @param value Hex(#fff) or string(red) of background color
+   * @param {string} value - Hex(#fff) or string(red) of background color
    * @since 1.0
    */
   public setBgColor(value: string): void {
@@ -757,7 +818,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Set rendering quality.
-   * @param value Quality value (1-100). Higher values are likely to support better quality but may impact performance.
+   * @param {number} value - Quality value (1-100). Higher values are likely to support better quality but may impact performance.
    * @since 1.0
    */
   public setQuality(value: number): void {
@@ -780,6 +841,9 @@ export class BaseLottiePlayer extends LitElement {
     };
   }
 
+  /**
+   * Render Lottie-player with canvas tag
+   * */
   public render(): TemplateResult {
     return html`
       <canvas class="thorvg" style="width: 100%; height: 100%;" />
