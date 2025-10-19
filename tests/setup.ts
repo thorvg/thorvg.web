@@ -27,7 +27,7 @@ require('module').createRequire = function() {
   return customRequire;
 };
 
-
+// Cast global to any to replace its TextDecoder and TextEncoder with the Node.js types.
 (global as any).TextDecoder = TextDecoder;
 (global as any).TextEncoder = TextEncoder;
 
@@ -56,14 +56,14 @@ class IntersectionObserver {
 window.IntersectionObserver = IntersectionObserver;
 global.IntersectionObserver = IntersectionObserver;
 
-// Replace global Canvas APIs
+// Cast global to any to replace its ImageData with the ImageData type from Node.js Canvas
 (global as any).ImageData = ImageData;
 
 // Mock fetch to return local fixtures/test-animation.json for any JSON request
 const mockAnimationPath = join(__dirname, 'fixtures/test-animation.json');
 const mockAnimationData = JSON.parse(readFileSync(mockAnimationPath, 'utf-8'));
 
-(global as any).fetch = jest.fn((url: string) => {
+global.fetch = jest.fn((url: string) => {
   // Handle any JSON file requests
   if (url.includes('.json')) {
     return Promise.resolve({
@@ -74,7 +74,7 @@ const mockAnimationData = JSON.parse(readFileSync(mockAnimationPath, 'utf-8'));
   }
   
   return Promise.reject(new Error('Fetch not mocked for: ' + url));
-});
+}) as jest.Mock
 
 global.URL.createObjectURL = jest.fn(() => 'mock-url');
 
