@@ -368,12 +368,31 @@ player.addEventListener('load', () => {
 
 ### Framework-specific Examples
 
-Please check these examples in various environments.
+Check the usage of each preset in the `example/{framework}` directory:
+
+- [ThorVG React Example](example/react/)
+- [ThorVG Vue Example](example/vue/)
+- [ThorVG Svelte Example](example/svelte/)
+
+You can also check it on CodeSandbox:
 
 - [VanillaJS Usage](https://codesandbox.io/p/sandbox/thorvg-lottieplayer-vanillajs-t737qm)
 - [React Usage](https://codesandbox.io/p/devbox/thorvg-lottieplayer-react-hkkrq3)
 - [VueJS Usage](https://codesandbox.io/p/devbox/thorvg-lottieplayer-vue-758h3l)
 - [Svelte Usage](https://codesandbox.io/p/devbox/thorvg-lottieplayer-svelte-xd4zp6)
+
+### Build Testing
+
+Test framework compatibility by running builds across different frontend frameworks:
+
+```bash
+# From the root directory
+$ npm run test:build
+```
+
+This will automatically detect framework projects in the `example/` directory and test their build processes.
+
+The build testing script is located in `./scripts/build-test/`.
 
 ### Local Examples
 Check the usage of each preset in the `example/` directory:
