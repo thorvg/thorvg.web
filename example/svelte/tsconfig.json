@@ -22,7 +22,5 @@
     "src/**/*.d.ts",
     "src/**/*.svelte",
     "vite.config.ts",
-    "declarations.d.ts",
-    "declarations.d.ts"
   ]
 }

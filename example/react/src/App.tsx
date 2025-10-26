@@ -10,7 +10,6 @@ const App = () => {
         loop
         src="https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json"
         wasmUrl="/thorvg.wasm"
-        style={{ width: "500px", height: "500px" }}
       />
     </div>
   );
