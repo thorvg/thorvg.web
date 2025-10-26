@@ -130,13 +130,13 @@ const countOptions = [
   //{ id: 6, name: 1000 },
 ];
 
-const playerOptions = [
-  { id: 1, name: 'ThorVG(Software)' },
-  { id: 2, name: 'ThorVG(WebGPU)' },
-  //{ id: 3, name: `dotlottie-web@${dotLottieReactPkg.dependencies["@lottiefiles/dotlottie-web"]}` },
-  //{ id: 4, name: `lottie-web@${reactLottiePlayerPkg.dependencies["lottie-web"]}` },
-  //{ id: 5, name: 'skia/skottie' },
+const playerOptions = [ 
+  { id: 1, name: 'ThorVG(Software)' } 
 ];
+
+if (typeof navigator !== 'undefined' && navigator.gpu) { 
+  playerOptions.push({ id: 2, name: 'ThorVG(WebGPU)' }); 
+}
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ')
