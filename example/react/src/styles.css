@@ -10,3 +10,8 @@
   margin-bottom: 2rem;
   color: #61dafb;
 }
+
+lottie-player {
+  width: 500px;
+  height: 500px;
+}
