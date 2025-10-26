@@ -6,24 +6,24 @@
   "module": "./dist/lottie-player.esm.js",
   "exports": {
     ".": {
-      "import": "./dist/lottie-player.cjs.js",
-      "require": "./dist/lottie-player.esm.js"
+      "import": "./dist/lottie-player.esm.js",
+      "require": "./dist/lottie-player.cjs.js"
     },
     "./sw": {
-      "import": "./dist/sw/lottie-player.cjs.js",
-      "require": "./dist/sw/lottie-player.esm.js"
+      "import": "./dist/sw/lottie-player.esm.js",
+      "require": "./dist/sw/lottie-player.cjs.js"
     },
     "./gl": {
-      "import": "./dist/gl/lottie-player.cjs.js",
-      "require": "./dist/gl/lottie-player.esm.js"
+      "import": "./dist/gl/lottie-player.esm.js",
+      "require": "./dist/gl/lottie-player.cjs.js"
     },
     "./sw-lite": {
-      "import": "./dist/sw-lite/lottie-player.cjs.js",
-      "require": "./dist/sw-lite/lottie-player.esm.js"
+      "import": "./dist/sw-lite/lottie-player.esm.js",
+      "require": "./dist/sw-lite/lottie-player.cjs.js"
     },
     "./gl-lite": {
-      "import": "./dist/gl-lite/lottie-player.cjs.js",
-      "require": "./dist/gl-lite/lottie-player.esm.js"
+      "import": "./dist/gl-lite/lottie-player.esm.js",
+      "require": "./dist/gl-lite/lottie-player.cjs.js"
     }
   },
   "publishConfig": {
