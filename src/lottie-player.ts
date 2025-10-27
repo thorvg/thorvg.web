@@ -74,6 +74,10 @@ export class LottiePlayer extends BaseLottiePlayer {
    * @since 1.0
    */
   public async save2gif(src: string): Promise<void> {
+    if (!wasmModule) {
+      throw new Error(`Unable to save. Module is not initialized.`);
+    }
+
     const saver = new wasmModule.TvgLottieAnimation(Renderer.SW, `#${this.canvas!.id}`);
     const bytes = await parseSrc(src, FileType.JSON);
     const isExported = saver.save(bytes, 'gif');

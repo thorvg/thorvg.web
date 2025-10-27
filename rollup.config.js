@@ -113,7 +113,7 @@ const createLottieConfig = (preset) => {
     plugins: [
       alias({
         entries: [
-          { find: 'thorvg', replacement: path.join('..', presetMap[preset].path, 'thorvg')  },
+          { find: '../dist/thorvg.js', replacement: path.join('..', presetMap[preset].path, 'thorvg')  },
         ]
       }),
       replace({
