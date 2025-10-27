@@ -165,7 +165,7 @@ export default function Home() {
     initialized = true;
 
     // @ts-ignore
-    import("@thorvg/lottie-player");
+    import("/public/lottie-player.js");
 
     let count: number = countOptions[1].name;
     let seed: string = '';
