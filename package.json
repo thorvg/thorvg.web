@@ -31,14 +31,14 @@
   },
   "files": [
     "dist/",
-    "!dist/thorvg.d.ts"
+    "!dist/thorvg.d.ts",
+    "!dist/thorvg.js"
   ],
   "types": "./dist/lottie-player.d.ts",
   "scripts": {
-    "build": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs && npm run clean:post",
+    "build": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
     "build:watch": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
-    "clean:post": "find ./dist -name 'thorvg.js' -type f -delete",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:build": "./build-test.sh",
     "lint": "eslint ./src --ext .ts,.tsx,.js",
