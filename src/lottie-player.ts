@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { BaseLottiePlayer, FileType, RenderConfig, Renderer, parseSrc, wasmModule } from './base-lottie-player';
 
 const _downloadFile = (fileName: string, blob: Blob) => {
@@ -38,6 +38,7 @@ export class LottiePlayer extends BaseLottiePlayer {
    * Sets the rendering configurations.
    * @since 1.0
    */
+  @property({ type: Object })
   public set renderConfig(value: RenderConfig) {
     this.config = value;
   }

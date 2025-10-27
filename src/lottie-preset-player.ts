@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { BaseLottiePlayer, RenderConfig, Renderer } from './base-lottie-player';
 
 type PresetRenderConfig = Exclude<RenderConfig, 'renderer'>;
@@ -28,9 +28,10 @@ type PresetRenderConfig = Exclude<RenderConfig, 'renderer'>;
 @customElement('lottie-player')
 export class LottiePresetPlayer extends BaseLottiePlayer {
   /**
-  * Sets the rendering configurations.
-  * @since 1.0
-  */
+   * Sets the rendering configurations.
+   * @since 1.0
+   */
+  @property({ type: Object })
   public set renderConfig(value: PresetRenderConfig) {
     this.config = {
       renderer: '__RENDERER__' as Renderer,
