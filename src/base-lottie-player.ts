@@ -205,6 +205,20 @@ const _generateUID = () => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
+const _isWebGLAvailable = (): boolean => {
+  try {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    return !!context;
+  } catch (e) {
+    return false;
+  }
+}
+
+const _isWebGPUAvailable = (): boolean => {
+  return navigator !== undefined && 'gpu' in navigator;
+}
+
 export class BaseLottiePlayer extends LitElement {
   /**
   * Lottie animation JSON data or URL to JSON.
@@ -344,16 +358,44 @@ export class BaseLottiePlayer extends LitElement {
     clearInterval(this._timer);
     this._timer = undefined;
 
-    const engine = this.config?.renderer || (DEFAULT_RENDERER as Renderer);
+    const requestedEngine = this.config?.renderer || Renderer.SW;    
+    let finalEngine: Renderer | null = null;
 
-    await _initModule(engine);
+    switch (requestedEngine) {
+      case Renderer.WG:
+      await _initModule(requestedEngine);
+
+      if (_initStatus === InitStatus.INITIALIZED) {
+        finalEngine = requestedEngine;
+      }
+      break;
+
+      case Renderer.GL:
+      if (this.isWebGLAvailable()) {
+        finalEngine = requestedEngine;
+      }
+      break;
+    }
+    
+    //REVIEW - 실패한 경우 바로 software renderer를 사용하는게 맞을까?
+    // Update render config if fallback applied.
+    if (!finalEngine) {
+      finalEngine = Renderer.SW;
+      this.config = {
+        ...this.config,
+        renderer: finalEngine,
+      };
+    }
+
+    //REVIEW - requestedEngine이 WG이고 실패한 후 software renderer로 fallback되면 _initStatus는 InitStatus.FAILED이다
+    // fallback이 적용되면 이 코드 블록은 실행되지 않도록 변경되어야 할까?
     if (_initStatus === InitStatus.FAILED) {
       this.currentState = PlayerState.Error;
       this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
       return;
     }
 
-    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`);
+    this.TVG = new wasmModule.TvgLottieAnimation(finalEngine, `#${this.canvas!.id}`);
 
     if (this.src) {
       this.load(this.src, this.fileType);
@@ -784,5 +826,21 @@ export class BaseLottiePlayer extends LitElement {
     return html`
       <canvas class="thorvg" style="width: 100%; height: 100%;" />
     `;
+  }
+
+  /**
+   * Return true if WebGL is supported.
+   * @since 1.0
+   */
+  public isWebGLAvailable(): boolean {
+    return _isWebGLAvailable();
+  }
+
+  /**
+   * Return true if WebGPU is supported.
+   * @since 1.0
+   */
+  public isWebGPUAvailable(): boolean {
+    return _isWebGPUAvailable();
   }
 }
