@@ -1,3 +1,8 @@
+[![Discord](https://img.shields.io/badge/Community-5865f2?style=flat&logo=discord&logoColor=white)](https://discord.gg/n25xj6J6HM)
+[![ThorVGPT](https://img.shields.io/badge/ThorVGPT-76A99C?style=flat&logo=openai&logoColor=white)](https://chat.openai.com/g/g-Ht3dYIwLO-thorvgpt)
+[![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/thorvg/thorvg)
+[![OpenCollective](https://img.shields.io/badge/OpenCollective-84B5FC?style=flat&logo=opencollective&logoColor=white)](https://opencollective.com/thorvg)
+[![License](https://img.shields.io/badge/licence-MIT-green.svg?style=flat)](LICENSE)
 [![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player)
 
 # ThorVG for Web
