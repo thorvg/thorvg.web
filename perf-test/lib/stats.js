@@ -65,15 +65,14 @@ Stats.Panel = function (name, fg, bg) {
 
   var PR = round(window.devicePixelRatio || 1);
 
-  var WIDTH = 110 * PR,
-    HEIGHT = 60 * PR,
+  var WIDTH = 80 * PR,
+    HEIGHT = 48 * PR,
     TEXT_X = 3 * PR,
     TEXT_Y = 2 * PR,
-    LINE_HEIGHT = 10 * PR,
     GRAPH_X = 3 * PR,
-    GRAPH_Y = 24 * PR,
-    GRAPH_WIDTH = 104 * PR,
-    GRAPH_HEIGHT = 32 * PR;
+    GRAPH_Y = 15 * PR,
+    GRAPH_WIDTH = 74 * PR,
+    GRAPH_HEIGHT = 30 * PR;
 
   var canvas = document.createElement("canvas");
   canvas.width = WIDTH;
@@ -81,7 +80,7 @@ Stats.Panel = function (name, fg, bg) {
   canvas.style.cssText = "width:110px;height:60px";
 
   var context = canvas.getContext("2d");
-  context.font = "bold " + 10 * PR + "px Helvetica,Arial,sans-serif";
+  context.font = "bold " + 9 * PR + "px Helvetica,Arial,sans-serif";
   context.textBaseline = "top";
 
   context.fillStyle = bg;
@@ -109,23 +108,18 @@ Stats.Panel = function (name, fg, bg) {
       context.globalAlpha = 1;
       context.fillRect(0, 0, WIDTH, GRAPH_Y);
 
-      var firstLine =
-        name === "MS"
-          ? `${name}: ${value.toFixed(1)}`
-          : `${name}: ${round(value)}`;
+      var firstLine;
 
-      var secondLine;
       if (name === "MS") {
-        secondLine = `acc: ${acc.toFixed(1)} (${min.toFixed(1)} ~ ${max.toFixed(
-          1
-        )})`;
+        firstLine = `${name}: ${value.toFixed(1)} (${acc.toFixed(1)})`;
+      } else if (name === "MB") {
+        firstLine = `${name}: ${value.toFixed(1)} (${acc.toFixed(1)})`;
       } else {
-        secondLine = `acc: ${round(acc)} (${round(min)} ~ ${round(max)})`;
+        firstLine = `${name}: ${round(value)} (${round(acc)})`;
       }
 
       context.fillStyle = fg;
       context.fillText(firstLine, TEXT_X, TEXT_Y);
-      context.fillText(secondLine, TEXT_X, TEXT_Y + LINE_HEIGHT);
 
       context.drawImage(
         canvas,

@@ -1,11 +1,4 @@
-async function getStatsCtor() {
-  try {
-    const mod = await import("/stats.js");
-    return mod.default || mod.Stats || window.Stats;
-  } catch {
-    return window.Stats;
-  }
-}
+import Stats from "./stats.js";
 
 export async function startProfiler(options = {}) {
   if (typeof document === "undefined") {
@@ -18,9 +11,6 @@ export async function startProfiler(options = {}) {
     maxFps = 144,
     maxMs = 33,
   } = options;
-
-  const Stats = await getStatsCtor();
-  if (!Stats) throw new Error("Stats constructor not found.");
 
   const root = document.createElement("div");
   root.style.cssText =
@@ -117,8 +107,4 @@ export async function startProfiler(options = {}) {
       root.remove();
     },
   };
-}
-
-if (typeof window !== "undefined" && !window.startProfiler) {
-  window.startProfiler = (...args) => startProfiler(...args);
 }

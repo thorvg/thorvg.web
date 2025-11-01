@@ -215,7 +215,7 @@ export default function Home() {
           await loadCanvasKit();
         }
 
-        loadProfiler();
+        await loadProfiler();
 
         if (seed) {
           loadSeed(seed);
@@ -236,12 +236,10 @@ export default function Home() {
     setCanvasKit(canvasKit);
   };
 
-  const loadProfiler = () => {
-    const s = document.createElement("script");
-    s.type = "module";
-    s.src = "/profiler.js";
-    s.onload = async () => {
-      const res = await window.startProfiler?.();
+  const loadProfiler = async () => {
+    try {
+      const { startProfiler } = await import("../lib/profiler.js");
+      const res = await startProfiler();
       window.__profilerCleanup__ = () => {
         try {
           res?.dispose?.();
@@ -250,9 +248,9 @@ export default function Home() {
           delete window.__profilerCleanup__;
         } catch {}
       };
-    };
-    s.onerror = (e) => console.error("[page] profiler load error", e);
-    document.head.appendChild(s);
+    } catch (e) {
+      console.error("[page] profiler load error", e);
+    }
   };
 
   const loadAnimationByCount = async (_count = count.name) => {
