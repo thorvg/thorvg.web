@@ -32,7 +32,7 @@
   "files": [
     "dist/",
     "!dist/thorvg.d.ts",
-    "!dist/thorvg.js"
+    "!dist/**/thorvg.js"
   ],
   "types": "./dist/lottie-player.d.ts",
   "scripts": {
