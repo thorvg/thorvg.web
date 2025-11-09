@@ -29,6 +29,7 @@ type PresetRenderConfig = Exclude<RenderConfig, 'renderer'>;
 export class LottiePresetPlayer extends BaseLottiePlayer {
   /**
    * Sets the rendering configurations.
+   * @param {PresetRenderConfig} value - The rendering configuration object (without renderer property)
    * @since 1.0
    */
   @property({ type: Object })
@@ -41,6 +42,7 @@ export class LottiePresetPlayer extends BaseLottiePlayer {
 
   /**
    * Gets the current rendering configuration.
+   * @returns {PresetRenderConfig} The current rendering configuration
    * @since 1.0
    */
   public get renderConfig(): PresetRenderConfig {
