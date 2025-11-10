@@ -315,6 +315,8 @@ export class BaseLottiePlayer extends LitElement {
   private _timer?: ReturnType<typeof setInterval>;
   private _observer?: IntersectionObserver;
   private _observable: boolean = false;
+  private _assetResolverCallback?: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string };
+  private _assetResolverData?: unknown;
 
   private async _init(): Promise<void> {
     // Ensure module is loaded only once
@@ -445,6 +447,10 @@ export class BaseLottiePlayer extends LitElement {
   private _loadBytes(data: Uint8Array): void {
     if (!this.TVG) {
       throw new Error(`TVG is not initialized`);
+    }
+
+    if (this._assetResolverCallback) {
+      this.TVG.setAssetResolver(this._assetResolverCallback, this._assetResolverData);
     }
 
     const isLoaded = this.TVG.load(data, this.fileType, this.canvas!.width, this.canvas!.height);
@@ -767,6 +773,15 @@ export class BaseLottiePlayer extends LitElement {
 
     if (this.TVG.quality(value) && this.currentState !== PlayerState.Playing) {
       this._render();
+    }
+  }
+
+  public setAssetResolver(callback: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string }, data: unknown | null): void {
+    this._assetResolverCallback = callback;
+    this._assetResolverData = data;
+
+    if (this.TVG) {
+      this.TVG.setAssetResolver(callback, data);
     }
   }
 
