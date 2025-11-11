@@ -130,12 +130,12 @@ const countOptions = [
   //{ id: 6, name: 1000 },
 ];
 
-const playerOptions = [ 
-  { id: 1, name: 'ThorVG(Software)' } 
+const playerOptions = [
+  { id: 1, name: 'ThorVG(Software)' }
 ];
 
-if (typeof navigator !== 'undefined' && navigator.gpu) { 
-  playerOptions.push({ id: 2, name: 'ThorVG(WebGPU)' }); 
+if (typeof navigator !== 'undefined' && navigator.gpu) {
+  playerOptions.push({ id: 2, name: 'ThorVG(WebGPU)' });
 }
 
 function classNames(...classes: any) {
@@ -155,9 +155,9 @@ const RANGE = MAX_WIDTH - MIN_WIDTH;
 export default function Home() {
   const [size, setSize] = useState(isMobile ? { width: 150, height: 150 } : { width: MAX_WIDTH, height: MAX_WIDTH });
   const percent = (size.width - MIN_WIDTH) / RANGE * 100;
-  
+
   let initialized = false;
-  
+
   const [count, setCount] = useState(countOptions[1]);
   const [player, setPlayer] = useState(playerOptions[0]);
   const [playerId, setPlayerId] = useState(1);
@@ -174,6 +174,7 @@ export default function Home() {
     import("@thorvg/lottie-player");
 
     let count: number = countOptions[1].name;
+    let size: number = isMobile ? 150 : MAX_WIDTH;
     let seed: string = '';
     let playerId = 1;
 
@@ -181,6 +182,7 @@ export default function Home() {
       const params = new URLSearchParams(window.location.search);
       const player = params.get('player');
       count = parseInt(params.get('count') ?? '20');
+      size = parseInt(params.get('size') ?? size.toString());
       seed = params.get('seed') ?? '';
 
       if (count) {
@@ -194,8 +196,15 @@ export default function Home() {
         setPlayer(_player);
         setPlayerId(_player.id);
       }
+
+      if (size) {
+        setSize({
+          width: size,
+          height: size
+        });
+      }
     }
-    
+
     setTimeout(async () => {
       if (playerId === 4) {
         await loadCanvasKit();
@@ -214,6 +223,7 @@ export default function Home() {
 
   const handleSliderChange = (value: number) => {
     setSize({ width: value, height: value });
+    setQueryStringParameter('size', value);
   };
 
   const loadCanvasKit = async () => {
@@ -413,7 +423,7 @@ export default function Home() {
         </>
       )}
     </Listbox>
-              
+
               <button
                 type="submit"
                 className="flex-none rounded-md bg-[#00deb5] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
@@ -455,7 +465,7 @@ export default function Home() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
               />
-              
+
               <button
                 type="submit"
                 className="flex-none rounded-md bg-[#00deb5] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
@@ -475,12 +485,12 @@ export default function Home() {
               {
                 playerId == 1 &&
                 (
-                  <lottie-player 
+                  <lottie-player
                     src={anim.lottieURL}
-                    background="transparent" 
+                    background="transparent"
                     className="aspect-[14/13] w-full rounded-2xl object-cover"
                     style={{width: size.width, height: size.height}}
-                    loop 
+                    loop
                     autoplay
                     wasmUrl={wasmUrl}
                     renderConfig={JSON.stringify({enableDevicePixelRatio: true})}
@@ -490,12 +500,12 @@ export default function Home() {
               {
                 playerId == 2 &&
                 (
-                  <lottie-player 
+                  <lottie-player
                     src={anim.lottieURL}
-                    background="transparent" 
+                    background="transparent"
                     className="aspect-[14/13] w-full rounded-2xl object-cover"
                     style={{width: size.width, height: size.height}}
-                    loop 
+                    loop
                     autoplay
                     wasmUrl={wasmUrl}
                     renderConfig={JSON.stringify({
@@ -510,7 +520,7 @@ export default function Home() {
                   <DotLottieReact
                     src={anim.lottieURL as string}
                     style={{width: size.width, height: size.height}}
-                    loop 
+                    loop
                     autoplay
                   />
                 )
