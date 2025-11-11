@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ThorVG Lottie Player</title>
+    <meta name="description" content="A web lottie player using ThorVG as a renderer" />
+    <script src="../dist/lottie-player.js"></script>
+    <style>
+      .resolver-buttons {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+      .resolver-buttons button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .resolver-buttons button.active {
+        background-color: #007bff;
+        color: white;
+        border: 1px solid #007bff;
+      }
+      .lottie-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div>
+        <button onclick="playAnimation()">Play</button>
+        <button onclick="pauseAnimation()">Pause</button>
+        <button onclick="stopAnimation()">Stop</button>
+        <button onclick="createAnimation()">Create</button>
+        <button onclick="destroyAnimation()">Destroy</button>
+        <button onclick="save2gif()">save2gif</button>
+        <button onclick="save2png()">save2png</button>
+        <div>
+          <label for="reverseCheckbox">Reverse</label>
+          <input type="checkbox" id="reverseCheckbox" onchange="toggleReverse(event)">
+        </div>
+          
+        <div>
+          <label for="loopCheckbox">Loop</label>
+          <input type="checkbox" id="loopCheckbox" onchange="toggleLoop(event)" checked>
+        </div>
+        
+        <div>
+          <label for="speedRange">Speed</label>
+          <input type="range" id="speedRange" min="0.1" max="2" step="0.1" value="1" onchange="changeSpeed(this.value)">
+        </div>
+        
+        <div>
+          <label for="frameRange">Frame</label>
+          <input type="range" id="frameRange" min="1" max="100" step="1" value="1" onchange="seekFrame(this.value)">
+        </div>
+      </div>
+
+      <div class="resolver-buttons">
+        <button id="imageResolverBtn" onclick="switchResolver('image')">Image Resolver</button>
+        <button id="fontResolverBtn" onclick="switchResolver('font')">Font Resolver</button>
+      </div>
+
+      <div class="lottie-container">
+        <div class="lottie"></div>
+      </div>
+    </div>
+    <script>
+      let animation;
+      
+      function getResolverType() {
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get('type');
+        return type === 'font' ? 'font' : 'image';
+      }
+      
+      window.onload = async function() {
+        await preloadAssets();
+        updateButtonStates();
+        createAnimation();
+      }
+
+      async function preloadAssets() {
+        // Preload assets to fetch immediately when rendering
+        const resolverType = getResolverType();
+        if (resolverType === 'image') {
+          await loadAsset('/example/resources/extensions/images/logo.png');
+        } else {
+          await loadAsset('https://fonts.gstatic.com/s/ubuntu/v15/4iCp6KVjbNBYlgoKejZftWyI.ttf');
+        }
+      }
+
+      function updateButtonStates() {
+        const resolverType = getResolverType();
+        const imageBtn = document.getElementById('imageResolverBtn');
+        const fontBtn = document.getElementById('fontResolverBtn');
+        
+        if (resolverType === 'image') {
+          imageBtn.classList.add('active');
+          fontBtn.classList.remove('active');
+        } else {
+          fontBtn.classList.add('active');
+          imageBtn.classList.remove('active');
+        }
+      }
+
+      function switchResolver(type) {
+        const url = new URL(window.location);
+        if (type === 'image') {
+          url.searchParams.delete('type');
+        } else {
+          url.searchParams.set('type', type);
+        }
+
+        window.location.href = url.toString();
+      }
+
+      let isLoading = false;
+      const assetCache = new Map();
+      async function loadAsset(url) {
+        if (isLoading) {
+          return;
+        }
+        console.log('[web] loadAsset', url);
+        
+        isLoading = true;
+        const response = await fetch(url);
+        const buffer = await response.arrayBuffer();
+        assetCache.set(url, new Uint8Array(buffer));
+        isLoading = false;
+      }
+    
+    function resolver2(src, data) {
+      if (assetCache.has(src)) {
+        const buffer = assetCache.get(src);
+        return { 
+          name: src.split('/').pop(), 
+          buffer: buffer, 
+          mimetype: 'ttf',
+        };
+      }
+
+      loadAsset(src);
+    }
+
+    function resolver1(src, data) {
+      const assetPath = new URL(`./resources/extensions/${src}`, window.location.href).pathname;
+      if (assetCache.has(assetPath)) {
+        const buffer = assetCache.get(assetPath);
+        return { 
+          name: assetPath.split('/').pop(), 
+          buffer: buffer, 
+          mimetype: assetPath.split('.').pop(),
+        };
+      }
+      loadAsset(assetPath);
+    }
+
+      function createAnimation() {
+        if (animation) {
+          return;
+        }
+
+        const resolverType = getResolverType();
+        const animationPath = window.location.href.split('/').slice(0, -1).join('/');
+        const lottie = document.querySelector('.lottie');
+
+        animation = document.createElement('lottie-player');
+        animation.autoPlay = true;
+        animation.loop = true;
+
+        if (resolverType === 'image') {
+          animation.src = `${animationPath}/resources/extensions/resolver1.json`;
+          animation.setAssetResolver(resolver1, {test: 'this is from JS Code'});
+        } else {
+          animation.src = `${animationPath}/resources/extensions/resolver2.json`;
+          animation.setAssetResolver(resolver2, {test: 'this is from JS Code'});
+        }
+
+        animation.style.width = "500px";
+        animation.style.height = "500px";
+        animation.wasmUrl = "/dist/thorvg.wasm";
+        lottie.appendChild(animation);
+
+        const frameRange = document.querySelector('#frameRange');
+        animation.addEventListener('frame', function(e) {
+          frameRange.value = e.detail.frame / animation.totalFrame * 100;
+        });
+      }
+
+      function pauseAnimation() {
+        if (!animation) {
+          alert('Animation is not created yet');
+          return;
+        }
+
+        animation.pause();
+      }
+
+      function stopAnimation() {
+        if (!animation) {
+          alert('Animation is not created yet');
+          return;
+        }
+
+        animation.stop();
+      }
+
+      function seekFrame(framePercentage) {
+        if (!animation) {
+          alert('Animation is not created yet');
+          return;
+        }
+
+        animation.seek(animation.totalFrames * framePercentage / 100);
+      }
+
+      function destroyAnimation() {
+        if (!animation) {
+          alert('No animation to destroy');
+          return;
+        }
+
+        animation.destroy();
+        animation = undefined;
+      }
+
+      function playAnimation() {
+        if (!animation) {
+          alert('Animation is not created yet');
+          return;
+        }
+
+        animation.play();
+      }
+
+      function toggleLoop(e) {
+        if (!animation) {
+          alert('Animation is not created yet');
+          return;
+        }
+
+        animation.setLooping(e.target.checked);
+        if (animation.currentState !== 'playing') {
+          animation.play();
+        }
+      }
+
+      function changeSpeed(speed) {
+        if (!animation) {
+          alert('Animation is not created yet');
+          return;
+        }
+
+        animation.setSpeed(speed);
+        if (animation.currentState !== 'playing') {
+          animation.play();
+        }
+      }
+
+      function toggleReverse(e) {
+        if (!animation) {
+          alert('Animation is not created yet');
+          return;
+        }
+
+        animation.setDirection(e.target.checked ? -1 : 1);
+        if (animation.currentState !== 'playing') {
+          animation.play();
+        }
+      }
+
+      function save2gif() {
+        if (!animation) {
+          alert('Animation is not created yet');
+          return;
+        }
+        animation.save2gif(animation.src);
+      }
+
+      function save2png() {
+        if (!animation) {
+          alert('Animation is not created yet');
+          return;
+        }
+        animation.save2png();
+      }
+
+  </script>
+  </body>
+</html>
