@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThorVG Canvas Kit API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background: #ffffff;
+            color: #333333;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #fafafa;
+            overflow-y: auto;
+            padding: 20px 15px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .sidebar h1 {
+            font-size: 16px;
+            margin: 0 0 20px 0;
+            color: #1976d2;
+            font-weight: 600;
+        }
+
+        .sidebar input {
+            width: 100%;
+            padding: 8px 10px;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 13px;
+            box-sizing: border-box;
+        }
+
+        .sidebar input:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+
+        .category {
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .api-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .api-item {
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #555;
+            transition: all 0.15s;
+            border-left: 2px solid transparent;
+        }
+
+        .api-item:hover {
+            background: #f0f0f0;
+            color: #1976d2;
+        }
+
+        .api-item.active {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left-color: #1976d2;
+            font-weight: 500;
+        }
+
+        .api-item.hidden {
+            display: none;
+        }
+
+        .content {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .no-results {
+            padding: 12px 8px;
+            color: #999;
+            font-size: 13px;
+            display: none;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>ThorVG Canvas Kit</h1>
+        <input type="text" id="search" placeholder="Search APIs...">
+
+        <div class="category">
+            <div class="category-title">Initialization</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="functions/init.html">init()</li>
+                <li class="api-item" data-page="functions/term.html">term()</li>
+            </ul>
+        </div>
+
+        <div class="category">
+            <div class="category-title">Canvas</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="classes/Canvas.html">Canvas</li>
+                <li class="api-item" data-page="classes/Canvas.html#constructor">Canvas.constructor</li>
+                <li class="api-item" data-page="classes/Canvas.html#add">Canvas.add()</li>
+                <li class="api-item" data-page="classes/Canvas.html#remove">Canvas.remove()</li>
+                <li class="api-item" data-page="classes/Canvas.html#clear">Canvas.clear()</li>
+                <li class="api-item" data-page="classes/Canvas.html#update">Canvas.update()</li>
+                <li class="api-item" data-page="classes/Canvas.html#render">Canvas.render()</li>
+                <li class="api-item" data-page="classes/Canvas.html#resize">Canvas.resize()</li>
+                <li class="api-item" data-page="classes/Canvas.html#viewport">Canvas.viewport()</li>
+                <li class="api-item" data-page="classes/Canvas.html#destroy">Canvas.destroy()</li>
+                <li class="api-item" data-page="classes/Canvas.html#renderer">Canvas.renderer</li>
+            </ul>
+        </div>
+
+        <div class="category">
+            <div class="category-title">Shapes</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="classes/Shape.html">Shape</li>
+                <li class="api-item" data-page="classes/Shape.html#moveTo">Shape.moveTo()</li>
+                <li class="api-item" data-page="classes/Shape.html#lineTo">Shape.lineTo()</li>
+                <li class="api-item" data-page="classes/Shape.html#cubicTo">Shape.cubicTo()</li>
+                <li class="api-item" data-page="classes/Shape.html#close">Shape.close()</li>
+                <li class="api-item" data-page="classes/Shape.html#appendRect">Shape.appendRect()</li>
+                <li class="api-item" data-page="classes/Shape.html#appendCircle">Shape.appendCircle()</li>
+                <li class="api-item" data-page="classes/Shape.html#fill">Shape.fill()</li>
+                <li class="api-item" data-page="classes/Shape.html#stroke">Shape.stroke()</li>
+            </ul>
+        </div>
+
+        <div class="category">
+            <div class="category-title">Scene</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="classes/Scene.html">Scene</li>
+                <li class="api-item" data-page="classes/Scene.html#add">Scene.add()</li>
+                <li class="api-item" data-page="classes/Scene.html#remove">Scene.remove()</li>
+                <li class="api-item" data-page="classes/Scene.html#clear">Scene.clear()</li>
+            </ul>
+        </div>
+
+        <div class="category">
+            <div class="category-title">Picture</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="classes/Picture.html">Picture</li>
+                <li class="api-item" data-page="classes/Picture.html#load">Picture.load()</li>
+                <li class="api-item" data-page="classes/Picture.html#loadData">Picture.loadData()</li>
+                <li class="api-item" data-page="classes/Picture.html#size">Picture.size()</li>
+            </ul>
+        </div>
+
+        <div class="category">
+            <div class="category-title">Text</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="classes/Text.html">Text</li>
+                <li class="api-item" data-page="classes/Text.html#font">Text.font()</li>
+                <li class="api-item" data-page="classes/Text.html#text">Text.text()</li>
+                <li class="api-item" data-page="classes/Text.html#fontSize">Text.fontSize()</li>
+                <li class="api-item" data-page="classes/Text.html#fill">Text.fill()</li>
+            </ul>
+        </div>
+
+        <div class="category">
+            <div class="category-title">Animation</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="classes/Animation.html">Animation</li>
+                <li class="api-item" data-page="classes/Animation.html#load">Animation.load()</li>
+                <li class="api-item" data-page="classes/Animation.html#frame">Animation.frame()</li>
+                <li class="api-item" data-page="classes/Animation.html#getFrame">Animation.getFrame()</li>
+                <li class="api-item" data-page="classes/Animation.html#getTotalFrames">Animation.getTotalFrames()</li>
+                <li class="api-item" data-page="classes/Animation.html#getDuration">Animation.getDuration()</li>
+            </ul>
+        </div>
+
+        <div class="category">
+            <div class="category-title">Gradients</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="classes/LinearGradient.html">LinearGradient</li>
+                <li class="api-item" data-page="classes/LinearGradient.html#addStop">LinearGradient.addStop()</li>
+                <li class="api-item" data-page="classes/LinearGradient.html#spread">LinearGradient.spread()</li>
+                <li class="api-item" data-page="classes/RadialGradient.html">RadialGradient</li>
+                <li class="api-item" data-page="classes/RadialGradient.html#addStop">RadialGradient.addStop()</li>
+                <li class="api-item" data-page="classes/RadialGradient.html#spread">RadialGradient.spread()</li>
+            </ul>
+        </div>
+
+        <div class="category">
+            <div class="category-title">Font</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="classes/Font.html">Font</li>
+                <li class="api-item" data-page="classes/Font.html#load">Font.load()</li>
+                <li class="api-item" data-page="classes/Font.html#unload">Font.unload()</li>
+            </ul>
+        </div>
+
+        <div class="category">
+            <div class="category-title">Paint (Base Class)</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="classes/_internal_.Paint.html">Paint</li>
+                <li class="api-item" data-page="classes/_internal_.Paint.html#translate">Paint.translate()</li>
+                <li class="api-item" data-page="classes/_internal_.Paint.html#rotate">Paint.rotate()</li>
+                <li class="api-item" data-page="classes/_internal_.Paint.html#scale">Paint.scale()</li>
+                <li class="api-item" data-page="classes/_internal_.Paint.html#opacity">Paint.opacity()</li>
+                <li class="api-item" data-page="classes/_internal_.Paint.html#bounds">Paint.bounds()</li>
+                <li class="api-item" data-page="classes/_internal_.Paint.html#duplicate">Paint.duplicate()</li>
+            </ul>
+        </div>
+
+        <div class="category">
+            <div class="category-title">Constants</div>
+            <ul class="api-list">
+                <li class="api-item" data-page="enums/BlendMethod.html">BlendMethod</li>
+                <li class="api-item" data-page="enums/StrokeCap.html">StrokeCap</li>
+                <li class="api-item" data-page="enums/StrokeJoin.html">StrokeJoin</li>
+                <li class="api-item" data-page="enums/FillRule.html">FillRule</li>
+                <li class="api-item" data-page="enums/GradientSpread.html">GradientSpread</li>
+                <li class="api-item" data-page="enums/CompositeMethod.html">CompositeMethod</li>
+            </ul>
+        </div>
+
+        <div class="no-results">No results found</div>
+    </div>
+
+    <div class="content">
+        <iframe id="contentFrame" src="../docs/index.html"></iframe>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('search');
+        const apiItems = document.querySelectorAll('.api-item');
+        const contentFrame = document.getElementById('contentFrame');
+        const noResults = document.querySelector('.no-results');
+
+        // Function to inject styles into iframe
+        function injectStyles() {
+            try {
+                const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+                if (!iframeDoc) return;
+
+                // Remove any existing injected styles
+                const existingStyle = iframeDoc.getElementById('custom-nav-styles');
+                if (existingStyle) existingStyle.remove();
+
+                // Add CSS to hide all TypeDoc navigation and apply light theme
+                const style = iframeDoc.createElement('style');
+                style.id = 'custom-nav-styles';
+                style.textContent = `
+                    /* Hide all navigation elements */
+                    .tsd-navigation,
+                    .col-sidebar,
+                    nav.tsd-navigation,
+                    .site-menu,
+                    nav,
+                    aside,
+                    .tsd-page-navigation,
+                    .tsd-sidebar,
+                    [class*="navigation"],
+                    [class*="sidebar"] {
+                        display: none !important;
+                    }
+
+                    /* Expand content to full width */
+                    body,
+                    html,
+                    .container,
+                    .col-content,
+                    .container-main,
+                    main,
+                    .tsd-page-content,
+                    .tsd-panel {
+                        margin: 0 !important;
+                        padding: 2rem !important;
+                        max-width: 100% !important;
+                        width: 100% !important;
+                    }
+
+                    /* Light theme colors */
+                    body {
+                        background: #ffffff !important;
+                        color: #333333 !important;
+                    }
+
+                    .tsd-page-title,
+                    h1, h2, h3, h4, h5, h6 {
+                        color: #1976d2 !important;
+                    }
+
+                    code,
+                    pre {
+                        background: #f5f5f5 !important;
+                        border: 1px solid #e0e0e0 !important;
+                    }
+
+                    a {
+                        color: #1976d2 !important;
+                    }
+
+                    /* Remove dark theme backgrounds */
+                    * {
+                        background-color: transparent !important;
+                    }
+
+                    body, .container, .col-content {
+                        background: #ffffff !important;
+                    }
+
+                    pre, code {
+                        background: #f5f5f5 !important;
+                    }
+                `;
+                iframeDoc.head.appendChild(style);
+            } catch (e) {
+                console.log('Cannot modify iframe content:', e);
+            }
+        }
+
+        // Apply styles on load
+        contentFrame.addEventListener('load', function() {
+            injectStyles();
+            // Apply again after a short delay to catch any dynamic content
+            setTimeout(injectStyles, 100);
+            setTimeout(injectStyles, 500);
+        });
+
+        // Handle click on API items
+        apiItems.forEach(item => {
+            item.addEventListener('click', () => {
+                apiItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                const page = item.getAttribute('data-page');
+                contentFrame.src = `../docs/${page}`;
+                // Apply styles when new page loads
+                setTimeout(injectStyles, 100);
+            });
+        });
+
+        // Handle search
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            let hasResults = false;
+
+            apiItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.classList.remove('hidden');
+                    hasResults = true;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            noResults.style.display = hasResults ? 'none' : 'block';
+        });
+
+        // Handle URL hash for deep linking
+        function handleHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const matchingItem = Array.from(apiItems).find(item => {
+                    const page = item.getAttribute('data-page');
+                    return page.includes(hash);
+                });
+                if (matchingItem) {
+                    matchingItem.click();
+                }
+            }
+        }
+
+        window.addEventListener('hashchange', handleHash);
+        window.addEventListener('load', handleHash);
+    </script>
+</body>
+</html>

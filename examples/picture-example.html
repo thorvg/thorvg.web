@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ThorVG Canvas Kit - Picture API Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        #canvas {
+            border: 1px solid #333;
+            background: white;
+            margin: 20px 0;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .info {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        input[type="file"] {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>ThorVG Canvas Kit - Picture API Example</h1>
+
+    <div class="info">
+        <h3>Picture API Features:</h3>
+        <ul>
+            <li>Load SVG, PNG, JPG, WebP, and Lottie files</li>
+            <li>Resize and scale pictures with <code>.size(width, height)</code></li>
+            <li>Transform pictures with <code>.translate()</code>, <code>.rotate()</code>, <code>.scale()</code></li>
+            <li>Picture opacity with <code>.opacity()</code></li>
+            <li>Load from file or raw data</li>
+            <li>Async methods: <code>.loadFile()</code>, <code>.loadUrl()</code></li>
+        </ul>
+    </div>
+
+    <div class="controls">
+        <label>Backend:
+            <select id="backend">
+                <option value="sw">Software</option>
+                <option value="gl">WebGL</option>
+                <option value="wg">WebGPU</option>
+            </select>
+        </label>
+        <button onclick="init()">Initialize</button>
+        <button onclick="drawPictures()">Draw SVG Examples</button>
+        <button onclick="clearCanvas()">Clear</button>
+        <br>
+        <label>Load Image File:
+            <input type="file" id="fileInput" accept="image/*,.svg" onchange="loadImageFile(event)">
+        </label>
+    </div>
+
+    <canvas id="canvas" width="800" height="600"></canvas>
+
+    <div class="info">
+        <h3>Status:</h3>
+        <pre id="log"></pre>
+    </div>
+
+    <script type="module">
+        import ThorVG from '../packages/canvas-kit/dist/canvas-kit.esm.js';
+
+        let TVG;
+        let canvas;
+
+        function log(msg) {
+            const logEl = document.getElementById('log');
+            logEl.textContent += msg + '\n';
+            console.log(msg);
+        }
+
+        window.init = async function() {
+            const renderer = document.getElementById('backend').value;
+            log(`Initializing ThorVG with ${renderer} backend...`);
+
+            try {
+                // Initialize ThorVG with backend
+                TVG = await ThorVG.init({
+                    renderer: renderer,
+                    locateFile: (path) => '../packages/canvas-kit/dist/' + path.split('/').pop()
+                });
+
+                // Create canvas
+                canvas = new TVG.Canvas('#canvas', {
+                    renderer: renderer,
+                    width: 800,
+                    height: 600
+                });
+
+                log('✓ ThorVG initialized successfully!');
+                log('Ready to draw!');
+            } catch (error) {
+                log('ERROR: ' + error.message);
+            }
+        };
+
+        window.drawPictures = function() {
+            if (!canvas) {
+                log('ERROR: Canvas not initialized. Click Initialize first!');
+                return;
+            }
+
+            log('Drawing SVG pictures...');
+
+            // Create a simple SVG
+            const svgData = `
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="#4CAF50" stroke-width="8"/>
+                    <path d="M 60 100 L 90 130 L 140 70" fill="none" stroke="#4CAF50" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            `;
+
+            // Picture 1: Original size
+            const picture1 = new TVG.Picture();
+            picture1.loadData(svgData, { format: 'svg' })
+                .translate(50, 50);
+            canvas.add(picture1);
+            log('1. SVG check mark (original size) at (50, 50)');
+
+            // Picture 2: Scaled version
+            const picture2 = new TVG.Picture();
+            picture2.loadData(svgData, { format: 'svg' })
+                .size(100, 100)
+                .translate(300, 50);
+            canvas.add(picture2);
+            log('2. SVG check mark (scaled 100x100) at (300, 50)');
+
+            // Picture 3: Rotated and scaled
+            const picture3 = new TVG.Picture();
+            picture3.loadData(svgData, { format: 'svg' })
+                .size(150, 150)
+                .translate(550, 50)
+                .rotate(45);
+            canvas.add(picture3);
+            log('3. SVG check mark (scaled 150x150, rotated 45°) at (550, 50)');
+
+            // Picture 4: Semi-transparent
+            const picture4 = new TVG.Picture();
+            picture4.loadData(svgData, { format: 'svg' })
+                .size(120, 120)
+                .translate(50, 300)
+                .opacity(0.5);
+            canvas.add(picture4);
+            log('4. SVG check mark (120x120, 50% opacity) at (50, 300)');
+
+            // Complex SVG with gradient
+            const complexSvg = `
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgb(255,255,0);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:rgb(255,0,0);stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect x="20" y="20" width="160" height="160" rx="20" fill="url(#grad1)"/>
+                    <text x="100" y="110" font-size="40" text-anchor="middle" fill="white">SVG</text>
+                </svg>
+            `;
+
+            // Picture 5: Complex SVG
+            const picture5 = new TVG.Picture();
+            picture5.loadData(complexSvg, { format: 'svg' })
+                .size(180, 180)
+                .translate(300, 280);
+            canvas.add(picture5);
+            log('5. Complex SVG with gradient (180x180) at (300, 280)');
+
+            // Render all
+            canvas.render();
+            log('✓ Picture rendering complete!');
+        };
+
+        window.loadImageFile = async function(event) {
+            if (!canvas) {
+                log('ERROR: Canvas not initialized. Click Initialize first!');
+                return;
+            }
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            log(`Loading file: ${file.name} (${file.type})...`);
+
+            try {
+                // Clear canvas first
+                canvas.clear();
+
+                // User handles file reading
+                const arrayBuffer = await file.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+
+                // Determine format from file extension
+                let format = 'svg';
+                const ext = file.name.split('.').pop()?.toLowerCase();
+                if (ext === 'jpg' || ext === 'jpeg') {
+                    format = 'jpg';
+                } else if (ext === 'png') {
+                    format = 'png';
+                } else if (ext === 'webp') {
+                    format = 'webp';
+                } else if (ext === 'svg') {
+                    format = 'svg';
+                }
+
+                // Create picture and load data
+                const picture = new TVG.Picture();
+                picture.loadData(uint8Array, { format });
+
+                // Get original size
+                const originalSize = picture.size();
+                log(`Original size: ${originalSize.width}x${originalSize.height}`);
+
+                // Fit the picture to canvas (max 600x500)
+                const maxWidth = 600;
+                const maxHeight = 500;
+                const scale = Math.min(
+                    maxWidth / originalSize.width,
+                    maxHeight / originalSize.height
+                );
+                const newWidth = originalSize.width * scale;
+                const newHeight = originalSize.height * scale;
+
+                picture.size(newWidth, newHeight)
+                    .translate(100, 50);
+
+                canvas.add(picture);
+                canvas.render();
+
+                log(`✓ Loaded ${file.name}: ${originalSize.width}x${originalSize.height} → ${newWidth.toFixed(0)}x${newHeight.toFixed(0)}`);
+            } catch (error) {
+                log(`ERROR: Failed to load ${file.name}: ${error.message}`);
+            }
+        };
+
+        window.clearCanvas = function() {
+            if (!canvas) {
+                log('ERROR: Canvas not initialized!');
+                return;
+            }
+
+            canvas.clear();
+            canvas.render();
+            log('✓ Canvas cleared!');
+        };
+
+        // Auto-initialize on load
+        log('Ready! Click "Initialize" to start.');
+    </script>
+</body>
+</html>
