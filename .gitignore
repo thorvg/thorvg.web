@@ -146,5 +146,6 @@ dist
 
 # Meson build directories
 build_wasm/
+build_wasm_wcanvas/
 
 # End of https://www.toptal.com/developers/gitignore/api/node
