@@ -10,7 +10,7 @@ endif
 
 # Find ThorVG library
 thorvg_dir = meson.project_source_root() + '/../../thorvg'
-thorvg_lib = cc.find_library('thorvg', dirs: thorvg_dir + '/build_wasm_wcanvas/src')
+thorvg_lib_path = thorvg_dir + '/build_wasm_wcanvas/src/libthorvg-1.a'
 
 thorvg_inc = include_directories(
     '../../thorvg/inc',
@@ -29,5 +29,5 @@ source_files = [
 executable('thorvg',
     source_files,
     include_directories : thorvg_inc,
-    dependencies : [thorvg_lib],
+    link_args : [thorvg_lib_path],
 )
