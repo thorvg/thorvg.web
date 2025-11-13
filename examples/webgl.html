@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>ThorVG Lottie Player</title>
     <meta name="description" content="A web lottie player using ThorVG as a renderer" />
-    <script src="../dist/lottie-player.js"></script>
+    <script src="../packages/lottie-player/dist/gl/lottie-player.js"></script>
   </head>
   <body>
     <div>
@@ -14,8 +14,6 @@
         <button onclick="stopAnimation()">Stop</button>
         <button onclick="createAnimation()">Create</button>
         <button onclick="destroyAnimation()">Destroy</button>
-        <button onclick="save2gif()">save2gif</button>
-        <button onclick="save2png()">save2png</button>
         <div>
           <label for="reverseCheckbox">Reverse</label>
           <input type="checkbox" id="reverseCheckbox" onchange="toggleReverse(event)">
@@ -56,10 +54,10 @@
 
         animation.autoPlay = true;
         animation.loop = true;
-        animation.src = "https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json";
+        animation.src = "https://raw.githubusercontent.com/thorvg/thorvg/main/examples/resources/lottie/cat_loader.json";
         animation.style.width = "500px";
         animation.style.height = "500px";
-        animation.wasmUrl = "/dist/thorvg.wasm";
+        animation.wasmUrl = "../packages/lottie-player/dist/gl/thorvg.wasm";
 
         lottie.appendChild(animation);
 
@@ -152,23 +150,6 @@
           animation.play();
         }
       }
-
-      function save2gif() {
-        if (!animation) {
-          alert('Animation is not created yet');
-          return;
-        }
-        animation.save2gif(animation.src);
-      }
-
-      function save2png() {
-        if (!animation) {
-          alert('Animation is not created yet');
-          return;
-        }
-        animation.save2png();
-      }
-
   </script>
   </body>
 </html>

@@ -46,7 +46,7 @@
         z-index: 1000;
       }
     </style>
-    <script src="../../dist/lottie-player.js" type="text/javascript"></script>
+    <script src="../packages/lottie-player/dist/lottie-player.js" type="text/javascript"></script>
   </head>
   <body>
     <div id="loading">Loading animations...</div>
@@ -176,7 +176,7 @@
           player.autoPlay = true;
           player.loop = true;
           player.src = `${animationPath}/resources/${lottieFiles[i]}`;
-          player.wasmUrl = "/dist/thorvg.wasm";
+          player.wasmUrl = "../packages/lottie-player/dist/thorvg.wasm";
           player.renderConfig = { enableDevicePixelRatio: true, renderer: 'sw' };
           player.style.width = animationSize;
           player.style.height = animationSize;

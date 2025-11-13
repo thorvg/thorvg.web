@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@thorvg/lottie-player": "file:../..",
+    "@thorvg/lottie-player": "file:../../packages/lottie-player",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

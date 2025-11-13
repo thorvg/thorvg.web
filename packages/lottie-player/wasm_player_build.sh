@@ -9,7 +9,7 @@ if [ -z "$2" ]; then
 fi
 
 # Step 1: Build ThorVG library
-cd thorvg
+cd ../../thorvg
 rm -rf build_wasm_player
 
 if [[ "$BACKEND" == "wg" ]]; then
@@ -34,15 +34,15 @@ fi
 
 ninja -C build_wasm_player/
 
-cd ..
+cd ../packages/lottie-player
 
 # Step 2: Build WASM bindings
 rm -rf build_wasm_player
 
-cp thorvg/build_wasm_player/config.h wasm/lottie-player/config.h
-meson setup -Db_lto=true --cross-file /tmp/.wasm_cross.txt build_wasm_player wasm/lottie-player
+cp ../../thorvg/build_wasm_player/config.h ../../wasm/lottie-player/config.h
+meson setup -Db_lto=true --cross-file /tmp/.wasm_cross.txt build_wasm_player ../../wasm/lottie-player
 
 ninja -C build_wasm_player/
-rm wasm/lottie-player/config.h
+rm ../../wasm/lottie-player/config.h
 
 ls -lrt build_wasm_player/*.{js,wasm}
