@@ -66,7 +66,7 @@ struct TvgSwEngine : TvgEngineMethod
     {
         if (Initializer::init() != Result::Success) return nullptr;
         loadFont();
-        return SwCanvas::gen();
+        return SwCanvas::gen(EngineOption::SmartRender);
     }
 
     void resize(Canvas* canvas, uint32_t w, uint32_t h) override
@@ -129,7 +129,7 @@ struct TvgWgEngine : TvgEngineMethod
         if (Initializer::init() != Result::Success) return nullptr;
         loadFont();
 
-        return WgCanvas::gen();
+        return WgCanvas::gen(EngineOption::Default);
     }
 
     void resize(Canvas* canvas, uint32_t w, uint32_t h) override
@@ -264,7 +264,7 @@ struct TvgGlEngine : TvgEngineMethod
         if (Initializer::init() != Result::Success) return nullptr;
         loadFont();
 
-        return GlCanvas::gen();
+        return GlCanvas::gen(EngineOption::Default);
     }
 
     void resize(Canvas* canvas, uint32_t w, uint32_t h) override
@@ -272,7 +272,7 @@ struct TvgGlEngine : TvgEngineMethod
         if (!canvas) return;
 
         static_cast<GlCanvas*>(canvas)->target(
-            (void*)context, 0, w, h, ColorSpace::ABGR8888S
+            nullptr, nullptr, (void*)context, 0, w, h, ColorSpace::ABGR8888S
         );
     }
 };
