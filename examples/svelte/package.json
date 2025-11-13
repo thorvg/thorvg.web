@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@thorvg/lottie-player": "file:../.."
+    "@thorvg/lottie-player": "file:../../packages/lottie-player"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
