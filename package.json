@@ -38,9 +38,10 @@
   "scripts": {
     "build": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
     "build:watch": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
+    "build:test": "tsc -p tests/tsconfig.json",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "test:build": "./build-test.sh",
+    "clean:post": "find ./dist -name 'thorvg.js' -type f -delete",
+    "test": "npm run build:test && wtr tests/*.test.js --node-resolve",
     "lint": "eslint ./src --ext .ts,.tsx,.js",
     "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
     "version": "sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'"
@@ -62,12 +63,15 @@
     "tvg"
   ],
   "devDependencies": {
+    "@open-wc/testing": "^4.0.0",
     "@rollup/plugin-alias": "^5.1.1",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^6.0.2",
     "@swc/core": "^1.3.99",
+    "@types/mocha": "^10.0.10",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@web/test-runner": "^0.20.2",
     "eslint": "^8.0.1",
     "eslint-config-standard-with-typescript": "^40.0.0",
     "eslint-plugin-import": "^2.25.2",
