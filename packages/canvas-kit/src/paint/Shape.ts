@@ -144,7 +144,8 @@ export class Shape extends Paint {
     const Module = getModule();
 
     if (gradientOrR instanceof Fill) {
-      // Gradient fill
+      // Gradient fill - apply pending stops before setting
+      gradientOrR['_applyStops']();
       const result = Module._tvg_shape_set_gradient(this.ptr, gradientOrR.ptr);
       checkResult(result, 'fill (gradient)');
     } else if (typeof gradientOrR === 'number' && g !== undefined && b !== undefined) {
@@ -182,6 +183,8 @@ export class Shape extends Paint {
         checkResult(result, 'stroke (color)');
       }
       if (gradient) {
+        // Apply pending stops before setting stroke gradient
+        gradient['_applyStops']();
         const result = Module._tvg_shape_set_stroke_gradient(this.ptr, gradient.ptr);
         checkResult(result, 'stroke (gradient)');
       }
