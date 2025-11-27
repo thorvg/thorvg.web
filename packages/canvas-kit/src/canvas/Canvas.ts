@@ -8,7 +8,7 @@ import type { RendererType } from '../constants';
 import { checkResult } from '../core/errors';
 import type { ThorVGEngineInstance } from '../types/emscripten';
 
-const DEFAULT_RENDERER: RendererType = 'sw';
+const DEFAULT_RENDERER: RendererType = 'gl';
 
 export interface CanvasOptions {
   renderer?: RendererType;

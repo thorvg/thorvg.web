@@ -183,6 +183,7 @@
                         <option value="wg">WebGPU</option>
                     </select>
                     <button onclick="clearCanvas()">Clear</button>
+                    <button id="play-btn" onclick="togglePlayPause()" style="display:none;">▶ Play</button>
                 </div>
             </div>
             <div class="canvas-container">
@@ -200,8 +201,11 @@
                         <option value="basic">Basic Shapes</option>
                         <option value="gradient">Gradients</option>
                         <option value="transform">Transforms</option>
+                        <option value="lottie">Lottie Animation</option>
                         <option value="custom">Custom</option>
                     </select>
+                    <input type="file" id="lottie-upload" accept=".json,.lottie" style="display:none;" onchange="handleLottieUpload(event)">
+                    <button onclick="document.getElementById('lottie-upload').click()">Upload Lottie</button>
                     <label class="checkbox-label">
                         <input type="checkbox" id="auto-run" checked>
                         Auto Run
@@ -222,8 +226,10 @@
         // Global state
         let TVG = null;
         let canvas = null;
+        let animation = null;
         let isInitialized = false;
         let autoRunTimeout = null;
+        let currentLottieData = null;
 
         // Example templates
         const examples = {
@@ -297,6 +303,42 @@ center.appendCircle(300, 300, 30, 30);
 center.fill(255, 255, 255, 255);
 canvas.add(center);`,
 
+            lottie: `// Lottie Animation Example
+// First, upload a Lottie JSON file using "Upload Lottie" button
+// Then the animation will be available as 'animation' variable
+
+if (!animation) {
+  // No animation loaded, show placeholder
+  const text = new TVG.Shape();
+  text.appendRect(100, 250, 400, 100, { rx: 10, ry: 10 });
+  text.fill(200, 200, 200, 255);
+  canvas.add(text);
+
+  console.log('Please upload a Lottie file first!');
+} else {
+  // Animation loaded! Get the picture and add to canvas
+  const picture = animation.picture;
+
+  // Fit to canvas
+  const size = picture.size();
+  const scale = Math.min(500 / size.width, 500 / size.height);
+  picture.size(size.width * scale, size.height * scale);
+  picture.translate(
+    (600 - size.width * scale) / 2,
+    (600 - size.height * scale) / 2
+  );
+
+  canvas.add(picture);
+
+  // Play animation
+  animation.play((frame) => {
+    canvas.update();
+    canvas.render();
+  });
+
+  console.log('Animation info:', animation.info());
+}`,
+
             custom: `// Your custom code here
 const shape = new TVG.Shape();
 shape.appendRect(150, 150, 300, 300, { rx: 20, ry: 20 });
@@ -345,23 +387,94 @@ canvas.add(shape);`
             }
 
             try {
+                // Stop any existing animation
+                if (animation && animation.isPlaying()) {
+                    animation.pause();
+                }
+
                 // Clear canvas before running new code
                 canvas.clear();
 
                 // Get user code
                 const code = document.getElementById('code-editor').value;
 
-                // Execute user code in a context where TVG and canvas are available
-                const func = new Function('TVG', 'canvas', code);
-                func(TVG, canvas);
+                // Execute user code in a context where TVG, canvas, and animation are available
+                const func = new Function('TVG', 'canvas', 'animation', code);
+                func(TVG, canvas, animation);
 
-                // Render the canvas
-                canvas.render();
+                // Render the canvas (unless animation is playing)
+                if (!animation || !animation.isPlaying()) {
+                    canvas.render();
+                }
+
+                // Show/hide play button based on animation state
+                const playBtn = document.getElementById('play-btn');
+                if (animation) {
+                    playBtn.style.display = 'inline-block';
+                    playBtn.textContent = animation.isPlaying() ? '⏸ Pause' : '▶ Play';
+                } else {
+                    playBtn.style.display = 'none';
+                }
 
                 updateStatus('Code executed successfully', 'success');
             } catch (error) {
                 updateStatus('Error: ' + error.message, 'error');
                 console.error(error);
+            }
+        };
+
+        // Handle Lottie file upload
+        window.handleLottieUpload = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                updateStatus('Loading Lottie file...', 'info');
+
+                // Read file as ArrayBuffer
+                const arrayBuffer = await file.arrayBuffer();
+                currentLottieData = new Uint8Array(arrayBuffer);
+
+                // Create new animation
+                if (animation) {
+                    animation.dispose();
+                }
+
+                animation = new TVG.Animation();
+                animation.load(currentLottieData);
+
+                const info = animation.info();
+                updateStatus(`Lottie loaded: ${info.totalFrames.toFixed(0)} frames, ${info.duration.toFixed(2)}s`, 'success');
+
+                // Switch to lottie example
+                document.getElementById('example-select').value = 'lottie';
+                document.getElementById('code-editor').value = examples.lottie;
+
+                // Run the code
+                runCode();
+            } catch (error) {
+                updateStatus('Error loading Lottie: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+
+        // Toggle play/pause
+        window.togglePlayPause = function() {
+            if (!animation) return;
+
+            const playBtn = document.getElementById('play-btn');
+
+            if (animation.isPlaying()) {
+                animation.pause();
+                playBtn.textContent = '▶ Play';
+                updateStatus('Animation paused', 'info');
+            } else {
+                animation.play((frame) => {
+                    canvas.update();
+                    canvas.render();
+                });
+                playBtn.textContent = '⏸ Pause';
+                updateStatus('Playing animation...', 'success');
             }
         };
 
@@ -371,6 +484,14 @@ canvas.add(shape);`
                 updateStatus('Error: Canvas not initialized', 'error');
                 return;
             }
+
+            // Stop animation if playing
+            if (animation && animation.isPlaying()) {
+                animation.pause();
+                const playBtn = document.getElementById('play-btn');
+                playBtn.textContent = '▶ Play';
+            }
+
             canvas.clear();
             updateStatus('Canvas cleared', 'success');
         };
@@ -395,13 +516,11 @@ canvas.add(shape);`
             }
         });
 
-        // Handle renderer change
-        document.getElementById('renderer-select').addEventListener('change', async (e) => {
-            if (canvas) {
-                canvas.destroy();
-            }
-            isInitialized = false;
-            await initializeThorVG();
+        // Handle renderer change - save to query param and reload
+        document.getElementById('renderer-select').addEventListener('change', (e) => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('renderer', e.target.value);
+            window.location.href = url.toString();
         });
 
         // Auto-run with debounce
@@ -442,6 +561,13 @@ canvas.add(shape);`
                 e.target.selectionStart = e.target.selectionEnd = start + 2;
             }
         });
+
+        // Load renderer from query parameter
+        const params = new URLSearchParams(window.location.search);
+        const rendererParam = params.get('renderer');
+        if (rendererParam && ['sw', 'gl', 'wg'].includes(rendererParam)) {
+            document.getElementById('renderer-select').value = rendererParam;
+        }
 
         // Load initial example
         document.getElementById('code-editor').value = examples.basic;
