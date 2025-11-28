@@ -398,6 +398,8 @@
                     <button id="upload-lottie-btn" onclick="document.getElementById('lottie-upload').click()" style="display:none;">Upload Lottie</button>
                     <input type="file" id="font-upload" accept=".ttf,.otf" style="display:none;" onchange="handleFontUpload(event)">
                     <button id="upload-font-btn" onclick="document.getElementById('font-upload').click()" style="display:none;">Upload Font</button>
+                    <input type="file" id="image-upload" accept=".png,.jpg,.jpeg,.webp" style="display:none;" onchange="handleImageUpload(event)">
+                    <button id="upload-image-btn" onclick="document.getElementById('image-upload').click()" style="display:none;">Upload Image</button>
                 </div>
             </div>
             <div class="canvas-container">
@@ -458,6 +460,7 @@
                     <select id="example-select">
                         <option value="basic">Basic Shapes</option>
                         <option value="gradient">Gradients</option>
+                        <option value="picture">Picture (SVG/PNG)</option>
                         <option value="transform">Transforms (Static)</option>
                         <option value="transformAnim">Transform Animation</option>
                         <option value="text">Text (Static)</option>
@@ -809,6 +812,91 @@ radialGrad.addStop(1, [255, 100, 100, 255]);
 
 circle.fill(radialGrad);
 canvas.add(circle);`,
+
+            picture: `// Picture Example (SVG and PNG/JPG)
+// Upload an image using "Upload Image" button to see it rendered
+
+// SVG Icon 1: Check mark
+const checkSvg = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <polyline points="20 6 9 17 4 12" stroke="#00ff00"/>
+</svg>\`;
+
+const checkIcon = new TVG.Picture();
+checkIcon.loadData(checkSvg, { format: 'svg' })
+  .size(80, 80)
+  .translate(50, 50);
+
+// SVG Icon 2: Heart
+const heartSvg = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red">
+  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+</svg>\`;
+
+const heartIcon = new TVG.Picture();
+heartIcon.loadData(heartSvg, { format: 'svg' })
+  .size(80, 80)
+  .translate(180, 50);
+
+// SVG Icon 3: Star
+const starSvg = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gold">
+  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+</svg>\`;
+
+const starIcon = new TVG.Picture();
+starIcon.loadData(starSvg, { format: 'svg' })
+  .size(80, 80)
+  .translate(310, 50);
+
+// SVG Icon 4: Circle with gradient
+const circleSvg = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgb(255,100,100);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgb(100,100,255);stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="40" fill="url(#grad)"/>
+</svg>\`;
+
+const circleIcon = new TVG.Picture();
+circleIcon.loadData(circleSvg, { format: 'svg' })
+  .size(80, 80)
+  .translate(440, 50);
+
+// Add all SVG icons
+canvas.add(checkIcon, heartIcon, starIcon, circleIcon);
+
+// Display uploaded image if available
+if (window.uploadedImageData) {
+  const uploadedPicture = new TVG.Picture();
+  uploadedPicture.loadData(window.uploadedImageData.data, {
+    format: window.uploadedImageData.format
+  });
+
+  // Scale to fit
+  const size = uploadedPicture.size();
+  const maxWidth = 500;
+  const maxHeight = 400;
+  const scale = Math.min(maxWidth / size.width, maxHeight / size.height);
+
+  uploadedPicture.size(size.width * scale, size.height * scale)
+    .translate(50, 180);
+
+  canvas.add(uploadedPicture);
+
+  console.log(\`Uploaded image: \${size.width}x\${size.height}\`);
+} else {
+  // Show placeholder text
+  const placeholderRect = new TVG.Shape();
+  placeholderRect.appendRect(50, 200, 500, 100, { rx: 10, ry: 10 })
+    .fill(50, 50, 50)
+    .stroke({ width: 2, color: [100, 100, 100, 255] });
+
+  canvas.add(placeholderRect);
+
+  console.log('Click "Upload Image" to add PNG/JPG/WebP images');
+}
+
+canvas.render();`,
 
             transform: `// Transform example
 // Create a shape that we'll transform multiple times
@@ -1202,9 +1290,10 @@ console.log('Transform animation started!');`
                     updateHighlight();
                 }
 
-                // Show Upload Font button, hide Lottie button
+                // Show Upload Font button, hide others
                 document.getElementById('upload-font-btn').style.display = 'inline-block';
                 document.getElementById('upload-lottie-btn').style.display = 'none';
+                document.getElementById('upload-image-btn').style.display = 'none';
 
                 // Run the code
                 runCode();
@@ -1242,14 +1331,63 @@ console.log('Transform animation started!');`
                 editor.value = examples.lottie;
                 updateHighlight();
 
-                // Show Upload Lottie button, hide Font button
+                // Show Upload Lottie button, hide others
                 document.getElementById('upload-lottie-btn').style.display = 'inline-block';
                 document.getElementById('upload-font-btn').style.display = 'none';
+                document.getElementById('upload-image-btn').style.display = 'none';
 
                 // Run the code
                 runCode();
             } catch (error) {
                 updateStatus('Error loading Lottie: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+
+        // Handle Image file upload
+        window.handleImageUpload = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                updateStatus('Loading image...', 'info');
+
+                // Read file as ArrayBuffer
+                const arrayBuffer = await file.arrayBuffer();
+                const imageData = new Uint8Array(arrayBuffer);
+
+                // Detect format from file extension
+                const ext = file.name.match(/\.(png|jpg|jpeg|webp)$/i);
+                if (!ext) {
+                    throw new Error('Unsupported image format. Please use PNG, JPG, or WebP.');
+                }
+                const format = ext[1].toLowerCase();
+
+                // Store uploaded image data
+                window.uploadedImageData = {
+                    data: imageData,
+                    format: format === 'jpg' ? 'jpeg' : format,
+                    name: file.name
+                };
+
+                updateStatus(`Image loaded: ${file.name}`, 'success');
+
+                // Switch to picture example if not already there
+                if (document.getElementById('example-select').value !== 'picture') {
+                    document.getElementById('example-select').value = 'picture';
+                    editor.value = examples.picture;
+                    updateHighlight();
+                }
+
+                // Show Upload Image button, hide others
+                document.getElementById('upload-image-btn').style.display = 'inline-block';
+                document.getElementById('upload-lottie-btn').style.display = 'none';
+                document.getElementById('upload-font-btn').style.display = 'none';
+
+                // Run the code
+                runCode();
+            } catch (error) {
+                updateStatus('Error loading image: ' + error.message, 'error');
                 console.error(error);
             }
         };
@@ -1317,16 +1455,24 @@ console.log('Transform animation started!');`
             // Show/hide Upload buttons based on selection
             const uploadLottieBtn = document.getElementById('upload-lottie-btn');
             const uploadFontBtn = document.getElementById('upload-font-btn');
+            const uploadImageBtn = document.getElementById('upload-image-btn');
 
             if (e.target.value === 'lottie') {
                 uploadLottieBtn.style.display = 'inline-block';
                 uploadFontBtn.style.display = 'none';
+                uploadImageBtn.style.display = 'none';
             } else if (e.target.value === 'text' || e.target.value === 'textAnim') {
                 uploadLottieBtn.style.display = 'none';
                 uploadFontBtn.style.display = 'inline-block';
+                uploadImageBtn.style.display = 'none';
+            } else if (e.target.value === 'picture') {
+                uploadLottieBtn.style.display = 'none';
+                uploadFontBtn.style.display = 'none';
+                uploadImageBtn.style.display = 'inline-block';
             } else {
                 uploadLottieBtn.style.display = 'none';
                 uploadFontBtn.style.display = 'none';
+                uploadImageBtn.style.display = 'none';
             }
 
             if (document.getElementById('auto-run').checked) {
