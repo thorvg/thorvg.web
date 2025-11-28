@@ -104,12 +104,62 @@
             justify-content: center;
             padding: 20px;
             overflow: auto;
+            position: relative;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            transform-origin: center center;
+            transition: transform 0.2s ease;
+        }
+
+        .canvas-wrapper.show-grid::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: 1;
         }
 
         #canvas {
             border: 1px solid #3e3e42;
             background: white;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: block;
+            transition: background 0.3s ease;
+        }
+
+        .canvas-wrapper.dark-mode #canvas {
+            background: #2d2d30;
+        }
+
+        .canvas-toolbar {
+            padding: 8px 16px;
+            background: #2d2d30;
+            border-top: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 20px;
+            background: #3e3e42;
         }
 
         .editor-container {
@@ -197,6 +247,23 @@
             cursor: pointer;
         }
 
+        input[type="range"] {
+            width: 100px;
+            cursor: pointer;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .zoom-label {
+            font-size: 11px;
+            color: #cccccc;
+            min-width: 35px;
+        }
+
         .docs-panel {
             flex: 0 0 400px;
             min-width: 200px;
@@ -280,10 +347,37 @@
                     </select>
                     <button onclick="clearCanvas()">Clear</button>
                     <button id="play-btn" onclick="togglePlayPause()" style="display:none;">▶ Play</button>
+                    <input type="file" id="lottie-upload" accept=".json,.lottie" style="display:none;" onchange="handleLottieUpload(event)">
+                    <button id="upload-lottie-btn" onclick="document.getElementById('lottie-upload').click()" style="display:none;">Upload Lottie</button>
+                    <input type="file" id="font-upload" accept=".ttf,.otf" style="display:none;" onchange="handleFontUpload(event)">
+                    <button id="upload-font-btn" onclick="document.getElementById('font-upload').click()" style="display:none;">Upload Font</button>
                 </div>
             </div>
             <div class="canvas-container">
-                <canvas id="canvas" width="600" height="600"></canvas>
+                <div class="canvas-wrapper" id="canvas-wrapper">
+                    <canvas id="canvas" width="600" height="600"></canvas>
+                </div>
+            </div>
+            <div class="canvas-toolbar">
+                <div class="toolbar-group">
+                    <label>Zoom:</label>
+                    <input type="range" id="zoom-slider" min="50" max="200" value="100" step="10">
+                    <span class="zoom-label" id="zoom-value">100%</span>
+                </div>
+                <div class="toolbar-separator"></div>
+                <div class="toolbar-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="grid-toggle">
+                        Grid
+                    </label>
+                </div>
+                <div class="toolbar-separator"></div>
+                <div class="toolbar-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="theme-toggle">
+                        Dark Canvas
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -298,11 +392,11 @@
                         <option value="gradient">Gradients</option>
                         <option value="transform">Transforms (Static)</option>
                         <option value="transformAnim">Transform Animation</option>
+                        <option value="text">Text (Static)</option>
+                        <option value="textAnim">Text Animation</option>
                         <option value="lottie">Lottie Animation</option>
                         <option value="custom">Custom</option>
                     </select>
-                    <input type="file" id="lottie-upload" accept=".json,.lottie" style="display:none;" onchange="handleLottieUpload(event)">
-                    <button onclick="document.getElementById('lottie-upload').click()">Upload Lottie</button>
                     <label>Docs:</label>
                     <select id="docs-select">
                         <option value="">None</option>
@@ -370,6 +464,38 @@
 
         editor.addEventListener('input', updateHighlight);
         editor.addEventListener('scroll', syncScroll);
+
+        // Canvas zoom, grid, and theme controls
+        const zoomSlider = document.getElementById('zoom-slider');
+        const zoomValue = document.getElementById('zoom-value');
+        const gridToggle = document.getElementById('grid-toggle');
+        const themeToggle = document.getElementById('theme-toggle');
+        const canvasWrapper = document.getElementById('canvas-wrapper');
+
+        // Handle zoom
+        zoomSlider.addEventListener('input', (e) => {
+            const zoom = e.target.value;
+            zoomValue.textContent = `${zoom}%`;
+            canvasWrapper.style.transform = `scale(${zoom / 100})`;
+        });
+
+        // Handle grid toggle
+        gridToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                canvasWrapper.classList.add('show-grid');
+            } else {
+                canvasWrapper.classList.remove('show-grid');
+            }
+        });
+
+        // Handle theme toggle
+        themeToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                canvasWrapper.classList.add('dark-mode');
+            } else {
+                canvasWrapper.classList.remove('dark-mode');
+            }
+        });
 
         // Documentation loading
         async function loadDocumentation(filename) {
@@ -531,6 +657,143 @@ const center = new TVG.Shape();
 center.appendCircle(300, 300, 30, 30);
 center.fill(255, 255, 255, 255);
 canvas.add(center);`,
+
+            text: `// Text (Static) Example
+// Upload a custom font using "Upload Font" button, or use default font
+
+// Check if custom font is loaded
+const fontName = window.customFontLoaded ? 'CustomFont' : 'default';
+
+// Create main title
+const title = new TVG.Text();
+title.font(fontName)
+  .text('ThorVG Canvas Kit')
+  .fontSize(48)
+  .fill(255, 255, 255)
+  .outline(2, 0, 122, 204)
+  .align({ horizontal: 'center', vertical: 'middle' })
+  .translate(300, 100);
+
+// Create subtitle with different style
+const subtitle = new TVG.Text();
+subtitle.font(fontName)
+  .text('High-Performance Vector Graphics')
+  .fontSize(24)
+  .fill(100, 200, 255)
+  .align({ horizontal: 'center', vertical: 'middle' })
+  .translate(300, 170);
+
+// Feature list
+const features = [
+  'WebGPU / WebGL / Software Rendering',
+  'Lottie Animation Support',
+  'Custom Fonts & Text Rendering',
+  'SVG / PNG / WebP Support',
+  'Gradient & Stroke Support'
+];
+
+features.forEach((feature, i) => {
+  const featureText = new TVG.Text();
+  featureText.font(fontName)
+    .text('• ' + feature)
+    .fontSize(18)
+    .fill(200, 200, 200)
+    .align({ horizontal: 'left', vertical: 'middle' })
+    .translate(120, 260 + i * 40);
+  canvas.add(featureText);
+});
+
+// Add gradient text example
+const gradientText = new TVG.Text();
+const gradient = new TVG.LinearGradient(100, 500, 500, 500);
+gradient.addStop(0, [255, 100, 100, 255]);
+gradient.addStop(0.5, [255, 255, 100, 255]);
+gradient.addStop(1, [100, 255, 100, 255]);
+
+gradientText.font(fontName)
+  .text('Gradient Text Support!')
+  .fontSize(32)
+  .fill(gradient)
+  .align({ horizontal: 'center', vertical: 'middle' })
+  .translate(300, 500);
+
+canvas.add(title, subtitle, gradientText);
+canvas.render();
+
+console.log(\`Using font: \${fontName}\`);`,
+
+            textAnim: `// Text Animation Example
+// Upload a custom font using "Upload Font" button, or use default font
+
+// Check if custom font is loaded
+const fontName = window.customFontLoaded ? 'CustomFont' : 'default';
+
+let time = 0;
+
+function animateText() {
+  time += 0.05;
+  canvas.clear();
+
+  // Rainbow effect on title
+  const r = Math.sin(time) * 127 + 128;
+  const g = Math.sin(time + 2) * 127 + 128;
+  const b = Math.sin(time + 4) * 127 + 128;
+
+  const animTitle = new TVG.Text();
+  animTitle.font(fontName)
+    .text('ThorVG Canvas Kit')
+    .fontSize(48)
+    .fill(r, g, b)
+    .outline(2, 0, 0, 0)
+    .align({ horizontal: 'center', vertical: 'middle' })
+    .translate(300, 150);
+
+  // Pulsing subtitle
+  const scale = 1 + Math.sin(time * 2) * 0.1;
+  const animSubtitle = new TVG.Text();
+  animSubtitle.font(fontName)
+    .text('High-Performance Vector Graphics')
+    .fontSize(24 * scale)
+    .fill(100, 200, 255)
+    .align({ horizontal: 'center', vertical: 'middle' })
+    .translate(300, 220);
+
+  // Rotating text
+  const rotatingText = new TVG.Text();
+  rotatingText.font(fontName)
+    .text('Animated!')
+    .fontSize(32)
+    .fill(255, 200, 100)
+    .align({ horizontal: 'center', vertical: 'middle' })
+    .translate(300, 300)
+    .rotate(time * 20);
+
+  // Wave effect text
+  const waveText = 'WAVE EFFECT';
+  for (let i = 0; i < waveText.length; i++) {
+    const char = new TVG.Text();
+    const yOffset = Math.sin(time * 2 + i * 0.5) * 20;
+    const charColor = Math.sin(time + i * 0.3) * 127 + 128;
+
+    char.font(fontName)
+      .text(waveText[i])
+      .fontSize(28)
+      .fill(charColor, 150, 255 - charColor)
+      .align({ horizontal: 'center', vertical: 'middle' })
+      .translate(150 + i * 30, 400 + yOffset);
+
+    canvas.add(char);
+  }
+
+  canvas.add(animTitle, animSubtitle, rotatingText);
+  canvas.render();
+
+  requestAnimationFrame(animateText);
+}
+
+animateText();
+
+console.log(\`Using font: \${fontName}\`);`,
 
             lottie: `// Lottie Animation Example
 // First, upload a Lottie JSON file using "Upload Lottie" button
@@ -730,6 +993,48 @@ console.log('Transform animation started!');`
             }
         };
 
+        // Handle Font file upload
+        window.handleFontUpload = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                updateStatus('Loading font...', 'info');
+
+                // Read file as ArrayBuffer
+                const arrayBuffer = await file.arrayBuffer();
+                const fontData = new Uint8Array(arrayBuffer);
+
+                // Load font with ThorVG
+                const fontName = 'CustomFont';
+                const format = file.name.endsWith('.otf') ? 'otf' : 'ttf';
+
+                TVG.Font.load(fontName, fontData, { format: format });
+
+                // Set flag for code to use
+                window.customFontLoaded = true;
+
+                updateStatus(`Font loaded: ${file.name}`, 'success');
+
+                // Switch to text example if not already
+                if (document.getElementById('example-select').value !== 'text') {
+                    document.getElementById('example-select').value = 'text';
+                    editor.value = examples.text;
+                    updateHighlight();
+                }
+
+                // Show Upload Font button, hide Lottie button
+                document.getElementById('upload-font-btn').style.display = 'inline-block';
+                document.getElementById('upload-lottie-btn').style.display = 'none';
+
+                // Run the code
+                runCode();
+            } catch (error) {
+                updateStatus('Error loading font: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+
         // Handle Lottie file upload
         window.handleLottieUpload = async function(event) {
             const file = event.target.files[0];
@@ -757,6 +1062,10 @@ console.log('Transform animation started!');`
                 document.getElementById('example-select').value = 'lottie';
                 editor.value = examples.lottie;
                 updateHighlight();
+
+                // Show Upload Lottie button, hide Font button
+                document.getElementById('upload-lottie-btn').style.display = 'inline-block';
+                document.getElementById('upload-font-btn').style.display = 'none';
 
                 // Run the code
                 runCode();
@@ -825,6 +1134,21 @@ console.log('Transform animation started!');`
             const example = examples[e.target.value];
             editor.value = example;
             updateHighlight();
+
+            // Show/hide Upload buttons based on selection
+            const uploadLottieBtn = document.getElementById('upload-lottie-btn');
+            const uploadFontBtn = document.getElementById('upload-font-btn');
+
+            if (e.target.value === 'lottie') {
+                uploadLottieBtn.style.display = 'inline-block';
+                uploadFontBtn.style.display = 'none';
+            } else if (e.target.value === 'text' || e.target.value === 'textAnim') {
+                uploadLottieBtn.style.display = 'none';
+                uploadFontBtn.style.display = 'inline-block';
+            } else {
+                uploadLottieBtn.style.display = 'none';
+                uploadFontBtn.style.display = 'none';
+            }
 
             if (document.getElementById('auto-run').checked) {
                 scheduleAutoRun();
