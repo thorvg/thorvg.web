@@ -1,4 +1,4 @@
-# ThorVG Canvas Kit API Reference
+# ThorVG Canvas Kit API
 
 TypeScript/WebAssembly API for high-performance vector graphics rendering
 

@@ -1,4 +1,4 @@
-# ThorVG Canvas Kit Usage Guide
+# ThorVG Web Canvas Kit Quick Guide
 
 ## Quick Start
 

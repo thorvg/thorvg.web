@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThorVG Live Editor</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.0/github-markdown-dark.css">
     <style>
         * {
             margin: 0;
@@ -28,17 +29,21 @@
 
         .canvas-panel {
             flex: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             background: #252526;
             border-right: 1px solid #3e3e42;
+            overflow: hidden;
         }
 
         .editor-panel {
             flex: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             background: #1e1e1e;
+            overflow: hidden;
         }
 
         .panel-header {
@@ -191,6 +196,73 @@
         input[type="checkbox"] {
             cursor: pointer;
         }
+
+        .docs-panel {
+            flex: 0 0 400px;
+            min-width: 200px;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+            position: relative;
+        }
+
+        .docs-panel.hidden {
+            display: none;
+        }
+
+        .resize-handle {
+            position: absolute;
+            left: -3px;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            cursor: col-resize;
+            background: transparent;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        .resize-handle:hover {
+            background: rgba(0, 122, 204, 0.5);
+        }
+
+        .resize-handle.dragging {
+            background: #007acc;
+        }
+
+        body.resizing {
+            cursor: col-resize !important;
+            user-select: none;
+        }
+
+        .docs-container {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .markdown-body {
+            background: #1e1e1e !important;
+            color: #d4d4d4 !important;
+            font-size: 14px;
+        }
+
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            border-bottom-color: #3e3e42 !important;
+        }
+
+        .markdown-body code {
+            background: #2d2d30 !important;
+        }
+
+        .markdown-body pre {
+            background: #2d2d30 !important;
+        }
+
+        .markdown-body a {
+            color: #4a9eff !important;
+        }
     </style>
 </head>
 <body>
@@ -231,6 +303,12 @@
                     </select>
                     <input type="file" id="lottie-upload" accept=".json,.lottie" style="display:none;" onchange="handleLottieUpload(event)">
                     <button onclick="document.getElementById('lottie-upload').click()">Upload Lottie</button>
+                    <label>Docs:</label>
+                    <select id="docs-select">
+                        <option value="">None</option>
+                        <option value="API_REFERENCE.md">API Reference</option>
+                        <option value="USAGE.md">Usage Guide</option>
+                    </select>
                     <label class="checkbox-label">
                         <input type="checkbox" id="auto-run" checked>
                         Auto Run
@@ -246,10 +324,24 @@
                 Ready - Edit code and click Run or enable Auto Run
             </div>
         </div>
+
+        <!-- Docs Panel -->
+        <div class="docs-panel hidden" id="docs-panel">
+            <div class="resize-handle" id="resize-handle"></div>
+            <div class="panel-header">
+                <div class="panel-title" id="docs-title">Documentation</div>
+            </div>
+            <div class="docs-container">
+                <div class="markdown-body" id="docs-content">
+                    <p>Select a document from the dropdown to view.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 
     <script type="module">
         // Global state
@@ -278,6 +370,95 @@
 
         editor.addEventListener('input', updateHighlight);
         editor.addEventListener('scroll', syncScroll);
+
+        // Documentation loading
+        async function loadDocumentation(filename) {
+            if (!filename) {
+                document.getElementById('docs-panel').classList.add('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`../${filename}`);
+                if (!response.ok) throw new Error('Failed to load documentation');
+
+                const markdown = await response.text();
+                const html = marked.parse(markdown);
+
+                document.getElementById('docs-content').innerHTML = html;
+                document.getElementById('docs-title').textContent = filename.replace('.md', '').replace('_', ' ');
+                document.getElementById('docs-panel').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading documentation:', error);
+                document.getElementById('docs-content').innerHTML = `<p style="color: #f48771;">Error loading documentation: ${error.message}</p>`;
+                document.getElementById('docs-panel').classList.remove('hidden');
+            }
+        }
+
+        // Handle docs selection
+        document.getElementById('docs-select').addEventListener('change', (e) => {
+            loadDocumentation(e.target.value);
+        });
+
+        // Resizable docs panel
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        function initResize() {
+            const resizeHandle = document.getElementById('resize-handle');
+            const docsPanel = document.getElementById('docs-panel');
+
+            console.log('Initializing resize:', { resizeHandle, docsPanel });
+
+            if (!resizeHandle || !docsPanel) {
+                console.error('Resize elements not found', { resizeHandle, docsPanel });
+                return;
+            }
+
+            resizeHandle.addEventListener('mousedown', (e) => {
+                console.log('Mousedown on resize handle', e);
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = docsPanel.offsetWidth;
+                console.log('Start width:', startWidth);
+                resizeHandle.classList.add('dragging');
+                document.body.classList.add('resizing');
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+
+                const deltaX = startX - e.clientX;
+                const newWidth = startWidth + deltaX;
+
+                const minWidth = 200;
+                const maxWidth = 800;
+                const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+
+                console.log('Resizing:', { deltaX, newWidth, constrainedWidth });
+                docsPanel.style.flexBasis = `${constrainedWidth}px`;
+                docsPanel.style.width = `${constrainedWidth}px`;
+                e.preventDefault();
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    console.log('Resize ended');
+                    isResizing = false;
+                    resizeHandle.classList.remove('dragging');
+                    document.body.classList.remove('resizing');
+                }
+            });
+        }
+
+        // Initialize resize when page loads
+        window.addEventListener('load', () => {
+            console.log('Page loaded, initializing resize');
+            initResize();
+        });
 
         // Example templates
         const examples = {
