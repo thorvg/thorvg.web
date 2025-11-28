@@ -163,6 +163,7 @@ export default function Home() {
   const [playerId, setPlayerId] = useState(1);
   const [text, setText] = useState('');
   const [animationList, setAnimationList] = useState<any>([]);
+  const [contentSize, setContentSize] = useState<{width: number, height: number}>({width: 0, height: 0});
 
   useEffect(() => {
     if (initialized) {
@@ -221,9 +222,23 @@ export default function Home() {
     }, 500);
   }, []);
 
+  const checkCanvasSize = (playerRef?: HTMLElement) => {
+    const player = playerRef || document.querySelector('lottie-player');
+    const canvas = player?.querySelector('canvas');
+    if (!player || !canvas) {
+      return;
+    }
+
+    setContentSize({
+      width: canvas.width,
+      height: canvas.height
+    });
+  };
+
   const handleSliderChange = (value: number) => {
     setSize({ width: value, height: value });
     setQueryStringParameter('size', value);
+    requestAnimationFrame(() => checkCanvasSize());
   };
 
   const loadCanvasKit = async () => {
@@ -435,7 +450,9 @@ export default function Home() {
                 Set
               </button>
               <div className="text-white w-full sm:flex-1 sm:min-w-[240px]">
-                <label className="block mb-2">Box Size: {size.width}px</label>
+                <label className="block mb-2">
+                  Size: {contentSize.width}px
+                </label>
                 <input
                   type="range"
                   min={50}
@@ -494,6 +511,11 @@ export default function Home() {
                     autoplay
                     wasmUrl={wasmUrl}
                     renderConfig={JSON.stringify({enableDevicePixelRatio: true})}
+                    ref={(playerRef: HTMLElement) => {
+                      if (playerRef && index === 0) {
+                        requestAnimationFrame(() => checkCanvasSize(playerRef));
+                      }
+                    }}
                   />
                 )
               }
@@ -512,6 +534,11 @@ export default function Home() {
                       enableDevicePixelRatio: true,
                       renderer: 'wg'
                     })}
+                    ref={(playerRef: HTMLElement) => {
+                      if (playerRef && index === 0) {
+                        requestAnimationFrame(() => checkCanvasSize(playerRef));
+                      }
+                    }}
                   />
                 )
               }
