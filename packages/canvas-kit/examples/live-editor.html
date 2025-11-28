@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThorVG Live Editor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
     <style>
         * {
             margin: 0;
@@ -108,23 +109,46 @@
 
         .editor-container {
             flex: 1;
-            display: flex;
-            flex-direction: column;
+            position: relative;
             overflow: hidden;
         }
 
-        #code-editor {
-            flex: 1;
+        #code-editor, #code-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             padding: 16px;
-            background: #1e1e1e;
-            color: #d4d4d4;
+            margin: 0;
             border: none;
             font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
             font-size: 14px;
             line-height: 1.6;
+            tab-size: 2;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow: auto;
+        }
+
+        #code-editor {
+            background: transparent;
+            color: transparent;
+            caret-color: #d4d4d4;
             resize: none;
             outline: none;
-            tab-size: 2;
+            z-index: 2;
+        }
+
+        #code-editor::selection {
+            background: rgba(58, 118, 176, 0.5);
+        }
+
+        #code-highlight {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            pointer-events: none;
+            z-index: 1;
         }
 
         #code-editor:focus {
@@ -215,6 +239,7 @@
                 </div>
             </div>
             <div class="editor-container">
+                <pre id="code-highlight"><code class="language-javascript"></code></pre>
                 <textarea id="code-editor" spellcheck="false"></textarea>
             </div>
             <div class="status-bar" id="status-bar">
@@ -222,6 +247,9 @@
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
 
     <script type="module">
         // Global state
@@ -232,6 +260,24 @@
         let autoRunTimeout = null;
         let currentLottieData = null;
         let userAnimationId = null; // Track user's requestAnimationFrame
+
+        // Syntax highlighting
+        const editor = document.getElementById('code-editor');
+        const highlight = document.querySelector('#code-highlight code');
+
+        function updateHighlight() {
+            const code = editor.value;
+            highlight.textContent = code;
+            Prism.highlightElement(highlight);
+        }
+
+        function syncScroll() {
+            document.getElementById('code-highlight').scrollTop = editor.scrollTop;
+            document.getElementById('code-highlight').scrollLeft = editor.scrollLeft;
+        }
+
+        editor.addEventListener('input', updateHighlight);
+        editor.addEventListener('scroll', syncScroll);
 
         // Example templates
         const examples = {
@@ -527,7 +573,8 @@ console.log('Transform animation started!');`
 
                 // Switch to lottie example
                 document.getElementById('example-select').value = 'lottie';
-                document.getElementById('code-editor').value = examples.lottie;
+                editor.value = examples.lottie;
+                updateHighlight();
 
                 // Run the code
                 runCode();
@@ -594,7 +641,8 @@ console.log('Transform animation started!');`
         // Handle example selection
         document.getElementById('example-select').addEventListener('change', (e) => {
             const example = examples[e.target.value];
-            document.getElementById('code-editor').value = example;
+            editor.value = example;
+            updateHighlight();
 
             if (document.getElementById('auto-run').checked) {
                 scheduleAutoRun();
@@ -655,7 +703,8 @@ console.log('Transform animation started!');`
         }
 
         // Load initial example
-        document.getElementById('code-editor').value = examples.basic;
+        editor.value = examples.basic;
+        updateHighlight();
 
         // Initialize on page load
         window.addEventListener('load', () => {
