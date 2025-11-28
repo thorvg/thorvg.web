@@ -542,6 +542,46 @@
         const canvasWrapper = document.getElementById('canvas-wrapper');
         const statsOverlay = document.getElementById('stats-overlay');
 
+        // Helper function to update URL params
+        function updateUrlParam(key, value) {
+            const url = new URL(window.location.href);
+            if (value) {
+                url.searchParams.set(key, 'true');
+            } else {
+                url.searchParams.delete(key);
+            }
+            window.history.replaceState({}, '', url.toString());
+        }
+
+        // Load initial state from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialGrid = urlParams.get('grid') === 'true';
+        const initialDarkCanvas = urlParams.get('darkCanvas') === 'true';
+        const initialStats = urlParams.get('stats') === 'true';
+
+        // Set initial checkbox states
+        gridToggle.checked = initialGrid;
+        themeToggle.checked = initialDarkCanvas;
+        statsToggle.checked = initialStats;
+
+        // Apply initial states
+        if (initialGrid) {
+            canvasWrapper.classList.add('show-grid');
+        }
+        if (initialDarkCanvas) {
+            canvasWrapper.classList.add('dark-mode');
+        }
+        let statsEnabled = initialStats;
+        if (initialStats) {
+            statsOverlay.classList.add('visible');
+            // Start stats tracking on load if enabled
+            window.addEventListener('load', () => {
+                if (statsEnabled) {
+                    startStatsTracking();
+                }
+            });
+        }
+
         // Handle zoom
         zoomSlider.addEventListener('input', (e) => {
             const zoom = e.target.value;
@@ -556,6 +596,7 @@
             } else {
                 canvasWrapper.classList.remove('show-grid');
             }
+            updateUrlParam('grid', e.target.checked);
         });
 
         // Handle theme toggle
@@ -565,10 +606,10 @@
             } else {
                 canvasWrapper.classList.remove('dark-mode');
             }
+            updateUrlParam('darkCanvas', e.target.checked);
         });
 
         // Handle stats toggle
-        let statsEnabled = false;
         statsToggle.addEventListener('change', (e) => {
             statsEnabled = e.target.checked;
             if (statsEnabled) {
@@ -577,6 +618,7 @@
             } else {
                 statsOverlay.classList.remove('visible');
             }
+            updateUrlParam('stats', e.target.checked);
         });
 
         // Stats tracking
