@@ -162,6 +162,53 @@
             background: #3e3e42;
         }
 
+        .stats-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .stats-overlay.visible {
+            display: block;
+        }
+
+        .stats-overlay .stat-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 2px 0;
+        }
+
+        .stats-overlay .stat-label {
+            color: #888;
+        }
+
+        .stats-overlay .stat-value {
+            color: #00ff00;
+            font-weight: bold;
+            text-align: right;
+            min-width: 60px;
+        }
+
+        .stats-overlay .stat-value.warning {
+            color: #ffaa00;
+        }
+
+        .stats-overlay .stat-value.error {
+            color: #ff4444;
+        }
+
         .editor-container {
             flex: 1;
             position: relative;
@@ -354,6 +401,20 @@
                 </div>
             </div>
             <div class="canvas-container">
+                <div class="stats-overlay" id="stats-overlay">
+                    <div class="stat-line">
+                        <span class="stat-label">FPS:</span>
+                        <span class="stat-value" id="fps-value">0</span>
+                    </div>
+                    <div class="stat-line">
+                        <span class="stat-label">Memory:</span>
+                        <span class="stat-value" id="memory-value">0 MB</span>
+                    </div>
+                    <div class="stat-line">
+                        <span class="stat-label">Heap:</span>
+                        <span class="stat-value" id="heap-value">0%</span>
+                    </div>
+                </div>
                 <div class="canvas-wrapper" id="canvas-wrapper">
                     <canvas id="canvas" width="600" height="600"></canvas>
                 </div>
@@ -376,6 +437,13 @@
                     <label class="checkbox-label">
                         <input type="checkbox" id="theme-toggle">
                         Dark Canvas
+                    </label>
+                </div>
+                <div class="toolbar-separator"></div>
+                <div class="toolbar-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="stats-toggle">
+                        Stats
                     </label>
                 </div>
             </div>
@@ -465,12 +533,14 @@
         editor.addEventListener('input', updateHighlight);
         editor.addEventListener('scroll', syncScroll);
 
-        // Canvas zoom, grid, and theme controls
+        // Canvas zoom, grid, theme, and stats controls
         const zoomSlider = document.getElementById('zoom-slider');
         const zoomValue = document.getElementById('zoom-value');
         const gridToggle = document.getElementById('grid-toggle');
         const themeToggle = document.getElementById('theme-toggle');
+        const statsToggle = document.getElementById('stats-toggle');
         const canvasWrapper = document.getElementById('canvas-wrapper');
+        const statsOverlay = document.getElementById('stats-overlay');
 
         // Handle zoom
         zoomSlider.addEventListener('input', (e) => {
@@ -496,6 +566,73 @@
                 canvasWrapper.classList.remove('dark-mode');
             }
         });
+
+        // Handle stats toggle
+        let statsEnabled = false;
+        statsToggle.addEventListener('change', (e) => {
+            statsEnabled = e.target.checked;
+            if (statsEnabled) {
+                statsOverlay.classList.add('visible');
+                startStatsTracking();
+            } else {
+                statsOverlay.classList.remove('visible');
+            }
+        });
+
+        // Stats tracking
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let fpsUpdateTime = performance.now();
+
+        function startStatsTracking() {
+            if (!statsEnabled) return;
+
+            const now = performance.now();
+            frameCount++;
+
+            // Update FPS every 500ms
+            if (now - fpsUpdateTime >= 500) {
+                const fps = Math.round((frameCount * 1000) / (now - fpsUpdateTime));
+                const fpsElement = document.getElementById('fps-value');
+                fpsElement.textContent = fps;
+
+                // Color coding for FPS
+                if (fps >= 55) {
+                    fpsElement.className = 'stat-value';
+                } else if (fps >= 30) {
+                    fpsElement.className = 'stat-value warning';
+                } else {
+                    fpsElement.className = 'stat-value error';
+                }
+
+                frameCount = 0;
+                fpsUpdateTime = now;
+            }
+
+            // Update memory info (if available)
+            if (performance.memory) {
+                const usedMB = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+                const totalMB = (performance.memory.jsHeapSizeLimit / 1048576).toFixed(1);
+                const percentage = ((performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100).toFixed(1);
+
+                document.getElementById('memory-value').textContent = `${usedMB} MB`;
+
+                const heapElement = document.getElementById('heap-value');
+                heapElement.textContent = `${percentage}%`;
+
+                // Color coding for heap usage
+                if (percentage < 70) {
+                    heapElement.className = 'stat-value';
+                } else if (percentage < 85) {
+                    heapElement.className = 'stat-value warning';
+                } else {
+                    heapElement.className = 'stat-value error';
+                }
+            }
+
+            lastFrameTime = now;
+            requestAnimationFrame(startStatsTracking);
+        }
 
         // Documentation loading
         async function loadDocumentation(filename) {
