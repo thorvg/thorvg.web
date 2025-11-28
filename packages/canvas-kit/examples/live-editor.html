@@ -395,7 +395,8 @@ let animationId = null;
 
 function animate(currentTime) {
   const elapsed = currentTime - startTime;
-  const progress = (elapsed % 1500) / 1500; // 2 second loop
+  const t = elapsed / 1500; // Continuously increasing time
+  const wave = Math.sin(elapsed / 1500 * Math.PI * 2) * 0.5 + 0.5; // 0-1 smooth wave
 
   // Clear and redraw
   canvas.clear();
@@ -408,16 +409,16 @@ function animate(currentTime) {
   shape1.appendCircle(235, 320, 210, 140);
 
   const gradient = new TVG.LinearGradient(50, 50, 550, 450);
-  gradient.addStop(0, [150 + progress * 25, 100, progress * 100, 255]);
-  gradient.addStop(0.5, [150 + progress * 10, 200, progress * 255, 255]);
-  gradient.addStop(1, [100, 255 * progress, 100, 255]);
+  gradient.addStop(0, [150 + wave * 25, 100, wave * 100, 255]);
+  gradient.addStop(0.5, [150 + wave * 10, 200, wave * 255, 255]);
+  gradient.addStop(1, [100, 255 * wave, 100, 255]);
 
   shape1.fill(gradient);
 
-  // Apply transformations
+  // Apply transformations - rotation continues indefinitely
   shape1.translate(300, 300);
-  shape1.scale(1.0 - 0.75 * progress);
-  shape1.rotate(360 * progress);
+  shape1.scale(1.0 - 0.75 * wave);
+  shape1.rotate(360 * t);
 
   canvas.add(shape1);
 
@@ -426,10 +427,10 @@ function animate(currentTime) {
   shape2.appendRect(-50, -50, 180, 180);
   shape2.fill(0, 255, 255, 255);
 
-  // Chain transformations
+  // Chain transformations - rotation continues indefinitely
   shape2.translate(300, 300);
-  shape2.rotate(360 * progress);
-  shape2.translate(200 + progress * 150, 200);
+  shape2.rotate(360 * t);
+  shape2.translate(200 + wave * 150, 200);
 
   canvas.add(shape2);
 
@@ -439,8 +440,8 @@ function animate(currentTime) {
   shape3.fill(255, 0, 255, 255);
 
   shape3.translate(350, 350);
-  shape3.rotate(-360 * progress);
-  shape3.scale(0.5 + progress);
+  shape3.rotate(-360 * t);
+  shape3.scale(0.5 + wave);
 
   canvas.add(shape3);
 
