@@ -282,7 +282,7 @@ canvas.add(circle);`,
 // Create a shape that we'll transform multiple times
 for (let i = 0; i < 8; i++) {
   const rect = new TVG.Shape();
-  rect.appendRect(-50, -25, 100, 50, { rx: 5, ry: 5 });
+  rect.appendRect(50, 25, 100, 50, { rx: 5, ry: 5 });
 
   const hue = (i * 45) % 360;
   const r = Math.abs(Math.sin(hue * Math.PI / 180)) * 255;
@@ -294,7 +294,7 @@ for (let i = 0; i < 8; i++) {
   // Transform: translate to center, rotate, then translate outward
   rect.translate(300, 300);
   rect.rotate(i * 45);
-  rect.translate(150, 0);
+  rect.translate(300, 300);
 
   canvas.add(rect);
 }
@@ -349,7 +349,7 @@ let animationId = null;
 
 function animate(currentTime) {
   const elapsed = currentTime - startTime;
-  const progress = (elapsed % 2000) / 2000; // 2 second loop
+  const progress = (elapsed % 1500) / 1500; // 2 second loop
 
   // Clear and redraw
   canvas.clear();
@@ -360,7 +360,13 @@ function animate(currentTime) {
   shape1.appendRect(-145, -160, 380, 380, { rx: 100, ry: 100 });
   shape1.appendCircle(155, 140, 140, 140);
   shape1.appendCircle(235, 320, 210, 140);
-  shape1.fill(255, 255, 255, 255);
+
+  const gradient = new TVG.LinearGradient(50, 50, 550, 450);
+  gradient.addStop(0, [150 + progress * 25, 100, progress * 100, 255]);
+  gradient.addStop(0.5, [150 + progress * 10, 200, progress * 255, 255]);
+  gradient.addStop(1, [100, 255 * progress, 100, 255]);
+
+  shape1.fill(gradient);
 
   // Apply transformations
   shape1.translate(300, 300);
@@ -403,14 +409,7 @@ function animate(currentTime) {
 animate(performance.now());
 
 // Note: Animation will be automatically stopped when you run new code
-console.log('Transform animation started!');`,
-
-            custom: `// Your custom code here
-const shape = new TVG.Shape();
-shape.appendRect(150, 150, 300, 300, { rx: 20, ry: 20 });
-shape.fill(100, 150, 255, 255);
-
-canvas.add(shape);`
+console.log('Transform animation started!');`
         };
 
         // Initialize ThorVG once on page load
