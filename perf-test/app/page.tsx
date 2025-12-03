@@ -153,7 +153,8 @@ const MAX_WIDTH = 180;
 const RANGE = MAX_WIDTH - MIN_WIDTH;
 
 export default function Home() {
-  const [size, setSize] = useState(isMobile ? { width: 150, height: 150 } : { width: MAX_WIDTH, height: MAX_WIDTH });
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [contentSize, setContentSize] = useState({ width: 0, height: 0 });
   const percent = (size.width - MIN_WIDTH) / RANGE * 100;
 
   let initialized = false;
@@ -163,7 +164,6 @@ export default function Home() {
   const [playerId, setPlayerId] = useState(1);
   const [text, setText] = useState('');
   const [animationList, setAnimationList] = useState<any>([]);
-  const [contentSize, setContentSize] = useState<{width: number, height: number}>({width: 0, height: 0});
 
   useEffect(() => {
     if (initialized) {
@@ -197,14 +197,12 @@ export default function Home() {
         setPlayer(_player);
         setPlayerId(_player.id);
       }
-
-      if (size) {
-        setSize({
-          width: size,
-          height: size
-        });
-      }
     }
+
+    setSize({
+      width: size,
+      height: size
+    });
 
     setTimeout(async () => {
       if (playerId === 4) {
