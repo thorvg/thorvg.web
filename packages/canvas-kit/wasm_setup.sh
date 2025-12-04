@@ -21,14 +21,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Copy output files to dist/
-echo "Copying WASM output to dist/..."
-cp ../../thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.wasm ./dist/
-cp ../../thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.js ./dist/
-
-# Copy TypeScript definitions if they exist
-if [ -f ../../thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.d.ts ]; then
-  cp ../../thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.d.ts ./dist/
-fi
+mv build_wasm/thorvg.{wasm,js,d.ts} ./dist
 
 echo "WASM setup completed successfully!"
 ls -lh ./dist/thorvg.*
