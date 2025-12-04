@@ -22,12 +22,12 @@ fi
 
 # Copy output files to dist/
 echo "Copying WASM output to dist/..."
-cp thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.wasm ./dist/
-cp thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.js ./dist/
+cp ../../thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.wasm ./dist/
+cp ../../thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.js ./dist/
 
 # Copy TypeScript definitions if they exist
-if [ -f thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.d.ts ]; then
-  cp thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.d.ts ./dist/
+if [ -f ../../thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.d.ts ]; then
+  cp ../../thorvg/build_wasm_canvaskit/src/bindings/wasm/thorvg.d.ts ./dist/
 fi
 
 echo "WASM setup completed successfully!"
