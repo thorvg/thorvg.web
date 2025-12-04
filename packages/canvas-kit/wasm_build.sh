@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Canvas Kit WASM Build Script
-# Builds ThorVG with Canvas Kit bindings (capi + wasm_beta)
+# Builds ThorVG library + Canvas Kit bindings in 2 steps
 
 EMSDK="$1"
 
@@ -10,25 +10,16 @@ if [ -z "$EMSDK" ]; then
   exit 1
 fi
 
-cd thorvg
+# Remove trailing slash from EMSDK path
+EMSDK="${EMSDK%/}"
 
-# Use unique build directory for canvas-kit
-BUILD_DIR="build_wasm_canvaskit"
+# Step 1: Build ThorVG library
+cd ../../thorvg
+rm -rf build_wasm
 
-# Clean previous build
-echo "Cleaning previous build..."
-rm -rf $BUILD_DIR
+# Use cross file with all backends
+sed "s|EMSDK:|$EMSDK|g; s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts'|g" ./cross/wasm32_canvaskit.txt > /tmp/.wasm_canvaskit_cross.txt
 
-# Determine cross file based on available engines
-CROSS_FILE="wasm32_canvaskit.txt"
-
-echo "Building with cross file: $CROSS_FILE"
-
-# Replace EMSDK path in cross file
-sed "s|EMSDK:|$EMSDK|g" ./cross/$CROSS_FILE > /tmp/.wasm_canvaskit_cross.txt
-
-# Configure meson build
-echo "Configuring meson..."
 meson setup \
   -Db_lto=true \
   -Ddefault_library=static \
@@ -37,27 +28,45 @@ meson setup \
   -Dsavers="all" \
   -Dthreads=false \
   -Dfile="false" \
-  -Dbindings="capi, wasm_canvaskit" \
+  -Dbindings="capi" \
   -Dpartial=false \
   -Dengines="all" \
   --cross-file /tmp/.wasm_canvaskit_cross.txt \
-  $BUILD_DIR
+  build_wasm
 
 if [ $? -ne 0 ]; then
-  echo "Meson setup failed!"
+  echo "ThorVG library meson setup failed!"
   exit 1
 fi
 
-# Build with ninja
-echo "Building with ninja..."
-ninja -C $BUILD_DIR/
+ninja -C build_wasm/
 
 if [ $? -ne 0 ]; then
-  echo "Ninja build failed!"
+  echo "ThorVG library build failed!"
   exit 1
 fi
+
+cd ../packages/canvas-kit
+
+# Step 2: Build WASM bindings
+rm -rf build_wasm
+
+cp ../../thorvg/build_wasm/config.h ../../bindings/canvas_kit/config.h
+meson setup -Db_lto=true --cross-file /tmp/.wasm_canvaskit_cross.txt build_wasm ../../bindings/canvas_kit
+
+if [ $? -ne 0 ]; then
+  echo "Canvas Kit bindings meson setup failed!"
+  exit 1
+fi
+
+ninja -C build_wasm/
+
+if [ $? -ne 0 ]; then
+  echo "Canvas Kit bindings build failed!"
+  exit 1
+fi
+
+rm ../../bindings/canvas_kit/config.h
 
 echo "Build completed successfully!"
-ls -lrt $BUILD_DIR/src/bindings/wasm/*.{js,wasm}
-
-cd ..
+ls -lrt build_wasm/*.{js,wasm}
