@@ -20,12 +20,12 @@ thorvg_inc = include_directories(
     '../../thorvg/src/renderer/gl_engine',
     '../../thorvg/src/renderer/wg_engine',
     '../../thorvg/src/bindings/capi',
-    '../../thorvg/build_wasm'
+    '../../thorvg/build_wasm',
+    '../common'
 )
 
 # WASM binding sources
 source_files = [
-    'tvgWasmDefaultFont.h',
     'tvgWasmCanvasKit.cpp',
 ]
 
