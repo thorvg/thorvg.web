@@ -21,27 +21,26 @@ export interface EmscriptenModule {
   init(): number;
   term(): void;
 
-  // ThorVGEngine class (Embind)
-  ThorVGEngine: ThorVGEngineConstructor;
+  // TvgCanvas class (Embind)
+  TvgCanvas: TvgCanvasConstructor;
 }
 
-export interface ThorVGEngineConstructor {
-  new (): ThorVGEngineInstance;
-}
-
-export interface ThorVGEngineInstance {
-  createCanvas(
-    engine: string,
+export interface TvgCanvasConstructor {
+  new (
+    engineType: string,
     selector: string,
     width: number,
     height: number
-  ): number;
+  ): TvgCanvasInstance;
+}
+
+export interface TvgCanvasInstance {
+  error(): string;
   resize(width: number, height: number): boolean;
   clear(): boolean;
   render(): Uint8ClampedArray | undefined;
   size(): { width: number; height: number };
-  getCanvas(): number;
-  getEngineType(): string;
+  ptr(): number;
   delete(): void;
 }
 

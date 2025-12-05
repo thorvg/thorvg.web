@@ -6,7 +6,7 @@ import { getModule } from '../core/Module';
 import { Paint } from '../paint/Paint';
 import type { RendererType } from '../constants';
 import { checkResult } from '../core/errors';
-import type { ThorVGEngineInstance } from '../types/emscripten';
+import type { TvgCanvasInstance } from '../types/emscripten';
 
 const DEFAULT_RENDERER: RendererType = 'gl';
 
@@ -18,19 +18,27 @@ export interface CanvasOptions {
 
 export class Canvas {
   #ptr: number = 0;
-  #engine: ThorVGEngineInstance | null = null;
+  #engine: TvgCanvasInstance | null = null;
   #renderer: RendererType = DEFAULT_RENDERER;
   #htmlCanvas: HTMLCanvasElement | null = null;
 
-  constructor(selector: RendererType, options: CanvasOptions = {}) {
+  constructor(selector: string, options: CanvasOptions = {}) {
     const { renderer = DEFAULT_RENDERER, width = 800, height = 600 } = options;
 
     // Module should already be initialized by ThorVG.init()
     const Module = getModule();
 
-    // Create engine wrapper
-    this.#engine = new Module.ThorVGEngine();
-    this.#ptr = this.#engine.createCanvas(renderer, selector, width, height);
+    // Create TvgCanvas with constructor (engine type, selector, width, height)
+    this.#engine = new Module.TvgCanvas(renderer, selector, width, height);
+
+    // Check for errors
+    const error = this.#engine.error();
+    if (error !== 'None') {
+      throw new Error(`Failed to create canvas with ${renderer} renderer: ${error}`);
+    }
+
+    // Get canvas pointer
+    this.#ptr = this.#engine.ptr();
 
     if (this.#ptr === 0) {
       throw new Error(`Failed to create canvas with ${renderer} renderer`);
