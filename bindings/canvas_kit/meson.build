@@ -10,7 +10,7 @@ endif
 
 # Find ThorVG library
 thorvg_dir = meson.project_source_root() + '/../../thorvg'
-thorvg_lib = cc.find_library('thorvg', dirs: thorvg_dir + '/build_wasm/src')
+thorvg_lib = cc.find_library('thorvg', dirs: thorvg_dir + '/build_wasm_canvaskit/src')
 
 thorvg_inc = include_directories(
     '../../thorvg/inc',
@@ -20,7 +20,7 @@ thorvg_inc = include_directories(
     '../../thorvg/src/renderer/gl_engine',
     '../../thorvg/src/renderer/wg_engine',
     '../../thorvg/src/bindings/capi',
-    '../../thorvg/build_wasm',
+    '../../thorvg/build_wasm_canvaskit',
     '../common'
 )
 

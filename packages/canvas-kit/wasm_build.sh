@@ -25,7 +25,7 @@ EXPORTED_RUNTIME_METHODS="HEAPU8,HEAPF32"
 
 # Step 1: Build ThorVG library
 cd ../../thorvg
-rm -rf build_wasm
+rm -rf build_wasm_canvaskit
 
 # Generate temporary cross file from wasm32.txt with Canvas Kit specific modifications
 # 1. Replace EMSDK: placeholder with actual path (preserving the path structure)
@@ -51,14 +51,14 @@ meson setup \
   -Dpartial=false \
   -Dengines="all" \
   --cross-file /tmp/.wasm_canvaskit_cross.txt \
-  build_wasm
+  build_wasm_canvaskit
 
 if [ $? -ne 0 ]; then
   echo "ThorVG library meson setup failed!"
   exit 1
 fi
 
-ninja -C build_wasm/
+ninja -C build_wasm_canvaskit/
 
 if [ $? -ne 0 ]; then
   echo "ThorVG library build failed!"
@@ -70,7 +70,7 @@ cd ../packages/canvas-kit
 # Step 2: Build WASM bindings
 rm -rf build_wasm
 
-cp ../../thorvg/build_wasm/config.h ../../bindings/canvas_kit/config.h
+cp ../../thorvg/build_wasm_canvaskit/config.h ../../bindings/canvas_kit/config.h
 meson setup -Db_lto=true --cross-file /tmp/.wasm_canvaskit_cross.txt build_wasm ../../bindings/canvas_kit
 
 if [ $? -ne 0 ]; then
