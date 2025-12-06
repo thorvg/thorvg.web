@@ -110,8 +110,9 @@ describe("Lottie Player", () => {
 
   describe("save2gif", () => {
     it("should execute save2gif without error", () => {
-      expect(async () => await lottiePlayer.save2gif(testAnimationUrl)).to.not.throw();
-    });
+      // Per the docs, prefer returning the Promise for async tests.
+      return lottiePlayer.save2gif(testAnimationUrl);
+    }).timeout(10000); // Extended timeout to handle async operation
   });
 
   describe("getVersion", () => {
