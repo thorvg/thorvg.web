@@ -38,10 +38,9 @@
   "scripts": {
     "build": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
     "build:watch": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
-    "build:test": "tsc -p tests/tsconfig.json",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
-    "clean:post": "find ./dist -name 'thorvg.js' -type f -delete",
-    "test": "npm run build:test && wtr tests/*.test.js --node-resolve",
+    "test": "tsc -p tests/tsconfig.json && wtr tests/*.test.js --node-resolve; rm -f tests/*.test.js",
+    "test:build": "./build-test.sh",
     "lint": "eslint ./src --ext .ts,.tsx,.js",
     "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
     "version": "sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'"
