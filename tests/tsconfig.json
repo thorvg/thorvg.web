@@ -3,6 +3,7 @@
     "target": "es2017",
     "module": "esnext",
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "noEmitOnError": true,
     "lib": ["es2017", "dom"],
     "strict": true,

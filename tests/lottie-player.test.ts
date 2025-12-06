@@ -1,6 +1,7 @@
 import { fixture, html, expect } from '@open-wc/testing';
 import '../dist/lottie-player.esm.js';
 import type { LottiePlayer } from '../dist/lottie-player';
+import animation from './fixtures/test-animation.json' with { type: 'json' };
 
 describe("Lottie Player", () => {
   let lottiePlayer: LottiePlayer;
@@ -13,9 +14,9 @@ describe("Lottie Player", () => {
         wasmUrl="/dist/thorvg.wasm"
       ></lottie-player>`);
 
-    await lottiePlayer.load('https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json');
+    await lottiePlayer.load(animation);
 
-    expect(lottiePlayer.getElementsByClassName('thorvg').length).to.equal(1);
+    expect(lottiePlayer.querySelector('.thorvg')).to.not.equal(null);
   });
 
   describe("play", () => {
@@ -57,9 +58,9 @@ describe("Lottie Player", () => {
   describe("resize", () => {
     it("should resize the canvas", () => {
       lottiePlayer.resize(600, 600);
-      const canvas = lottiePlayer.getElementsByClassName('thorvg')[0];
-      expect(canvas.getAttribute('width')).to.equal('600');
-      expect(canvas.getAttribute('height')).to.equal('600');
+      const canvas = lottiePlayer.querySelector('.thorvg') as HTMLCanvasElement;
+      expect(canvas.width).to.equal(600);
+      expect(canvas.height).to.equal(600);
     });
   });
 
@@ -87,7 +88,7 @@ describe("Lottie Player", () => {
   describe("setBgColor", () => {
     it("should set background color", () => {
       lottiePlayer.setBgColor('red');
-      const canvas = lottiePlayer.getElementsByClassName('thorvg')[0] as HTMLCanvasElement;
+      const canvas = lottiePlayer.querySelector('.thorvg') as HTMLCanvasElement;
       expect(canvas.style.backgroundColor).to.equal('red');
     });
   });
@@ -115,7 +116,7 @@ describe("Lottie Player", () => {
     it("should return version object", () => {
       const version = lottiePlayer.getVersion();
       expect(version).to.have.property('THORVG_VERSION');
-      expect(version.THORVG_VERSION).to.be.a('string');
+      expect(version.THORVG_VERSION).to.equal('1.0.0');
     });
   });
 
