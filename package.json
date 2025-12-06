@@ -39,7 +39,7 @@
     "build": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
     "build:watch": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
-    "test": "tsc -p tests/tsconfig.json && wtr tests/*.test.js --node-resolve; rm -f tests/*.test.js",
+    "test": "sh -c 'trap \"rm -f tests/*.test.js\" EXIT; tsc -p tests/tsconfig.json && wtr tests/*.test.js --node-resolve'",
     "test:build": "./build-test.sh",
     "lint": "eslint ./src --ext .ts,.tsx,.js",
     "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
