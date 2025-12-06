@@ -3,6 +3,8 @@ import '../dist/lottie-player.esm.js';
 import type { LottiePlayer } from '../dist/lottie-player';
 import animation from './fixtures/test-animation.json' with { type: 'json' };
 
+const testAnimationUrl = "https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json";
+
 describe("Lottie Player", () => {
   let lottiePlayer: LottiePlayer;
 
@@ -108,7 +110,7 @@ describe("Lottie Player", () => {
 
   describe("save2gif", () => {
     it("should execute save2gif without error", () => {
-      expect(async () => await lottiePlayer.save2gif('https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json')).to.not.throw();
+      expect(async () => await lottiePlayer.save2gif(testAnimationUrl)).to.not.throw();
     });
   });
 
