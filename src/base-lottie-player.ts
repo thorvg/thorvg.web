@@ -476,7 +476,7 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    if (this.config?.enableDevicePixelRatio) {
+    if (this.config?.enableDevicePixelRatio !== false) {
       const dpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
       const { width, height } = this.canvas!.getBoundingClientRect();
       this.canvas!.width = width * dpr;
