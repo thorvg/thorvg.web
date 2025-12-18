@@ -118,7 +118,7 @@ const animations = [
   'yarn_loading.json'
 ];
 
-const urlPrefix = 'https://raw.githubusercontent.com/thorvg/thorvg/main/examples/resources/lottie/';
+const urlPrefix = 'https://raw.githubusercontent.com/thorvg/thorvg.example/main/res/lottie/';
 
 const countOptions = [
   { id: 0, name: 10 },
