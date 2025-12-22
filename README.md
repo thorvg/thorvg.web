@@ -9,6 +9,12 @@
   <img width="800" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png">
 </p>
 
+**ThorVG.Web** is a WebAssembly (WASM)-based extension of the ThorVG vector graphics engine, designed to run seamlessly in **modern web environments**. It enables efficient and high-performance rendering of **vector graphics** and **Lottie animations** directly in the browser, leveraging both **WebGL** and **WebGPU** for hardware-accelerated rendering. Fully compatible with ThorVG’s core rendering logic, **ThorVG.Web** ensures **consistent output** across desktop, mobile, and web platforms, allowing developers to reuse the same vector assets and rendering code across multiple targets with minimal changes.
+
+Whether you're building a high-performance **Lottie animation**, a **graphics editing tool**, or a **scalable UI framework** for the browser, **ThorVG.Web** provides the **speed** and **flexibility** needed to deliver **modern vector graphics** experiences on the web.
+
+<br />
+
 # @thorvg/lottie-player
 
 A Lottie Player which uses [ThorVG](https://github.com/thorvg/thorvg) as a renderer, provides a web component for easily embedding and playing [Lottie](https://airbnb.io/lottie) animations.
