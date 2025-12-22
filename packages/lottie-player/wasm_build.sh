@@ -8,8 +8,8 @@ if [ -z "$2" ]; then
   EMSDK="$1"
 fi
 
-# Step 1: Build ThorVG library
-cd thorvg
+# Step 1: Build ThorVG static library
+cd ../../thorvg
 rm -rf build_wasm
 
 if [[ "$BACKEND" == "wg" ]]; then
@@ -34,15 +34,12 @@ fi
 
 ninja -C build_wasm/
 
-cd ..
-
-# Step 2: Build WASM bindings
+# Step 2: Build WASM bindings from new location
+cd ../wasm/lottie-player
 rm -rf build_wasm
 
-cp thorvg/build_wasm/config.h wasm/lottie-player/config.h
-meson setup -Db_lto=true --cross-file /tmp/.wasm_cross.txt build_wasm wasm/lottie-player
-
+meson setup --cross-file /tmp/.wasm_cross.txt build_wasm
 ninja -C build_wasm/
-rm wasm/lottie-player/config.h
-
 ls -lrt build_wasm/*.{js,wasm}
+
+cd ../..

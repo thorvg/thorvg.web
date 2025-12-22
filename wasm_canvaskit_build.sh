@@ -56,7 +56,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-cd ..
+cd ../packages/canvas-kit
 
 # Step 2: Build WASM bindings
 rm -rf build_wasm_canvaskit

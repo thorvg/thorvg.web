@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@thorvg/lottie-player": "file:../..",
+    "@thorvg/lottie-player": "file:../../packages/lottie-player",
     "vue": "^3.5.22"
   },
   "devDependencies": {
