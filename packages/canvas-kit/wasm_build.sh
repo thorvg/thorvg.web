@@ -1,12 +1,16 @@
 #!/bin/bash
 
 # Canvas Kit WASM Build Script
+# Builds ThorVG library + Canvas Kit bindings in 2 steps
+#
+# This script dynamically generates a temporary cross file based on thorvg/cross/wasm32.txt
+# with Canvas Kit specific modifications (exported functions, exception handling, etc.)
+# instead of maintaining a separate wasm32_canvaskit.txt in the thorvg core repository.
 
 EMSDK="$1"
 
 if [ -z "$EMSDK" ]; then
   echo "Usage: $0 <EMSDK_PATH>"
-  echo "Example: $0 /path/to/emsdk"
   exit 1
 fi
 
@@ -20,9 +24,14 @@ EXPORTED_FUNCTIONS="_tvg_engine_init,_tvg_engine_term,_tvg_swcanvas_create,_tvg_
 EXPORTED_RUNTIME_METHODS="HEAPU8,HEAPF32"
 
 # Step 1: Build ThorVG library
-cd thorvg
+cd ../../thorvg
 rm -rf build_wasm_canvaskit
 
+# Generate temporary cross file from wasm32.txt with Canvas Kit specific modifications
+# 1. Replace EMSDK: placeholder with actual path (preserving the path structure)
+# 2. Remove -fno-exceptions from cpp_args
+# 3. Remove --closure=1 and -sEXPORTED_RUNTIME_METHODS=FS from cpp_link_args
+# 4. Add Canvas Kit specific flags: EXPORTED_FUNCTIONS, EXPORTED_RUNTIME_METHODS, exception handling, and TypeScript definitions
 sed "s|EMSDK:|$EMSDK/|g" ../wasm/wasm32.txt | \
   sed "s|, '-fno-exceptions'||g" | \
   sed "s|'-fno-exceptions', ||g" | \
@@ -45,14 +54,14 @@ meson setup \
   build_wasm_canvaskit
 
 if [ $? -ne 0 ]; then
-  echo "ERROR: ThorVG library meson setup failed!"
+  echo "ThorVG library meson setup failed!"
   exit 1
 fi
 
 ninja -C build_wasm_canvaskit/
 
 if [ $? -ne 0 ]; then
-  echo "ERROR: ThorVG library build failed!"
+  echo "ThorVG library build failed!"
   exit 1
 fi
 
@@ -61,18 +70,22 @@ cd ../packages/canvas-kit
 # Step 2: Build WASM bindings
 rm -rf build_wasm_canvaskit
 
-meson setup -Db_lto=true --cross-file /tmp/.wasm_canvaskit_cross.txt build_wasm_canvaskit ./wasm/canvas-kit
+cp ../../thorvg/build_wasm_canvaskit/config.h ../../wasm/canvas-kit/config.h
+meson setup -Db_lto=true --cross-file /tmp/.wasm_canvaskit_cross.txt build_wasm_canvaskit ../../wasm/canvas-kit
 
 if [ $? -ne 0 ]; then
-  echo "ERROR: Canvas Kit bindings meson setup failed!"
+  echo "Canvas Kit bindings meson setup failed!"
   exit 1
 fi
 
 ninja -C build_wasm_canvaskit/
 
 if [ $? -ne 0 ]; then
-  echo "ERROR: Canvas Kit bindings build failed!"
+  echo "Canvas Kit bindings build failed!"
   exit 1
 fi
 
+rm ../../wasm/canvas-kit/config.h
+
+echo "Build completed successfully!"
 ls -lrt build_wasm_canvaskit/*.{js,wasm}

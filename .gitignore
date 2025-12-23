@@ -146,5 +146,14 @@ dist
 
 # Meson build directories
 build_wasm/
+build_wasm_canvaskit/
+thorvg/build_wasm/
+thorvg/build_wasm_canvaskit/
+
+# Package-specific
+packages/*/node_modules/
+packages/*/dist/
+packages/*/build_wasm/
+packages/*/build_wasm_canvaskit/
 
 # End of https://www.toptal.com/developers/gitignore/api/node

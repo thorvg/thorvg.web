@@ -1,0 +1,20 @@
+# Build output
+dist/
+build_wasm_canvaskit/
+
+# Generated documentation
+docs/
+
+# Dependencies
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

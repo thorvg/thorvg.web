@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ThorVG Canvas Kit - Text API Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        #canvas {
+            border: 1px solid #333;
+            background: white;
+            margin: 20px 0;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .info {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .control-group label {
+            min-width: 120px;
+        }
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            padding: 5px;
+            flex: 1;
+        }
+        textarea {
+            min-height: 60px;
+            font-family: inherit;
+        }
+        input[type="range"] {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ThorVG Canvas Kit - Text API Example</h1>
+
+    <div class="info">
+        <h3>Text API Features:</h3>
+        <ul>
+            <li>Custom font loading with <code>Font.load()</code> or <code>Font.loadFile()</code></li>
+            <li>Font size and color control</li>
+            <li>Text alignment: horizontal (left/center/right) and vertical (top/middle/bottom)</li>
+            <li>Text layout and wrapping (word, character, smart, ellipsis)</li>
+            <li>Italic style with shear control</li>
+            <li>Text outline (stroke) with color or gradient</li>
+            <li>Gradient fill support</li>
+            <li>Default font built-in</li>
+        </ul>
+    </div>
+
+    <div class="controls">
+        <label>Backend:
+            <select id="backend">
+                <option value="sw">Software</option>
+                <option value="gl">WebGL</option>
+                <option value="wg">WebGPU</option>
+            </select>
+        </label>
+        <button onclick="init()">Initialize</button>
+        <br>
+        <label>Load Custom Font (Optional):
+            <input type="file" id="fontInput" accept=".ttf,.otf" onchange="loadCustomFont(event)">
+        </label>
+        <span style="color: #666; font-size: 0.9em;">Default font works without loading</span>
+    </div>
+
+    <div class="control-group">
+        <label>Text:</label>
+        <textarea id="textInput" placeholder="Enter text here...">Hello ThorVG!
+안녕하세요 🎨</textarea>
+    </div>
+
+    <div class="control-group">
+        <label>Font Size:</label>
+        <input type="range" id="fontSize" min="12" max="120" value="48" oninput="updateFontSize(this.value)">
+        <span id="fontSizeLabel">48</span>
+    </div>
+
+    <div class="control-group">
+        <label>Text Color:</label>
+        <input type="color" id="textColor" value="#ff0000" onchange="redrawText()">
+    </div>
+
+    <div class="control-group">
+        <label>H-Align:</label>
+        <select id="hAlign" onchange="redrawText()">
+            <option value="left">Left</option>
+            <option value="center" selected>Center</option>
+            <option value="right">Right</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label>V-Align:</label>
+        <select id="vAlign" onchange="redrawText()">
+            <option value="top">Top</option>
+            <option value="middle" selected>Middle</option>
+            <option value="bottom">Bottom</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label>Italic Shear:</label>
+        <input type="range" id="italic" min="0" max="0.5" step="0.01" value="0" oninput="updateItalic(this.value)">
+        <span id="italicLabel">0.00</span>
+    </div>
+
+    <div class="control-group">
+        <label>Outline Width:</label>
+        <input type="range" id="outlineWidth" min="0" max="10" step="0.5" value="0" oninput="updateOutline()">
+        <span id="outlineWidthLabel">0</span>
+    </div>
+
+    <div class="control-group">
+        <label>Outline Color:</label>
+        <input type="color" id="outlineColor" value="#000000" onchange="redrawText()">
+    </div>
+
+    <div class="control-group">
+        <label>Wrap Mode:</label>
+        <select id="wrapMode" onchange="redrawText()">
+            <option value="none" selected>None</option>
+            <option value="character">Character</option>
+            <option value="word">Word</option>
+            <option value="smart">Smart</option>
+            <option value="ellipsis">Ellipsis</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label>Layout Width:</label>
+        <input type="number" id="layoutWidth" min="0" max="800" value="600" onchange="redrawText()">
+    </div>
+
+    <div class="controls">
+        <button onclick="drawText()">Draw Text</button>
+        <button onclick="clearCanvas()">Clear</button>
+    </div>
+
+    <canvas id="canvas" width="800" height="600"></canvas>
+
+    <div class="info">
+        <h3>Status:</h3>
+        <pre id="log"></pre>
+    </div>
+
+    <script type="module">
+        import ThorVG from '../packages/canvas-kit/dist/canvas-kit.esm.js';
+
+        let TVG;
+        let canvas;
+        let currentFontName = 'default';
+
+        function log(msg) {
+            const logEl = document.getElementById('log');
+            logEl.textContent += msg + '\n';
+            console.log(msg);
+        }
+
+        window.init = async function() {
+            const renderer = document.getElementById('backend').value;
+            log(`Initializing ThorVG with ${renderer} backend...`);
+
+            try {
+                // Initialize ThorVG with backend
+                TVG = await ThorVG.init({
+                    renderer: renderer,
+                    locateFile: (path) => '../packages/canvas-kit/dist/' + path.split('/').pop()
+                });
+
+                // Create canvas
+                canvas = new TVG.Canvas('#canvas', {
+                    renderer: renderer,
+                    width: 800,
+                    height: 600
+                });
+
+                log('✓ ThorVG initialized successfully!');
+                log('✓ Default font is ready!');
+                log('Ready to draw text!');
+            } catch (error) {
+                log('ERROR: ' + error.message);
+            }
+        };
+
+        window.loadCustomFont = async function(event) {
+            if (!tvg) {
+                log('ERROR: ThorVG not initialized. Click Initialize first!');
+                return;
+            }
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            log(`Loading font: ${file.name}...`);
+
+            try {
+                // User handles file reading
+                const arrayBuffer = await file.arrayBuffer();
+                const fontData = new Uint8Array(arrayBuffer);
+
+                // Extract font name (without extension)
+                currentFontName = file.name.replace(/\.[^/.]+$/, '');
+
+                // Determine format from file extension
+                const ext = file.name.split('.').pop()?.toLowerCase();
+                const format = ext === 'otf' ? 'otf' : 'ttf';
+
+                // Load font using Font utility
+                TVG.Font.load(currentFontName, fontData, { format });
+
+                log(`✓ Font "${currentFontName}" loaded successfully!`);
+            } catch (error) {
+                log(`ERROR: Failed to load font: ${error.message}`);
+                currentFontName = 'default';
+            }
+        };
+
+        window.drawText = function() {
+            if (!canvas) {
+                log('ERROR: Canvas not initialized. Click Initialize first!');
+                return;
+            }
+
+            const textContent = document.getElementById('textInput').value;
+            if (!textContent) {
+                log('ERROR: No text entered!');
+                return;
+            }
+
+            log('Drawing text...');
+
+            // Clear previous content
+            canvas.clear();
+
+            // Create text object
+            const text = new TVG.Text();
+
+            // Set font
+            text.font(currentFontName);
+
+            // Set text content
+            text.text(textContent);
+
+            // Set font size
+            const fontSize = parseFloat(document.getElementById('fontSize').value);
+            text.fontSize(fontSize);
+
+            // Set color
+            const color = document.getElementById('textColor').value;
+            const r = parseInt(color.substr(1, 2), 16);
+            const g = parseInt(color.substr(3, 2), 16);
+            const b = parseInt(color.substr(5, 2), 16);
+            text.fill(r, g, b);
+
+            // Set alignment
+            const hAlign = document.getElementById('hAlign').value;
+            const vAlign = document.getElementById('vAlign').value;
+            text.align({
+                horizontal: hAlign,
+                vertical: vAlign
+            });
+
+            // Set layout (for wrapping)
+            const layoutWidth = parseFloat(document.getElementById('layoutWidth').value);
+            text.layout(layoutWidth, 0);
+
+            // Set wrap mode
+            const wrapMode = document.getElementById('wrapMode').value;
+            text.wrap(wrapMode);
+
+            // Set italic
+            const italic = parseFloat(document.getElementById('italic').value);
+            if (italic > 0) {
+                text.italic(italic);
+            }
+
+            // Set outline
+            const outlineWidth = parseFloat(document.getElementById('outlineWidth').value);
+            if (outlineWidth > 0) {
+                const outlineColor = document.getElementById('outlineColor').value;
+                const or = parseInt(outlineColor.substr(1, 2), 16);
+                const og = parseInt(outlineColor.substr(3, 2), 16);
+                const ob = parseInt(outlineColor.substr(5, 2), 16);
+                text.outline(outlineWidth, or, og, ob);
+            }
+
+            // Position text at center of canvas
+            text.translate(400, 300);
+
+            // Add to canvas and render
+            canvas.add(text);
+            canvas.render();
+
+            log(`✓ Text rendered with font "${currentFontName}"!`);
+        };
+
+        window.redrawText = function() {
+            if (canvas) {
+                drawText();
+            }
+        };
+
+        window.updateFontSize = function(value) {
+            document.getElementById('fontSizeLabel').textContent = value;
+            redrawText();
+        };
+
+        window.updateItalic = function(value) {
+            document.getElementById('italicLabel').textContent = parseFloat(value).toFixed(2);
+            redrawText();
+        };
+
+        window.updateOutline = function() {
+            const width = document.getElementById('outlineWidth').value;
+            document.getElementById('outlineWidthLabel').textContent = width;
+            redrawText();
+        };
+
+        window.clearCanvas = function() {
+            if (!canvas) {
+                log('ERROR: Canvas not initialized!');
+                return;
+            }
+
+            canvas.clear();
+            canvas.render();
+            log('✓ Canvas cleared!');
+        };
+
+        // Auto-initialize message
+        log('Ready! Click "Initialize" to start.');
+    </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "name": "ThorVG Canvas Kit API",
+  "includeVersion": true,
+  "tsconfig": "./tsconfig.json",
+
+  "plugin": ["typedoc-plugin-missing-exports"],
+
+  "readme": "README.md",
+  "githubPages": true,
+  "hideGenerator": true,
+
+  "json": "docs/api.json",
+
+  "categorizeByGroup": true,
+  "defaultCategory": "Other",
+  "categoryOrder": [
+    "Initialization",
+    "Canvas",
+    "Shapes",
+    "Scene",
+    "Picture",
+    "Text",
+    "Animation",
+    "Gradients",
+    "Font",
+    "Constants",
+    "*"
+  ],
+
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": false,
+    "includeFolders": false,
+    "compactFolders": true
+  },
+
+  "searchInComments": true,
+  "searchInDocuments": true,
+
+  "sort": ["source-order", "required-first", "kind"],
+
+  "kindSortOrder": [
+    "Function",
+    "Class",
+    "Interface",
+    "TypeAlias",
+    "Constructor",
+    "Property",
+    "Method",
+    "Accessor"
+  ],
+
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build_wasm_canvaskit/**",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ],
+
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": false,
+
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": false
+  },
+
+  "visibilityFilters": {
+    "protected": false,
+    "private": false,
+    "inherited": true,
+    "external": false
+  },
+
+  "lightHighlightTheme": "light-plus",
+  "darkHighlightTheme": "dark-plus",
+
+  "titleLink": "/"
+}

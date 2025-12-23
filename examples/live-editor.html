@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThorVG Live Editor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.0/github-markdown-dark.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            flex-direction: row;
+        }
+
+        .canvas-panel {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background: #252526;
+            border-right: 1px solid #3e3e42;
+            overflow: hidden;
+        }
+
+        .editor-panel {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #cccccc;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        select, button {
+            padding: 6px 12px;
+            font-size: 13px;
+            border: 1px solid #3e3e42;
+            background: #3c3c3c;
+            color: #cccccc;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #505050;
+        }
+
+        button:active {
+            background: #2a2a2a;
+        }
+
+        button.run-btn {
+            background: #0e639c;
+            border-color: #0e639c;
+            color: white;
+            font-weight: 500;
+        }
+
+        button.run-btn:hover {
+            background: #1177bb;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: auto;
+            position: relative;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            transform-origin: center center;
+            transition: transform 0.2s ease;
+        }
+
+        .canvas-wrapper.show-grid::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #canvas {
+            border: 1px solid #3e3e42;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: block;
+            transition: background 0.3s ease;
+        }
+
+        .canvas-wrapper.dark-mode #canvas {
+            background: #2d2d30;
+        }
+
+        .canvas-toolbar {
+            padding: 8px 16px;
+            background: #2d2d30;
+            border-top: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 20px;
+            background: #3e3e42;
+        }
+
+        .stats-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .stats-overlay.visible {
+            display: block;
+        }
+
+        .stats-overlay .stat-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 2px 0;
+        }
+
+        .stats-overlay .stat-label {
+            color: #888;
+        }
+
+        .stats-overlay .stat-value {
+            color: #00ff00;
+            font-weight: bold;
+            text-align: right;
+            min-width: 60px;
+        }
+
+        .stats-overlay .stat-value.warning {
+            color: #ffaa00;
+        }
+
+        .stats-overlay .stat-value.error {
+            color: #ff4444;
+        }
+
+        .editor-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #code-editor, #code-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 16px;
+            margin: 0;
+            border: none;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            tab-size: 2;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow: auto;
+        }
+
+        #code-editor {
+            background: transparent;
+            color: transparent;
+            caret-color: #d4d4d4;
+            resize: none;
+            outline: none;
+            z-index: 2;
+        }
+
+        #code-editor::selection {
+            background: rgba(58, 118, 176, 0.5);
+        }
+
+        #code-highlight {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #code-editor:focus {
+            outline: none;
+        }
+
+        .status-bar {
+            padding: 6px 16px;
+            background: #007acc;
+            color: white;
+            font-size: 12px;
+            border-top: 1px solid #3e3e42;
+        }
+
+        .status-bar.error {
+            background: #f48771;
+        }
+
+        .status-bar.success {
+            background: #89d185;
+        }
+
+        .examples-dropdown {
+            position: relative;
+        }
+
+        label {
+            font-size: 12px;
+            color: #cccccc;
+            margin-right: 4px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            width: 100px;
+            cursor: pointer;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .zoom-label {
+            font-size: 11px;
+            color: #cccccc;
+            min-width: 35px;
+        }
+
+        .docs-panel {
+            flex: 0 0 400px;
+            min-width: 200px;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+            position: relative;
+        }
+
+        .docs-panel.hidden {
+            display: none;
+        }
+
+        .resize-handle {
+            position: absolute;
+            left: -3px;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            cursor: col-resize;
+            background: transparent;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        .resize-handle:hover {
+            background: rgba(0, 122, 204, 0.5);
+        }
+
+        .resize-handle.dragging {
+            background: #007acc;
+        }
+
+        body.resizing {
+            cursor: col-resize !important;
+            user-select: none;
+        }
+
+        .docs-container {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .markdown-body {
+            background: #1e1e1e !important;
+            color: #d4d4d4 !important;
+            font-size: 14px;
+        }
+
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            border-bottom-color: #3e3e42 !important;
+        }
+
+        .markdown-body code {
+            background: #2d2d30 !important;
+        }
+
+        .markdown-body pre {
+            background: #2d2d30 !important;
+        }
+
+        .markdown-body a {
+            color: #4a9eff !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Panel: Canvas -->
+        <div class="canvas-panel">
+            <div class="panel-header">
+                <div class="panel-title">Canvas Preview</div>
+                <div class="controls">
+                    <label>Renderer:</label>
+                    <select id="renderer-select">
+                        <option value="sw">Software</option>
+                        <option value="gl" selected>WebGL</option>
+                        <option value="wg">WebGPU</option>
+                    </select>
+                    <button onclick="clearCanvas()">Clear</button>
+                    <button id="play-btn" onclick="togglePlayPause()" style="display:none;">▶ Play</button>
+                    <input type="file" id="lottie-upload" accept=".json,.lottie" style="display:none;" onchange="handleLottieUpload(event)">
+                    <button id="upload-lottie-btn" onclick="document.getElementById('lottie-upload').click()" style="display:none;">Upload Lottie</button>
+                    <input type="file" id="font-upload" accept=".ttf,.otf" style="display:none;" onchange="handleFontUpload(event)">
+                    <button id="upload-font-btn" onclick="document.getElementById('font-upload').click()" style="display:none;">Upload Font</button>
+                    <input type="file" id="image-upload" accept=".png,.jpg,.jpeg,.webp" style="display:none;" onchange="handleImageUpload(event)">
+                    <button id="upload-image-btn" onclick="document.getElementById('image-upload').click()" style="display:none;">Upload Image</button>
+                </div>
+            </div>
+            <div class="canvas-container">
+                <div class="stats-overlay" id="stats-overlay">
+                    <div class="stat-line">
+                        <span class="stat-label">FPS:</span>
+                        <span class="stat-value" id="fps-value">0</span>
+                    </div>
+                    <div class="stat-line">
+                        <span class="stat-label">Memory:</span>
+                        <span class="stat-value" id="memory-value">0 MB</span>
+                    </div>
+                    <div class="stat-line">
+                        <span class="stat-label">Heap:</span>
+                        <span class="stat-value" id="heap-value">0%</span>
+                    </div>
+                </div>
+                <div class="canvas-wrapper" id="canvas-wrapper">
+                    <canvas id="canvas" width="600" height="600"></canvas>
+                </div>
+            </div>
+            <div class="canvas-toolbar">
+                <div class="toolbar-group">
+                    <label>Zoom:</label>
+                    <input type="range" id="zoom-slider" min="50" max="200" value="100" step="10">
+                    <span class="zoom-label" id="zoom-value">100%</span>
+                </div>
+                <div class="toolbar-separator"></div>
+                <div class="toolbar-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="grid-toggle">
+                        Grid
+                    </label>
+                </div>
+                <div class="toolbar-separator"></div>
+                <div class="toolbar-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="theme-toggle">
+                        Dark Canvas
+                    </label>
+                </div>
+                <div class="toolbar-separator"></div>
+                <div class="toolbar-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="stats-toggle">
+                        Stats
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Code Editor -->
+        <div class="editor-panel">
+            <div class="panel-header">
+                <div class="panel-title">Code Editor</div>
+                <div class="controls">
+                    <label>Example:</label>
+                    <select id="example-select">
+                        <option value="basic">Basic Shapes</option>
+                        <option value="gradient">Gradients</option>
+                        <option value="picture">Picture (SVG/PNG)</option>
+                        <option value="transform">Transforms (Static)</option>
+                        <option value="transformAnim">Transform Animation</option>
+                        <option value="text">Text (Static)</option>
+                        <option value="textAnim">Text Animation</option>
+                        <option value="lottie">Lottie Animation</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <label>Docs:</label>
+                    <select id="docs-select">
+                        <option value="">None</option>
+                        <option value="API_REFERENCE.md">API Reference</option>
+                        <option value="USAGE.md">Usage Guide</option>
+                    </select>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="auto-run" checked>
+                        Auto Run
+                    </label>
+                    <button class="run-btn" onclick="runCode()">Run (Cmd+Enter)</button>
+                </div>
+            </div>
+            <div class="editor-container">
+                <pre id="code-highlight"><code class="language-javascript"></code></pre>
+                <textarea id="code-editor" spellcheck="false"></textarea>
+            </div>
+            <div class="status-bar" id="status-bar">
+                Ready - Edit code and click Run or enable Auto Run
+            </div>
+        </div>
+
+        <!-- Docs Panel -->
+        <div class="docs-panel hidden" id="docs-panel">
+            <div class="resize-handle" id="resize-handle"></div>
+            <div class="panel-header">
+                <div class="panel-title" id="docs-title">Documentation</div>
+            </div>
+            <div class="docs-container">
+                <div class="markdown-body" id="docs-content">
+                    <p>Select a document from the dropdown to view.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+
+    <script type="module">
+        // Global state
+        let TVG = null;
+        let canvas = null;
+        let animation = null;
+        let isInitialized = false;
+        let autoRunTimeout = null;
+        let currentLottieData = null;
+        let userAnimationId = null; // Track user's requestAnimationFrame
+
+        // Syntax highlighting
+        const editor = document.getElementById('code-editor');
+        const highlight = document.querySelector('#code-highlight code');
+
+        function updateHighlight() {
+            const code = editor.value;
+            highlight.textContent = code;
+            Prism.highlightElement(highlight);
+        }
+
+        function syncScroll() {
+            document.getElementById('code-highlight').scrollTop = editor.scrollTop;
+            document.getElementById('code-highlight').scrollLeft = editor.scrollLeft;
+        }
+
+        editor.addEventListener('input', updateHighlight);
+        editor.addEventListener('scroll', syncScroll);
+
+        // Canvas zoom, grid, theme, and stats controls
+        const zoomSlider = document.getElementById('zoom-slider');
+        const zoomValue = document.getElementById('zoom-value');
+        const gridToggle = document.getElementById('grid-toggle');
+        const themeToggle = document.getElementById('theme-toggle');
+        const statsToggle = document.getElementById('stats-toggle');
+        const canvasWrapper = document.getElementById('canvas-wrapper');
+        const statsOverlay = document.getElementById('stats-overlay');
+
+        // Helper function to update URL params
+        function updateUrlParam(key, value) {
+            const url = new URL(window.location.href);
+            if (value) {
+                url.searchParams.set(key, 'true');
+            } else {
+                url.searchParams.delete(key);
+            }
+            window.history.replaceState({}, '', url.toString());
+        }
+
+        // Load initial state from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialGrid = urlParams.get('grid') === 'true';
+        const initialDarkCanvas = urlParams.get('darkCanvas') === 'true';
+        const initialStats = urlParams.get('stats') === 'true';
+
+        // Set initial checkbox states
+        gridToggle.checked = initialGrid;
+        themeToggle.checked = initialDarkCanvas;
+        statsToggle.checked = initialStats;
+
+        // Apply initial states
+        if (initialGrid) {
+            canvasWrapper.classList.add('show-grid');
+        }
+        if (initialDarkCanvas) {
+            canvasWrapper.classList.add('dark-mode');
+        }
+        let statsEnabled = initialStats;
+        if (initialStats) {
+            statsOverlay.classList.add('visible');
+            // Start stats tracking on load if enabled
+            window.addEventListener('load', () => {
+                if (statsEnabled) {
+                    startStatsTracking();
+                }
+            });
+        }
+
+        // Handle zoom
+        zoomSlider.addEventListener('input', (e) => {
+            const zoom = e.target.value;
+            zoomValue.textContent = `${zoom}%`;
+            canvasWrapper.style.transform = `scale(${zoom / 100})`;
+        });
+
+        // Handle grid toggle
+        gridToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                canvasWrapper.classList.add('show-grid');
+            } else {
+                canvasWrapper.classList.remove('show-grid');
+            }
+            updateUrlParam('grid', e.target.checked);
+        });
+
+        // Handle theme toggle
+        themeToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                canvasWrapper.classList.add('dark-mode');
+            } else {
+                canvasWrapper.classList.remove('dark-mode');
+            }
+            updateUrlParam('darkCanvas', e.target.checked);
+        });
+
+        // Handle stats toggle
+        statsToggle.addEventListener('change', (e) => {
+            statsEnabled = e.target.checked;
+            if (statsEnabled) {
+                statsOverlay.classList.add('visible');
+                startStatsTracking();
+            } else {
+                statsOverlay.classList.remove('visible');
+            }
+            updateUrlParam('stats', e.target.checked);
+        });
+
+        // Stats tracking
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let fpsUpdateTime = performance.now();
+
+        function startStatsTracking() {
+            if (!statsEnabled) return;
+
+            const now = performance.now();
+            frameCount++;
+
+            // Update FPS every 500ms
+            if (now - fpsUpdateTime >= 500) {
+                const fps = Math.round((frameCount * 1000) / (now - fpsUpdateTime));
+                const fpsElement = document.getElementById('fps-value');
+                fpsElement.textContent = fps;
+
+                // Color coding for FPS
+                if (fps >= 55) {
+                    fpsElement.className = 'stat-value';
+                } else if (fps >= 30) {
+                    fpsElement.className = 'stat-value warning';
+                } else {
+                    fpsElement.className = 'stat-value error';
+                }
+
+                frameCount = 0;
+                fpsUpdateTime = now;
+            }
+
+            // Update memory info (if available)
+            if (performance.memory) {
+                const usedMB = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+                const totalMB = (performance.memory.jsHeapSizeLimit / 1048576).toFixed(1);
+                const percentage = ((performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100).toFixed(1);
+
+                document.getElementById('memory-value').textContent = `${usedMB} MB`;
+
+                const heapElement = document.getElementById('heap-value');
+                heapElement.textContent = `${percentage}%`;
+
+                // Color coding for heap usage
+                if (percentage < 70) {
+                    heapElement.className = 'stat-value';
+                } else if (percentage < 85) {
+                    heapElement.className = 'stat-value warning';
+                } else {
+                    heapElement.className = 'stat-value error';
+                }
+            }
+
+            lastFrameTime = now;
+            requestAnimationFrame(startStatsTracking);
+        }
+
+        // Documentation loading
+        async function loadDocumentation(filename) {
+            if (!filename) {
+                document.getElementById('docs-panel').classList.add('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`../${filename}`);
+                if (!response.ok) throw new Error('Failed to load documentation');
+
+                const markdown = await response.text();
+                const html = marked.parse(markdown);
+
+                document.getElementById('docs-content').innerHTML = html;
+                document.getElementById('docs-title').textContent = filename.replace('.md', '').replace('_', ' ');
+                document.getElementById('docs-panel').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading documentation:', error);
+                document.getElementById('docs-content').innerHTML = `<p style="color: #f48771;">Error loading documentation: ${error.message}</p>`;
+                document.getElementById('docs-panel').classList.remove('hidden');
+            }
+        }
+
+        // Handle docs selection
+        document.getElementById('docs-select').addEventListener('change', (e) => {
+            loadDocumentation(e.target.value);
+        });
+
+        // Resizable docs panel
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        function initResize() {
+            const resizeHandle = document.getElementById('resize-handle');
+            const docsPanel = document.getElementById('docs-panel');
+
+            console.log('Initializing resize:', { resizeHandle, docsPanel });
+
+            if (!resizeHandle || !docsPanel) {
+                console.error('Resize elements not found', { resizeHandle, docsPanel });
+                return;
+            }
+
+            resizeHandle.addEventListener('mousedown', (e) => {
+                console.log('Mousedown on resize handle', e);
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = docsPanel.offsetWidth;
+                console.log('Start width:', startWidth);
+                resizeHandle.classList.add('dragging');
+                document.body.classList.add('resizing');
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+
+                const deltaX = startX - e.clientX;
+                const newWidth = startWidth + deltaX;
+
+                const minWidth = 200;
+                const maxWidth = 800;
+                const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+
+                console.log('Resizing:', { deltaX, newWidth, constrainedWidth });
+                docsPanel.style.flexBasis = `${constrainedWidth}px`;
+                docsPanel.style.width = `${constrainedWidth}px`;
+                e.preventDefault();
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    console.log('Resize ended');
+                    isResizing = false;
+                    resizeHandle.classList.remove('dragging');
+                    document.body.classList.remove('resizing');
+                }
+            });
+        }
+
+        // Initialize resize when page loads
+        window.addEventListener('load', () => {
+            console.log('Page loaded, initializing resize');
+            initResize();
+        });
+
+        // Example templates
+        const examples = {
+            basic: `// Basic shapes example
+const rect = new TVG.Shape();
+rect.appendRect(100, 100, 200, 150, { rx: 10, ry: 10 });
+rect.fill(255, 80, 80, 255);
+
+const circle = new TVG.Shape();
+circle.appendCircle(400, 200, 80, 80);
+circle.fill(80, 150, 255, 255);
+circle.stroke({ width: 5, color: [0, 0, 0, 255] });
+
+const triangle = new TVG.Shape();
+triangle.moveTo(300, 400);
+triangle.lineTo(400, 550);
+triangle.lineTo(200, 550);
+triangle.close();
+triangle.fill(100, 200, 100, 255);
+
+canvas.add(rect, circle, triangle);`,
+
+            gradient: `// Gradient example
+const rect = new TVG.Shape();
+rect.appendRect(50, 50, 500, 400, { rx: 20, ry: 20 });
+
+// Create linear gradient
+const gradient = new TVG.LinearGradient(50, 50, 550, 450);
+gradient.addStop(0, [255, 100, 100, 255]);
+gradient.addStop(0.5, [100, 100, 255, 255]);
+gradient.addStop(1, [100, 255, 100, 255]);
+
+rect.fill(gradient);
+canvas.add(rect);
+
+// Radial gradient circle
+const circle = new TVG.Shape();
+circle.appendCircle(300, 500, 80, 80);
+
+const radialGrad = new TVG.RadialGradient(300, 500, 80);
+radialGrad.addStop(0, [255, 255, 100, 255]);
+radialGrad.addStop(1, [255, 100, 100, 255]);
+
+circle.fill(radialGrad);
+canvas.add(circle);`,
+
+            picture: `// Picture Example (SVG and PNG/JPG)
+// Upload an image using "Upload Image" button to see it rendered
+
+// SVG Icon 1: Check mark
+const checkSvg = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <polyline points="20 6 9 17 4 12" stroke="#00ff00"/>
+</svg>\`;
+
+const checkIcon = new TVG.Picture();
+checkIcon.loadData(checkSvg, { format: 'svg' })
+  .size(80, 80)
+  .translate(50, 50);
+
+// SVG Icon 2: Heart
+const heartSvg = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red">
+  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+</svg>\`;
+
+const heartIcon = new TVG.Picture();
+heartIcon.loadData(heartSvg, { format: 'svg' })
+  .size(80, 80)
+  .translate(180, 50);
+
+// SVG Icon 3: Star
+const starSvg = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gold">
+  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+</svg>\`;
+
+const starIcon = new TVG.Picture();
+starIcon.loadData(starSvg, { format: 'svg' })
+  .size(80, 80)
+  .translate(310, 50);
+
+// SVG Icon 4: Circle with gradient
+const circleSvg = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgb(255,100,100);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgb(100,100,255);stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="40" fill="url(#grad)"/>
+</svg>\`;
+
+const circleIcon = new TVG.Picture();
+circleIcon.loadData(circleSvg, { format: 'svg' })
+  .size(80, 80)
+  .translate(440, 50);
+
+// Add all SVG icons
+canvas.add(checkIcon, heartIcon, starIcon, circleIcon);
+
+// Display uploaded image if available
+if (window.uploadedImageData) {
+  const uploadedPicture = new TVG.Picture();
+  uploadedPicture.loadData(window.uploadedImageData.data, {
+    format: window.uploadedImageData.format
+  });
+
+  // Scale to fit
+  const size = uploadedPicture.size();
+  const maxWidth = 500;
+  const maxHeight = 400;
+  const scale = Math.min(maxWidth / size.width, maxHeight / size.height);
+
+  uploadedPicture.size(size.width * scale, size.height * scale)
+    .translate(50, 180);
+
+  canvas.add(uploadedPicture);
+
+  console.log(\`Uploaded image: \${size.width}x\${size.height}\`);
+} else {
+  // Show placeholder text
+  const placeholderRect = new TVG.Shape();
+  placeholderRect.appendRect(50, 200, 500, 100, { rx: 10, ry: 10 })
+    .fill(50, 50, 50)
+    .stroke({ width: 2, color: [100, 100, 100, 255] });
+
+  canvas.add(placeholderRect);
+
+  console.log('Click "Upload Image" to add PNG/JPG/WebP images');
+}
+
+canvas.render();`,
+
+            transform: `// Transform example
+// Create a shape that we'll transform multiple times
+for (let i = 0; i < 8; i++) {
+  const rect = new TVG.Shape();
+  rect.appendRect(50, 25, 100, 50, { rx: 5, ry: 5 });
+
+  const hue = (i * 45) % 360;
+  const r = Math.abs(Math.sin(hue * Math.PI / 180)) * 255;
+  const g = Math.abs(Math.sin((hue + 120) * Math.PI / 180)) * 255;
+  const b = Math.abs(Math.sin((hue + 240) * Math.PI / 180)) * 255;
+
+  rect.fill(r, g, b, 255);
+
+  // Transform: translate to center, rotate, then translate outward
+  rect.translate(300, 300);
+  rect.rotate(i * 45);
+  rect.translate(300, 300);
+
+  canvas.add(rect);
+}
+
+// Center circle
+const center = new TVG.Shape();
+center.appendCircle(300, 300, 30, 30);
+center.fill(255, 255, 255, 255);
+canvas.add(center);`,
+
+            text: `// Text (Static) Example
+// Upload a custom font using "Upload Font" button, or use default font
+
+// Check if custom font is loaded
+const fontName = window.customFontLoaded ? 'CustomFont' : 'default';
+
+// Create main title
+const title = new TVG.Text();
+title.font(fontName)
+  .text('ThorVG Canvas Kit')
+  .fontSize(48)
+  .fill(255, 255, 255)
+  .outline(2, 0, 122, 204)
+  .align({ horizontal: 'center', vertical: 'middle' })
+  .translate(300, 100);
+
+// Create subtitle with different style
+const subtitle = new TVG.Text();
+subtitle.font(fontName)
+  .text('High-Performance Vector Graphics')
+  .fontSize(24)
+  .fill(100, 200, 255)
+  .align({ horizontal: 'center', vertical: 'middle' })
+  .translate(300, 170);
+
+// Feature list
+const features = [
+  'WebGPU / WebGL / Software Rendering',
+  'Lottie Animation Support',
+  'Custom Fonts & Text Rendering',
+  'SVG / PNG / WebP Support',
+  'Gradient & Stroke Support'
+];
+
+features.forEach((feature, i) => {
+  const featureText = new TVG.Text();
+  featureText.font(fontName)
+    .text('• ' + feature)
+    .fontSize(18)
+    .fill(200, 200, 200)
+    .align({ horizontal: 'left', vertical: 'middle' })
+    .translate(120, 260 + i * 40);
+  canvas.add(featureText);
+});
+
+// Add gradient text example
+const gradientText = new TVG.Text();
+const gradient = new TVG.LinearGradient(100, 500, 500, 500);
+gradient.addStop(0, [255, 100, 100, 255]);
+gradient.addStop(0.5, [255, 255, 100, 255]);
+gradient.addStop(1, [100, 255, 100, 255]);
+
+gradientText.font(fontName)
+  .text('Gradient Text Support!')
+  .fontSize(32)
+  .fill(gradient)
+  .align({ horizontal: 'center', vertical: 'middle' })
+  .translate(300, 500);
+
+canvas.add(title, subtitle, gradientText);
+canvas.render();
+
+console.log(\`Using font: \${fontName}\`);`,
+
+            textAnim: `// Text Animation Example
+// Upload a custom font using "Upload Font" button, or use default font
+
+// Check if custom font is loaded
+const fontName = window.customFontLoaded ? 'CustomFont' : 'default';
+
+let time = 0;
+
+function animateText() {
+  time += 0.05;
+  canvas.clear();
+
+  // Rainbow effect on title
+  const r = Math.sin(time) * 127 + 128;
+  const g = Math.sin(time + 2) * 127 + 128;
+  const b = Math.sin(time + 4) * 127 + 128;
+
+  const animTitle = new TVG.Text();
+  animTitle.font(fontName)
+    .text('ThorVG Canvas Kit')
+    .fontSize(48)
+    .fill(r, g, b)
+    .outline(2, 0, 0, 0)
+    .align({ horizontal: 'center', vertical: 'middle' })
+    .translate(300, 150);
+
+  // Pulsing subtitle
+  const scale = 1 + Math.sin(time * 2) * 0.1;
+  const animSubtitle = new TVG.Text();
+  animSubtitle.font(fontName)
+    .text('High-Performance Vector Graphics')
+    .fontSize(24 * scale)
+    .fill(100, 200, 255)
+    .align({ horizontal: 'center', vertical: 'middle' })
+    .translate(300, 220);
+
+  // Rotating text
+  const rotatingText = new TVG.Text();
+  rotatingText.font(fontName)
+    .text('Animated!')
+    .fontSize(32)
+    .fill(255, 200, 100)
+    .align({ horizontal: 'center', vertical: 'middle' })
+    .translate(300, 300)
+    .rotate(time * 20);
+
+  // Wave effect text
+  const waveText = 'WAVE EFFECT';
+  for (let i = 0; i < waveText.length; i++) {
+    const char = new TVG.Text();
+    const yOffset = Math.sin(time * 2 + i * 0.5) * 20;
+    const charColor = Math.sin(time + i * 0.3) * 127 + 128;
+
+    char.font(fontName)
+      .text(waveText[i])
+      .fontSize(28)
+      .fill(charColor, 150, 255 - charColor)
+      .align({ horizontal: 'center', vertical: 'middle' })
+      .translate(150 + i * 30, 400 + yOffset);
+
+    canvas.add(char);
+  }
+
+  canvas.add(animTitle, animSubtitle, rotatingText);
+  canvas.render();
+
+  requestAnimationFrame(animateText);
+}
+
+animateText();
+
+console.log(\`Using font: \${fontName}\`);`,
+
+            lottie: `// Lottie Animation Example
+// First, upload a Lottie JSON file using "Upload Lottie" button
+// Then the animation will be available as 'animation' variable
+
+if (!animation) {
+  // No animation loaded, show placeholder
+  const text = new TVG.Shape();
+  text.appendRect(100, 250, 400, 100, { rx: 10, ry: 10 });
+  text.fill(200, 200, 200, 255);
+  canvas.add(text);
+
+  console.log('Please upload a Lottie file first!');
+} else {
+  // Animation loaded! Get the picture and add to canvas
+  const picture = animation.picture;
+
+  // Fit to canvas
+  const size = picture.size();
+  const scale = Math.min(500 / size.width, 500 / size.height);
+  picture.size(size.width * scale, size.height * scale);
+  picture.translate(
+    (600 - size.width * scale) / 2,
+    (600 - size.height * scale) / 2
+  );
+
+  canvas.add(picture);
+
+  // Play animation
+  animation.play((frame) => {
+    canvas.update();
+    canvas.render();
+  });
+
+  console.log('Animation info:', animation.info());
+}`,
+
+            transformAnim: `// Transform Animation (based on Transform.cpp example)
+// This creates an animated scene with rotating and scaling shapes
+
+let startTime = performance.now();
+let animationId = null;
+
+function animate(currentTime) {
+  const elapsed = currentTime - startTime;
+  const t = elapsed / 1500; // Continuously increasing time
+  const wave = Math.sin(elapsed / 1500 * Math.PI * 2) * 0.5 + 0.5; // 0-1 smooth wave
+
+  // Clear and redraw
+  canvas.clear();
+
+  // Shape 1: Complex shape with rotate and scale
+  const shape1 = new TVG.Shape();
+  shape1.appendRect(-285, -300, 280, 280);
+  shape1.appendRect(-145, -160, 380, 380, { rx: 100, ry: 100 });
+  shape1.appendCircle(155, 140, 140, 140);
+  shape1.appendCircle(235, 320, 210, 140);
+
+  const gradient = new TVG.LinearGradient(50, 50, 550, 450);
+  gradient.addStop(0, [150 + wave * 25, 100, wave * 100, 255]);
+  gradient.addStop(0.5, [150 + wave * 10, 200, wave * 255, 255]);
+  gradient.addStop(1, [100, 255 * wave, 100, 255]);
+
+  shape1.fill(gradient);
+
+  // Apply transformations - rotation continues indefinitely
+  shape1.translate(300, 300);
+  shape1.scale(1.0 - 0.75 * wave);
+  shape1.rotate(360 * t);
+
+  canvas.add(shape1);
+
+  // Shape 2: Square with rotation and translation
+  const shape2 = new TVG.Shape();
+  shape2.appendRect(-50, -50, 180, 180);
+  shape2.fill(0, 255, 255, 255);
+
+  // Chain transformations - rotation continues indefinitely
+  shape2.translate(300, 300);
+  shape2.rotate(360 * t);
+  shape2.translate(200 + wave * 150, 200);
+
+  canvas.add(shape2);
+
+  // Shape 3: Rounded rectangle with rotation and scale
+  const shape3 = new TVG.Shape();
+  shape3.appendRect(100, 100, 230, 130, { rx: 20, ry: 20 });
+  shape3.fill(255, 0, 255, 255);
+
+  shape3.translate(350, 350);
+  shape3.rotate(-360 * t);
+  shape3.scale(0.5 + wave);
+
+  canvas.add(shape3);
+
+  // Render
+  canvas.render();
+
+  // Continue animation
+  animationId = requestAnimationFrame(animate);
+}
+
+// Start animation
+animate(performance.now());
+
+// Note: Animation will be automatically stopped when you run new code
+console.log('Transform animation started!');`
+        };
+
+        // Initialize ThorVG once on page load
+        async function initializeThorVG() {
+            if (isInitialized) return;
+
+            try {
+                updateStatus('Initializing ThorVG...', 'info');
+
+                const renderer = document.getElementById('renderer-select').value;
+                const wasmModule = await import('../packages/canvas-kit/dist/canvas-kit.esm.js');
+
+                TVG = await wasmModule.init({
+                    renderer: renderer,
+                    locateFile: (path) => '../packages/canvas-kit/dist/' + path.split('/').pop()
+                });
+
+                canvas = new TVG.Canvas('#canvas', {
+                    width: 600,
+                    height: 600,
+                    renderer: renderer
+                });
+
+                isInitialized = true;
+                updateStatus('Ready - ThorVG initialized successfully', 'success');
+
+                // Run initial code
+                runCode();
+            } catch (error) {
+                updateStatus('Initialization error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+
+        // Run user code
+        window.runCode = function() {
+            if (!isInitialized) {
+                updateStatus('Error: ThorVG not initialized', 'error');
+                return;
+            }
+
+            try {
+                // Stop any existing Lottie animation
+                if (animation && animation.isPlaying()) {
+                    animation.pause();
+                }
+
+                // Stop any existing user animation (requestAnimationFrame)
+                if (userAnimationId !== null) {
+                    cancelAnimationFrame(userAnimationId);
+                    userAnimationId = null;
+                }
+
+                // Clear canvas before running new code
+                canvas.clear();
+
+                // Get user code
+                const code = document.getElementById('code-editor').value;
+
+                // Wrap requestAnimationFrame to track animation IDs
+                const wrappedRAF = function(callback) {
+                    userAnimationId = requestAnimationFrame(callback);
+                    return userAnimationId;
+                };
+
+                // Execute user code in a context where TVG, canvas, animation, and wrapped RAF are available
+                const func = new Function('TVG', 'canvas', 'animation', 'requestAnimationFrame', code);
+                func(TVG, canvas, animation, wrappedRAF);
+
+                // Render the canvas (unless animation is playing)
+                if (!animation || !animation.isPlaying()) {
+                    if (userAnimationId === null) {
+                        canvas.render();
+                    }
+                }
+
+                // Show/hide play button based on animation state
+                const playBtn = document.getElementById('play-btn');
+                if (animation) {
+                    playBtn.style.display = 'inline-block';
+                    playBtn.textContent = animation.isPlaying() ? '⏸ Pause' : '▶ Play';
+                } else {
+                    playBtn.style.display = 'none';
+                }
+
+                updateStatus('Code executed successfully', 'success');
+            } catch (error) {
+                updateStatus('Error: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+
+        // Handle Font file upload
+        window.handleFontUpload = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                updateStatus('Loading font...', 'info');
+
+                // Read file as ArrayBuffer
+                const arrayBuffer = await file.arrayBuffer();
+                const fontData = new Uint8Array(arrayBuffer);
+
+                // Load font with ThorVG
+                const fontName = 'CustomFont';
+                const format = file.name.endsWith('.otf') ? 'otf' : 'ttf';
+
+                TVG.Font.load(fontName, fontData, { format: format });
+
+                // Set flag for code to use
+                window.customFontLoaded = true;
+
+                updateStatus(`Font loaded: ${file.name}`, 'success');
+
+                // Switch to text example if not already
+                if (document.getElementById('example-select').value !== 'text') {
+                    document.getElementById('example-select').value = 'text';
+                    editor.value = examples.text;
+                    updateHighlight();
+                }
+
+                // Show Upload Font button, hide others
+                document.getElementById('upload-font-btn').style.display = 'inline-block';
+                document.getElementById('upload-lottie-btn').style.display = 'none';
+                document.getElementById('upload-image-btn').style.display = 'none';
+
+                // Run the code
+                runCode();
+            } catch (error) {
+                updateStatus('Error loading font: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+
+        // Handle Lottie file upload
+        window.handleLottieUpload = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                updateStatus('Loading Lottie file...', 'info');
+
+                // Read file as ArrayBuffer
+                const arrayBuffer = await file.arrayBuffer();
+                currentLottieData = new Uint8Array(arrayBuffer);
+
+                // Create new animation
+                if (animation) {
+                    animation.dispose();
+                }
+
+                animation = new TVG.Animation();
+                animation.load(currentLottieData);
+
+                const info = animation.info();
+                updateStatus(`Lottie loaded: ${info.totalFrames.toFixed(0)} frames, ${info.duration.toFixed(2)}s`, 'success');
+
+                // Switch to lottie example
+                document.getElementById('example-select').value = 'lottie';
+                editor.value = examples.lottie;
+                updateHighlight();
+
+                // Show Upload Lottie button, hide others
+                document.getElementById('upload-lottie-btn').style.display = 'inline-block';
+                document.getElementById('upload-font-btn').style.display = 'none';
+                document.getElementById('upload-image-btn').style.display = 'none';
+
+                // Run the code
+                runCode();
+            } catch (error) {
+                updateStatus('Error loading Lottie: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+
+        // Handle Image file upload
+        window.handleImageUpload = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                updateStatus('Loading image...', 'info');
+
+                // Read file as ArrayBuffer
+                const arrayBuffer = await file.arrayBuffer();
+                const imageData = new Uint8Array(arrayBuffer);
+
+                // Detect format from file extension
+                const ext = file.name.match(/\.(png|jpg|jpeg|webp)$/i);
+                if (!ext) {
+                    throw new Error('Unsupported image format. Please use PNG, JPG, or WebP.');
+                }
+                const format = ext[1].toLowerCase();
+
+                // Store uploaded image data
+                window.uploadedImageData = {
+                    data: imageData,
+                    format: format === 'jpg' ? 'jpeg' : format,
+                    name: file.name
+                };
+
+                updateStatus(`Image loaded: ${file.name}`, 'success');
+
+                // Switch to picture example if not already there
+                if (document.getElementById('example-select').value !== 'picture') {
+                    document.getElementById('example-select').value = 'picture';
+                    editor.value = examples.picture;
+                    updateHighlight();
+                }
+
+                // Show Upload Image button, hide others
+                document.getElementById('upload-image-btn').style.display = 'inline-block';
+                document.getElementById('upload-lottie-btn').style.display = 'none';
+                document.getElementById('upload-font-btn').style.display = 'none';
+
+                // Run the code
+                runCode();
+            } catch (error) {
+                updateStatus('Error loading image: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+
+        // Toggle play/pause
+        window.togglePlayPause = function() {
+            if (!animation) return;
+
+            const playBtn = document.getElementById('play-btn');
+
+            if (animation.isPlaying()) {
+                animation.pause();
+                playBtn.textContent = '▶ Play';
+                updateStatus('Animation paused', 'info');
+            } else {
+                animation.play((frame) => {
+                    canvas.update();
+                    canvas.render();
+                });
+                playBtn.textContent = '⏸ Pause';
+                updateStatus('Playing animation...', 'success');
+            }
+        };
+
+        // Clear canvas
+        window.clearCanvas = function() {
+            if (!canvas) {
+                updateStatus('Error: Canvas not initialized', 'error');
+                return;
+            }
+
+            // Stop Lottie animation if playing
+            if (animation && animation.isPlaying()) {
+                animation.pause();
+                const playBtn = document.getElementById('play-btn');
+                playBtn.textContent = '▶ Play';
+            }
+
+            // Stop user animation (requestAnimationFrame)
+            if (userAnimationId !== null) {
+                cancelAnimationFrame(userAnimationId);
+                userAnimationId = null;
+            }
+
+            canvas.clear();
+            updateStatus('Canvas cleared', 'success');
+        };
+
+        // Update status bar
+        function updateStatus(message, type = 'info') {
+            const statusBar = document.getElementById('status-bar');
+            statusBar.textContent = message;
+            statusBar.className = 'status-bar';
+            if (type === 'error' || type === 'success') {
+                statusBar.classList.add(type);
+            }
+        }
+
+        // Handle example selection
+        document.getElementById('example-select').addEventListener('change', (e) => {
+            const example = examples[e.target.value];
+            editor.value = example;
+            updateHighlight();
+
+            // Show/hide Upload buttons based on selection
+            const uploadLottieBtn = document.getElementById('upload-lottie-btn');
+            const uploadFontBtn = document.getElementById('upload-font-btn');
+            const uploadImageBtn = document.getElementById('upload-image-btn');
+
+            if (e.target.value === 'lottie') {
+                uploadLottieBtn.style.display = 'inline-block';
+                uploadFontBtn.style.display = 'none';
+                uploadImageBtn.style.display = 'none';
+            } else if (e.target.value === 'text' || e.target.value === 'textAnim') {
+                uploadLottieBtn.style.display = 'none';
+                uploadFontBtn.style.display = 'inline-block';
+                uploadImageBtn.style.display = 'none';
+            } else if (e.target.value === 'picture') {
+                uploadLottieBtn.style.display = 'none';
+                uploadFontBtn.style.display = 'none';
+                uploadImageBtn.style.display = 'inline-block';
+            } else {
+                uploadLottieBtn.style.display = 'none';
+                uploadFontBtn.style.display = 'none';
+                uploadImageBtn.style.display = 'none';
+            }
+
+            if (document.getElementById('auto-run').checked) {
+                scheduleAutoRun();
+            }
+        });
+
+        // Handle renderer change - save to query param and reload
+        document.getElementById('renderer-select').addEventListener('change', (e) => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('renderer', e.target.value);
+            window.location.href = url.toString();
+        });
+
+        // Auto-run with debounce
+        function scheduleAutoRun() {
+            if (autoRunTimeout) {
+                clearTimeout(autoRunTimeout);
+            }
+            autoRunTimeout = setTimeout(() => {
+                if (document.getElementById('auto-run').checked) {
+                    runCode();
+                }
+            }, 500);
+        }
+
+        // Handle code editor changes
+        document.getElementById('code-editor').addEventListener('input', () => {
+            if (document.getElementById('auto-run').checked) {
+                scheduleAutoRun();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.getElementById('code-editor').addEventListener('keydown', (e) => {
+            // Cmd/Ctrl + Enter to run
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+
+            // Tab key support
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = e.target.selectionStart;
+                const end = e.target.selectionEnd;
+                const value = e.target.value;
+
+                e.target.value = value.substring(0, start) + '  ' + value.substring(end);
+                e.target.selectionStart = e.target.selectionEnd = start + 2;
+            }
+        });
+
+        // Load renderer from query parameter
+        const params = new URLSearchParams(window.location.search);
+        const rendererParam = params.get('renderer');
+        if (rendererParam && ['sw', 'gl', 'wg'].includes(rendererParam)) {
+            document.getElementById('renderer-select').value = rendererParam;
+        }
+
+        // Load initial example
+        editor.value = examples.basic;
+        updateHighlight();
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initializeThorVG();
+        });
+    </script>
+</body>
+</html>
