@@ -39,7 +39,7 @@ export default function Home() {
                 GitHub
               </a>
               <a
-                href="/docs"
+                href="http://canvas-kit-api-docs.surge.sh/"
                 className="px-4 py-2 bg-[#2b2b2b] text-white hover:bg-[#1a1a1a] rounded-md text-sm font-medium transition-colors"
               >
                 Documentation
