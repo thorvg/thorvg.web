@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import wasmUrl from "../node_modules/@thorvg/webcanvas/dist/thorvg.wasm";
 
 interface CanvasPreviewProps {
@@ -25,7 +24,6 @@ const codeUsesFont = (code: string): boolean => {
 };
 
 export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = false }: CanvasPreviewProps) {
-  const searchParams = useSearchParams();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<{ message: string; type: 'info' | 'success' | 'error' }>({
@@ -110,7 +108,8 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
 
   // Initialize ThorVG once on mount
   useEffect(() => {
-    const urlRenderer = searchParams.get('renderer');
+    const params = new URLSearchParams(window.location.search);
+    const urlRenderer = params.get('renderer');
     const renderer = (urlRenderer && ['sw', 'gl', 'wg'].includes(urlRenderer)) ? urlRenderer : 'gl';
 
     initThorVG(renderer as 'sw' | 'gl' | 'wg');
@@ -130,7 +129,7 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
         }
       }
     };
-  }, [searchParams]);
+  }, []);
 
   // Auto-run when code changes and ThorVG is ready
   useEffect(() => {
