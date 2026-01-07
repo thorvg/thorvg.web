@@ -43,6 +43,7 @@
 
 import { getModule } from '../core/Module';
 import { Paint } from '../paint/Paint';
+import { Scene } from '../paint/Scene';
 import type { RendererType } from '../constants';
 import { checkResult } from '../core/errors';
 import type { TvgCanvasInstance } from '../types/emscripten';
@@ -58,6 +59,8 @@ export interface CanvasOptions {
   width?: number;
   /** Canvas height in pixels. Default: 600 */
   height?: number;
+  /** Enable device pixel ratio for high-DPI displays. Default: true */
+  enableDevicePixelRatio?: boolean;
 }
 
 /**
@@ -108,6 +111,12 @@ export class Canvas {
   #engine: TvgCanvasInstance | null = null;
   #renderer: RendererType;
   #htmlCanvas: HTMLCanvasElement | null = null;
+  #enableDevicePixelRatio: boolean;
+  #mainScene: Scene | null = null;
+  #logicalWidth: number = 0;
+  #logicalHeight: number = 0;
+  #currentDPR: number = 1;
+  #needsUpdate: boolean = false;
 
   /**
    * Creates a new Canvas rendering context.
@@ -124,7 +133,7 @@ export class Canvas {
    * // Initialize with renderer
    * const TVG = await ThorVG.init({ renderer: 'gl' });
    *
-   * // Basic canvas with default options
+   * // Basic canvas with default options (DPR enabled by default)
    * const canvas = new TVG.Canvas('#canvas');
    * ```
    *
@@ -137,9 +146,24 @@ export class Canvas {
    *   height: 1080
    * });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Canvas with DPR disabled for consistent rendering across devices
+   * const canvas = new TVG.Canvas('#canvas', {
+   *   width: 800,
+   *   height: 600,
+   *   enableDevicePixelRatio: false
+   * });
+   * ```
    */
   constructor(selector: string, options: CanvasOptions = {}) {
-    const { width = 800, height = 600 } = options;
+    const { width = 800, height = 600, enableDevicePixelRatio = true } = options;
+
+    // Store logical dimensions
+    this.#logicalWidth = width;
+    this.#logicalHeight = height;
+    this.#enableDevicePixelRatio = enableDevicePixelRatio;
 
     // Get the global renderer set during ThorVG.init()
     const renderer = getGlobalRenderer();
@@ -148,8 +172,15 @@ export class Canvas {
     // Module should already be initialized by ThorVG.init()
     const Module = getModule();
 
-    // Create TvgCanvas with constructor (engine type, selector, width, height)
-    this.#engine = new Module.TvgCanvas(renderer, selector, width, height);
+    // Calculate DPR and physical dimensions
+    const dpr = enableDevicePixelRatio ? this._calculateDPR() : 1;
+    this.#currentDPR = dpr;
+
+    const physicalWidth = width * dpr;
+    const physicalHeight = height * dpr;
+
+    // Create TvgCanvas with physical dimensions
+    this.#engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight);
 
     // Check for errors
     const error = this.#engine.error();
@@ -161,10 +192,33 @@ export class Canvas {
     this.#ptr = this.#engine.ptr();
 
     if (this.#ptr === 0) {
-      throw new Error(`Failed to create canvas with ${renderer} renderer`);
+      throw new Error(`Failed to create canvas with ${renderer} renderer: engine pointer is 0`);
     }
 
     this.#htmlCanvas = document.querySelector(selector);
+    if (!this.#htmlCanvas) {
+      throw new Error(`Failed to create canvas with ${renderer} renderer: HTML canvas element not found`);
+    }
+
+    // Set CSS dimensions to logical size
+    this.#htmlCanvas.style.width = `${width}px`;
+    this.#htmlCanvas.style.height = `${height}px`;
+
+    // Set canvas pixel dimensions to physical size
+    this.#htmlCanvas.width = physicalWidth;
+    this.#htmlCanvas.height = physicalHeight;
+
+    // Create main Scene
+    this.#mainScene = new Scene();
+
+    // Apply DPR scale transform if enabled
+    if (enableDevicePixelRatio) {
+      this.#mainScene.scale(dpr, dpr);
+    }
+
+    // Add main Scene to canvas
+    const result = Module._tvg_canvas_push(this.#ptr, this.#mainScene.ptr);
+    checkResult(result, 'add main scene');
   }
 
   /**
@@ -192,11 +246,13 @@ export class Canvas {
    * ```
    */
   public add(...paints: Paint[]): this {
-    const Module = getModule();
-    for (const paint of paints) {
-      const result = Module._tvg_canvas_push(this.#ptr, paint.ptr);
-      checkResult(result, 'add');
+    if (!this.#mainScene) {
+      throw new Error('Main scene not initialized');
     }
+
+    // Add paints to main Scene instead of directly to canvas
+    this.#mainScene.add(...paints);
+    this.#needsUpdate = true;
     return this;
   }
 
@@ -219,15 +275,16 @@ export class Canvas {
    * ```
    */
   public remove(paint?: Paint): this {
-    if (paint) {
-      const Module = getModule();
-      const result = Module._tvg_canvas_remove(this.#ptr, paint.ptr);
-      checkResult(result, 'remove');
-    } else {
-      if (this.#engine) {
-        this.#engine.clear();
-      }
+    if (!this.#mainScene) {
+      throw new Error('Main scene not initialized');
     }
+
+    if (paint) {
+      this.#mainScene.remove(paint);
+    } else {
+      this.#mainScene.remove();
+    }
+    this.#needsUpdate = true;
     return this;
   }
 
@@ -245,20 +302,23 @@ export class Canvas {
    * ```
    */
   public clear(): this {
-    if (!this.#engine) {
+    if (!this.#engine || !this.#mainScene) {
       return this;
     }
 
     const Module = getModule();
 
-    this.#engine.clear();
+    // Clear all paints from main Scene
+    this.#mainScene.clear();
+
+    // Render empty frame
     Module._tvg_canvas_draw(this.#ptr, 1);
     Module._tvg_canvas_sync(this.#ptr);
 
     // For SW backend, also clear the HTML canvas
     if (this.#renderer === 'sw' && this.#htmlCanvas) {
-        const ctx = this.#htmlCanvas?.getContext('2d') as CanvasRenderingContext2D;
-        ctx.clearRect(0, 0, this.#htmlCanvas.width, this.#htmlCanvas.height);
+      const ctx = this.#htmlCanvas.getContext('2d') as CanvasRenderingContext2D;
+      ctx.clearRect(0, 0, this.#htmlCanvas.width, this.#htmlCanvas.height);
     }
 
     return this;
@@ -322,7 +382,48 @@ export class Canvas {
    * For static scenes, render() can be called directly.
    */
   public render(): this {
+    if (!this.#engine || !this.#htmlCanvas || !this.#mainScene) {
+      return this;
+    }
+
     const Module = getModule();
+
+    // Auto-update if main Scene contents changed
+    if (this.#needsUpdate) {
+      Module._tvg_canvas_update(this.#ptr);
+      this.#needsUpdate = false;
+    }
+
+    if (this.#enableDevicePixelRatio) {
+      const dpr = this._calculateDPR();
+
+      // Apply new DPR when it's changed
+      if (dpr !== this.#currentDPR) {
+        this.#currentDPR = dpr;
+
+        // Update main Scene scale with new DPR
+        const matrix = {
+          e11: dpr, e12: 0, e13: 0,
+          e21: 0, e22: dpr, e23: 0,
+          e31: 0, e32: 0, e33: 1,
+        };
+        this.#mainScene.transform(matrix);
+      }
+
+      // Calculate physical dimensions
+      const physicalWidth = this.#logicalWidth * dpr;
+      const physicalHeight = this.#logicalHeight * dpr;
+
+      // Update canvas pixel dimensions if changed
+      if (
+        this.#htmlCanvas.width !== physicalWidth ||
+        this.#htmlCanvas.height !== physicalHeight
+      ) {
+        this.#htmlCanvas.width = physicalWidth;
+        this.#htmlCanvas.height = physicalHeight;
+        this.#engine.resize(physicalWidth, physicalHeight);
+      }
+    }
 
     Module._tvg_canvas_draw(this.#ptr, 1);
     Module._tvg_canvas_sync(this.#ptr);
@@ -333,6 +434,11 @@ export class Canvas {
     }
 
     return this;
+  }
+
+  private _calculateDPR(): number {
+    // ThorVG DPR formula of 1.75 for best performance
+    return 1 + ((window.devicePixelRatio - 1) * 0.75);
   }
 
   private _updateHTMLCanvas(): void {
@@ -371,9 +477,29 @@ export class Canvas {
    * ```
    */
   public resize(width: number, height: number): this {
-    if (this.#engine) {
-      this.#engine.resize(width, height);
+    // Update logical dimensions
+    this.#logicalWidth = width;
+    this.#logicalHeight = height;
+
+    if (this.#htmlCanvas) {
+      // Update CSS dimensions to logical size
+      this.#htmlCanvas.style.width = `${width}px`;
+      this.#htmlCanvas.style.height = `${height}px`;
+
+      // Calculate physical dimensions
+      const dpr = this.#enableDevicePixelRatio ? this.#currentDPR : 1;
+      const physicalWidth = width * dpr;
+      const physicalHeight = height * dpr;
+
+      // Set canvas pixel dimensions to physical size
+      this.#htmlCanvas.width = physicalWidth;
+      this.#htmlCanvas.height = physicalHeight;
+
+      if (this.#engine) {
+        this.#engine.resize(physicalWidth, physicalHeight);
+      }
     }
+
     return this;
   }
 
@@ -421,6 +547,12 @@ export class Canvas {
    * may be created and destroyed frequently.
    */
   public destroy(): void {
+    // Clear main Scene first
+    if (this.#mainScene) {
+      this.#mainScene.clear();
+      this.#mainScene = null;
+    }
+
     // Clear all paints from canvas
     this.clear();
 
