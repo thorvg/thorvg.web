@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { showcaseExamples } from '@/lib/examples';
 
 const categoryColors = {
@@ -22,7 +21,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#f6f6f6]">
       {/* Header */}
-      <header className="bg-white border-b border-[#e0e0e0] sticky top-0 z-10">
+      {/* <header className="bg-white border-b border-[#e0e0e0] sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -47,17 +46,17 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </header>
+      </header> */}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <h2 className="text-xl font-semibold mb-2 text-[#2b2b2b]">Showcase Examples</h2>
           <p className="text-[#737373] text-sm">
             Click on any example to view the code and live preview. All examples include full import statements
             so you can copy and use them directly in your projects.
           </p>
-        </div>
+        </div> */}
 
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -65,16 +64,16 @@ export default function Home() {
             <Link
               key={example.id}
               href={`/showcase/${example.id}`}
+              target="_blank"
               className="group flex flex-col bg-white rounded-lg overflow-hidden hover:shadow-lg transition-all"
             >
               {/* Thumbnail / Preview */}
               <div className="aspect-video bg-white flex items-center justify-center relative overflow-hidden">
                 {example.thumbnail ? (
-                  <Image
+                  <img
                     src={example.thumbnail}
                     alt={example.title}
-                    fill
-                    className="object-cover"
+                    className="object-contain w-full h-full"
                   />
                 ) : (
                   <>
@@ -131,7 +130,7 @@ export default function Home() {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-12 p-6 bg-white border border-[#e0e0e0] rounded-lg">
+        {/* <div className="mt-12 p-6 bg-white border border-[#e0e0e0] rounded-lg">
           <h3 className="text-lg font-semibold mb-2 text-[#2b2b2b]">Getting Started</h3>
           <p className="text-sm text-[#737373] mb-4">
             To use ThorVG WebCanvas in your project, install it via npm or yarn:
@@ -143,7 +142,7 @@ export default function Home() {
             <br />
             <code className="text-[#047857]">yarn add @thorvg/webcanvas</code>
           </pre>
-        </div>
+        </div> */}
       </main>
     </div>
   );
