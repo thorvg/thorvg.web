@@ -1,4 +1,4 @@
-project('thorvg-wasm', 'cpp',
+project('thorvg-wasm-player', 'cpp',
         version : '1.0.0',
         default_options : ['cpp_std=c++14'])
 
@@ -10,12 +10,12 @@ endif
 
 # Find ThorVG library
 thorvg_dir = meson.project_source_root() + '/../../thorvg'
-thorvg_lib = cc.find_library('thorvg', dirs: thorvg_dir + '/build_wasm/src')
+thorvg_lib = cc.find_library('thorvg', dirs: thorvg_dir + '/build_wasm_player/src')
 
 thorvg_inc = include_directories(
     '../../thorvg/inc',
     '../../thorvg/src/loaders/lottie',
-    '../../thorvg/build_wasm',
+    '../../thorvg/build_wasm_player',
     '../common'
 )
 

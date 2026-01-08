@@ -36,8 +36,8 @@
   ],
   "types": "./dist/lottie-player.d.ts",
   "scripts": {
-    "build": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
-    "build:watch": "npm run clean && sh ./wasm_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
+    "build": "npm run clean && sh ./wasm_player_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
+    "build:watch": "npm run clean && sh ./wasm_player_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:build": "./build-test.sh",
