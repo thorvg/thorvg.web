@@ -33,15 +33,16 @@ using emscripten::val;
 using emscripten::typed_memory_view;
 using std::string;
 
+EMSCRIPTEN_DECLARE_VAL_TYPE(ArrayBuffer);
 
 struct TvgEngineMethod
 {
     virtual ~TvgEngineMethod() {}
     virtual Canvas* init(string& selector) = 0;
     virtual void resize(Canvas* canvas, uint32_t w, uint32_t h) = 0;
-    virtual val output(uint32_t w, uint32_t h)
+    virtual ArrayBuffer output(uint32_t w, uint32_t h)
     {
-        return val::undefined();
+        return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
     }
 
     void loadFont() {
@@ -78,12 +79,9 @@ struct TvgSwEngine : TvgEngineMethod
         static_cast<SwCanvas*>(canvas)->target((uint32_t*)buffer, w, w, h, ColorSpace::ABGR8888S);
     }
 
-    val output(uint32_t w, uint32_t h) override
+    ArrayBuffer output(uint32_t w, uint32_t h) override
     {
-        if (buffer) {
-            return val(typed_memory_view(w * h * 4, buffer));
-        }
-        return val::undefined();
+        return ArrayBuffer(val(typed_memory_view(w * h * 4, buffer)));
     }
 };
 
@@ -352,8 +350,8 @@ public:
         return true;
     }
 
-    val render() {
-        if (!canvas || !engine) return val::undefined();
+    ArrayBuffer render() {
+        if (!canvas || !engine) return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
         return engine->output(width, height);
     }
 
@@ -377,6 +375,8 @@ private:
 };
 
 EMSCRIPTEN_BINDINGS(thorvg_webcanvas) {
+    emscripten::register_type<ArrayBuffer>("ArrayBuffer");
+
     emscripten::function("init", &init);
     emscripten::function("term", &term);
 
