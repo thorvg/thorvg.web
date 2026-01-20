@@ -38,7 +38,7 @@ EMSCRIPTEN_DECLARE_VAL_TYPE(ArrayBuffer);
 struct TvgEngineMethod
 {
     virtual ~TvgEngineMethod() {}
-    virtual Canvas* init(string& selector) = 0;
+    virtual Canvas* init(string& selector, uint32_t threads) = 0;
     virtual void resize(Canvas* canvas, uint32_t w, uint32_t h) = 0;
     virtual ArrayBuffer output(uint32_t w, uint32_t h)
     {
@@ -63,9 +63,9 @@ struct TvgSwEngine : TvgEngineMethod
         retrieveFont();
     }
 
-    Canvas* init(string& selector) override
+    Canvas* init(string& selector, uint32_t threads) override
     {
-        if (Initializer::init() != Result::Success) return nullptr;
+        if (Initializer::init(threads) != Result::Success) return nullptr;
         loadFont();
         return SwCanvas::gen(EngineOption::SmartRender);
     }
@@ -109,7 +109,7 @@ struct TvgWgEngine : TvgEngineMethod
         retrieveFont();
     }
 
-    Canvas* init(string& selector) override
+    Canvas* init(string& selector, uint32_t threads) override
     {
         // Create WebGPU surface
         WGPUEmscriptenSurfaceSourceCanvasHTMLSelector canvasDesc{};
@@ -124,7 +124,7 @@ struct TvgWgEngine : TvgEngineMethod
 
         if (!surface) return nullptr;
 
-        if (Initializer::init() != Result::Success) return nullptr;
+        if (Initializer::init(threads) != Result::Success) return nullptr;
         loadFont();
 
         return WgCanvas::gen(EngineOption::Default);
@@ -242,7 +242,7 @@ struct TvgGlEngine : TvgEngineMethod
         retrieveFont();
     }
 
-    Canvas* init(string& selector) override
+    Canvas* init(string& selector, uint32_t threads) override
     {
         EmscriptenWebGLContextAttributes attrs{};
         attrs.alpha = true;
@@ -259,7 +259,7 @@ struct TvgGlEngine : TvgEngineMethod
 
         emscripten_webgl_make_context_current(context);
 
-        if (Initializer::init() != Result::Success) return nullptr;
+        if (Initializer::init(threads) != Result::Success) return nullptr;
         loadFont();
 
         return GlCanvas::gen(EngineOption::Default);
@@ -276,6 +276,7 @@ struct TvgGlEngine : TvgEngineMethod
 };
 
 #endif
+
 
 // 0: success, 1: fail, 2: wait for async request
 int init() {
@@ -299,7 +300,7 @@ public:
         if (engine) delete engine;
     }
 
-    explicit TvgCanvas(string engineType = "sw", string selector = "", uint32_t w = 0, uint32_t h = 0) {
+    explicit TvgCanvas(string engineType = "sw", string selector = "", uint32_t w = 0, uint32_t h = 0, uint32_t threads = 0) {
         errorMsg = "None";
 
 #ifdef THORVG_SW_RASTER_SUPPORT
@@ -317,7 +318,7 @@ public:
             return;
         }
 
-        canvas = engine->init(selector);
+        canvas = engine->init(selector, threads);
         if (!canvas) {
             errorMsg = "Canvas initialization failed";
             return;
@@ -381,7 +382,7 @@ EMSCRIPTEN_BINDINGS(thorvg_webcanvas) {
     emscripten::function("term", &term);
 
     class_<TvgCanvas>("TvgCanvas")
-        .constructor<string, string, uint32_t, uint32_t>()
+        .constructor<string, string, uint32_t, uint32_t, uint32_t>()
         .function("error", &TvgCanvas::error)
         .function("resize", &TvgCanvas::resize)
         .function("clear", &TvgCanvas::clear)

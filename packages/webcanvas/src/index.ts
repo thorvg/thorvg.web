@@ -61,6 +61,30 @@ export interface InitOptions {
   locateFile?: (path: string) => string;
   /** Renderer type: 'sw' (Software), 'gl' (WebGL), or 'wg' (WebGPU). Default: 'gl'. WebGPU provides best performance but requires Chrome 113+ or Edge 113+. */
   renderer?: RendererType;
+  /**
+   * Number of worker threads for parallel rendering.
+   *
+   * @defaultValue navigator.hardwareConcurrency (CPU core count)
+   *
+   * @remarks
+   * - Set to 0 to disable threading (single-threaded mode)
+   * - Requires SharedArrayBuffer support (COOP/COEP headers must be set)
+   * - Higher values increase memory usage but improve rendering performance
+   * - Recommended: Use default or `Math.max(1, navigator.hardwareConcurrency - 2)` to prevent system freezing
+   *
+   * @example
+   * ```typescript
+   * // Use 4 threads
+   * await init({ threadCount: 4 });
+   *
+   * // Use half of available cores
+   * await init({ threadCount: Math.floor(navigator.hardwareConcurrency / 2) });
+   *
+   * // Single-threaded mode
+   * await init({ threadCount: 0 });
+   * ```
+   */
+  threadCount?: number;
 }
 
 export interface ThorVGNamespace {
@@ -146,6 +170,9 @@ async function initEngine(engineType: RendererType = 'gl'): Promise<void> {
  * @param options.renderer - Renderer type: 'sw' (Software), 'gl' (WebGL), or 'wg' (WebGPU).
  *                           Default: 'gl'. WebGPU provides best performance but requires
  *                           Chrome 113+ or Edge 113+.
+ * @param options.threadCount - Number of worker threads for parallel rendering.
+ *                              Default: navigator.hardwareConcurrency (CPU core count).
+ *                              Set to 0 to disable threading. Requires SharedArrayBuffer support (COOP/COEP headers).
  *
  * @returns Promise that resolves to ThorVG namespace containing all classes and utilities
  *
@@ -162,6 +189,16 @@ async function initEngine(engineType: RendererType = 'gl'): Promise<void> {
  * const TVG = await ThorVG.init({
  *   locateFile: (path) => `/public/wasm/${path}`,
  *   renderer: 'gl'
+ * });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Initialize with custom thread count for parallel rendering
+ * const TVG = await ThorVG.init({
+ *   renderer: 'gl',
+ *   threadCount: 8,  // Use 8 worker threads
+ *   locateFile: (path) => '/webcanvas/' + path.split('/').pop()
  * });
  * ```
  *
@@ -190,10 +227,21 @@ async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
     return createNamespace();
   }
 
-  const { locateFile, renderer = 'gl' } = options;
+  const { locateFile, renderer = 'gl', threadCount } = options;
 
   // Store the renderer for use by Canvas instances
   globalRenderer = renderer;
+
+  // Determine thread count: use user-specified value, or default to hardware concurrency
+  const threads = threadCount !== undefined
+    ? threadCount
+    : (typeof navigator !== 'undefined' && navigator.hardwareConcurrency)
+      ? navigator.hardwareConcurrency
+      : 4;
+
+  // Set global thread count BEFORE loading WASM module
+  // This is read by Emscripten's PTHREAD_POOL_SIZE at module initialization
+  (globalThis as any).__THORVG_THREAD_COUNT = threads;
 
   // Load WASM module
   Module = await ThorVGModuleFactory({
