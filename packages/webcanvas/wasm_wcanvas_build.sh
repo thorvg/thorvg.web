@@ -33,7 +33,8 @@ sed "s|EMSDK:|$EMSDK/|g" ../wasm/wasm32.txt | \
   sed "s|'-fno-exceptions', ||g" | \
   sed "s|, '--closure=1'||g" | \
   sed "s|, '-sEXPORTED_RUNTIME_METHODS=FS'||g" | \
-  sed "s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sDISABLE_EXCEPTION_CATCHING=0', '-sDISABLE_EXCEPTION_THROWING=0', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
+  sed "s|cpp_args = \[|cpp_args = ['-pthread', |g" | \
+  sed "s|'--bind'|'--bind', '-pthread', '-sPTHREAD_POOL_SIZE=4', '-sPTHREAD_POOL_SIZE_STRICT=0', '-sINITIAL_MEMORY=134217728', '-sALLOW_MEMORY_GROWTH=1', '--emit-tsd=thorvg.d.ts', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sDISABLE_EXCEPTION_CATCHING=0', '-sDISABLE_EXCEPTION_THROWING=0', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
 
 meson setup \
   -Db_lto=true \
@@ -41,7 +42,7 @@ meson setup \
   -Dstatic=true \
   -Dloaders="all" \
   -Dsavers="all" \
-  -Dthreads=false \
+  -Dthreads=true \
   -Dfile="false" \
   -Dbindings="capi" \
   -Dpartial=true \

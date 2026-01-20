@@ -27,17 +27,17 @@ const createWebCanvasConfig = () => {
         format: "esm",
         ...commonOutput,
       },
-      {
-        file: pkg.exports['.'].require,
-        format: "cjs",
-        ...commonOutput,
-      },
-      {
-        file: './dist/webcanvas.js',
-        format: "umd",
-        hoistTransitiveImports: true,
-        ...commonOutput,
-      },
+      // {
+      //   file: pkg.exports['.'].require,
+      //   format: "cjs",
+      //   ...commonOutput,
+      // },
+      // {
+      //   file: './dist/webcanvas.js',
+      //   format: "umd",
+      //   hoistTransitiveImports: true,
+      //   ...commonOutput,
+      // },
     ],
     plugins: [
       commonjs({
