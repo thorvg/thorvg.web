@@ -48,10 +48,12 @@ export function transformCodeForExecution(code: string): string {
  */
 export function extractInitConfig(code: string): {
   renderer?: string;
+  threadCount?: number;
   canvasSize?: { width: number; height: number };
 } {
   const config: {
     renderer?: string;
+    threadCount?: number;
     canvasSize?: { width: number; height: number };
   } = {};
 
@@ -59,6 +61,13 @@ export function extractInitConfig(code: string): {
   const rendererMatch = code.match(/renderer:\s*['"](\w+)['"]/);
   if (rendererMatch) {
     config.renderer = rendererMatch[1];
+  }
+
+  // Extract threadCount from init() call
+  // Support various formats: threadCount: 4, threadCount:4, threadCount: 4,
+  const threadCountMatch = code.match(/threadCount\s*:\s*(\d+)/);
+  if (threadCountMatch) {
+    config.threadCount = parseInt(threadCountMatch[1], 10);
   }
 
   // Extract canvas dimensions

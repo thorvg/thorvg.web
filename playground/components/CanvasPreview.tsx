@@ -23,14 +23,16 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
   const [TVG, setTVG] = useState<any>(null);
   const [canvas, setCanvas] = useState<any>(null);
   const [currentRenderer, setCurrentRenderer] = useState<'sw' | 'gl' | 'wg'>('gl');
+  const [currentThreadCount, setCurrentThreadCount] = useState<number | undefined>(undefined);
   const [isZoomDragging, setIsZoomDragging] = useState(false);
   const animationIdRef = useRef<number | null>(null);
   const originalDPRRef = useRef<number | null>(null);
 
-  // Initialize ThorVG with specified renderer
-  const initThorVG = async (renderer: 'sw' | 'gl' | 'wg') => {
+  // Initialize ThorVG with specified renderer and thread count
+  const initThorVG = async (renderer: 'sw' | 'gl' | 'wg', threadCount?: number) => {
     try {
-      setStatus({ message: `Initializing ThorVG with ${renderer.toUpperCase()} renderer...`, type: 'info' });
+      const threadInfo = threadCount !== undefined ? ` (${threadCount} threads)` : '';
+      setStatus({ message: `Initializing ThorVG with ${renderer.toUpperCase()} renderer${threadInfo}...`, type: 'info' });
 
       if (originalDPRRef.current === null) {
         originalDPRRef.current = window.devicePixelRatio;
@@ -39,6 +41,7 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
       const { init } = await import('@thorvg/webcanvas');
       const TVGInstance = await init({
         renderer,
+        threadCount,
         locateFile: (path: string) => wasmUrl,
       });
 
@@ -50,6 +53,7 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
       setTVG(TVGInstance);
       setCanvas(canvasInstance);
       setCurrentRenderer(renderer);
+      setCurrentThreadCount(threadCount);
       setStatus({ message: 'Ready', type: 'success' });
     } catch (error) {
       console.error('Error initializing ThorVG:', error);
@@ -66,7 +70,20 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
     const urlRenderer = params.get('renderer');
     const renderer = (urlRenderer && ['sw', 'gl', 'wg'].includes(urlRenderer)) ? urlRenderer : 'gl';
 
-    initThorVG(renderer as 'sw' | 'gl' | 'wg');
+    // Parse threadCount from URL (validate range: 0 to hardwareConcurrency * 2)
+    const urlThreadCount = params.get('threadCount');
+    let threadCount: number | undefined = undefined;
+    if (urlThreadCount !== null) {
+      const parsed = parseInt(urlThreadCount, 10);
+      const maxThreads = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency)
+        ? navigator.hardwareConcurrency * 2
+        : 32;
+      if (!isNaN(parsed) && parsed >= 0 && parsed <= maxThreads) {
+        threadCount = parsed;
+      }
+    }
+
+    initThorVG(renderer as 'sw' | 'gl' | 'wg', threadCount);
 
     return () => {
       if (animationIdRef.current !== null) {
@@ -108,20 +125,51 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
       return;
     }
 
-    // Detect renderer from code
+    // Detect renderer and threadCount from code
     const { extractInitConfig } = await import('@/lib/code-transformer');
     const config = extractInitConfig(code);
     const detectedRenderer = (config.renderer as 'sw' | 'gl' | 'wg') || 'gl';
+    const detectedThreadCount = config.threadCount;
 
-    // If renderer changed, update URL and reload
-    if (detectedRenderer !== currentRenderer && ['sw', 'gl', 'wg'].includes(detectedRenderer)) {
+    // Check if renderer or threadCount changed
+    const rendererChanged = detectedRenderer !== currentRenderer && ['sw', 'gl', 'wg'].includes(detectedRenderer);
+
+    // IMPORTANT: Only check threadCount change if it's explicitly in the code
+    // This prevents infinite reload loop when URL has threadCount but code doesn't
+    const threadCountChanged = detectedThreadCount !== undefined && detectedThreadCount !== currentThreadCount;
+
+    // Validate threadCount range (only if explicitly set)
+    let validThreadCount = detectedThreadCount;
+    if (detectedThreadCount !== undefined) {
+      const maxThreads = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency)
+        ? navigator.hardwareConcurrency * 2
+        : 32;
+      if (isNaN(detectedThreadCount) || detectedThreadCount < 0 || detectedThreadCount > maxThreads) {
+        validThreadCount = undefined;
+      }
+    }
+
+    // If renderer or threadCount changed, update URL and reload
+    if (rendererChanged || threadCountChanged) {
+      const changes: string[] = [];
+      if (rendererChanged) changes.push(`${detectedRenderer.toUpperCase()} renderer`);
+      if (threadCountChanged) {
+        const threadInfo = validThreadCount !== undefined ? `${validThreadCount} threads` : 'default threads';
+        changes.push(threadInfo);
+      }
+
       setStatus({
-        message: `Switching to ${detectedRenderer.toUpperCase()} renderer...`,
+        message: `Switching to ${changes.join(', ')}...`,
         type: 'info'
       });
 
       const url = new URL(window.location.href);
-      url.searchParams.set('renderer', detectedRenderer);
+      if (rendererChanged) {
+        url.searchParams.set('renderer', detectedRenderer);
+      }
+      if (threadCountChanged && validThreadCount !== undefined) {
+        url.searchParams.set('threadCount', validThreadCount.toString());
+      }
 
       setTimeout(() => {
         window.location.href = url.toString();

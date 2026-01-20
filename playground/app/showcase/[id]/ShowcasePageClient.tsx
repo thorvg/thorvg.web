@@ -7,6 +7,45 @@ import CodeEditor from '@/components/CodeEditor';
 import CanvasPreview from '@/components/CanvasPreview';
 import { getExampleById, showcaseExamples } from '@/lib/examples';
 
+// Helper function to apply URL params to code
+function applyUrlParamsToCode(
+  code: string,
+  rendererParam: string | null,
+  threadCountParam: string | null
+): string {
+  let modifiedCode = code;
+
+  // Apply renderer from URL
+  if (rendererParam && ['sw', 'gl', 'wg'].includes(rendererParam)) {
+    modifiedCode = modifiedCode.replace(
+      /renderer:\s*['"](?:sw|gl|wg)['"]/,
+      `renderer: '${rendererParam}'`
+    );
+  }
+
+  // Apply threadCount from URL
+  if (threadCountParam !== null) {
+    const threadCount = parseInt(threadCountParam, 10);
+    if (!isNaN(threadCount)) {
+      if (/threadCount\s*:\s*\d+/.test(modifiedCode)) {
+        // Replace existing threadCount
+        modifiedCode = modifiedCode.replace(
+          /threadCount\s*:\s*\d+/,
+          `threadCount: ${threadCount}`
+        );
+      } else {
+        // Add threadCount after renderer line
+        modifiedCode = modifiedCode.replace(
+          /(renderer:\s*['"][^'"]+['"])/,
+          `$1,\n  threadCount: ${threadCount}`
+        );
+      }
+    }
+  }
+
+  return modifiedCode;
+}
+
 export default function ShowcasePageClient({ id }: { id: string }) {
   const router = useRouter();
 
@@ -15,6 +54,7 @@ export default function ShowcasePageClient({ id }: { id: string }) {
   const [autoRun, setAutoRun] = useState(true);
   const [copied, setCopied] = useState(false);
   const [rendererParam, setRendererParam] = useState<string | null>(null);
+  const [threadCountParam, setThreadCountParam] = useState<string | null>(null);
 
   useEffect(() => {
     const foundExample = getExampleById(id);
@@ -26,17 +66,12 @@ export default function ShowcasePageClient({ id }: { id: string }) {
 
     const params = new URLSearchParams(window.location.search);
     const urlRenderer = params.get('renderer');
+    const urlThreadCount = params.get('threadCount');
     setRendererParam(urlRenderer);
+    setThreadCountParam(urlThreadCount);
 
-    if (urlRenderer && ['sw', 'gl', 'wg'].includes(urlRenderer)) {
-      const modifiedCode = foundExample.code.replace(
-        /renderer:\s*['"](?:sw|gl|wg)['"]/,
-        `renderer: '${urlRenderer}'`
-      );
-      setCode(modifiedCode);
-    } else {
-      setCode(foundExample.code);
-    }
+    const modifiedCode = applyUrlParamsToCode(foundExample.code, urlRenderer, urlThreadCount);
+    setCode(modifiedCode);
   }, [id, router]);
 
   if (!example) {
@@ -63,7 +98,9 @@ export default function ShowcasePageClient({ id }: { id: string }) {
   };
 
   const handleReset = () => {
-    setCode(example.code);
+    if (!example) return;
+    const modifiedCode = applyUrlParamsToCode(example.code, rendererParam, threadCountParam);
+    setCode(modifiedCode);
   };
 
   const currentIndex = showcaseExamples.findIndex((ex) => ex.id === id);
@@ -72,7 +109,11 @@ export default function ShowcasePageClient({ id }: { id: string }) {
     currentIndex < showcaseExamples.length - 1 ? showcaseExamples[currentIndex + 1] : null;
 
   const buildExampleUrl = (exampleId: string) => {
-    return rendererParam ? `/showcase/${exampleId}?renderer=${rendererParam}` : `/showcase/${exampleId}`;
+    const params = new URLSearchParams();
+    if (rendererParam) params.set('renderer', rendererParam);
+    if (threadCountParam) params.set('threadCount', threadCountParam);
+    const queryString = params.toString();
+    return queryString ? `/showcase/${exampleId}?${queryString}` : `/showcase/${exampleId}`;
   };
 
   return (
