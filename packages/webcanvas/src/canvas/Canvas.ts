@@ -47,7 +47,7 @@ import { Scene } from '../paint/Scene';
 import type { RendererType } from '../constants';
 import { checkResult } from '../core/errors';
 import type { TvgCanvasInstance } from '../types/emscripten';
-import { getGlobalRenderer } from '../index';
+import { getGlobalRenderer, getGlobalThreadCount } from '../index';
 
 /**
  * Configuration options for Canvas initialization.
@@ -169,6 +169,9 @@ export class Canvas {
     const renderer = getGlobalRenderer();
     this.#renderer = renderer;
 
+    // Get the global thread count set during ThorVG.init()
+    const threadCount = getGlobalThreadCount();
+
     // Module should already be initialized by ThorVG.init()
     const Module = getModule();
 
@@ -179,8 +182,8 @@ export class Canvas {
     const physicalWidth = width * dpr;
     const physicalHeight = height * dpr;
 
-    // Create TvgCanvas with physical dimensions
-    this.#engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight);
+    // Create TvgCanvas with physical dimensions and thread count
+    this.#engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight, threadCount);
 
     // Check for errors
     const error = this.#engine.error();

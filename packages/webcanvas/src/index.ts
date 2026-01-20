@@ -114,6 +114,7 @@ export interface ThorVGNamespace {
 let Module: ThorVGModule | null = null;
 let initialized = false;
 let globalRenderer: RendererType = 'gl';
+let globalThreadCount: number = 0;
 
 /**
  * Get the currently configured renderer
@@ -121,6 +122,14 @@ let globalRenderer: RendererType = 'gl';
  */
 export function getGlobalRenderer(): RendererType {
   return globalRenderer;
+}
+
+/**
+ * Get the currently configured thread count
+ * @internal
+ */
+export function getGlobalThreadCount(): number {
+  return globalThreadCount;
 }
 
 /**
@@ -238,6 +247,9 @@ async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
     : (typeof navigator !== 'undefined' && navigator.hardwareConcurrency)
       ? navigator.hardwareConcurrency
       : 4;
+
+  // Store thread count for use by Canvas instances
+  globalThreadCount = threads;
 
   // Set global thread count BEFORE loading WASM module
   // This is read by Emscripten's PTHREAD_POOL_SIZE at module initialization
