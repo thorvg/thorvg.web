@@ -21,7 +21,9 @@ if [ $? -ne 0 ]; then
 fi
 
 # Copy output files to dist/
-mv build_wasm_wcanvas/thorvg.{wasm,js,d.ts} ./dist
+mv build_wasm_wcanvas/thorvg.js ./dist/
+mv build_wasm_wcanvas/thorvg.wasm ./dist/
+mv build_wasm_wcanvas/thorvg.d.ts ./dist/
 
 echo "WASM setup completed successfully!"
 ls -lh ./dist/thorvg.*
