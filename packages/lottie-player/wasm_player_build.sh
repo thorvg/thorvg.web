@@ -48,4 +48,4 @@ meson setup -Db_lto=true --cross-file /tmp/.wasm_cross.txt build_wasm_player ../
 ninja -C build_wasm_player/
 rm ../../wasm/lottie-player/config.h
 
-ls -lrt build_wasm_player/*.{js,wasm}
+ls -lrt build_wasm_player/*.js build_wasm_player/*.wasm

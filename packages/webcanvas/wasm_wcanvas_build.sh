@@ -85,4 +85,4 @@ fi
 rm ../../wasm/webcanvas/config.h
 
 echo "Build completed successfully!"
-ls -lrt build_wasm_wcanvas/*.{js,wasm}
+ls -lrt build_wasm_wcanvas/*.js build_wasm_wcanvas/*.wasm
