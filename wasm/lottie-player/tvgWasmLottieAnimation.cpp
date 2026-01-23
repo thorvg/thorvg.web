@@ -231,7 +231,7 @@ struct TvgGLEngine : TvgEngineMethod
 
     void resize(Canvas* canvas, uint32_t w, uint32_t h) override
     {
-        if (canvas) static_cast<GlCanvas*>(canvas)->target((void*)context, 0, w, h, ColorSpace::ABGR8888S);
+        if (canvas) static_cast<GlCanvas*>(canvas)->target(nullptr, nullptr, (void*)context, 0, w, h, ColorSpace::ABGR8888S);
     }
 };
 #endif
@@ -342,8 +342,8 @@ public:
 
         resize(width, height);
 
-        if (canvas->push(animation->picture()) != Result::Success) {
-            errorMsg = "push() fail";
+        if (canvas->add(animation->picture()) != Result::Success) {
+            errorMsg = "add() fail";
             return false;
         }
 
