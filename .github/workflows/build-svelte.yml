@@ -1,0 +1,79 @@
+name: Svelte
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - 'examples/svelte/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/build-svelte.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - 'examples/svelte/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/build-svelte.yml'
+
+jobs:
+  build-svelte-example:
+    name: Build and Validate Svelte Example
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.19
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build python3-pip
+          pip install meson==1.10.0
+
+      - name: Install pnpm dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Setup Yarn
+        run: npm install -g yarn
+
+      - name: Build Svelte Example
+        working-directory: examples/svelte
+        run: |
+          yarn install
+          yarn build
+
+      - name: Verify Svelte build artifacts
+        working-directory: examples/svelte
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed: dist directory not found"
+            exit 1
+          fi
+          ls -lah dist/
+          echo "✅ Svelte example build completed successfully"
