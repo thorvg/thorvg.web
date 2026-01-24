@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>ThorVG Lottie Player</title>
     <meta name="description" content="A web lottie player using ThorVG as a renderer" />
-    <script src="../packages/lottie-player/dist/wg/lottie-player.js"></script>
+    <script src="../packages/lottie-player/dist/wg-lite/lottie-player.js"></script>
   </head>
   <body>
     <div style="margin-top: 60px;">
@@ -61,7 +61,7 @@
         animation.style.height = "2000px";
         animation.renderConfig = { renderer: 'wg' };
 
-        animation.wasmUrl = "../packages/lottie-player/dist/wg/thorvg.wasm";
+        animation.wasmUrl = "../packages/lottie-player/dist/wg-lite/thorvg.wasm";
 
         lottie.appendChild(animation);
 
