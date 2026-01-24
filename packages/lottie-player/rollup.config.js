@@ -27,8 +27,10 @@ const PresetModule = {
   Default: "lottie-player",
   SW: "lottie-player-sw",
   GL: "lottie-player-gl",
+  WG: "lottie-player-wg",
   SW_LITE: "lottie-player-sw-lite",
   GL_LITE: "lottie-player-gl-lite",
+  WG_LITE: "lottie-player-wg-lite",
 }
 
 const presetMap = {
@@ -80,6 +82,26 @@ const presetMap = {
       umd: './dist/gl-lite/lottie-player.js',
       cjs: pkg.exports['./gl-lite'].require,
       esm: pkg.exports['./gl-lite'].import,
+    }
+  },
+  [PresetModule.WG]: {
+    path: '/dist/wg',
+    renderer: 'wg',
+    input: "./src/lottie-preset-player.ts",
+    output: {
+      umd: './dist/wg/lottie-player.js',
+      cjs: pkg.exports['./wg'].require,
+      esm: pkg.exports['./wg'].import,
+    }
+  },
+  [PresetModule.WG_LITE]: {
+    path: '/dist/wg-lite',
+    renderer: 'wg',
+    input: "./src/lottie-preset-player.ts",
+    output: {
+      umd: './dist/wg-lite/lottie-player.js',
+      cjs: pkg.exports['./wg-lite'].require,
+      esm: pkg.exports['./wg-lite'].import,
     }
   },
 }
@@ -165,8 +187,10 @@ export default [
   createLottieConfig(PresetModule.Default),
   createLottieConfig(PresetModule.SW),
   createLottieConfig(PresetModule.GL),
+  createLottieConfig(PresetModule.WG),
   createLottieConfig(PresetModule.SW_LITE),
   createLottieConfig(PresetModule.GL_LITE),
+  createLottieConfig(PresetModule.WG_LITE),
   {
     input: "./src/lottie-player.ts",
     treeshake: true,
