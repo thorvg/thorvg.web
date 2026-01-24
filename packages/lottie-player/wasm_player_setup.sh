@@ -20,3 +20,11 @@ mv build_wasm_player/thorvg.{wasm,js} ./dist/sw-lite
 rm -rf build_wasm_player && sh ./wasm_player_build.sh gl-lite $EMSDK/
 mkdir -p ./dist/gl-lite
 mv build_wasm_player/thorvg.{wasm,js} ./dist/gl-lite
+
+rm -rf build_wasm_player && sh ./wasm_player_build.sh wg $EMSDK/
+mkdir -p ./dist/wg
+mv build_wasm_player/thorvg.{wasm,js} ./dist/wg
+
+rm -rf build_wasm_player && sh ./wasm_player_build.sh wg-lite $EMSDK/
+mkdir -p ./dist/wg-lite
+mv build_wasm_player/thorvg.{wasm,js} ./dist/wg-lite

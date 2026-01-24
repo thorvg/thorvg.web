@@ -17,6 +17,10 @@
       "import": "./dist/gl/lottie-player.esm.js",
       "require": "./dist/gl/lottie-player.cjs.js"
     },
+    "./wg": {
+      "import": "./dist/wg/lottie-player.esm.js",
+      "require": "./dist/wg/lottie-player.cjs.js"
+    },
     "./sw-lite": {
       "import": "./dist/sw-lite/lottie-player.esm.js",
       "require": "./dist/sw-lite/lottie-player.cjs.js"
@@ -24,6 +28,10 @@
     "./gl-lite": {
       "import": "./dist/gl-lite/lottie-player.esm.js",
       "require": "./dist/gl-lite/lottie-player.cjs.js"
+    },
+    "./wg-lite": {
+      "import": "./dist/wg-lite/lottie-player.esm.js",
+      "require": "./dist/wg-lite/lottie-player.cjs.js"
     }
   },
   "publishConfig": {
