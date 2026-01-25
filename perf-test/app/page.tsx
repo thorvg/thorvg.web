@@ -2,18 +2,8 @@
 import { Listbox, ListboxOption, ListboxOptions, Transition } from '@headlessui/react';
 import { Fragment, useEffect, useState } from 'react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
-import { DotLottieReact, setWasmUrl as setDotLottieWasmUrl } from '@lottiefiles/dotlottie-react';
-import { Player } from '@lottiefiles/react-lottie-player';
 import { isMobile } from 'react-device-detect';
-import reactLottiePlayerPkg from "@lottiefiles/react-lottie-player/package.json";
-import dotLottieReactPkg from "@lottiefiles/dotlottie-react/package.json";
-import dotLottieWasmUrl from "../node_modules/@lottiefiles/dotlottie-web/dist/dotlottie-player.wasm";
-import SkottiePlayer, { setCanvasKit } from '../components/SkottiePlayer';
-import skottieWasmUrl from "../node_modules/canvaskit-wasm/bin/full/canvaskit.wasm";
-import InitCanvasKit from 'canvaskit-wasm/bin/full/canvaskit';
 import wasmUrl from "../node_modules/@thorvg/lottie-player/dist/thorvg.wasm";
-
-setDotLottieWasmUrl(dotLottieWasmUrl);
 
 const animations = [
   '1643-exploding-star.json',
@@ -134,7 +124,7 @@ const playerOptions = [
   { id: 1, name: 'ThorVG(Software)' }
 ];
 
-if (typeof navigator !== 'undefined' && navigator.gpu) {
+if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
   playerOptions.push({ id: 2, name: 'ThorVG(WebGPU)' });
 }
 
@@ -205,10 +195,6 @@ export default function Home() {
     });
 
     setTimeout(async () => {
-      if (playerId === 4) {
-        await loadCanvasKit();
-      }
-
       loadProfiler();
 
       if (seed) {
@@ -238,13 +224,6 @@ export default function Home() {
     setQueryStringParameter('size', value);
     requestAnimationFrame(() => checkCanvasSize());
   };
-
-  const loadCanvasKit = async () => {
-    const canvasKit = await InitCanvasKit({
-      locateFile: (_) => skottieWasmUrl,
-    });
-    setCanvasKit(canvasKit);
-  }
 
   const loadProfiler = () => {
     const script = document.createElement("script");
@@ -537,35 +516,6 @@ export default function Home() {
                         requestAnimationFrame(() => checkCanvasSize(playerRef));
                       }
                     }}
-                  />
-                )
-              }
-              {
-                playerId === 3 && (
-                  <DotLottieReact
-                    src={anim.lottieURL as string}
-                    style={{width: size.width, height: size.height}}
-                    loop
-                    autoplay
-                  />
-                )
-              }
-              {
-                playerId === 3 && (
-                  <Player
-                    autoplay
-                    loop
-                    src={anim.lottieURL}
-                    style={{ height: size.height, width: size.width }}
-                  ></Player>
-                )
-              }
-              {
-                playerId == 4 && (
-                  <SkottiePlayer
-                    lottieURL={anim.lottieURL}
-                    width={size.width}
-                    height={size.height}
                   />
                 )
               }
