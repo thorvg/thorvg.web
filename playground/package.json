@@ -6,8 +6,7 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "setup": "bash scripts/setup.sh"
+    "lint": "next lint"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
