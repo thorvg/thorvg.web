@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@thorvg/lottie-player": "file:../../packages/lottie-player",
+    "@thorvg/webcanvas": "file:../../packages/webcanvas",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

@@ -316,6 +316,9 @@
   dependencies:
     lit "^3.1.0"
 
+"@thorvg/webcanvas@file:../../packages/webcanvas":
+  version "1.0.0"
+
 "@tsconfig/svelte@^5.0.5":
   version "5.0.5"
   resolved "https://registry.yarnpkg.com/@tsconfig/svelte/-/svelte-5.0.5.tgz#781df887c6a41b574e6972f9e002cea7edf4f450"

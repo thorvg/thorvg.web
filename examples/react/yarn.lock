@@ -456,6 +456,9 @@
   dependencies:
     lit "^3.1.0"
 
+"@thorvg/webcanvas@file:../../packages/webcanvas":
+  version "1.0.0"
+
 "@types/babel__core@^7.20.5":
   version "7.20.5"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.20.5.tgz#3df15f27ba85319caa07ba08d0721889bb39c017"

@@ -9,7 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@thorvg/lottie-player": "file:../../packages/lottie-player"
+    "@thorvg/lottie-player": "file:../../packages/lottie-player",
+    "@thorvg/webcanvas": "file:../../packages/webcanvas"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
