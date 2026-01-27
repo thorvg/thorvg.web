@@ -20,6 +20,3 @@ node_modules/
 
 # Build files
 build/
-
-# local wasm file
-public/thorvg.wasm
