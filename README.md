@@ -1,7 +1,7 @@
-[![Discord](https://img.shields.io/badge/Community-5865f2?style=flat&logo=discord&logoColor=white)](https://discord.gg/n25xj6J6HM)
-[![ThorVGPT](https://img.shields.io/badge/ThorVGPT-76A99C?style=flat&logo=openai&logoColor=white)](https://chat.openai.com/g/g-Ht3dYIwLO-thorvgpt)
-[![OpenCollective](https://img.shields.io/badge/OpenCollective-84B5FC?style=flat&logo=opencollective&logoColor=white)](https://opencollective.com/thorvg)
 [![License](https://img.shields.io/badge/licence-MIT-green.svg?style=flat)](LICENSE)
+[![Wikipedia](https://img.shields.io/badge/Wikipedia-000000?style=flat&logo=wikipedia&logoColor=white)](https://en.wikipedia.org/wiki/Thor_Vector_Graphics)
+[![Discord](https://img.shields.io/badge/Community-5865f2?style=flat&logo=discord&logoColor=white)](https://discord.gg/n25xj6J6HM)
+[![OpenCollective](https://img.shields.io/badge/OpenCollective-84B5FC?style=flat&logo=opencollective&logoColor=white)](https://opencollective.com/thorvg)
 [![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player)
 
 # ThorVG for Web
@@ -10,15 +10,14 @@
   <img width="800" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png">
 </p>
 
-**ThorVG.Web** is a WebAssembly (WASM)-based extension of the ThorVG vector graphics engine, designed to run seamlessly in **modern web environments**. It enables efficient and high-performance rendering of **vector graphics** and **Lottie animations** directly in the browser, leveraging both **WebGL** and **WebGPU** for hardware-accelerated rendering. Fully compatible with ThorVG’s core rendering logic, **ThorVG.Web** ensures **consistent output** across desktop, mobile, and web platforms, allowing developers to reuse the same vector assets and rendering code across multiple targets with minimal changes.
+**ThorVG.Web** is a WebAssembly (WASM)-based extension of the ThorVG vector graphics engine, designed to run seamlessly in modern web environments. It enables efficient and high-performance rendering of **vector graphics** and **Lottie animations** directly in the browser, leveraging both **WebGL** and **WebGPU** for hardware-accelerated rendering. **Fully compatible with ThorVG’s core rendering logic**, ThorVG.Web ensures consistent output across desktop, mobile, and web platforms, allowing developers to reuse the same vector assets and rendering code across multiple targets with minimal changes.
 
-Whether you're building a high-performance **Lottie animation**, a **graphics editing tool**, or a **scalable UI framework** for the browser, **ThorVG.Web** provides the **speed** and **flexibility** needed to deliver **modern vector graphics** experiences on the web.
-
+Whether you're building a high-performance Lottie animation, a graphics editing tool, or a scalable UI framework for the browser, ThorVG.Web provides the speed and flexibility needed to **deliver modern vector graphics experiences on the web**.
 <br />
 
 ## What is ThorVG?
 
-[ThorVG](https://github.com/thorvg/thorvg) is a lightweight, cross-platform vector graphics engine that powers this web implementation. ThorVG Web brings its performance and flexibility to JavaScript/TypeScript through WebAssembly bindings, supporting Software, WebGL, and WebGPU rendering backends.
+[ThorVG](https://github.com/thorvg/thorvg) is a lightweight, cross-platform vector graphics engine that powers this web implementation. ThorVG Web brings its performance and flexibility to JavaScript/TypeScript through WebAssembly bindings, supporting Software, WebGL, and WebGPU render backends.
 
 ## 📦 Packages
 
@@ -62,9 +61,9 @@ canvas.render();
 ```
 
 
-## Rendering Backends
+## Render Backends
 
-All packages support multiple rendering backends:
+All packages support multiple render backends:
 
 | Backend | Description |
 |---------|-------------|
@@ -93,9 +92,6 @@ All packages support multiple rendering backends:
 - [Live Editor](./examples/live-editor.html) - Interactive code playground
 
 ### Framework Integration
-
-See framework-specific examples:
-
 - [React Example](./examples/react/)
 - [Vue Example](./examples/vue/)
 - [Svelte Example](./examples/svelte/)
@@ -146,9 +142,9 @@ sh ./wasm_wcanvas_setup.sh
 - [WebCanvas Guide](./packages/webcanvas/README.md)
 
 ### API Reference
-- [Lottie Player API](./packages/lottie-player/README.md#api)
-- [WebCanvas API Reference](./packages/webcanvas/API_USAGE.md)
+- [Lottie Player](./packages/lottie-player/README.md#api)
+- [WebCanvas](./packages/webcanvas/API_USAGE.md)
 
-### Examples & Integration
-- [Framework Integration Examples](./examples/)
-- [Live Interactive Examples](./examples/)
+### Examples
+- [Framework Integration](./examples/)
+- [Live Interactive](./examples/)
