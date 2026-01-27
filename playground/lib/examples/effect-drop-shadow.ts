@@ -40,8 +40,8 @@ let scene1, scene2, scene3;
     const picture = new TVG.Picture();
     picture.load(svgData, { type: 'svg' });
 
-    picture.size(200, 200);
-    picture.translate(190, 0);
+    picture.scale(0.6);
+    picture.translate(100, 50);
 
     scene1.add(picture);
     canvas.add(scene1);
