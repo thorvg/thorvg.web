@@ -40,8 +40,6 @@ This monorepo contains two complementary packages:
 </lottie-player>
 ```
 
-[→ Read lottie-player documentation](./packages/lottie-player/README.md)
-
 ---
 
 ### [@thorvg/webcanvas](./packages/webcanvas)
@@ -63,8 +61,6 @@ canvas.add(shape);
 canvas.render();
 ```
 
-[→ Read webcanvas documentation](./packages/webcanvas/README.md)
-
 
 ## Rendering Backends
 
@@ -83,9 +79,10 @@ All packages support multiple rendering backends:
 **Lottie Player Examples:**
 - [Software Renderer](./examples/software.html) - Full Lottie support with CPU rendering
 - [WebGL Renderer](./examples/webgl.html) - GPU-accelerated Lottie rendering
+- [WebGPU Renderer](./examples/webgpu.html) - Next-gen GPU acceleration
 - [Software Lite](./examples/software-lite.html) - Lightweight CPU rendering
 - [WebGL Lite](./examples/webgl-lite.html) - Lightweight GPU rendering
-- [WebGPU Renderer](./examples/webgpu.html) - Next-gen GPU acceleration
+- [WebGPU Lite](./examples/webgpu-lite.html) - Lightweight WebGPU rendering
 
 **WebCanvas Examples:**
 - [Basic Usage](./examples/basic-usage.html) - Getting started with shapes
@@ -103,16 +100,12 @@ See framework-specific examples:
 - [Vue Example](./examples/vue/)
 - [Svelte Example](./examples/svelte/)
 
-## Monorepo Structure
-
-[→ Read monorepo documentation](./MONOREPO.md)
-
 ## Development
 
 ### Prerequisites
 
-- Node.js 18+
-- pnpm 8+
+- Node.js 20+
+- pnpm 10+
 - Emscripten SDK (for WASM builds)
 - Meson & Ninja (for native builds)
 
@@ -139,31 +132,23 @@ Each package has its own WASM build script:
 ```bash
 # Build lottie-player WASM
 cd packages/lottie-player
-sh ./wasm_setup.sh
+sh ./wasm_player_setup.sh
 
 # Build webcanvas WASM
 cd packages/webcanvas
-sh ./wasm_setup.sh
-```
-
-### Testing Framework Integration
-
-Test compatibility across different frameworks:
-
-```bash
-pnpm run test:build
+sh ./wasm_wcanvas_setup.sh
 ```
 
 ## Documentation
 
-- **Getting Started**
-  - [Lottie Player Guide](./packages/lottie-player/README.md)
-  - [WebCanvas Guide](./packages/webcanvas/README.md)
+### Getting Started
+- [Lottie Player Guide](./packages/lottie-player/README.md)
+- [WebCanvas Guide](./packages/webcanvas/README.md)
 
-- **API Reference**
-  - [Lottie Player API](./packages/lottie-player/README.md#api)
-  - [WebCanvas API Reference](./packages/webcanvas/API_USAGE.md)
+### API Reference
+- [Lottie Player API](./packages/lottie-player/README.md#api)
+- [WebCanvas API Reference](./packages/webcanvas/API_USAGE.md)
 
-- **Examples & Integration**
-  - [Framework Integration Examples](./examples/)
-  - [Live Interactive Examples](./examples/)
+### Examples & Integration
+- [Framework Integration Examples](./examples/)
+- [Live Interactive Examples](./examples/)

@@ -2,6 +2,8 @@
 
 Interactive playground for exploring ThorVG WebCanvas examples with real-time code editing and preview.
 
+> Hosted version: https://thorvg-playground.vercel.app/
+
 ## Overview
 
 - 📦 **Showcase**: Browse through curated examples organized by category
@@ -13,55 +15,43 @@ Interactive playground for exploring ThorVG WebCanvas examples with real-time co
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - Yarn package manager
-- ThorVG WebCanvas built in `../packages/webcanvas`
+- ThorVG WebCanvas (`../packages/webcanvas`)
 
-### Installation
+### Launch Playground
 
-1. **Install dependencies:**
+```bash
+yarn install
+yarn build
+yarn start
+```
 
-   ```bash
-   cd playground
-   yarn install
-   ```
+### Using Local Version
 
-   This automatically links to the local `@thorvg/webcanvas` package.
+To develop with a local build of `@thorvg/webcanvas`:
 
-2. **Copy WebCanvas WASM files:**
+1. **Build the webcanvas package:**
 
-   ```bash
-   yarn setup
-   ```
+```bash
+cd ../packages/webcanvas
+pnpm install
+pnpm build
+cd ../../playground
+```
 
-   This copies the WASM files from `../packages/webcanvas/dist/` to `public/webcanvas/`.
+2. **Link to local package:**
 
-   > **Note:** If webcanvas hasn't been built yet:
-   > ```bash
-   > cd ../packages/webcanvas
-   > pnpm install && pnpm build
-   > cd ../../playground
-   > yarn setup
-   > ```
+```bash
+yarn add ../packages/webcanvas
+```
 
 3. **Start the development server:**
 
-   ```bash
-   yarn dev
-   ```
-
-4. **Open your browser:**
-
-   Navigate to [http://localhost:3001](http://localhost:3001)
-
-## Existing Examples
-
-- **Basic**: Fundamental shapes, gradients, transforms
-- **Animation**: Animated graphics using requestAnimationFrame
-- **Text**: Text rendering with fonts and effects
-- **Media**: SVG, images, and Lottie animations
-
-
+```bash
+yarn dev
+# open http://localhost:3001
+```
 
 ## Adding New Examples
 
@@ -85,7 +75,6 @@ const TVG = await init({
 const canvas = new TVG.Canvas('#canvas', {
   width: 600,
   height: 600,
-  renderer: 'gl'
 });
 
 // Your code here
@@ -111,13 +100,3 @@ export const showcaseExamples: ShowcaseExample[] = [
 ```
 
 Your example will automatically appear in the grid!
-
-
-## Dependencies
-
-- **Next.js 15**: React framework with App Router
-- **React 19**: UI library
-- **TypeScript**: Type-safe development
-- **Monaco Editor**: VS Code's editor in the browser
-- **Tailwind CSS**: Utility-first CSS framework
-- **ThorVG WebCanvas**: High-performance vector graphics (local package)
