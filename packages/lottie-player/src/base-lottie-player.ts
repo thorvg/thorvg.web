@@ -33,19 +33,28 @@ const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thorvg.was
 export let wasmModule: MainModule | null = null;
 let _moduleRequested: boolean = false;
 
-// Define library version
+/**
+ * Define library version
+ * @category Types
+ */
 export interface LibraryVersion {
   THORVG_VERSION: string
 }
 
-// Define renderer type
+/**
+ * Define renderer type
+ * @category Enums
+ */
 export enum Renderer {
   SW = 'sw',
   WG = 'wg',
   GL = 'gl',
 }
 
-// Define initialization status
+/**
+ * Define initialization status
+ * @category Enums
+ */
 export enum InitStatus {
   IDLE = 'idle',
   FAILED = 'failed',
@@ -53,13 +62,19 @@ export enum InitStatus {
   INITIALIZED = 'initialized',
 }
 
-// Define rendering configurations
+/**
+ * Define rendering configurations
+ * @category Types
+ */
 export type RenderConfig = {
   enableDevicePixelRatio?: boolean;
   renderer?: Renderer;
 }
 
-// Define file type which player can load
+/**
+ * Define file type which player can load
+ * @category Enums
+ */
 export enum FileType {
   JSON = 'json',
   LOT = 'lot',
@@ -68,7 +83,10 @@ export enum FileType {
   SVG = 'svg',
 }
 
-// Define valid player states
+/**
+ * Define valid player states
+ * @category Enums
+ */
 export enum PlayerState {
   Destroyed = 'destroyed', // Player is destroyed by `destroy()` method
   Error = 'error', // An error occurred
@@ -79,13 +97,19 @@ export enum PlayerState {
   Frozen = 'frozen', // Player is paused due to player being invisible
 }
 
-// Define play modes
+/**
+ * Define play modes
+ * @category Enums
+ */
 export enum PlayMode {
   Bounce = 'bounce',
   Normal = 'normal',
 }
 
-// Define player events
+/**
+ * Define player events
+ * @category Enums
+ */
 export enum PlayerEvent {
   Complete = 'complete',
   Destroyed = 'destroyed',
@@ -208,6 +232,7 @@ const _generateUID = () => {
 export class BaseLottiePlayer extends LitElement {
   /**
   * Lottie animation JSON data or URL to JSON.
+  * @category Properties
   * @since 1.0
   */
   @property({ type: String })
@@ -215,6 +240,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Custom WASM URL for ThorVG engine
+   * @category Configuration
    * @since 1.0
    */
   @property({ type: String })
@@ -222,6 +248,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
   * File type.
+  * @category Properties
   * @since 1.0
   */
   @property({ type: FileType })
@@ -229,6 +256,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Animation speed.
+   * @category Properties
    * @since 1.0
    */
   @property({ type: Number })
@@ -236,6 +264,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Autoplay animation on load.
+   * @category Properties
    * @since 1.0
    */
   @property({ type: Boolean })
@@ -243,6 +272,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Number of times to loop animation.
+   * @category Properties
    * @since 1.0
    */
   @property({ type: Number })
@@ -250,6 +280,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Whether to loop animation.
+   * @category Properties
    * @since 1.0
    */
   @property({ type: Boolean })
@@ -257,6 +288,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Direction of animation.
+   * @category Properties
    * @since 1.0
    */
   @property({ type: Number })
@@ -264,6 +296,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Play mode.
+   * @category Properties
    * @since 1.0
    */
   @property()
@@ -271,6 +304,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Intermission
+   * @category Properties
    * @since 1.0
    */
   @property()
@@ -278,6 +312,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * total frame of current animation (readonly)
+   * @category Properties
    * @since 1.0
    */
   @property({ type: Number })
@@ -285,6 +320,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * current frame of current animation (readonly)
+   * @category Properties
    * @since 1.0
    */
   @property({ type: Number })
@@ -292,6 +328,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Player state
+   * @category Properties
    * @since 1.0
    */
   @property({ type: Number })
@@ -299,6 +336,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * original size of the animation (readonly)
+   * @category Properties
    * @since 1.0
    */
   @property({ type: Float32Array })
@@ -567,6 +605,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Configure and load
+   * @category Loading
    * @param src Lottie animation JSON data or URL to JSON.
    * @param fileType The file type of the data to be loaded, defaults to JSON
    * @since 1.0
@@ -587,6 +626,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Start playing animation.
+   * @category Player Control
    * @since 1.0
    */
   public play(): void {
@@ -619,6 +659,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Pause animation.
+   * @category Player Control
    * @since 1.0
    */
   public pause(): void {
@@ -628,6 +669,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Stop animation.
+   * @category Player Control
    * @since 1.0
    */
   public stop(): void {
@@ -641,6 +683,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Freeze animation.
+   * @category Player Control
    * @since 1.0
    */
   public freeze(): void {
@@ -650,6 +693,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Seek to a given frame
+   * @category Player Control
    * @param frame Frame number to move
    * @since 1.0
    */
@@ -661,6 +705,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Adjust the canvas size.
+   * @category Configuration
    * @param width The width to resize
    * @param height The height to resize
    * @since 1.0
@@ -676,6 +721,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Destroy animation and lottie-player element.
+   * @category Loading
    * @since 1.0
    */
   public destroy(): void {
@@ -698,6 +744,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Terminate module and release resources
+   * @category Loading
    * @since 1.0
    */
   public term(): void {
@@ -711,6 +758,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Sets the repeating of the animation.
+   * @category Configuration
    * @param value Whether to enable repeating. Boolean true enables repeating.
    * @since 1.0
    */
@@ -724,6 +772,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Animation play direction.
+   * @category Configuration
    * @param value Direction values. (1: forward, -1: backward)
    * @since 1.0
    */
@@ -737,6 +786,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Set animation play speed.
+   * @category Configuration
    * @param value Playback speed. (any positive number)
    * @since 1.0
    */
@@ -750,6 +800,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Set a background color. (default: 0x00000000)
+   * @category Configuration
    * @param value Hex(#fff) or string(red) of background color
    * @since 1.0
    */
@@ -763,6 +814,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Set rendering quality.
+   * @category Configuration
    * @param value Quality value (1-100). Higher values are likely to support better quality but may impact performance.
    * @since 1.0
    */
@@ -776,6 +828,10 @@ export class BaseLottiePlayer extends LitElement {
     }
   }
 
+  /**
+   * Set asset resolver callback
+   * @category Configuration
+   */
   public setAssetResolver(callback: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string }, data: unknown | null): void {
     this._assetResolverCallback = callback;
     this._assetResolverData = data;
@@ -787,6 +843,7 @@ export class BaseLottiePlayer extends LitElement {
 
   /**
    * Return thorvg version
+   * @category Configuration
    * @since 1.0
    */
   public getVersion(): LibraryVersion {

@@ -74,6 +74,12 @@ importers:
       rollup-plugin-terser:
         specifier: ^7.0.2
         version: 7.0.2(rollup@4.53.3)
+      typedoc:
+        specifier: ^0.28.15
+        version: 0.28.15(typescript@5.9.3)
+      typedoc-plugin-missing-exports:
+        specifier: ^4.1.2
+        version: 4.1.2(typedoc@0.28.15(typescript@5.9.3))
       typescript:
         specifier: '*'
         version: 5.9.3

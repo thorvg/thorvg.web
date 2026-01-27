@@ -148,4 +148,7 @@ dist
 build_wasm_player/
 build_wasm_wcanvas/
 
+# TypeDoc generated documentation
+docs/
+
 # End of https://www.toptal.com/developers/gitignore/api/node
