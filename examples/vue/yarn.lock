@@ -294,6 +294,9 @@
   dependencies:
     lit "^3.1.0"
 
+"@thorvg/webcanvas@file:../../packages/webcanvas":
+  version "1.0.0"
+
 "@types/estree@1.0.8":
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.8.tgz#958b91c991b1867ced318bedea0e215ee050726e"
