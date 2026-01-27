@@ -3,6 +3,8 @@
   <img width="800" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png">
 </p>
 
+[![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player)
+
 # @thorvg/lottie-player
 
 A Lottie Player which uses [ThorVG](https://github.com/thorvg/thorvg) as a renderer, provides a web component for easily embedding and playing [Lottie](https://airbnb.io/lottie) animations.
@@ -131,11 +133,11 @@ ThorVG Lottie Player provides multiple presets optimized for different use cases
 
 | Preset | Renderer | Features | Bundle Size | Use Case |
 |--------|----------|---------|-------------|----------|
-| `sw` | Software | lottie + expressions, jpg, png, webp, ttf | ~687KB | Full-featured applications with CPU rendering |
-| `gl` | WebGL | lottie + expressions, jpg, png, webp, ttf | ~694KB | Full-featured applications with WebGL acceleration |
+| `sw` | Software | lottie + expressions, jpg, png, webp, ttf | ~596KB | Full-featured applications with CPU rendering |
+| `gl` | WebGL | lottie + expressions, jpg, png, webp, ttf | ~602KB | Full-featured applications with WebGL acceleration |
 | `wg` | WebGPU | lottie + expressions, jpg, png, webp, ttf | ~633KB | Full-featured applications with WebGPU acceleration |
-| `sw-lite` | Software | lottie, png | ~288KB | Lightweight applications with CPU rendering |
-| `gl-lite` | WebGL | lottie, png | ~294KB | Lightweight applications with WebGL acceleration |
+| `sw-lite` | Software | lottie, png | ~228KB | Lightweight applications with CPU rendering |
+| `gl-lite` | WebGL | lottie, png | ~233KB | Lightweight applications with WebGL acceleration |
 | `wg-lite` | WebGPU | lottie, png | ~266KB | Lightweight applications with WebGPU acceleration |
 
 ### Preset Usage

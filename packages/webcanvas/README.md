@@ -1,3 +1,8 @@
+# ThorVG for Web
+<p align="center">
+  <img width="800" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png">
+</p>
+
 [![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas)
 
 # @thorvg/webcanvas
@@ -6,12 +11,14 @@ A high-performance TypeScript Canvas API for [ThorVG](https://github.com/thorvg/
 
 ## Installation
 
+- Import from CDN
+```html
+<script src="https://unpkg.com/@thorvg/webcanvas@latest/dist/webcanvas.js"></script>
+```
+
+- Install from [NPM](https://www.npmjs.com/package/@thorvg/webcanvas)
 ```bash
 npm install @thorvg/webcanvas
-# or
-pnpm add @thorvg/webcanvas
-# or
-yarn add @thorvg/webcanvas
 ```
 
 ## Quick Start
@@ -22,14 +29,13 @@ import ThorVG from '@thorvg/webcanvas';
 // 1. Initialize ThorVG WASM module
 const TVG = await ThorVG.init({
   locateFile: (path) => `/wasm/${path}`,
-  renderer: 'sw'  // RendererType: 'sw' | 'gl' | 'wg'
+  renderer: 'gl'  // RendererType: 'sw' | 'gl' | 'wg'
 });
 
 // 2. Create canvas
 const canvas = new TVG.Canvas('#canvas', {
   width: 800,
   height: 600,
-  renderer: 'sw'
 });
 
 // 3. Draw shapes with fluent API
@@ -87,9 +93,10 @@ canvas.add(scene);
 ```typescript
 // Linear gradient
 const linear = new TVG.LinearGradient(0, 0, 200, 0);
-linear.addStop(0, [255, 0, 0, 255]);
-linear.addStop(0.5, [255, 255, 0, 255]);
-linear.addStop(1, [0, 0, 255, 255]);
+linear.setStops(
+  [0, [0, 0, 255, 255]],
+  [1, [255, 0, 255, 255]]
+);
 linear.spread(TVG.GradientSpread.Pad);  // GradientSpread.Pad | Reflect | Repeat
 
 // Radial gradient
@@ -326,18 +333,10 @@ TVG.Font.unload(name)
 
 ### Documentation
 
-- **[API Documentation](./docs/index.html)** - Standard TypeDoc hierarchical documentation
+- **[API Documentation](https://thorvg.github.io/thorvg.web)** - Standard TypeDoc hierarchical documentation
 - **[Manual Documentation](./API_USAGE.md)** - Complete API documentation with detailed method signatures
 
-To generate documentation locally:
-```bash
-npm run docs        # Generates both navigation styles
-open docs/index.html
-```
-
 ### Interactive Examples
-
-Explore live examples in your browser:
 
 - [Basic Usage](../../examples/basic-usage.html) - Getting started with shapes
 - [Animation](../../examples/animation-example.html) - Frame-based animations
