@@ -1,5 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
+	import wasmUrl from '../node_modules/@thorvg/lottie-player/dist/thorvg.wasm?url';
+
 	onMount(() => {
 		import('@thorvg/lottie-player');
 	});
@@ -13,6 +15,6 @@
 		mode="normal"
 		src="https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json"
 		style="width: 500px; height: 500px;"
-		wasmUrl="/thorvg.wasm"
+		wasmUrl={wasmUrl}
 	></lottie-player>
 </div>

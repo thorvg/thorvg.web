@@ -1,4 +1,5 @@
 import "@thorvg/lottie-player";
+import wasmUrl from "../node_modules/@thorvg/lottie-player/dist/thorvg.wasm?url";
 import "./styles.css";
 
 const App = () => {
@@ -9,7 +10,7 @@ const App = () => {
         autoPlay
         loop
         src="https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json"
-        wasmUrl="/thorvg.wasm"
+        wasmUrl={wasmUrl}
       />
     </div>
   );
