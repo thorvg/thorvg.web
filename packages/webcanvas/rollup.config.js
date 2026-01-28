@@ -5,7 +5,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import { terser } from "rollup-plugin-terser";
 import pkg from './package.json' assert { type: 'json' };
 
-const name = 'webcanvas';
+const name = 'ThorVG';
 const commonOutput = {
   name,
   minifyInternalExports: true,
