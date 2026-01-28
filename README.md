@@ -49,7 +49,7 @@ This monorepo contains two complementary packages:
 ```typescript
 import ThorVG from '@thorvg/webcanvas';
 
-const TVG = await ThorVG.init({ renderer: 'sw' });
+const TVG = await ThorVG.init({ renderer: 'gl' });
 const canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });
 
 const shape = new TVG.Shape();
@@ -59,17 +59,6 @@ shape.fill(255, 0, 0, 255);
 canvas.add(shape);
 canvas.render();
 ```
-
-
-## Render Backends
-
-All packages support multiple render backends:
-
-| Backend | Description |
-|---------|-------------|
-| **Software (sw)** | CPU-based rendering |
-| **WebGL (gl)** | GPU-accelerated | 
-| **WebGPU (wg)** | WebGPU API |
 
 ## Examples
 
@@ -112,9 +101,6 @@ pnpm install
 # Build all packages
 pnpm run build
 
-# Run linter
-pnpm run lint
-
 # Clean build artifacts
 pnpm run clean
 ```
@@ -132,17 +118,3 @@ sh ./wasm_player_setup.sh
 cd packages/webcanvas
 sh ./wasm_wcanvas_setup.sh
 ```
-
-## Documentation
-
-### Getting Started
-- [Lottie Player Guide](./packages/lottie-player/README.md)
-- [WebCanvas Guide](./packages/webcanvas/README.md)
-
-### API Reference
-- [Lottie Player](./packages/lottie-player/README.md#api)
-- [WebCanvas](./packages/webcanvas/API_USAGE.md)
-
-### Examples
-- [Framework Integration](./examples/)
-- [Live Interactive](./examples/)

@@ -23,149 +23,100 @@ npm install @thorvg/webcanvas
 
 ## Quick Start
 
+ThorVG renders vector shapes to a given canvas buffer. The following is a quick start to show you how to use the essential APIs.
+
+First, you should initialize the ThorVG engine:
+
 ```typescript
 import ThorVG from '@thorvg/webcanvas';
 
-// 1. Initialize ThorVG WASM module
-const TVG = await ThorVG.init({
-  locateFile: (path) => `/wasm/${path}`,
-  renderer: 'gl'  // RendererType: 'sw' | 'gl' | 'wg'
-});
+const TVG = await ThorVG.init({ renderer: 'gl' });  // WebGL renderer
+```
 
-// 2. Create canvas
+Then it would be best if you prepared an empty canvas for drawing on it:
+
+```typescript
 const canvas = new TVG.Canvas('#canvas', {
   width: 800,
-  height: 600,
+  height: 600
+});
+```
+
+Next you can draw multiple shapes on the canvas:
+
+```typescript
+const rect = new TVG.Shape();                              // generate a shape
+rect.appendRect(50, 50, 200, 200, { rx: 20, ry: 20 });    // define it as a rounded rectangle (x, y, w, h, rx, ry)
+rect.fill(100, 100, 100);                                  // set its color (r, g, b)
+canvas.add(rect);                                          // add the rectangle to the canvas
+
+const circle = new TVG.Shape();                            // generate a shape
+circle.appendCircle(400, 400, 100, 100);                   // define it as a circle (cx, cy, rx, ry)
+
+const fill = new TVG.RadialGradient(400, 400, 150);       // generate a radial gradient (cx, cy, radius)
+
+fill.setStops(                                             // set the gradient colors info
+  [0.0, [255, 255, 255, 255]],                             // 1st color values (offset, [r, g, b, a])
+  [1.0, [0, 0, 0, 255]]                                    // 2nd color values (offset, [r, g, b, a])
+);
+
+circle.fill(fill);                                         // set the circle fill
+canvas.add(circle);                                        // add the circle to the canvas
+```
+
+This code generates the following result:
+
+<p align="center">
+  <img width="416" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/example_shapes.png">
+</p>
+
+You can also draw your own shapes and use dashed stroking:
+
+```typescript
+const path = new TVG.Shape();                              // generate a path
+path.moveTo(199, 34);                                      // set sequential path coordinates
+path.lineTo(253, 143);
+path.lineTo(374, 160);
+path.lineTo(287, 244);
+path.lineTo(307, 365);
+path.lineTo(199, 309);
+path.lineTo(97, 365);
+path.lineTo(112, 245);
+path.lineTo(26, 161);
+path.lineTo(146, 143);
+path.close();
+
+path.fill(150, 150, 255);                                  // path color
+
+path.stroke({
+  width: 3,                                                // stroke width
+  color: [0, 0, 255, 255],                                 // stroke color (r, g, b, a)
+  cap: TVG.StrokeCap.Round,                                // stroke cap style
+  join: TVG.StrokeJoin.Round,                              // stroke join style
+  dash: [10, 10]                                           // stroke dash pattern (line, gap)
 });
 
-// 3. Draw shapes with fluent API
-const rect = new TVG.Shape();
-rect.appendRect(100, 100, 200, 150, { rx: 10, ry: 10 })
-    .fill(255, 0, 0);
+canvas.add(path);                                          // add the path to the canvas
+```
 
-const circle = new TVG.Shape();
-circle.appendCircle(500, 200, 80, 80)
-      .fill(0, 100, 255)
-      .stroke({ width: 5, color: [0, 0, 0] });
+The code generates the following result:
 
-// 4. Render to canvas
-canvas.add(rect).add(circle);
+<p align="center">
+  <img width="300" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/example_path.png">
+</p>
+
+Now begin rendering & finish it at a particular time:
+
+```typescript
 canvas.render();
 ```
 
-## Core Concepts
+Then you can acquire the rendered image from the canvas element.
 
-### Shapes - Vector Primitives
-
-```typescript
-const shape = new TVG.Shape();
-
-// Path drawing
-shape.moveTo(50, 50)
-     .lineTo(150, 50)
-     .lineTo(100, 150)
-     .close()
-     .fill(255, 0, 0);
-
-// Convenience methods
-shape.appendRect(x, y, w, h, { rx: 10, ry: 10 });
-shape.appendCircle(cx, cy, radius);
-shape.appendPath('M0,0 L100,0 L50,100 Z');
-```
-
-### Scenes - Hierarchical Grouping
+Lastly, terminate the engine after its usage:
 
 ```typescript
-const scene = new TVG.Scene();
-
-// Group shapes and apply transformations
-scene.add(shape1).add(shape2).add(shape3);
-scene.translate(50, 50)
-     .rotate(45)
-     .scale(1.5)
-     .opacity(0.8);
-
-canvas.add(scene);
-```
-
-### Gradients - Advanced Fills
-
-```typescript
-// Linear gradient
-const linear = new TVG.LinearGradient(0, 0, 200, 0);
-linear.setStops(
-  [0, [0, 0, 255, 255]],
-  [1, [255, 0, 255, 255]]
-);
-linear.spread(TVG.GradientSpread.Pad);  // GradientSpread.Pad | Reflect | Repeat
-
-// Radial gradient
-const radial = new TVG.RadialGradient(100, 100, 50);
-radial.addStop(0, [255, 255, 255, 255]);
-radial.addStop(1, [0, 0, 0, 255]);
-
-shape.fill(linear);
-```
-
-### Pictures - Images & SVG
-
-```typescript
-const picture = new TVG.Picture();
-
-// Load SVG from string
-picture.load(svgString, { type: 'svg' });
-
-// Load from URL
-const response = await fetch('/images/logo.svg');
-const svgData = await response.text();
-picture.load(svgData, { type: 'svg' });
-
-// Resize
-picture.size(300, 300);
-
-canvas.add(picture);
-```
-
-### Text - Typography
-
-```typescript
-// Load font first
-await TVG.Font.load('Roboto', fontDataUint8Array);
-
-// Create text
-const text = new TVG.Text();
-text.font('Roboto')
-    .text('Hello ThorVG!')
-    .fontSize(48)
-    .fill(0, 0, 0)
-    .align(0.5, 0.5);  // x: 0.5 (center), y: 0.5 (middle)
-
-canvas.add(text);
-```
-
-### Animations - Lottie Playback
-
-```typescript
-const animation = new TVG.Animation();
-
-// Load Lottie JSON
-await animation.load(lottieData);
-
-// Get animation info
-const info = animation.info();
-console.log(`Total frames: ${info.totalFrame}`);
-console.log(`Duration: ${info.duration}s`);
-console.log(`FPS: ${info.framerate}`);
-
-// Control playback
-animation.frame(30);    // Set frame
-animation.play();       // Start playback
-animation.pause();      // Pause
-animation.stop();       // Stop and reset
-animation.loop(true);   // Enable looping
-
-// Access picture for rendering
-canvas.add(animation.picture);
+TVG.term();
 ```
 
 ## Render Backends
@@ -192,147 +143,34 @@ const TVG = await ThorVG.init({ renderer: 'wg' });
 WebCanvas provides automatic memory management through FinalizationRegistry, but you can also manage memory explicitly:
 
 ```typescript
-// Automatic cleanup when out of scope
-{
-  const shape = new TVG.Shape();
-  canvas.add(shape);
-} // WASM memory automatically freed
+// Automatic cleanup when GC runs
+const shape = new TVG.Shape();
+canvas.add(shape);
+shape = null; // Call dispose()
 
-// Explicit cleanup (recommended for large objects)
+// Automatic cleanup on page unload (registry.ts)
+window.addEventListener('beforeunload', () => {
+  if (hasModule()) {
+    const Module = getModule();
+    Module.term(); // Terminate WASM
+  }
+});
+
+// Explicit cleanup (recommended for predictable memory management)
 shape.dispose();
 picture.dispose();
 animation.dispose();
 
-// Canvas lifecycle
-canvas.clear();     // Clear all objects
-canvas.render();    // Re-render
-TVG.term();         // Terminate WASM module
+// Terminate WASM module (call this when done)
+TVG.term();
 ```
 
-## API Quick Reference
-
-### Initialization
-
-```typescript
-ThorVG.init(options?)        // Load WASM module
-TVG.term()                   // Terminate module
-```
-
-### Canvas
-
-```typescript
-new TVG.Canvas(selector, options)
-canvas.add(paint)            // Add object
-canvas.remove(paint?)        // Remove objects
-canvas.clear()               // Clear all
-canvas.render()              // Render frame
-canvas.update()              // Update before render
-canvas.resize(w, h)          // Resize canvas
-canvas.viewport(x, y, w, h)  // Set viewport
-```
-
-### Shape
-
-```typescript
-new TVG.Shape()
-shape.moveTo(x, y)
-shape.lineTo(x, y)
-shape.cubicTo(cx1, cy1, cx2, cy2, x, y)
-shape.close()
-shape.appendRect(x, y, w, h, options?)
-shape.appendCircle(cx, cy, rx, ry?)
-shape.appendPath(svgPath)
-shape.fill(r, g, b)          // Color fill (RGB)
-shape.fill(gradient)         // Gradient fill
-shape.stroke(width)          // Simple stroke
-shape.stroke(options)        // Full stroke config
-```
-
-### Scene
-
-```typescript
-const scene = new TVG.Scene()
-scene.add(paint)             // Add child
-scene.remove(paint?)         // Remove children
-scene.clear()                // Clear all
-```
-
-### Paint Transformations (Shape/Scene/Picture/Text)
-
-```typescript
-paint.translate(x, y)
-paint.rotate(degrees)
-paint.scale(sx, sy?)
-paint.opacity(value)         // 0-1
-paint.visible(boolean)
-paint.bounds()               // Get bounding box
-paint.duplicate()            // Clone
-paint.dispose()              // Free memory
-```
-
-### Gradients
-
-```typescript
-const linear = new TVG.LinearGradient(x1, y1, x2, y2)
-linear.addStop(offset, [r, g, b, a])
-linear.spread(TVG.GradientSpread.Pad | Reflect | Repeat)
-
-const radial = new TVG.RadialGradient(cx, cy, radius)
-radial.addStop(offset, [r, g, b, a])
-radial.spread(TVG.GradientSpread.Pad | Reflect | Repeat)
-```
-
-### Picture
-
-```typescript
-const picture = new TVG.Picture()
-picture.load(data, options?)  // Load from data
-picture.size()                // Get size
-picture.size(w, h)            // Set size
-```
-
-### Text
-
-```typescript
-const text = new TVG.Text()
-text.font(name)              // Set font
-text.text(content)           // Set text
-text.fontSize(size)          // Set size
-text.fill(r, g, b)           // Color (RGB)
-text.fill(gradient)          // Gradient
-text.align(x, y)             // Alignment (0.0-1.0 for both axes)
-```
-
-### Animation
-
-```typescript
-const animation = new TVG.Animation()
-animation.load(lottieData)   // Load Lottie JSON
-animation.info()             // Get metadata
-animation.frame()            // Get current frame
-animation.frame(n)           // Set frame
-animation.play()             // Start playback
-animation.pause()            // Pause
-animation.stop()             // Stop and reset
-animation.loop(boolean)      // Enable looping
-animation.picture            // Get Picture instance
-```
-
-### Font
-
-```typescript
-TVG.Font.load(name, data, options?)
-TVG.Font.unload(name)
-```
-
-## Examples
-
-### Documentation
+## Documentation
 
 - **[API Documentation](https://thorvg.github.io/thorvg.web)** - Standard TypeDoc hierarchical documentation
 - **[Manual Documentation](./API_USAGE.md)** - Complete API documentation with detailed method signatures
 
-### Interactive Examples
+## Examples
 
 - [Basic Usage](../../examples/basic-usage.html) - Getting started with shapes
 - [Animation](../../examples/animation-example.html) - Frame-based animations

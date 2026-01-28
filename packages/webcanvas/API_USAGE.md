@@ -73,7 +73,7 @@ const TVG = await ThorVG.init({
 });
 
 // Software rendering
-const TVG = await ThorVG.init({ renderer: 'sw' });
+const TVG = await ThorVG.init({ renderer: 'gl' });
 
 // Use classes via namespace
 const canvas = new TVG.Canvas('#canvas');
@@ -258,7 +258,7 @@ canvas.destroy();
 Returns the currently used renderer.
 
 ```typescript
-const renderer = canvas.renderer; // 'sw', 'gl', or 'wg'
+const renderer = canvas.renderer; // 'gl', or 'wg'
 ```
 
 **Returns:** `string`
@@ -1494,10 +1494,9 @@ enum TextWrapMode {
 Renderer backend types.
 
 ```typescript
-type RendererType = 'sw' | 'gl' | 'wg';
+type RendererType = 'gl' | 'wg';
 ```
 
-- `'sw'` - Software (CPU) rendering
 - `'gl'` - WebGL (hardware accelerated)
 - `'wg'` - WebGPU (best performance)
 
