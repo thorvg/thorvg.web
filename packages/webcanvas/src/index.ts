@@ -51,8 +51,7 @@ import { Font } from './core/Font';
 import { ThorVGResultCode, ThorVGError, setGlobalErrorHandler, handleError, type ErrorHandler } from './common/errors';
 import * as constants from './common/constants';
 import type { RendererType } from './common/constants';
-// @ts-ignore - thorvg.js is generated during build
-import ThorVGModuleFactory from '../dist/thorvg.js';
+import ThorVGModuleFactory from '../dist/thorvg';
 
 /**
  * @category Initialization
