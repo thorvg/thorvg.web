@@ -30,7 +30,7 @@
     "docs": "typedoc && node ./tools/docs/generate.js",
     "docs:watch": "typedoc --watch",
     "docs:serve": "typedoc --watch --serve",
-    "version": "sed -n -e 4p ./thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'"
+    "version": "sed -n -e 4p ../../thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'"
   },
   "repository": {
     "type": "git",
