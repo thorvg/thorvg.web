@@ -168,22 +168,18 @@ animation.loop(true);   // Enable looping
 canvas.add(animation.picture);
 ```
 
-## Rendering Backends
+## Render Backends
 
-Choose the best renderer for your needs:
+ThorVG WebCanvas supports both WebGL and the next-generation WebGPU, optimized for modern browsers and high-performance rendering pipelines. Designed to empower developers with cutting-edge graphics capabilities.
 
-| Backend | Performance | Browser Support | Best For |
-|---------|-------------|-----------------|----------|
-| **Software (sw)** | Good | All browsers | Maximum compatibility |
-| **WebGL (gl)** | Better | Chrome/Firefox/Safari 90+ | Balanced performance |
-| **WebGPU (wg)** | Best | Chrome/Edge 113+ | Cutting-edge apps |
+| Backend | Browser Support |
+|---------|-----------------|
+| **WebGL (gl)** | Chrome/Firefox/Safari 90+ |
+| **WebGPU (wg)** | Chrome/Edge 113+/Firefox 141+/Safari 26+ |
 
 ### Backend-Specific Initialization
 
 ```typescript
-// Software renderer
-const TVG = await ThorVG.init({ renderer: 'sw' });
-
 // WebGL renderer
 const TVG = await ThorVG.init({ renderer: 'gl' });
 

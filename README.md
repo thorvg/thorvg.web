@@ -73,9 +73,7 @@ All packages support multiple render backends:
 
 ## Examples
 
-### Basic Examples
-
-**Lottie Player Examples:**
+### Lottie Player
 - [Software Renderer](./examples/software.html) - Full Lottie support with CPU rendering
 - [WebGL Renderer](./examples/webgl.html) - GPU-accelerated Lottie rendering
 - [WebGPU Renderer](./examples/webgpu.html) - Next-gen GPU acceleration
@@ -83,7 +81,7 @@ All packages support multiple render backends:
 - [WebGL Lite](./examples/webgl-lite.html) - Lightweight GPU rendering
 - [WebGPU Lite](./examples/webgpu-lite.html) - Lightweight WebGPU rendering
 
-**WebCanvas Examples:**
+### WebCanvas
 - [Basic Usage](./examples/basic-usage.html) - Getting started with shapes
 - [Animation](./examples/animation-example.html) - Frame-based animations
 - [Scene Composition](./examples/scene.html) - Hierarchical object grouping
