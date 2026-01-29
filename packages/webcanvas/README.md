@@ -21,6 +21,14 @@ A high-performance TypeScript Canvas API for [ThorVG](https://github.com/thorvg/
 npm install @thorvg/webcanvas
 ```
 
+## Contents
+- [Quick Start](#quick-start)
+- [Render Backends](#render-backends)
+- [Memory Management](#memory-management)
+- [Documentation](#documentation)
+- [Examples](#examples)
+
+
 ## Quick Start
 
 ThorVG renders vector shapes to a given canvas buffer. The following is a quick start to show you how to use the essential APIs.
@@ -119,6 +127,9 @@ Lastly, terminate the engine after its usage:
 TVG.term();
 ```
 
+[Back to contents](#contents)
+<br />
+
 ## Render Backends
 
 ThorVG WebCanvas supports both WebGL and the next-generation WebGPU, optimized for modern browsers and high-performance rendering pipelines. Designed to empower developers with cutting-edge graphics capabilities.
@@ -137,6 +148,9 @@ const TVG = await ThorVG.init({ renderer: 'gl' });
 // WebGPU renderer (requires async init)
 const TVG = await ThorVG.init({ renderer: 'wg' });
 ```
+
+[Back to contents](#contents)
+<br />
 
 ## Memory Management
 
@@ -165,10 +179,16 @@ animation.dispose();
 TVG.term();
 ```
 
+[Back to contents](#contents)
+<br />
+
 ## Documentation
 
 - **[API Documentation](https://thorvg.github.io/thorvg.web)** - Standard TypeDoc hierarchical documentation
 - **[Manual Documentation](./API_USAGE.md)** - Complete API documentation with detailed method signatures
+
+[Back to contents](#contents)
+<br />
 
 ## Examples
 
@@ -178,4 +198,7 @@ TVG.term();
 - [Picture Loading](../../examples/picture-example.html) - SVG and images
 - [Text Rendering](../../examples/text-example.html) - Typography
 - [Live Editor](../../examples/live-editor.html) - Interactive playground
+
+[Back to contents](#contents)
+<br />
 

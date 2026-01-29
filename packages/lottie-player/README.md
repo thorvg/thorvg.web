@@ -21,6 +21,28 @@ A Lottie Player which uses [ThorVG](https://github.com/thorvg/thorvg) as a rende
 npm install @thorvg/lottie-player
 ```
 
+## Contents
+- [Usage](#usage)
+  - [With HTML (Basic Usage)](#with-html-basic-usage)
+  - [With NPM (JS/TS)](#with-npm-jsts)
+  - [With ReactJS + TypeScript](#with-reactjs--typescript)
+  - [With SSR Framework](#with-ssr-framework)
+- [Player Preset Variants](#player-preset-variants)
+  - [Standard Presets](#standard-presets)
+  - [Lite Presets](#lite-presets)
+  - [Preset Comparison](#preset-comparison)
+  - [Preset Usage](#preset-usage)
+- [API](#api)
+  - [Properties](#properties)
+  - [Events](#events)
+  - [Methods](#methods)
+- [Examples](#examples)
+  - [Framework-specific Examples](#framework-specific-examples)
+  - [Build Testing](#build-testing)
+  - [Local Examples](#local-examples)
+
+<br />
+
 ## Usage
 ### With HTML (Basic Usage)
 
@@ -115,6 +137,9 @@ export default function Home() {
 </script>
 ```
 
+[Back to contents](#contents)
+<br />
+
 ## Player Preset Variants
 
 ThorVG Lottie Player provides multiple presets optimized for different use cases. Each preset can be selected based on bundle size and performance requirements.
@@ -133,12 +158,12 @@ ThorVG Lottie Player provides multiple presets optimized for different use cases
 
 | Preset | Renderer | Features | Bundle Size | Use Case |
 |--------|----------|---------|-------------|----------|
-| `sw` | Software | lottie + expressions, jpg, png, webp, ttf | ~596KB | Full-featured applications with CPU rendering |
-| `gl` | WebGL | lottie + expressions, jpg, png, webp, ttf | ~602KB | Full-featured applications with WebGL acceleration |
-| `wg` | WebGPU | lottie + expressions, jpg, png, webp, ttf | ~633KB | Full-featured applications with WebGPU acceleration |
-| `sw-lite` | Software | lottie, png | ~228KB | Lightweight applications with CPU rendering |
-| `gl-lite` | WebGL | lottie, png | ~233KB | Lightweight applications with WebGL acceleration |
-| `wg-lite` | WebGPU | lottie, png | ~266KB | Lightweight applications with WebGPU acceleration |
+| `sw` | Software | lottie + expressions, jpg, png, webp, ttf | ~600KB | Full-featured applications with CPU rendering |
+| `gl` | WebGL | lottie + expressions, jpg, png, webp, ttf | ~650KB | Full-featured applications with WebGL acceleration |
+| `wg` | WebGPU | lottie + expressions, jpg, png, webp, ttf | ~650KB | Full-featured applications with WebGPU acceleration |
+| `sw-lite` | Software | lottie, png | ~250KB | Lightweight applications with CPU rendering |
+| `gl-lite` | WebGL | lottie, png | ~250KB | Lightweight applications with WebGL acceleration |
+| `wg-lite` | WebGPU | lottie, png | ~300KB | Lightweight applications with WebGPU acceleration |
 
 ### Preset Usage
 
@@ -189,6 +214,9 @@ import '@thorvg/lottie-player/gl-lite';
 // WebGPU Renderer (Lite)
 import '@thorvg/lottie-player/wg-lite';
 ```
+
+[Back to contents](#contents)
+<br />
 
 ## API
 ### Properties
@@ -380,6 +408,9 @@ player.addEventListener('load', () => {
 
 **Return Type** : `LibraryVersion`
 
+[Back to contents](#contents)
+<br />
+
 ## Examples
 
 ### Framework-specific Examples
@@ -411,3 +442,6 @@ Check the usage of each preset in the `example/` directory:
 - [Software Renderer (Lite)](example/software-lite.html) - Basic Lottie support with CPU rendering
 - [WebGL Renderer (Lite)](example/webgl-lite.html) - Basic Lottie support with WebGL acceleration
 - [WebGPU Renderer](example/webgpu.html) - Full Lottie support with WebGPU acceleration
+
+[Back to contents](#contents)
+<br />
