@@ -11,7 +11,7 @@
   "dependencies": {
     "@headlessui/react": "^2.0.3",
     "@heroicons/react": "^2.1.3",
-    "@thorvg/lottie-player": "^1.0.0-pre.34",
+    "@thorvg/lottie-player": "^1.0.1",
     "glob": "^13.0.0",
     "next": "^15.1.0",
     "react": "^18",
