@@ -68,6 +68,7 @@ jobs:
     name: Validate Package
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: read
 
     steps:
@@ -144,8 +145,6 @@ jobs:
       - name: Publish to npm
         working-directory: ./packages/lottie-player
         run: pnpm publish --dry-run --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   gpr-release:
     name: Release to GitHub Packages
