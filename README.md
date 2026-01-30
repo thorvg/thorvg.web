@@ -24,8 +24,8 @@ Whether you're building a high-performance Lottie animation, a graphics editing 
 
 ## Contents
 - [Packages](#-packages)
-  - [@thorvg/lottie-player](#thorvglottie-player)
-  - [@thorvg/webcanvas](#thorvgwebcanvas)
+  - [Lottie Player](#lottie-player)
+  - [WebCanvas](#webcanvas)
 - [Examples](#examples)
   - [Lottie Player](#lottie-player)
   - [WebCanvas](#webcanvas)
@@ -39,7 +39,7 @@ Whether you're building a high-performance Lottie animation, a graphics editing 
 
 This monorepo contains two complementary packages:
 
-### [@thorvg/lottie-player](./packages/lottie-player)
+### [Lottie Player](./packages/lottie-player)
 [![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player)
 
 **Lottie animation player** - [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components) for embedding Lottie animations
@@ -55,7 +55,7 @@ This monorepo contains two complementary packages:
 
 ---
 
-### [@thorvg/webcanvas](./packages/webcanvas)
+### [WebCanvas](./packages/webcanvas)
 [![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas)
 
 **ThorVG Canvas for Web** – A TypeScript API with a fluent interface for vector graphics rendering
