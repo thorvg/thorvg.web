@@ -11,6 +11,7 @@ on:
       - 'playground/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/playground.yml'
+      - '!**/*.md'
 
 jobs:
   preview-playground:

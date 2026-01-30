@@ -11,6 +11,7 @@ on:
       - 'perf-test/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/perf-test.yml'
+      - '!**/*.md'
 
 jobs:
   preview-perf-test:
