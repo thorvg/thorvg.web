@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
-    "@thorvg/webcanvas": "file:../packages/webcanvas",
+    "@thorvg/webcanvas": "^1.0.0",
     "monaco-editor": "^0.55.1",
     "next": "^15.5.10",
     "prism-react-renderer": "^2.4.1",

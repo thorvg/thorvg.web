@@ -66,7 +66,9 @@ jobs:
 
       - name: Install Playground dependencies
         working-directory: ./playground
-        run: yarn install --frozen-lockfile
+        run: |
+          yarn install --frozen-lockfile
+          yarn add ../packages/webcanvas
 
       - name: Pull Vercel Environment Information
         working-directory: ./playground
