@@ -120,6 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate
     permissions:
+      id-token: write
       contents: read
 
     steps:
@@ -150,8 +151,6 @@ jobs:
       - name: Publish to npm
         working-directory: ./packages/webcanvas
         run: pnpm publish --dry-run --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   gpr-release:
     name: Release to GitHub Packages
