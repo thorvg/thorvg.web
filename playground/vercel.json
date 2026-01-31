@@ -1,0 +1,10 @@
+{
+  "buildCommand": "echo 'Build completed in GitHub Actions'",
+  "outputDirectory": ".next",
+  "installCommand": "echo 'Dependencies installed in GitHub Actions'",
+  "framework": "nextjs",
+  "ignoreCommand": "echo 'Skipping Vercel build - using pre-built artifacts'",
+  "git": {
+    "deploymentEnabled": false
+  }
+}

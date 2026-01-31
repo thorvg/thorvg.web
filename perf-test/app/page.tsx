@@ -2,19 +2,9 @@
 import { Listbox, ListboxOption, ListboxOptions, Transition } from '@headlessui/react';
 import { Fragment, useEffect, useState } from 'react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
-import { DotLottieReact, setWasmUrl as setDotLottieWasmUrl } from '@lottiefiles/dotlottie-react';
-import { Player } from '@lottiefiles/react-lottie-player';
 import { isMobile } from 'react-device-detect';
-import reactLottiePlayerPkg from "@lottiefiles/react-lottie-player/package.json";
-import dotLottieReactPkg from "@lottiefiles/dotlottie-react/package.json";
-import dotLottieWasmUrl from "../node_modules/@lottiefiles/dotlottie-web/dist/dotlottie-player.wasm";
-import SkottiePlayer, { setCanvasKit } from '../components/SkottiePlayer';
-import skottieWasmUrl from "../node_modules/canvaskit-wasm/bin/full/canvaskit.wasm";
-import InitCanvasKit from 'canvaskit-wasm/bin/full/canvaskit';
 import wasmUrl from "../node_modules/@thorvg/lottie-player/dist/thorvg.wasm";
 import { initProfiler } from '../lib/profiler';
-
-setDotLottieWasmUrl(dotLottieWasmUrl);
 
 const animations = [
   '1643-exploding-star.json',
@@ -119,7 +109,7 @@ const animations = [
   'yarn_loading.json'
 ];
 
-const urlPrefix = 'https://raw.githubusercontent.com/thorvg/thorvg/main/examples/resources/lottie/';
+const urlPrefix = 'https://raw.githubusercontent.com/thorvg/thorvg.example/main/res/lottie/';
 
 const countOptions = [
   { id: 0, name: 10 },
@@ -131,12 +121,12 @@ const countOptions = [
   //{ id: 6, name: 1000 },
 ];
 
-const playerOptions = [ 
-  { id: 1, name: 'ThorVG(Software)' } 
+const playerOptions = [
+  { id: 1, name: 'ThorVG(Software)' }
 ];
 
-if (typeof navigator !== 'undefined' && navigator.gpu) { 
-  playerOptions.push({ id: 2, name: 'ThorVG(WebGPU)' }); 
+if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
+  playerOptions.push({ id: 2, name: 'ThorVG(WebGPU)' });
 }
 
 function classNames(...classes: any) {
@@ -154,11 +144,12 @@ const MAX_WIDTH = 180;
 const RANGE = MAX_WIDTH - MIN_WIDTH;
 
 export default function Home() {
-  const [size, setSize] = useState(isMobile ? { width: 150, height: 150 } : { width: MAX_WIDTH, height: MAX_WIDTH });
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [contentSize, setContentSize] = useState({ width: 0, height: 0 });
   const percent = (size.width - MIN_WIDTH) / RANGE * 100;
-  
+
   let initialized = false;
-  
+
   const [count, setCount] = useState(countOptions[1]);
   const [player, setPlayer] = useState(playerOptions[0]);
   const [playerId, setPlayerId] = useState(1);
@@ -175,6 +166,7 @@ export default function Home() {
     import("@thorvg/lottie-player");
 
     let count: number = countOptions[1].name;
+    let size: number = isMobile ? 150 : MAX_WIDTH;
     let seed: string = '';
     let playerId = 1;
 
@@ -182,6 +174,7 @@ export default function Home() {
       const params = new URLSearchParams(window.location.search);
       const player = params.get('player');
       count = parseInt(params.get('count') ?? '20');
+      size = parseInt(params.get('size') ?? size.toString());
       seed = params.get('seed') ?? '';
 
       if (count) {
@@ -196,12 +189,13 @@ export default function Home() {
         setPlayerId(_player.id);
       }
     }
-    
-    setTimeout(async () => {
-      if (playerId === 4) {
-        await loadCanvasKit();
-      }
 
+    setSize({
+      width: size,
+      height: size
+    });
+
+    setTimeout(async () => {
       initProfiler();
 
       if (seed) {
@@ -213,17 +207,24 @@ export default function Home() {
     }, 500);
   }, []);
 
-  const handleSliderChange = (value: number) => {
-    setSize({ width: value, height: value });
+  const checkCanvasSize = (playerRef?: HTMLElement) => {
+    const player = playerRef || document.querySelector('lottie-player');
+    const canvas = player?.querySelector('canvas');
+    if (!player || !canvas) {
+      return;
+    }
+
+    setContentSize({
+      width: canvas.width,
+      height: canvas.height
+    });
   };
 
-  const loadCanvasKit = async () => {
-    const canvasKit = await InitCanvasKit({
-      locateFile: (_) => skottieWasmUrl,
-    });
-    setCanvasKit(canvasKit);
-  }
-
+  const handleSliderChange = (value: number) => {
+    setSize({ width: value, height: value });
+    setQueryStringParameter('size', value);
+    requestAnimationFrame(() => checkCanvasSize());
+  };
 
   const loadAnimationByCount = async (_count = count.name) => {
     const newAnimationList = [];
@@ -409,7 +410,7 @@ export default function Home() {
         </>
       )}
     </Listbox>
-              
+
               <button
                 type="submit"
                 className="flex-none rounded-md bg-[#00deb5] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
@@ -421,7 +422,9 @@ export default function Home() {
                 Set
               </button>
               <div className="text-white w-full sm:flex-1 sm:min-w-[240px]">
-                <label className="block mb-2">Box Size: {size.width}px</label>
+                <label className="block mb-2">
+                  Size: {contentSize.width}px
+                </label>
                 <input
                   type="range"
                   min={50}
@@ -451,7 +454,7 @@ export default function Home() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
               />
-              
+
               <button
                 type="submit"
                 className="flex-none rounded-md bg-[#00deb5] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
@@ -471,62 +474,43 @@ export default function Home() {
               {
                 playerId == 1 &&
                 (
-                  <lottie-player 
+                  <lottie-player
                     src={anim.lottieURL}
-                    background="transparent" 
+                    background="transparent"
                     className="aspect-[14/13] w-full rounded-2xl object-cover"
                     style={{width: size.width, height: size.height}}
-                    loop 
+                    loop
                     autoplay
                     wasmUrl={wasmUrl}
                     renderConfig={JSON.stringify({enableDevicePixelRatio: true})}
+                    ref={(playerRef: HTMLElement) => {
+                      if (playerRef && index === 0) {
+                        requestAnimationFrame(() => checkCanvasSize(playerRef));
+                      }
+                    }}
                   />
                 )
               }
               {
                 playerId == 2 &&
                 (
-                  <lottie-player 
+                  <lottie-player
                     src={anim.lottieURL}
-                    background="transparent" 
+                    background="transparent"
                     className="aspect-[14/13] w-full rounded-2xl object-cover"
                     style={{width: size.width, height: size.height}}
-                    loop 
+                    loop
                     autoplay
                     wasmUrl={wasmUrl}
                     renderConfig={JSON.stringify({
                       enableDevicePixelRatio: true,
                       renderer: 'wg'
                     })}
-                  />
-                )
-              }
-              {
-                playerId === 3 && (
-                  <DotLottieReact
-                    src={anim.lottieURL as string}
-                    style={{width: size.width, height: size.height}}
-                    loop 
-                    autoplay
-                  />
-                )
-              }
-              {
-                playerId === 3 && (
-                  <Player
-                    autoplay
-                    loop
-                    src={anim.lottieURL}
-                    style={{ height: size.height, width: size.width }}
-                  ></Player>
-                )
-              }
-              {
-                playerId == 4 && (
-                  <SkottiePlayer
-                    lottieURL={anim.lottieURL}
-                    width={size.width}
-                    height={size.height}
+                    ref={(playerRef: HTMLElement) => {
+                      if (playerRef && index === 0) {
+                        requestAnimationFrame(() => checkCanvasSize(playerRef));
+                      }
+                    }}
                   />
                 )
               }
