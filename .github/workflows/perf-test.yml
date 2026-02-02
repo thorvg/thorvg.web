@@ -3,7 +3,7 @@ env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PERF_TEST_PROJECT_ID }}
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
     paths:
@@ -17,11 +17,13 @@ jobs:
   preview-perf-test:
     name: Preview Perf Test
     runs-on: ubuntu-latest
+    environment: external
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
 
       - name: Setup pnpm
