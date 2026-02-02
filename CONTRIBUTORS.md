@@ -13,3 +13,4 @@
 - Yeji Kim <lerry597@gmail.com>
 - OnYu Lee <loy7153@gmail.com>
 - TsingWong <919916459@qq.com>
+- Seungwon Lee <nowgnues.lee@gmail.com>
