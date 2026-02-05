@@ -15,12 +15,14 @@
     "next": "^15.5.10",
     "prism-react-renderer": "^2.4.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "stats.js": "^0.17.0"
   },
   "devDependencies": {
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/stats.js": "^0.17.4",
     "eslint": "^9",
     "eslint-config-next": "^15.1.0",
     "postcss": "^8",
