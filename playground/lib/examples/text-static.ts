@@ -129,7 +129,7 @@ const canvas = new TVG.Canvas('#canvas', {
     .text('나눔고딕코딩(UTF-8)');
   
   //RadialGradient
-  const radialGradient = new TVG.RadialGradient(117, 264, 59);
+  const radialGradient = new TVG.RadialGradient(115, 14.5, 115, 115, 14.5);
   
   radialGradient.setStops(
     [0, [0, 255, 255, 255]],
