@@ -1,6 +1,6 @@
 [binaries]
-cpp = 'EMSDK:upstream/emscripten/em++.py'
-ar = 'EMSDK:upstream/emscripten/emar.py'
+cpp = ['python3', 'EMSDK:upstream/emscripten/em++.py']
+ar = ['python3', 'EMSDK:upstream/emscripten/emar.py']
 strip = '-strip'
 
 [properties]
