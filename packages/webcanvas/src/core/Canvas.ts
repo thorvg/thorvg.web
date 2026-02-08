@@ -633,7 +633,7 @@ class Canvas {
 }
 
 export class SwCanvas extends Canvas {
-  constructor(selector: string | undefined, options: CanvasOptions = {}) {
+  constructor(selector: string | undefined, options: CanvasOptions) {
     super(selector, options);
   }
 
@@ -665,5 +665,14 @@ export class SwCanvas extends Canvas {
   }
 }
 
-export const GlCanvas = Canvas;
-export const WgCanvas = Canvas;
+export class GlCanvas extends Canvas {
+  constructor(selector: string, options: CanvasOptions) {
+    super(selector, options);
+  }
+}
+
+export class WgCanvas extends Canvas {
+  constructor(selector: string, options: CanvasOptions) {
+    super(selector, options);
+  }
+}
