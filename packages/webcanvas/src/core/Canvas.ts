@@ -627,7 +627,7 @@ class Canvas {
   }
 }
 
-export class SWCanvas extends Canvas {
+export class SwCanvas extends Canvas {
   constructor(selector: string | undefined, options: CanvasOptions = {}) {
     super(selector, options);
   }
@@ -669,5 +669,5 @@ export class SWCanvas extends Canvas {
   }
 }
 
-export const GLCanvas = Canvas;
-export const WGCanvas = Canvas;
+export const GlCanvas = Canvas;
+export const WgCanvas = Canvas;

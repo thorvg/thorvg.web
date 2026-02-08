@@ -39,7 +39,7 @@
  */
 
 import type { ThorVGModule } from './types/emscripten';
-import { SWCanvas, GLCanvas, WGCanvas } from './core/Canvas';
+import { SwCanvas, GlCanvas, WgCanvas } from './core/Canvas';
 import { Shape } from './core/Shape';
 import { Scene } from './core/Scene';
 import { Picture } from './core/Picture';
@@ -66,7 +66,7 @@ export interface InitOptions<R extends RendererType = RendererType> {
 }
 
 export interface ThorVGNamespace<R extends RendererType = RendererType> {
-  Canvas: R extends 'sw' ? typeof SWCanvas : R extends 'gl' ? typeof GLCanvas : typeof WGCanvas;
+  Canvas: R extends 'sw' ? typeof SwCanvas : R extends 'gl' ? typeof GlCanvas : typeof WgCanvas;
   Shape: typeof Shape;
   Scene: typeof Scene;
   Picture: typeof Picture;
@@ -271,7 +271,7 @@ function createNamespace<T extends RendererType>(renderer: T): ThorVGNamespace<T
 
   return {
     ...namespace,
-    Canvas: renderer === 'sw' ? SWCanvas : renderer === 'gl' ? GLCanvas : WGCanvas,
+    Canvas: renderer === 'sw' ? SwCanvas : renderer === 'gl' ? GlCanvas : WgCanvas,
   } as ThorVGNamespace<T>;
 }
 
