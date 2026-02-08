@@ -106,11 +106,11 @@ export interface CanvasOptions {
  * animate();
  * ```
  */
-export class Canvas {
+class Canvas {
   #ptr: number = 0;
-  #engine: TvgCanvasInstance | null = null;
   #renderer: RendererType;
-  #htmlCanvas: HTMLCanvasElement | null = null;
+  protected _engine: TvgCanvasInstance | null = null;
+  protected _htmlCanvas: HTMLCanvasElement | null = null;
   #enableDevicePixelRatio: boolean;
   #mainScene: Scene | null = null;
   #logicalWidth: number = 0;
@@ -157,7 +157,7 @@ export class Canvas {
    * });
    * ```
    */
-  constructor(selector: string, options: CanvasOptions = {}) {
+  constructor(selector: string | undefined, options: CanvasOptions = {}) {
     const { width = 800, height = 600, enableDevicePixelRatio = true } = options;
 
     // Store logical dimensions
@@ -168,6 +168,11 @@ export class Canvas {
     // Get the global renderer set during ThorVG.init()
     const renderer = getGlobalRenderer();
     this.#renderer = renderer;
+
+    if (!selector && this.#renderer !== 'sw') {
+      handleError(`Failed to create canvas with ${renderer} renderer: selector is required`, 'Canvas constructor');
+      return;
+    }
 
     // Module should already be initialized by ThorVG.init()
     const Module = getModule();
@@ -180,36 +185,40 @@ export class Canvas {
     const physicalHeight = height * dpr;
 
     // Create TvgCanvas with physical dimensions
-    this.#engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight);
+    this._engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight);
 
     // Check for errors
-    const error = this.#engine.error();
+    const error = this._engine.error();
     if (error !== 'None') {
       handleError(`Failed to create canvas with ${renderer} renderer: ${error}`, 'Canvas constructor');
       return;
     }
 
     // Get canvas pointer
-    this.#ptr = this.#engine.ptr();
+    this.#ptr = this._engine.ptr();
 
     if (this.#ptr === 0) {
       handleError(`Failed to create canvas with ${renderer} renderer: engine pointer is 0`, 'Canvas constructor');
       return;
     }
 
-    this.#htmlCanvas = document.querySelector(selector);
-    if (!this.#htmlCanvas) {
-      handleError(`Failed to create canvas with ${renderer} renderer: HTML canvas element not found`, 'Canvas constructor');
-      return;
+    if (selector) {
+      this._htmlCanvas = document.querySelector<HTMLCanvasElement>(selector);
+      if (!this._htmlCanvas) {
+        handleError(`Failed to create canvas with ${renderer} renderer: HTML canvas element not found`, 'Canvas constructor');
+        return;
+      }
+
+      // Set CSS dimensions to logical size
+      this._htmlCanvas.style.width = `${width}px`;
+      this._htmlCanvas.style.height = `${height}px`;
+
+      // Set canvas pixel dimensions to physical size
+      this._htmlCanvas.width = physicalWidth;
+      this._htmlCanvas.height = physicalHeight;
     }
 
-    // Set CSS dimensions to logical size
-    this.#htmlCanvas.style.width = `${width}px`;
-    this.#htmlCanvas.style.height = `${height}px`;
-
-    // Set canvas pixel dimensions to physical size
-    this.#htmlCanvas.width = physicalWidth;
-    this.#htmlCanvas.height = physicalHeight;
+    this._engine.resize(physicalWidth, physicalHeight);
 
     // Create main Scene
     this.#mainScene = new Scene();
@@ -308,7 +317,7 @@ export class Canvas {
    * ```
    */
   public clear(): this {
-    if (!this.#engine || !this.#mainScene) {
+    if (!this._engine || !this.#mainScene) {
       return this;
     }
 
@@ -321,10 +330,9 @@ export class Canvas {
     Module._tvg_canvas_draw(this.#ptr, 1);
     Module._tvg_canvas_sync(this.#ptr);
 
-    // For SW backend, also clear the HTML canvas
-    if (this.#renderer === 'sw' && this.#htmlCanvas) {
-      const ctx = this.#htmlCanvas.getContext('2d') as CanvasRenderingContext2D;
-      ctx.clearRect(0, 0, this.#htmlCanvas.width, this.#htmlCanvas.height);
+    if (this._htmlCanvas) {
+      const ctx = this._htmlCanvas.getContext('2d')!;
+      ctx.clearRect(0, 0, this._htmlCanvas.width, this._htmlCanvas.height);
     }
 
     return this;
@@ -388,7 +396,7 @@ export class Canvas {
    * For static scenes, render() can be called directly.
    */
   public render(): this {
-    if (!this.#engine || !this.#htmlCanvas || !this.#mainScene) {
+    if (!this._engine || !this.#mainScene) {
       return this;
     }
 
@@ -422,22 +430,19 @@ export class Canvas {
 
       // Update canvas pixel dimensions if changed
       if (
-        this.#htmlCanvas.width !== physicalWidth ||
-        this.#htmlCanvas.height !== physicalHeight
+        this._htmlCanvas && (
+          this._htmlCanvas.width !== physicalWidth ||
+          this._htmlCanvas.height !== physicalHeight
+        )
       ) {
-        this.#htmlCanvas.width = physicalWidth;
-        this.#htmlCanvas.height = physicalHeight;
-        this.#engine.resize(physicalWidth, physicalHeight);
+        this._htmlCanvas.width = physicalWidth;
+        this._htmlCanvas.height = physicalHeight;
+        this._engine.resize(physicalWidth, physicalHeight);
       }
     }
 
     Module._tvg_canvas_draw(this.#ptr, 1);
     Module._tvg_canvas_sync(this.#ptr);
-
-    // For SW backend, copy to HTML canvas
-    if (this.#renderer === 'sw') {
-      this._updateHTMLCanvas();
-    }
 
     return this;
   }
@@ -445,21 +450,6 @@ export class Canvas {
   private _calculateDPR(): number {
     // ThorVG DPR formula: interpolate between 1.0 and devicePixelRatio using a 0.75 factor
     return 1 + ((window.devicePixelRatio - 1) * 0.75);
-  }
-
-  private _updateHTMLCanvas(): void {
-    if (!this.#engine || !this.#htmlCanvas) return;
-
-    const buffer = this.#engine.render();
-    const size = this.#engine.size();
-
-    const ctx = this.#htmlCanvas.getContext('2d') as CanvasRenderingContext2D;
-    const imageData = new ImageData(
-      new Uint8ClampedArray(buffer),
-      size.width,
-      size.height
-    );
-    ctx.putImageData(imageData, 0, 0);
   }
 
   /**
@@ -487,10 +477,10 @@ export class Canvas {
     this.#logicalWidth = width;
     this.#logicalHeight = height;
 
-    if (this.#htmlCanvas) {
+    if (this._htmlCanvas) {
       // Update CSS dimensions to logical size
-      this.#htmlCanvas.style.width = `${width}px`;
-      this.#htmlCanvas.style.height = `${height}px`;
+      this._htmlCanvas.style.width = `${width}px`;
+      this._htmlCanvas.style.height = `${height}px`;
 
       // Calculate physical dimensions
       const dpr = this.#enableDevicePixelRatio ? this.#currentDPR : 1;
@@ -498,11 +488,11 @@ export class Canvas {
       const physicalHeight = height * dpr;
 
       // Set canvas pixel dimensions to physical size
-      this.#htmlCanvas.width = physicalWidth;
-      this.#htmlCanvas.height = physicalHeight;
+      this._htmlCanvas.width = physicalWidth;
+      this._htmlCanvas.height = physicalHeight;
 
-      if (this.#engine) {
-        this.#engine.resize(physicalWidth, physicalHeight);
+      if (this._engine) {
+        this._engine.resize(physicalWidth, physicalHeight);
       }
     }
 
@@ -570,16 +560,16 @@ export class Canvas {
     }
 
     // Cleanup engine
-    if (this.#engine) {
-      this.#engine.delete();
-      this.#engine = null;
+    if (this._engine) {
+      this._engine.delete();
+      this._engine = null;
     }
 
     // Clear HTML canvas if SW backend
-    if (this.#htmlCanvas && this.#renderer === 'sw') {
-      const ctx = this.#htmlCanvas.getContext('2d');
+    if (this._htmlCanvas && this.#renderer === 'sw') {
+      const ctx = this._htmlCanvas.getContext('2d');
       if (ctx) {
-        ctx.clearRect(0, 0, this.#htmlCanvas.width, this.#htmlCanvas.height);
+        ctx.clearRect(0, 0, this._htmlCanvas.width, this._htmlCanvas.height);
       }
     }
   }
@@ -639,5 +629,50 @@ export class Canvas {
    */
   public get dpr(): number {
     return this.#currentDPR;
+  }
+}
+
+export class SwCanvas extends Canvas {
+  constructor(selector: string | undefined, options: CanvasOptions) {
+    super(selector, options);
+  }
+
+  public getFrameData(): ImageData | null {
+    if (!this._engine) return null;
+    const buffer = this._engine.render();
+    const size = this._engine.size();
+
+    return new ImageData(
+      new Uint8ClampedArray(buffer),
+      size.width,
+      size.height
+    );
+  }
+
+  public override render(): this {
+    super.render();
+    this._updateHTMLCanvas();
+    return this;
+  }
+
+  private _updateHTMLCanvas(): void {
+    if (!this._htmlCanvas) return;
+
+    const ctx = this._htmlCanvas.getContext('2d')!;
+    const imageData = this.getFrameData();
+    if (!imageData) return;
+    ctx.putImageData(imageData, 0, 0);
+  }
+}
+
+export class GlCanvas extends Canvas {
+  constructor(selector: string, options: CanvasOptions) {
+    super(selector, options);
+  }
+}
+
+export class WgCanvas extends Canvas {
+  constructor(selector: string, options: CanvasOptions) {
+    super(selector, options);
   }
 }
