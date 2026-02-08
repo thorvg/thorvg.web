@@ -28,7 +28,7 @@ export interface EmscriptenModule {
 export interface TvgCanvasConstructor {
   new (
     engineType: string,
-    selector: string,
+    selector: string | undefined,
     width: number,
     height: number
   ): TvgCanvasInstance;

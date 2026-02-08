@@ -26,19 +26,20 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <string>
+#include <optional>
 
 using namespace tvg;
 using emscripten::class_;
 using emscripten::val;
 using emscripten::typed_memory_view;
 using std::string;
+using std::optional;
 
 EMSCRIPTEN_DECLARE_VAL_TYPE(ArrayBuffer);
 
 struct TvgEngineMethod
 {
     virtual ~TvgEngineMethod() {}
-    virtual Canvas* init(string& selector) = 0;
     virtual void resize(Canvas* canvas, uint32_t w, uint32_t h) = 0;
     virtual ArrayBuffer output(uint32_t w, uint32_t h)
     {
@@ -63,7 +64,7 @@ struct TvgSwEngine : TvgEngineMethod
         retrieveFont();
     }
 
-    Canvas* init(string& selector) override
+    Canvas* init()
     {
         if (Initializer::init() != Result::Success) return nullptr;
         loadFont();
@@ -109,7 +110,7 @@ struct TvgWgEngine : TvgEngineMethod
         retrieveFont();
     }
 
-    Canvas* init(string& selector) override
+    Canvas* init(string& selector)
     {
         // Create WebGPU surface
         WGPUEmscriptenSurfaceSourceCanvasHTMLSelector canvasDesc{};
@@ -242,7 +243,7 @@ struct TvgGlEngine : TvgEngineMethod
         retrieveFont();
     }
 
-    Canvas* init(string& selector) override
+    Canvas* init(string& selector)
     {
         EmscriptenWebGLContextAttributes attrs{};
         attrs.alpha = true;
@@ -299,17 +300,29 @@ public:
         if (engine) delete engine;
     }
 
-    explicit TvgCanvas(string engineType = "sw", string selector = "", uint32_t w = 0, uint32_t h = 0) {
+    explicit TvgCanvas(string engineType = "sw", optional<string> selector = std::nullopt, uint32_t w = 0, uint32_t h = 0) {
         errorMsg = "None";
 
 #ifdef THORVG_SW_RASTER_SUPPORT
-        if (engineType == "sw") engine = new TvgSwEngine;
+        if (engineType == "sw") {
+            auto sw = new TvgSwEngine;
+            canvas = sw->init();
+            engine = sw;
+        }
 #endif
 #ifdef THORVG_GL_RASTER_SUPPORT
-        if (engineType == "gl") engine = new TvgGlEngine;
+        if (engineType == "gl") {
+            auto gl = new TvgGlEngine;
+            canvas = gl->init(selector.value());
+            engine = gl;
+        }
 #endif
 #ifdef THORVG_WG_RASTER_SUPPORT
-        if (engineType == "wg") engine = new TvgWgEngine;
+        if (engineType == "wg") {
+            auto wg = new TvgWgEngine;
+            canvas = wg->init(selector.value());
+            engine = wg;
+        }
 #endif
 
         if (!engine) {
@@ -317,7 +330,6 @@ public:
             return;
         }
 
-        canvas = engine->init(selector);
         if (!canvas) {
             errorMsg = "Canvas initialization failed";
             return;
@@ -376,12 +388,13 @@ private:
 
 EMSCRIPTEN_BINDINGS(thorvg_webcanvas) {
     emscripten::register_type<ArrayBuffer>("ArrayBuffer");
+    emscripten::register_optional<string>();
 
     emscripten::function("init", &init);
     emscripten::function("term", &term);
 
     class_<TvgCanvas>("TvgCanvas")
-        .constructor<string, string, uint32_t, uint32_t>()
+        .constructor<string, optional<string>, uint32_t, uint32_t>()
         .function("error", &TvgCanvas::error)
         .function("resize", &TvgCanvas::resize)
         .function("clear", &TvgCanvas::clear)
