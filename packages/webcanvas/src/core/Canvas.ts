@@ -203,7 +203,7 @@ class Canvas {
     }
 
     if (selector) {
-      this._htmlCanvas = document.querySelector(selector) as HTMLCanvasElement;
+      this._htmlCanvas = document.querySelector<HTMLCanvasElement>(selector);
       if (!this._htmlCanvas) {
         handleError(`Failed to create canvas with ${renderer} renderer: HTML canvas element not found`, 'Canvas constructor');
         return;

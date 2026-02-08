@@ -193,10 +193,10 @@ async function init<R extends RendererType = 'gl'>(
 ): Promise<ThorVGNamespace<R>> {
   if (initialized) {
     console.warn('ThorVG already initialized');
-    return createNamespace(globalRenderer as R);
+    return createNamespace(globalRenderer);
   }
 
-  const { locateFile, renderer = 'gl' as R, onError } = options;
+  const { locateFile, renderer = 'gl', onError } = options;
 
   // Store the renderer for use by Canvas instances
   globalRenderer = renderer;
