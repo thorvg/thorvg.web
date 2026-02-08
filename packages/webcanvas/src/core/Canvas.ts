@@ -330,6 +330,11 @@ class Canvas {
     Module._tvg_canvas_draw(this.#ptr, 1);
     Module._tvg_canvas_sync(this.#ptr);
 
+    if (this._htmlCanvas) {
+      const ctx = this._htmlCanvas.getContext('2d')!;
+      ctx.clearRect(0, 0, this._htmlCanvas.width, this._htmlCanvas.height);
+    }
+
     return this;
   }
 
@@ -642,15 +647,6 @@ export class SwCanvas extends Canvas {
       size.width,
       size.height
     );
-  }
-
-  public override clear(): this {
-    super.clear();
-    if (this._htmlCanvas) {
-      const ctx = this._htmlCanvas.getContext('2d')!;
-      ctx.clearRect(0, 0, this._htmlCanvas.width, this._htmlCanvas.height);
-    }
-    return this;
   }
 
   public override render(): this {
