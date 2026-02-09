@@ -6,6 +6,8 @@ function getTVG(): ThorVGNamespace {
   return (globalThis as any).__TVG;
 }
 
+const isHappyDom = () => (globalThis as any).__TEST_ENV === 'happy-dom';
+
 describe('Canvas', () => {
   let canvas: Canvas;
 
@@ -22,8 +24,9 @@ describe('Canvas', () => {
     expect(canvas).toBeInstanceOf(Canvas);
   });
 
-  it('renderer returns sw', () => {
-    expect(canvas.renderer).toBe('sw');
+  it('renderer matches configured renderer', () => {
+    const expected = (globalThis as any).__RENDERER;
+    expect(canvas.renderer).toBe(expected);
   });
 
   it('dpr returns a number', () => {
@@ -52,6 +55,12 @@ describe('Canvas', () => {
     expect(result).toBe(canvas);
   });
 
+  // skip: happy-dom cannot simulate canvas API
+  it.skipIf(isHappyDom())('render returns this', () => {
+    const result = canvas.render();
+    expect(result).toBe(canvas);
+  });
+
   it('resize returns this', () => {
     const result = canvas.resize(1024, 768);
     expect(result).toBe(canvas);
@@ -59,6 +68,12 @@ describe('Canvas', () => {
 
   it('viewport returns this', () => {
     const result = canvas.viewport(0, 0, 400, 300);
+    expect(result).toBe(canvas);
+  });
+
+  // skip: happy-dom cannot simulate canvas API
+  it.skipIf(isHappyDom())('clear returns this', () => {
+    const result = canvas.clear();
     expect(result).toBe(canvas);
   });
 });
