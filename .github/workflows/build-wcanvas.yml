@@ -69,3 +69,17 @@ jobs:
         run: |
           ls -lah packages/webcanvas/dist/
           echo "✅ WebCanvas build completed successfully"
+
+      - name: Run unit tests
+        run: pnpm --filter @thorvg/webcanvas test
+
+      - name: Install Browser tools for Playwright
+        run: |
+          sudo apt-get install -y xvfb
+          pnpm --filter @thorvg/webcanvas exec playwright install --with-deps chromium
+
+      - name: Run browser tests (WebGL)
+        run: xvfb-run pnpm --filter @thorvg/webcanvas test:gl
+
+      - name: Run browser tests (WebGPU)
+        run: pnpm --filter @thorvg/webcanvas test:wg
