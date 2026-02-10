@@ -1,6 +1,6 @@
 project('thorvg-wasm-player', 'cpp',
         version : '1.0.0',
-        default_options : ['cpp_std=c++14'])
+        default_options : ['cpp_std=c++17'])
 
 cc = meson.get_compiler('cpp')
 
