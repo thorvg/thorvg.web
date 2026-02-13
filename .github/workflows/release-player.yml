@@ -56,6 +56,9 @@ jobs:
         working-directory: ./packages/lottie-player
         run: pnpm run build
 
+      - name: Run component tests
+        run: pnpm --filter @thorvg/lottie-player test
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
