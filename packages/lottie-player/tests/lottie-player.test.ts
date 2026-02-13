@@ -2,6 +2,8 @@ import { fixture, html, expect } from '@open-wc/testing';
 import { LottiePlayer } from '../dist/lottie-player.esm.js';
 import '../dist/lottie-player.esm.js';
 
+declare const EXPECTED_THORVG_VERSION: string;
+
 const ANIMATION = 'https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json';
 const WASM_URL = '/dist/thorvg.wasm';
 const WIDTH = 300;
@@ -123,7 +125,7 @@ describe('Lottie Player', () => {
 
   it('should return version object', () => {
     const { THORVG_VERSION } = lottiePlayer.getVersion();
-    expect(THORVG_VERSION).to.equal('1.0.0');
+    expect(THORVG_VERSION).to.equal(EXPECTED_THORVG_VERSION);
   });
 
   it('should destroy the player and set state to destroyed', () => {
