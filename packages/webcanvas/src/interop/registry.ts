@@ -63,13 +63,3 @@ if (typeof window !== 'undefined') {
     }
   });
 }
-
-// For Node.js or other environments
-if (typeof process !== 'undefined' && process.on) {
-  process.on('exit', () => {
-    if (hasModule()) {
-      const Module = getModule();
-      Module.term();
-    }
-  });
-}
