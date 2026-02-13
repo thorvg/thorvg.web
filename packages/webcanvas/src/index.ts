@@ -53,6 +53,8 @@ import * as constants from './common/constants';
 import type { RendererType } from './common/constants';
 import ThorVGModuleFactory from '../dist/thorvg';
 
+const THORVG_VERSION = '__THORVG_VERSION__';
+
 /**
  * @category Initialization
  */
@@ -86,6 +88,8 @@ export interface ThorVGNamespace {
   SceneEffect: typeof constants.SceneEffect;
   TextWrapMode: typeof constants.TextWrapMode;
   ColorSpace: typeof constants.ColorSpace;
+  /** ThorVG engine version string */
+  version: string;
   term(): void;
 }
 
@@ -265,6 +269,7 @@ function createNamespace(): ThorVGNamespace {
     SceneEffect: constants.SceneEffect,
     TextWrapMode: constants.TextWrapMode,
     ColorSpace: constants.ColorSpace,
+    version: THORVG_VERSION,
     term,
   };
 }

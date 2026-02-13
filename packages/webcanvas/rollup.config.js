@@ -3,6 +3,7 @@ import { dts } from "rollup-plugin-dts";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import { terser } from "rollup-plugin-terser";
+import replace from '@rollup/plugin-replace';
 import pkg from './package.json' assert { type: 'json' };
 
 const name = 'ThorVG';
@@ -40,6 +41,13 @@ const createWebCanvasConfig = () => {
       },
     ],
     plugins: [
+      replace({
+        include: ['src/**/*.ts'],
+        preventAssignment: true,
+        values: {
+          '__THORVG_VERSION__': process.env.THORVG_VERSION,
+        },
+      }),
       commonjs({
         include: /node_modules/
       }),
