@@ -1,6 +1,6 @@
 {
   "name": "@thorvg/webcanvas",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A TypeScript WebCanvas API for ThorVG - High-performance vector graphics rendering",
   "main": "./dist/webcanvas.cjs.js",
   "module": "./dist/webcanvas.esm.js",
