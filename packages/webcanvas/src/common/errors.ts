@@ -28,11 +28,6 @@ export class ThorVGError extends Error {
     this.name = 'ThorVGError';
     this.code = code;
     this.operation = operation;
-
-    // Maintains proper stack trace for where our error was thrown (V8 only)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ThorVGError);
-    }
   }
 
   public static fromCode(code: ThorVGResultCode, operation: string): ThorVGError {

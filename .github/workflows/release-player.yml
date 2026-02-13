@@ -56,6 +56,9 @@ jobs:
         working-directory: ./packages/lottie-player
         run: pnpm run build
 
+      - name: Run component tests
+        run: pnpm --filter @thorvg/lottie-player test
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -182,7 +185,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         working-directory: ./packages/lottie-player
-        run: pnpm publish --dry-run --access public --no-git-checks
+        run: pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
