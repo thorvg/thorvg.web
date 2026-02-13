@@ -182,7 +182,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         working-directory: ./packages/lottie-player
-        run: pnpm publish --dry-run --access public --no-git-checks
+        run: pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
