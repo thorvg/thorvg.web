@@ -1,12 +1,12 @@
 import { ShowcaseExample } from './types';
 
-export const lottieAnimationExample: ShowcaseExample = {
-  id: 'lottie-animation',
-  title: 'Lottie',
+export const animationExample: ShowcaseExample = {
+  id: 'animation',
+  title: 'Animation',
   description: 'Load and play a Lottie animation with playback controls',
   category: 'media',
-  thumbnail: '/assets/lottie-thumbnail.png',
-  code: `// Native example: Lottie.cpp
+  thumbnail: '/assets/animation-thumbnail.png',
+  code: `// Native example: Animation.cpp
 
 import { init } from '@thorvg/webcanvas';
 
