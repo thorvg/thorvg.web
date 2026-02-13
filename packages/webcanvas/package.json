@@ -21,8 +21,8 @@
     "!dist/**/thorvg.js"
   ],
   "scripts": {
-    "build": "npm run clean && sh ./wasm_wcanvas_setup.sh && rollup -c --bundleConfigAsCjs",
-    "build:watch": "npm run clean && sh ./wasm_wcanvas_setup.sh && rollup -c --bundleConfigAsCjs --watch",
+    "build": "npm run clean && sh ./wasm_wcanvas_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
+    "build:watch": "npm run clean && sh ./wasm_wcanvas_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
     "test": "vitest run",
     "test:gl": "TEST_RENDERER=gl vitest run --config vitest.browser.config.ts",
@@ -57,6 +57,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^6.0.3",
     "@swc/core": "^1.3.99",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
     "@vitest/browser-playwright": "^4.0.18",
