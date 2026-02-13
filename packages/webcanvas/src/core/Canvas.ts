@@ -47,7 +47,6 @@ import { Scene } from './Scene';
 import type { RendererType } from '../common/constants';
 import { checkResult, handleError } from '../common/errors';
 import type { TvgCanvasInstance } from '../types/emscripten';
-import { getGlobalRenderer } from '../index';
 
 /**
  * Configuration options for Canvas initialization.
@@ -106,7 +105,7 @@ export interface CanvasOptions {
  * animate();
  * ```
  */
-class Canvas {
+abstract class Canvas {
   #ptr: number = 0;
   #renderer: RendererType;
   protected _engine: TvgCanvasInstance | null = null;
@@ -121,43 +120,16 @@ class Canvas {
   /**
    * Creates a new Canvas rendering context.
    *
-   * The renderer is determined by the global setting from ThorVG.init().
-   *
+   * @param renderer - Passed by subclass constructor
    * @param selector - CSS selector for the target HTML canvas element (e.g., '#canvas', '.my-canvas')
    * @param options - Configuration options for the canvas
    *
    * @throws {Error} If the canvas element is not found or renderer initialization fails
    *
-   * @example
-   * ```typescript
-   * // Initialize with renderer
-   * const TVG = await ThorVG.init({ renderer: 'gl' });
-   *
-   * // Basic canvas with default options (DPR enabled by default)
-   * const canvas = new TVG.Canvas('#canvas');
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Canvas with custom size
-   * const TVG = await ThorVG.init({ renderer: 'wg' });
-   * const canvas = new TVG.Canvas('#myCanvas', {
-   *   width: 1920,
-   *   height: 1080
-   * });
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Canvas with DPR disabled for consistent rendering across devices
-   * const canvas = new TVG.Canvas('#canvas', {
-   *   width: 800,
-   *   height: 600,
-   *   enableDevicePixelRatio: false
-   * });
-   * ```
+   * Abstract base class for all canvas types.
+   * See {@link SwCanvas}, {@link GlCanvas}, and {@link WgCanvas} for concrete implementations.
    */
-  constructor(selector: string | undefined, options: CanvasOptions = {}) {
+  constructor(renderer: RendererType, selector: string | undefined, options: CanvasOptions = {}) {
     const { width = 800, height = 600, enableDevicePixelRatio = true } = options;
 
     // Store logical dimensions
@@ -165,14 +137,7 @@ class Canvas {
     this.#logicalHeight = height;
     this.#enableDevicePixelRatio = enableDevicePixelRatio;
 
-    // Get the global renderer set during ThorVG.init()
-    const renderer = getGlobalRenderer();
     this.#renderer = renderer;
-
-    if (!selector && this.#renderer !== 'sw') {
-      handleError(`Failed to create canvas with ${renderer} renderer: selector is required`, 'Canvas constructor');
-      return;
-    }
 
     // Module should already be initialized by ThorVG.init()
     const Module = getModule();
@@ -185,7 +150,7 @@ class Canvas {
     const physicalHeight = height * dpr;
 
     // Create TvgCanvas with physical dimensions
-    this._engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight);
+    this._engine = new Module.TvgCanvas(renderer, selector || '', physicalWidth, physicalHeight);
 
     // Check for errors
     const error = this._engine.error();
@@ -330,11 +295,6 @@ class Canvas {
     Module._tvg_canvas_draw(this.#ptr, 1);
     Module._tvg_canvas_sync(this.#ptr);
 
-    if (this._htmlCanvas) {
-      const ctx = this._htmlCanvas.getContext('2d')!;
-      ctx.clearRect(0, 0, this._htmlCanvas.width, this._htmlCanvas.height);
-    }
-
     return this;
   }
 
@@ -477,23 +437,23 @@ class Canvas {
     this.#logicalWidth = width;
     this.#logicalHeight = height;
 
+    // Calculate physical dimensions
+    const dpr = this.#enableDevicePixelRatio ? this.#currentDPR : 1;
+    const physicalWidth = width * dpr;
+    const physicalHeight = height * dpr;
+
     if (this._htmlCanvas) {
       // Update CSS dimensions to logical size
       this._htmlCanvas.style.width = `${width}px`;
       this._htmlCanvas.style.height = `${height}px`;
 
-      // Calculate physical dimensions
-      const dpr = this.#enableDevicePixelRatio ? this.#currentDPR : 1;
-      const physicalWidth = width * dpr;
-      const physicalHeight = height * dpr;
-
       // Set canvas pixel dimensions to physical size
       this._htmlCanvas.width = physicalWidth;
       this._htmlCanvas.height = physicalHeight;
+    }
 
-      if (this._engine) {
-        this._engine.resize(physicalWidth, physicalHeight);
-      }
+    if (this._engine) {
+      this._engine.resize(physicalWidth, physicalHeight);
     }
 
     return this;
@@ -564,14 +524,6 @@ class Canvas {
       this._engine.delete();
       this._engine = null;
     }
-
-    // Clear HTML canvas if SW backend
-    if (this._htmlCanvas && this.#renderer === 'sw') {
-      const ctx = this._htmlCanvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, this._htmlCanvas.width, this._htmlCanvas.height);
-      }
-    }
   }
 
   /**
@@ -632,11 +584,80 @@ class Canvas {
   }
 }
 
+export type { Canvas };
+
 export class SwCanvas extends Canvas {
+  /**
+   * Creates a new SwCanvas rendering context.
+   *
+   * @param selector - Optional CSS selector for the target HTML canvas element (e.g., '#canvas', '.my-canvas')
+   * @param options - Configuration options for the canvas
+   *
+   * @throws {Error} If the canvas element is not found or renderer initialization fails
+   * 
+   * @remarks
+   * Can be used inside Web Workers by skipping the selector parameter.
+   * 
+   * If no selector is provided, you must manually obtain frame data after render by using {@link getFrameData}.
+   *
+   * @example
+   * ```typescript
+   * // Initialize with renderer
+   * const TVG = await ThorVG.init({ renderer: 'sw' });
+   *
+   * // Basic canvas with default options (DPR enabled by default)
+   * const canvas = new TVG.Canvas('#canvas');
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Canvas with custom size
+   * const TVG = await ThorVG.init({ renderer: 'sw' });
+   * const canvas = new TVG.Canvas('#myCanvas', {
+   *   width: 1920,
+   *   height: 1080
+   * });
+   * 
+   * // Canvas with manual frame data retrieval
+   * const bufferCanvas = new TVG.Canvas(undefined, { width: 800, height: 600 });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Canvas with DPR disabled for consistent rendering across devices
+   * const canvas = new TVG.Canvas('#canvas', {
+   *   width: 800,
+   *   height: 600,
+   *   enableDevicePixelRatio: false
+   * });
+   * ```
+   */
   constructor(selector: string | undefined, options: CanvasOptions) {
-    super(selector, options);
+    super('sw', selector, options);
   }
 
+  /**
+   * Access rendered frame data as an ImageData object.
+   *
+   * @returns The current frame data as an ImageData object. `null` if used after {@link destroy}.
+   *
+   *
+   * @example
+   * ```typescript
+   * // Animation loop
+   * function animate() {
+   *   canvas.update().render();
+   *   const imageData = canvas.getFrameData();
+   *   if (imageData) {
+   *     // Draw on canvas, process it, or send with `postMessage`
+   *   }
+   *   requestAnimationFrame(animate);
+   * }
+   * ```
+   *
+   * @remarks
+   * See {@link render}.
+   */
   public getFrameData(): ImageData | null {
     if (!this._engine) return null;
     const buffer = this._engine.render();
@@ -655,6 +676,17 @@ export class SwCanvas extends Canvas {
     return this;
   }
 
+  public override clear(): this {
+    super.clear();
+    this._clearHTMLCanvas();
+    return this;
+  }
+
+  public override destroy(): void {
+    super.destroy();
+    this._clearHTMLCanvas();
+  }
+
   private _updateHTMLCanvas(): void {
     if (!this._htmlCanvas) return;
 
@@ -663,16 +695,96 @@ export class SwCanvas extends Canvas {
     if (!imageData) return;
     ctx.putImageData(imageData, 0, 0);
   }
+
+  private _clearHTMLCanvas(): void {
+    if (!this._htmlCanvas) return;
+    const ctx = this._htmlCanvas.getContext('2d');
+    if (ctx) ctx.clearRect(0, 0, this._htmlCanvas.width, this._htmlCanvas.height);
+  }
 }
 
 export class GlCanvas extends Canvas {
+  /**
+   * Creates a new GlCanvas rendering context.
+   *
+   * @param selector - CSS selector for the target HTML canvas element (e.g., '#canvas', '.my-canvas')
+   * @param options - Configuration options for the canvas
+   *
+   * @throws {Error} If the canvas element is not found or renderer initialization fails
+   *
+   * @example
+   * ```typescript
+   * // Initialize with renderer
+   * const TVG = await ThorVG.init({ renderer: 'gl' });
+   *
+   * // Basic canvas with default options (DPR enabled by default)
+   * const canvas = new TVG.Canvas('#canvas');
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Canvas with custom size
+   * const TVG = await ThorVG.init({ renderer: 'gl' });
+   * const canvas = new TVG.Canvas('#myCanvas', {
+   *   width: 1920,
+   *   height: 1080
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Canvas with DPR disabled for consistent rendering across devices
+   * const canvas = new TVG.Canvas('#canvas', {
+   *   width: 800,
+   *   height: 600,
+   *   enableDevicePixelRatio: false
+   * });
+   * ```
+   */
   constructor(selector: string, options: CanvasOptions) {
-    super(selector, options);
+    super('gl', selector, options);
   }
 }
 
 export class WgCanvas extends Canvas {
+  /**
+   * Creates a new WgCanvas rendering context.
+   *
+   * @param selector - CSS selector for the target HTML canvas element (e.g., '#canvas', '.my-canvas')
+   * @param options - Configuration options for the canvas
+   *
+   * @throws {Error} If the canvas element is not found or renderer initialization fails
+   *
+   * @example
+   * ```typescript
+   * // Initialize with renderer
+   * const TVG = await ThorVG.init({ renderer: 'wg' });
+   *
+   * // Basic canvas with default options (DPR enabled by default)
+   * const canvas = new TVG.Canvas('#canvas');
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Canvas with custom size
+   * const TVG = await ThorVG.init({ renderer: 'wg' });
+   * const canvas = new TVG.Canvas('#myCanvas', {
+   *   width: 1920,
+   *   height: 1080
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Canvas with DPR disabled for consistent rendering across devices
+   * const canvas = new TVG.Canvas('#canvas', {
+   *   width: 800,
+   *   height: 600,
+   *   enableDevicePixelRatio: false
+   * });
+   * ```
+   */
   constructor(selector: string, options: CanvasOptions) {
-    super(selector, options);
+    super('wg', selector, options);
   }
 }

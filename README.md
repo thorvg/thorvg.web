@@ -109,7 +109,6 @@ canvas.render();
 
 - Node.js 20+
 - pnpm 10+
-- Python 3.10+
 - Emscripten SDK (for WASM builds)
 - Meson & Ninja (for native builds)
 

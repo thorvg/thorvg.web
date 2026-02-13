@@ -90,16 +90,7 @@ export interface ThorVGNamespace<R extends RendererType = RendererType> {
 }
 
 let Module: ThorVGModule | null = null;
-let initialized = false;
-let globalRenderer: RendererType = 'gl';
-
-/**
- * Get the currently configured renderer
- * @internal
- */
-export function getGlobalRenderer(): RendererType {
-  return globalRenderer;
-}
+let initializedRenderer: RendererType | null = null;
 
 /**
  * Internal function to initialize ThorVG engine
@@ -191,15 +182,12 @@ async function initEngine(engineType: RendererType = 'gl'): Promise<void> {
 async function init<R extends RendererType = 'gl'>(
   options: InitOptions<R> = {} as InitOptions<R>,
 ): Promise<ThorVGNamespace<R>> {
-  if (initialized) {
+  if (initializedRenderer) {
     console.warn('ThorVG already initialized');
-    return createNamespace(globalRenderer);
+    return createNamespace(initializedRenderer);
   }
 
   const { locateFile, renderer = 'gl', onError } = options;
-
-  // Store the renderer for use by Canvas instances
-  globalRenderer = renderer;
 
   // Set the global error handler for checkResult
   setGlobalErrorHandler(onError);
@@ -211,7 +199,7 @@ async function init<R extends RendererType = 'gl'>(
 
   // Make Module globally available for class constructors
   (globalThis as any).__ThorVGModule = Module;
-  initialized = true;
+  initializedRenderer = renderer;
 
   // Automatically initialize the engine with specified renderer
   await initEngine(renderer);
@@ -224,7 +212,7 @@ async function init<R extends RendererType = 'gl'>(
  * After calling this, you must call init() again to use ThorVG
  */
 function term(): void {
-  if (!initialized || !Module) {
+  if (!initializedRenderer || !Module) {
     console.warn('ThorVG not initialized, nothing to terminate');
     return;
   }
@@ -239,7 +227,7 @@ function term(): void {
 
   // Reset state
   Module = null;
-  initialized = false;
+  initializedRenderer = null;
 }
 
 /**
