@@ -47,7 +47,7 @@
     "build": "npm run clean && sh ./wasm_player_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
     "build:watch": "npm run clean && sh ./wasm_player_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
-    "test": "web-test-runner tests/**/*.test.ts",
+    "test": "THORVG_VERSION=$(npm run version --silent) web-test-runner tests/**/*.test.ts",
     "lint": "eslint ./src --ext .ts,.tsx,.js",
     "lint:fix": "eslint ./src --ext .ts,.tsx,.js --fix",
     "version": "sed -n -e 4p ../../thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'"
