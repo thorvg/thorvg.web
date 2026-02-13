@@ -62,6 +62,20 @@ jobs:
         working-directory: ./packages/webcanvas
         run: pnpm run build
 
+      - name: Run unit tests
+        run: pnpm --filter @thorvg/webcanvas test
+
+      - name: Install Browser tools for Playwright
+        run: |
+          sudo apt-get install -y xvfb
+          pnpm --filter @thorvg/webcanvas exec playwright install --with-deps chromium
+
+      - name: Run browser tests (WebGL)
+        run: xvfb-run pnpm --filter @thorvg/webcanvas test:gl
+
+      - name: Run browser tests (WebGPU)
+        run: pnpm --filter @thorvg/webcanvas test:wg
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
