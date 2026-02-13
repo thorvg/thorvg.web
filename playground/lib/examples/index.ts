@@ -25,7 +25,8 @@ import { pictureJpgExample } from './picture-jpg';
 import { picturePngExample } from './picture-png';
 import { pictureWebpExample } from './picture-webp';
 import { pictureRawExample } from './picture-raw';
-import { lottieAnimationExample } from './lottie-animation';
+import { animationExample } from './animation';
+import { lottieExample } from './lottie';
 import { lottieExpressionsExample } from './lottie-expressions';
 import { trimPathExample } from './trim-path';
 import { imageRotationExample } from './image-rotation';
@@ -94,9 +95,10 @@ export const showcaseExamples: ShowcaseExample[] = [
   textLineWrapExample,
   textStaticExample,
   // Media (alphabetically sorted by title)
-  pictureJpgExample,
-  lottieAnimationExample,
+  animationExample,
+  lottieExample,
   lottieExpressionsExample,
+  pictureJpgExample,
   picturePngExample,
   pictureRawExample,
   pictureSvgExample,
