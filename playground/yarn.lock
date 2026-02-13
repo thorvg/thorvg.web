@@ -411,10 +411,10 @@
   dependencies:
     tslib "^2.8.0"
 
-"@thorvg/webcanvas@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/@thorvg/webcanvas/-/webcanvas-1.0.0.tgz#fc88129355164a89ac7369d85aea8861260b94c1"
-  integrity sha512-RgcU9G9yfC2BvlC458ZOc4ytv1IkPQWbIp7NVJbOEURd9Njn17SU0I9/0nJHQtwPVTVBEu4RRfkNOZeXn430sw==
+"@thorvg/webcanvas@latest":
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/@thorvg/webcanvas/-/webcanvas-1.0.1.tgz#4f22cd832722a4e31b607c28427e0a9d652ff879"
+  integrity sha512-Kl03jDvPaLOkz7t8X/I1AoZaYEyuO+fXTCUhQMRanjn/8x9xKftpiVQu5MWzkNYFKZdAIhSO7yGHVDkNdfbrhg==
 
 "@tybys/wasm-util@^0.10.0":
   version "0.10.1"
