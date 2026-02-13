@@ -381,7 +381,7 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
 
       {/* Status Bar */}
       <div
-        className={`px-4 py-2 text-xs border-t border-[#3e3e42] ${
+        className={`px-4 py-2 text-xs border-t border-[#3e3e42] flex items-center justify-between ${
           status.type === 'error'
             ? 'bg-[#f48771] text-white'
             : status.type === 'success'
@@ -389,7 +389,12 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
             : 'bg-[#007acc] text-white'
         }`}
       >
-        {status.message}
+        <span>{status.message}</span>
+        {TVG?.version && (
+          <span className="opacity-70">
+            ThorVG v{TVG.version} · {currentRenderer.toUpperCase()}
+          </span>
+        )}
       </div>
     </div>
   );
