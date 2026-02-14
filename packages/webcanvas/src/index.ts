@@ -39,7 +39,7 @@
  */
 
 import type { ThorVGModule } from './types/emscripten';
-import { Canvas } from './core/Canvas';
+import { SwCanvas, GlCanvas, WgCanvas } from './core/Canvas';
 import { Shape } from './core/Shape';
 import { Scene } from './core/Scene';
 import { Picture } from './core/Picture';
@@ -56,17 +56,17 @@ import ThorVGModuleFactory from '../dist/thorvg';
 /**
  * @category Initialization
  */
-export interface InitOptions {
+export interface InitOptions<R extends RendererType = RendererType> {
   /** Optional function to locate WASM files. If not provided, assumes WASM files are in the same directory as the JavaScript bundle. */
   locateFile?: (path: string) => string;
   /** Renderer type: 'sw' (Software), 'gl' (WebGL), or 'wg' (WebGPU). Default: 'gl'. WebGPU provides best performance but requires Chrome 113+ or Edge 113+. */
-  renderer?: RendererType;
+  renderer?: R;
   /** Global error handler for all ThorVG operations. If provided, errors will be passed to this handler instead of being thrown. */
   onError?: ErrorHandler;
 }
 
-export interface ThorVGNamespace {
-  Canvas: typeof Canvas;
+export interface ThorVGNamespace<R extends RendererType = RendererType> {
+  Canvas: R extends 'sw' ? typeof SwCanvas : R extends 'gl' ? typeof GlCanvas : typeof WgCanvas;
   Shape: typeof Shape;
   Scene: typeof Scene;
   Picture: typeof Picture;
@@ -90,16 +90,7 @@ export interface ThorVGNamespace {
 }
 
 let Module: ThorVGModule | null = null;
-let initialized = false;
-let globalRenderer: RendererType = 'gl';
-
-/**
- * Get the currently configured renderer
- * @internal
- */
-export function getGlobalRenderer(): RendererType {
-  return globalRenderer;
-}
+let initializedRenderer: RendererType | null = null;
 
 /**
  * Internal function to initialize ThorVG engine
@@ -188,16 +179,15 @@ async function initEngine(engineType: RendererType = 'gl'): Promise<void> {
  *
  * @throws {Error} If WASM module fails to load or engine initialization fails
  */
-async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
-  if (initialized) {
+async function init<R extends RendererType = 'gl'>(
+  options: InitOptions<R> = {} as InitOptions<R>,
+): Promise<ThorVGNamespace<R>> {
+  if (initializedRenderer) {
     console.warn('ThorVG already initialized');
-    return createNamespace();
+    return createNamespace(initializedRenderer);
   }
 
   const { locateFile, renderer = 'gl', onError } = options;
-
-  // Store the renderer for use by Canvas instances
-  globalRenderer = renderer;
 
   // Set the global error handler for checkResult
   setGlobalErrorHandler(onError);
@@ -209,12 +199,12 @@ async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
 
   // Make Module globally available for class constructors
   (globalThis as any).__ThorVGModule = Module;
-  initialized = true;
+  initializedRenderer = renderer;
 
   // Automatically initialize the engine with specified renderer
   await initEngine(renderer);
 
-  return createNamespace();
+  return createNamespace(renderer);
 }
 
 /**
@@ -222,7 +212,7 @@ async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
  * After calling this, you must call init() again to use ThorVG
  */
 function term(): void {
-  if (!initialized || !Module) {
+  if (!initializedRenderer || !Module) {
     console.warn('ThorVG not initialized, nothing to terminate');
     return;
   }
@@ -237,15 +227,14 @@ function term(): void {
 
   // Reset state
   Module = null;
-  initialized = false;
+  initializedRenderer = null;
 }
 
 /**
  * Create namespace with all classes and enums
  */
-function createNamespace(): ThorVGNamespace {
-  return {
-    Canvas,
+function createNamespace<T extends RendererType>(renderer: T): ThorVGNamespace<T> {
+  const namespace = {
     Shape,
     Scene,
     Picture,
@@ -266,7 +255,12 @@ function createNamespace(): ThorVGNamespace {
     TextWrapMode: constants.TextWrapMode,
     ColorSpace: constants.ColorSpace,
     term,
-  };
+  } satisfies Omit<ThorVGNamespace<T>, 'Canvas'>; // Type safety
+
+  return {
+    ...namespace,
+    Canvas: renderer === 'sw' ? SwCanvas : renderer === 'gl' ? GlCanvas : WgCanvas,
+  } as ThorVGNamespace<T>;
 }
 
 // Main export object
@@ -277,7 +271,7 @@ const ThorVG = {
 export default ThorVG;
 
 // Named exports for advanced usage
-export { init, Canvas, Shape, Scene, Picture, Text, Animation, LinearGradient, RadialGradient, Font, constants, ThorVGResultCode, ThorVGError };
+export { init, Shape, Scene, Picture, Text, Animation, LinearGradient, RadialGradient, Font, constants, ThorVGResultCode, ThorVGError };
 
 // Re-export types
 export type { CanvasOptions } from './core/Canvas';
