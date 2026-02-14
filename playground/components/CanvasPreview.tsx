@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Stats from 'stats.js';
 import wasmUrl from "../node_modules/@thorvg/webcanvas/dist/thorvg.wasm";
 
 interface CanvasPreviewProps {
@@ -20,6 +21,7 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
   const [zoom, setZoom] = useState(100);
   const [showGrid, setShowGrid] = useState(false);
   const [darkCanvas, setDarkCanvas] = useState(useDarkCanvas);
+  const [showStats, setShowStats] = useState(false);
   const [TVG, setTVG] = useState<any>(null);
   const [canvas, setCanvas] = useState<any>(null);
   const [currentRenderer, setCurrentRenderer] = useState<'sw' | 'gl' | 'wg'>('gl');
@@ -134,6 +136,44 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
       }
     }
   }, [zoom, isZoomDragging]);
+
+  // Load/unload stats profiler
+  useEffect(() => {
+    if (showStats) {
+      // Create FPS panel
+      const statsFPS = new Stats();
+      statsFPS.showPanel(0);
+      statsFPS.dom.style.cssText = 'position:absolute;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000';
+      containerRef.current?.appendChild(statsFPS.dom);
+
+       // Create MS panel
+       const statsMS = new Stats();
+       statsMS.showPanel(1); // MS
+       statsMS.dom.style.cssText = 'position:absolute;top:0;left:80px;cursor:pointer;opacity:0.9;z-index:10000';
+       containerRef.current?.appendChild(statsMS.dom);
+
+      // Create MB panel
+      const statsMB = new Stats();
+      statsMB.showPanel(2); // MB
+      statsMB.dom.style.cssText = 'position:absolute;top:0;left:160px;cursor:pointer;opacity:0.9;z-index:10000';
+      containerRef.current?.appendChild(statsMB.dom);
+
+      function animate() {
+        statsFPS.begin();
+        statsFPS.end();
+
+        statsMS.begin();
+        statsMS.end();
+
+        statsMB.begin();
+        statsMB.end();
+
+        requestAnimationFrame(animate);
+      }
+
+      requestAnimationFrame(animate);
+    }
+  }, [showStats]);
 
   const runCode = async () => {
     if (!canvas || !TVG) {
@@ -286,7 +326,7 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
   return (
     <div className="h-full flex flex-col bg-[#252526]">
       {/* Canvas Container */}
-      <div className="flex-1 flex items-center justify-center p-5 overflow-auto" ref={containerRef}>
+      <div className="flex-1 flex items-center justify-center p-5 overflow-auto relative" ref={containerRef}>
         <div
           className={`relative transition-transform ${showGrid ? 'show-grid' : ''}`}
           style={{
@@ -358,6 +398,18 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
             className="cursor-pointer"
           />
           Dark Canvas
+        </label>
+
+        <div className="w-px h-5 bg-[#3e3e42]" />
+
+        <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showStats}
+            onChange={(e) => setShowStats(e.target.checked)}
+            className="cursor-pointer"
+          />
+          Stats
         </label>
 
         <div className="flex-1" />

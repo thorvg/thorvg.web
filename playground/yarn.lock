@@ -462,6 +462,11 @@
   dependencies:
     csstype "^3.2.2"
 
+"@types/stats.js@^0.17.4":
+  version "0.17.4"
+  resolved "https://registry.npmjs.org/@types/stats.js/-/stats.js-0.17.4.tgz#1933e5ff153a23c7664487833198d685c22e791e"
+  integrity sha512-jIBvWWShCvlBqBNIZt0KAshWpvSjhkwkEu4ZUcASoAvhmrgAUI2t1dXrjSL4xXVLB4FznPrIsX3nKXFl/Dt4vA==
+
 "@types/trusted-types@^2.0.7":
   version "2.0.7"
   resolved "https://registry.npmjs.org/@types/trusted-types/-/trusted-types-2.0.7.tgz#baccb07a970b91707df3a3e8ba6896c57ead2d11"
@@ -2654,6 +2659,11 @@ state-local@^1.0.6:
   version "1.0.7"
   resolved "https://registry.npmjs.org/state-local/-/state-local-1.0.7.tgz#da50211d07f05748d53009bee46307a37db386d5"
   integrity sha512-HTEHMNieakEnoe33shBYcZ7NX83ACUjCu8c40iOGEZsngj9zRnkqS9j1pqQPXwobB0ZcVTk27REb7COQ0UR59w==
+
+stats.js@^0.17.0:
+  version "0.17.0"
+  resolved "https://registry.npmjs.org/stats.js/-/stats.js-0.17.0.tgz#b1c3dc46d94498b578b7fd3985b81ace7131cc7d"
+  integrity sha512-hNKz8phvYLPEcRkeG1rsGmV5ChMjKDAWU7/OJJdDErPBNChQXxCo3WZurGpnWc6gZhAzEPFad1aVgyOANH1sMw==
 
 stop-iteration-iterator@^1.1.0:
   version "1.1.0"
