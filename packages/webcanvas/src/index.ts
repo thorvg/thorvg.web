@@ -287,7 +287,7 @@ export type { RectOptions, StrokeOptions } from './core/Shape';
 export type { LoadDataOptions, PictureSize } from './core/Picture';
 export type { TextLayout, TextOutline } from './core/Text';
 export type { AnimationInfo, AnimationSegment } from './core/Animation';
-export type { LoadFontOptions, FontType } from './core/Font';
+export type { LoadFontOptions, FontType, FontsourceOptions } from './core/Font';
 export type { ColorStop } from './core/Fill';
 /** @category Canvas */
 export type { RendererType } from './common/constants';
