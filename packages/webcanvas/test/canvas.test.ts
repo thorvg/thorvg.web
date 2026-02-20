@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import type { ThorVGNamespace } from '../src/index';
-import { Canvas } from '../src/core/Canvas';
+import type { RendererType, ThorVGNamespace } from '../src/index';
+import { Canvas, GlCanvas, SwCanvas, WgCanvas } from '../src/core/Canvas';
 
 function getTVG(): ThorVGNamespace {
   return (globalThis as any).__TVG;
+}
+
+function getRenderer(): RendererType {
+  return (globalThis as any).__RENDERER;
 }
 
 const isHappyDom = () => (globalThis as any).__TEST_ENV === 'happy-dom';
@@ -21,11 +25,13 @@ describe('Canvas', () => {
   });
 
   it('constructor creates canvas', () => {
-    expect(canvas).toBeInstanceOf(Canvas);
+    const renderer = getRenderer();
+    const canvasClass = renderer === 'sw' ? SwCanvas : renderer === 'gl' ? GlCanvas : WgCanvas;
+    expect(canvas).toBeInstanceOf(canvasClass);
   });
 
   it('renderer matches configured renderer', () => {
-    const expected = (globalThis as any).__RENDERER;
+    const expected = getRenderer();
     expect(canvas.renderer).toBe(expected);
   });
 
