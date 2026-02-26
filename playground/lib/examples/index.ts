@@ -39,7 +39,6 @@ import { strokeMiterlimitExample } from './stroke-miterlimit';
 import { updateExample } from './update';
 import { directUpdateExample } from './direct-update';
 import { maskingExample } from './masking';
-import { lumaMaskingExample } from './luma-masking';
 import { maskingMethodsExample } from './masking-methods';
 import { gradientMaskingExample } from './gradient-masking';
 import { intersectsExample } from './intersects';
@@ -83,7 +82,6 @@ export const showcaseExamples: ShowcaseExample[] = [
   errorHandlingExample,
   gradientMaskingExample,
   intersectsExample,
-  lumaMaskingExample,
   maskingExample,
   maskingMethodsExample,
   sceneEffectsExample,
