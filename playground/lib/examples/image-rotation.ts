@@ -33,6 +33,7 @@ const startTime = performance.now();
 
   picture.origin(0.5, 0.5);
   picture.translate(300, 300);
+  picture.scale(0.6);
 
   //Add picture to canvas once
   canvas.add(picture);
@@ -41,7 +42,6 @@ const startTime = performance.now();
     const elapsed = currentTime - startTime;
     const progress = (elapsed / 4000) % 1;  //4 second loop
 
-    picture.scale(0.6);
     picture.rotate(progress * 360);
 
     canvas.update();
