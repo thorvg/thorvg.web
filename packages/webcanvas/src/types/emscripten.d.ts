@@ -72,6 +72,7 @@ export interface ThorVGCAPI {
   _tvg_paint_set_blend_method(paint: number, method: number): number;
   _tvg_paint_set_mask_method(paint: number, target: number, method: number): number;
   _tvg_paint_intersects(paint: number, x: number, y: number, w: number, h: number): number;
+  _tvg_paint_get_id(paint: number): number;
 
   // Shape functions
   _tvg_shape_new(): number;

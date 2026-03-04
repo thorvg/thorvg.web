@@ -189,6 +189,15 @@ export abstract class Paint extends WasmObject {
   }
 
   /**
+   * Get the hash ID of this Paint object
+   * @returns The Paint object's hash ID
+   */
+  public id(): number {
+    const Module = getModule();
+    return Module._tvg_paint_get_id(this.ptr);
+  }
+
+  /**
    * Get the axis-aligned bounding box (AABB) of this paint
    */
   public bounds(): Bounds;
