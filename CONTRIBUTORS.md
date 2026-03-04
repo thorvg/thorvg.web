@@ -1,16 +1,16 @@
 ## Project Lead
-- Hermet Park <hermetpark@gmail.com>
+- Hermet Park @hermet
 
 ## Maintainer
-- Jinny You <jinny@lottiefiles.com>
+- Jinny You @tinyjin
 
 ## Contributors
-- Abdelrahman Ashraf <a.theashraf@gmail.com>
-- JaeDeok Kim <m.6d17s2@gmail.com>
-- Jiman Jeong <wlaks2317@gmail.com>
-- JaeDo Lim <limjaedo@webtoonscorp.com>
-- KunYoung Park <rjsdud3263@gmail.com>
-- Yeji Kim <lerry597@gmail.com>
-- OnYu Lee <loy7153@gmail.com>
-- TsingWong <919916459@qq.com>
-- Seungwon Lee <nowgnues.lee@gmail.com>
+- Abdelrahman Ashraf @theashraf
+- JaeDeok Kim @Howl-Kim
+- Jiman Jeong @jjm2317
+- JaeDo Lim @effozen
+- KunYoung Park @kunyoungparkk
+- Yeji Kim @lerrybe
+- OnYu Lee @ROWELLI
+- TsingWong @tsingwong
+- Seungwon Lee @nowgnuesLeee
