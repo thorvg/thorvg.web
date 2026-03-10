@@ -46,12 +46,12 @@ import { checkResult } from '../common/errors';
  * ```
  */
 export class Scene extends Paint {
-  constructor(ptr?: number) {
+  constructor(ptr?: number, skipRegistry: boolean = false) {
     const Module = getModule();
     if (!ptr) {
       ptr = Module._tvg_scene_new();
     }
-    super(ptr, sceneRegistry);
+    super(ptr, skipRegistry ? undefined : sceneRegistry);
   }
 
   protected _createInstance(ptr: number): Scene {
@@ -247,3 +247,6 @@ export class Scene extends Paint {
     return this;
   }
 }
+
+// Tvg_Type = 2 (TVG_TYPE_SCENE)
+Paint.registerType(2, (ptr) => new Scene(ptr, true));

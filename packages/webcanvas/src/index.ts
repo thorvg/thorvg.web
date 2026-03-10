@@ -48,6 +48,7 @@ import { Animation } from './core/Animation';
 import { LinearGradient } from './core/LinearGradient';
 import { RadialGradient } from './core/RadialGradient';
 import { Font } from './core/Font';
+import { Accessor } from './core/Accessor';
 import { ThorVGResultCode, ThorVGError, setGlobalErrorHandler, handleError, type ErrorHandler } from './common/errors';
 import * as constants from './common/constants';
 import type { RendererType } from './common/constants';
@@ -78,6 +79,7 @@ export interface ThorVGNamespace {
   LinearGradient: typeof LinearGradient;
   RadialGradient: typeof RadialGradient;
   Font: typeof Font;
+  Accessor: typeof Accessor;
   // Enums
   BlendMethod: typeof constants.BlendMethod;
   StrokeCap: typeof constants.StrokeCap;
@@ -259,6 +261,7 @@ function createNamespace(): ThorVGNamespace {
     LinearGradient,
     RadialGradient,
     Font,
+    Accessor,
     // Enums
     BlendMethod: constants.BlendMethod,
     StrokeCap: constants.StrokeCap,
@@ -283,7 +286,7 @@ const ThorVG = {
 export default ThorVG;
 
 // Named exports for advanced usage
-export { init, Canvas, Shape, Scene, Picture, Text, Animation, LinearGradient, RadialGradient, Font, constants, ThorVGResultCode, ThorVGError };
+export { init, Canvas, Shape, Scene, Picture, Text, Animation, LinearGradient, RadialGradient, Font, Accessor, constants, ThorVGResultCode, ThorVGError };
 
 // Re-export types
 export type { CanvasOptions } from './core/Canvas';

@@ -4,7 +4,7 @@
  */
 
 import { WasmObject } from '../interop/WasmObject';
-import { getModule } from '../interop/module';
+import { getModule, allocString } from '../interop/module';
 import { checkResult } from '../common/errors';
 import { BlendMethod, MaskMethod } from '../common/constants';
 
@@ -57,10 +57,52 @@ export interface Matrix {
   e33: number;
 }
 
+type PaintFactory = (ptr: number) => Paint;
+const paintFactories = new Map<number, PaintFactory>();
+
 export abstract class Paint extends WasmObject {
+  /**
+   * Register a subclass factory for a given Tvg_Type value.
+   * Called by each subclass at module load time.
+   * @internal
+   */
+  static registerType(type: number, factory: PaintFactory): void {
+    paintFactories.set(type, factory);
+  }
+
   protected _cleanup(ptr: number): void {
     const Module = getModule();
     Module._tvg_paint_unref(ptr, 1);
+  }
+
+  /**
+   * The ID of this paint object.
+   * IDs are used to identify paint objects within a picture's scene tree.
+   * Assign a string to generate a hash ID from the name, or a number to set directly.
+   * @beta
+   */
+  public get id(): number {
+    const Module = getModule();
+    return Module._tvg_paint_get_id(this.ptr);
+  }
+
+  /**
+   * @beta
+   */
+  public set id(value: number | string) {
+    const Module = getModule();
+
+    if (typeof value === 'string') {
+      const namePtr = allocString(Module, value);
+      try {
+        const hashId = Module._tvg_accessor_generate_id(namePtr);
+        checkResult(Module._tvg_paint_set_id(this.ptr, hashId), 'id');
+      } finally {
+        Module._free(namePtr);
+      }
+    } else {
+      checkResult(Module._tvg_paint_set_id(this.ptr, value), 'id');
+    }
   }
 
   /**
@@ -414,4 +456,26 @@ export abstract class Paint extends WasmObject {
    * Must be implemented by subclasses
    */
   protected abstract _createInstance(ptr: number): Paint;
+
+  /**
+   * Create a correctly-typed Paint subclass from a raw WASM pointer.
+   * The returned object does NOT own the pointer (won't be freed by GC).
+   *
+   * @param ptr - A raw WASM paint pointer
+   * @returns Shape, Scene, Picture, or Text instance
+   * @internal
+   */
+  static fromPtr(ptr: number): Paint {
+    const Module = getModule();
+    const typePtr = Module._malloc(4);
+    try {
+      Module._tvg_paint_get_type(ptr, typePtr);
+      const type = Module.HEAP32[typePtr >> 2]!;
+      const factory = paintFactories.get(type);
+      if (!factory) throw new Error(`Unknown paint type: ${type}`);
+      return factory(ptr);
+    } finally {
+      Module._free(typePtr);
+    }
+  }
 }
