@@ -257,4 +257,5 @@ describe('Paint (via Shape)', () => {
     shape.dispose();
     expect(shape.isDisposed).toBe(true);
   });
+
 });
