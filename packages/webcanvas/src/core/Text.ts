@@ -149,10 +149,10 @@ export class Text extends Paint {
     const Module = getModule();
 
     if (gradientOrR instanceof Fill) {
-      // Gradient fill - apply pending stops before setting
       gradientOrR['_applyStops']();
       const result = Module._tvg_text_set_gradient(this.ptr, gradientOrR.ptr);
       checkResult(result, 'fill (gradient)');
+      gradientOrR._markFilled();
     } else if (typeof gradientOrR === 'number' && g !== undefined && b !== undefined) {
       // RGB color
       const result = Module._tvg_text_set_color(this.ptr, gradientOrR, g, b);

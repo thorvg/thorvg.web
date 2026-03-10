@@ -222,6 +222,7 @@ export class Canvas {
     // Add main Scene to canvas
     const result = Module._tvg_canvas_add(this.#ptr, this.#mainScene.ptr);
     checkResult(result, 'add main scene');
+    Module._tvg_paint_ref(this.#mainScene.ptr);
   }
 
   /**
@@ -556,6 +557,7 @@ export class Canvas {
     // Clear main Scene
     if (this.#mainScene) {
       this.#mainScene.clear();
+      this.#mainScene.dispose();
       this.#mainScene = null;
     }
 

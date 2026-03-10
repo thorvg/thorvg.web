@@ -351,6 +351,7 @@ export abstract class Paint extends WasmObject {
     const Module = getModule();
     const result = Module._tvg_paint_set_clip(this.ptr, clipper.ptr);
     checkResult(result, 'clip');
+    Module._tvg_paint_ref(clipper.ptr);
     return this;
   }
 
@@ -381,6 +382,7 @@ export abstract class Paint extends WasmObject {
     const Module = getModule();
     const result = Module._tvg_paint_set_mask_method(this.ptr, target.ptr, method);
     checkResult(result, 'mask');
+    Module._tvg_paint_ref(target.ptr);
     return this;
   }
 

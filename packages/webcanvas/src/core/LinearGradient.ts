@@ -5,7 +5,7 @@
 
 import { Fill } from './Fill';
 import { getModule } from '../interop/module';
-import { gradientRegistry } from '../interop/registry';
+
 
 /**
  * Linear gradient for filling shapes
@@ -45,7 +45,7 @@ export class LinearGradient extends Fill {
   constructor(x1: number, y1: number, x2: number, y2: number) {
     const Module = getModule();
     const ptr = Module._tvg_linear_gradient_new();
-    super(ptr, gradientRegistry);
+    super(ptr);
     Module._tvg_linear_gradient_set(ptr, x1, y1, x2, y2);
   }
 

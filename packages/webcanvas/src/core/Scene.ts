@@ -66,6 +66,7 @@ export class Scene extends Paint {
     const Module = getModule();
     const result = Module._tvg_scene_add(this.ptr, paint.ptr);
     checkResult(result, 'add');
+    Module._tvg_paint_ref(paint.ptr);
     return this;
   }
 
