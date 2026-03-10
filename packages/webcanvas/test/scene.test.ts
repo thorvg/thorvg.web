@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { ThorVGNamespace } from '../src/index';
 import { Scene } from '../src/core/Scene';
+import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
 function getTVG(): ThorVGNamespace {
   return (globalThis as any).__TVG;
@@ -113,5 +114,15 @@ describe('Scene', () => {
     expect(scene.translate(50, 50)).toBe(scene);
     expect(scene.rotate(45)).toBe(scene);
     expect(scene.scale(2)).toBe(scene);
+  });
+
+  it('dispose + GC should not double-free', () => {
+    const TVG = getTVG();
+    assertNoDoubleFree(() => new TVG.Scene());
+  });
+
+  it.skipIf(!canForceGC)('unreferenced scene is cleaned up by GC', async () => {
+    const TVG = getTVG();
+    await assertGCCleanup(() => new TVG.Scene());
   });
 });
