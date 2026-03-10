@@ -7,6 +7,10 @@ export interface EmscriptenModule {
   _malloc(size: number): number;
   _free(ptr: number): void;
 
+  // Dynamic function pointer support
+  addFunction(func: Function, sig: string): number;
+  removeFunction(ptr: number): void;
+
   // Memory heaps
   HEAPU8: Uint8Array;
   HEAP8: Int8Array;
@@ -72,6 +76,9 @@ export interface ThorVGCAPI {
   _tvg_paint_set_blend_method(paint: number, method: number): number;
   _tvg_paint_set_mask_method(paint: number, target: number, method: number): number;
   _tvg_paint_intersects(paint: number, x: number, y: number, w: number, h: number): number;
+  _tvg_paint_get_id(paint: number): number;
+  _tvg_paint_set_id(paint: number, id: number): number;
+  _tvg_paint_get_type(paint: number, typePtr: number): number;
 
   // Shape functions
   _tvg_shape_new(): number;
@@ -166,6 +173,7 @@ export interface ThorVGCAPI {
   _tvg_picture_get_size(picture: number, w: number, h: number): number;
   _tvg_picture_set_origin(picture: number, x: number, y: number): number;
   _tvg_picture_get_origin(picture: number, x: number, y: number): number;
+  _tvg_picture_get_paint(picture: number, id: number): number;
   _tvg_paint_rel(paint: number): number;
 
   // Text functions
@@ -214,6 +222,12 @@ export interface ThorVGCAPI {
   _tvg_gradient_set_color_stops(gradient: number, stops: number, count: number): number;
   _tvg_gradient_set_spread(gradient: number, spread: number): number;
   _tvg_gradient_del(gradient: number): number;
+
+  // Accessor functions
+  _tvg_accessor_new(): number;
+  _tvg_accessor_del(accessor: number): number;
+  _tvg_accessor_set(accessor: number, paint: number, func: number, data: number): number;
+  _tvg_accessor_generate_id(name: number): number;
 }
 
 // Combined module interface
