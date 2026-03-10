@@ -56,4 +56,11 @@ describe('Picture', () => {
     expect(picture.translate(50, 50)).toBe(picture);
     expect(picture.rotate(45)).toBe(picture);
   });
+
+  it('paint returns null for non-existent id', () => {
+    const TVG = getTVG();
+    const picture = new TVG.Picture();
+    const result = picture.paint(99999);
+    expect(result).toBeNull();
+  });
 });
