@@ -73,12 +73,12 @@ export interface TextOutline {
  * ```
  */
 export class Text extends Paint {
-  constructor(ptr?: number) {
+  constructor(ptr?: number, skipRegistry: boolean = false) {
     const Module = getModule();
     if (!ptr) {
       ptr = Module._tvg_text_new();
     }
-    super(ptr, textRegistry);
+    super(ptr, skipRegistry ? undefined : textRegistry);
   }
 
   protected _createInstance(ptr: number): Text {
@@ -236,3 +236,6 @@ export class Text extends Paint {
     return this;
   }
 }
+
+// Tvg_Type = 4 (TVG_TYPE_TEXT)
+Paint.registerType(4, (ptr) => new Text(ptr, true));
