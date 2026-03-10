@@ -45,6 +45,7 @@ import { intersectsExample } from './intersects';
 import { effectDropShadowExample } from './effect-drop-shadow';
 import { sceneEffectsExample } from './scene-effects';
 import { errorHandlingExample } from './error-handling';
+import { accessorExample } from './accessor';
 
 export * from './types';
 
@@ -74,6 +75,7 @@ export const showcaseExamples: ShowcaseExample[] = [
   transformAnimationExample,
   trimPathExample,
   // Advanced (alphabetically sorted by title)
+  accessorExample,
   blendingExample,
   boundingBoxExample,
   clippingExample,
