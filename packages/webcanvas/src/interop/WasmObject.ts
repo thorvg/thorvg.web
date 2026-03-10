@@ -8,16 +8,15 @@ import { handleError } from '../common/errors';
 export abstract class WasmObject {
   #ptr: number = 0;
   #disposed: boolean = false;
+  #registryToken: RegistryToken | null = null;
 
   constructor(ptr: number, registry?: FinalizationRegistry<RegistryToken>) {
     this.#ptr = ptr;
 
     // Register for automatic cleanup
     if (registry) {
-      registry.register(this, {
-        ptr,
-        cleanup: this._cleanup.bind(this),
-      });
+      this.#registryToken = { ptr, cleanup: this._cleanup };
+      registry.register(this, this.#registryToken);
     }
   }
 
@@ -41,9 +40,14 @@ export abstract class WasmObject {
    * Manually dispose of this object and free its WASM memory
    */
   public dispose(): void {
-    if (!this.#disposed) {
-      this._cleanup(this.#ptr);
-      this.#disposed = true;
+    if (this.#disposed) {
+      return;
+    }
+
+    this._cleanup(this.#ptr);
+    this.#disposed = true;
+    if (this.#registryToken) {
+      this.#registryToken.ptr = 0;
     }
   }
 

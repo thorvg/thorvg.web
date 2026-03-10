@@ -9,50 +9,38 @@ export interface RegistryToken {
   cleanup: (ptr: number) => void;
 }
 
+function createRegistry(): FinalizationRegistry<RegistryToken> {
+  return new FinalizationRegistry<RegistryToken>((heldValue) => {
+    if (heldValue.ptr && hasModule()) {
+      heldValue.cleanup(heldValue.ptr);
+    }
+  });
+}
+
 /**
  * Registry for Shape objects
  */
-export const shapeRegistry = new FinalizationRegistry<RegistryToken>((heldValue) => {
-  if (heldValue.ptr && hasModule()) {
-    heldValue.cleanup(heldValue.ptr);
-  }
-});
+export const shapeRegistry = createRegistry();
 
 /**
  * Registry for Scene objects
  */
-export const sceneRegistry = new FinalizationRegistry<RegistryToken>((heldValue) => {
-  if (heldValue.ptr && hasModule()) {
-    heldValue.cleanup(heldValue.ptr);
-  }
-});
+export const sceneRegistry = createRegistry();
 
 /**
  * Registry for Picture objects
  */
-export const pictureRegistry = new FinalizationRegistry<RegistryToken>((heldValue) => {
-  if (heldValue.ptr && hasModule()) {
-    heldValue.cleanup(heldValue.ptr);
-  }
-});
+export const pictureRegistry = createRegistry();
 
 /**
  * Registry for Text objects
  */
-export const textRegistry = new FinalizationRegistry<RegistryToken>((heldValue) => {
-  if (heldValue.ptr && hasModule()) {
-    heldValue.cleanup(heldValue.ptr);
-  }
-});
+export const textRegistry = createRegistry();
 
 /**
  * Registry for gradient fills
  */
-export const gradientRegistry = new FinalizationRegistry<RegistryToken>((heldValue) => {
-  if (heldValue.ptr && hasModule()) {
-    heldValue.cleanup(heldValue.ptr);
-  }
-});
+export const gradientRegistry = createRegistry();
 
 // Automatic cleanup on page unload (browser only)
 if (typeof window !== 'undefined') {
