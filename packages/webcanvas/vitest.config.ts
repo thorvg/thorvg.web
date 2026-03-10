@@ -9,6 +9,7 @@ export default defineConfig({
     include: ['test/*.test.ts'],
     setupFiles: ['./test/setup.ts'],
     testTimeout: 30000,
+    execArgv: ['--expose-gc'],
   },
   resolve: {
     alias: {

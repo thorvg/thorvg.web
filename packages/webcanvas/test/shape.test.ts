@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { ThorVGNamespace } from '../src/index';
 import { Shape } from '../src/core/Shape';
 import { FillRule, BlendMethod, MaskMethod, StrokeCap, StrokeJoin } from '../src/common/constants';
+import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
 function getTVG(): ThorVGNamespace {
   return (globalThis as any).__TVG;
@@ -258,4 +259,13 @@ describe('Paint (via Shape)', () => {
     expect(shape.isDisposed).toBe(true);
   });
 
+  it('dispose + GC should not double-free', () => {
+    const TVG = getTVG();
+    assertNoDoubleFree(() => new TVG.Shape());
+  });
+
+  it.skipIf(!canForceGC)('unreferenced shape is cleaned up by GC', async () => {
+    const TVG = getTVG();
+    await assertGCCleanup(() => new TVG.Shape());
+  });
 });
