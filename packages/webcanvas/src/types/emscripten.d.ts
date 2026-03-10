@@ -70,6 +70,7 @@ export interface ThorVGCAPI {
   _tvg_paint_get_obb(paint: number, pts: number): number;
   _tvg_paint_set_transform(paint: number, matrix: number): number;
   _tvg_paint_duplicate(paint: number): number;
+  _tvg_paint_ref(paint: number): number;
   _tvg_paint_unref(paint: number, free: number): number;
   _tvg_paint_set_clip(paint: number, clipper: number): number;
   _tvg_paint_get_clip(paint: number): number;
