@@ -17,6 +17,7 @@ import { boundingBoxExample } from './bounding-box';
 import { transformStaticExample } from './transform-static';
 import { transformAnimationExample } from './transform-animation';
 import { textStaticExample } from './text-static';
+import { fontProviderExample } from './font-provider';
 import { textAnimationExample } from './text-animation';
 import { textLayoutExample } from './text-layout';
 import { textLineWrapExample } from './text-line-wrap';
@@ -89,6 +90,7 @@ export const showcaseExamples: ShowcaseExample[] = [
   sceneEffectsExample,
   viewportExample,
   // Text (alphabetically sorted by title)
+  fontProviderExample,
   textAnimationExample,
   textLayoutExample,
   textLineWrapExample,
