@@ -3,6 +3,7 @@ import type { ThorVGNamespace } from '../src/index';
 import { LinearGradient } from '../src/core/LinearGradient';
 import { RadialGradient } from '../src/core/RadialGradient';
 import { GradientSpread } from '../src/common/constants';
+import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
 function getTVG(): ThorVGNamespace {
   return (globalThis as any).__TVG;
@@ -75,6 +76,16 @@ describe('LinearGradient', () => {
     gradient.dispose();
     expect(gradient.isDisposed).toBe(true);
   });
+
+  it('dispose + GC should not double-free', () => {
+    const TVG = getTVG();
+    assertNoDoubleFree(() => new TVG.LinearGradient(0, 0, 100, 100));
+  });
+
+  it.skipIf(!canForceGC)('unreferenced gradient is cleaned up by GC', async () => {
+    const TVG = getTVG();
+    await assertGCCleanup(() => new TVG.LinearGradient(0, 0, 100, 100));
+  });
 });
 
 describe('RadialGradient', () => {
@@ -105,5 +116,15 @@ describe('RadialGradient', () => {
     const gradient = new TVG.RadialGradient(50, 50, 50);
     const result = gradient.spread(GradientSpread.Repeat);
     expect(result).toBe(gradient);
+  });
+
+  it('dispose + GC should not double-free', () => {
+    const TVG = getTVG();
+    assertNoDoubleFree(() => new TVG.RadialGradient(50, 50, 50));
+  });
+
+  it.skipIf(!canForceGC)('unreferenced gradient is cleaned up by GC', async () => {
+    const TVG = getTVG();
+    await assertGCCleanup(() => new TVG.RadialGradient(50, 50, 50));
   });
 });
