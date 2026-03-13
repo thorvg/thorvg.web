@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import { isMobile } from 'react-device-detect';
 import wasmUrl from "../node_modules/@thorvg/lottie-player/dist/thorvg.wasm";
+import { initProfiler } from '../lib/profiler';
 
 const animations = [
   '1643-exploding-star.json',
@@ -195,7 +196,7 @@ export default function Home() {
     });
 
     setTimeout(async () => {
-      loadProfiler();
+      initProfiler();
 
       if (seed) {
         loadSeed(seed);
@@ -225,11 +226,6 @@ export default function Home() {
     requestAnimationFrame(() => checkCanvasSize());
   };
 
-  const loadProfiler = () => {
-    const script = document.createElement("script");
-    script.src = "/profiler.js";
-    document.body.appendChild(script);
-  }
 
   const loadAnimationByCount = async (_count = count.name) => {
     const newAnimationList = [];
