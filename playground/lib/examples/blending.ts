@@ -22,7 +22,7 @@ const canvas = new TVG.Canvas('#canvas', {
 });
 
 (async () => {
-  const imageResponse = await fetch('https://jinui.s3.ap-northeast-2.amazonaws.com/rawimage_200x300.raw');
+  const imageResponse = await fetch('/assets/images/rawimage_200x300.raw');
   const arrayBuffer = await imageResponse.arrayBuffer();
   const imageData = new Uint8Array(arrayBuffer);
 
