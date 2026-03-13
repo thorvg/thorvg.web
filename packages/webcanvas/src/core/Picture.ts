@@ -4,7 +4,7 @@
  */
 
 import { Paint } from './Paint';
-import { getModule } from '../interop/module';
+import { getModule, allocString } from '../interop/module';
 import { pictureRegistry } from '../interop/registry';
 import { checkResult, handleError } from '../common/errors';
 import { ColorSpace } from '../common/constants';
@@ -177,4 +177,38 @@ export class Picture extends Paint {
     }
   }
 
+  /**
+   * Retrieve a paint object from this picture's scene tree by ID.
+   *
+   * @param id - A numeric hash ID or a string name (which will be hashed via Accessor.id)
+   * @returns The matching Paint object, or null if not found
+   *
+   * @note The returned Paint is owned by this Picture — do not dispose it manually.
+   */
+  public paint(id: number): Paint | null;
+  public paint(name: string): Paint | null;
+  public paint(id: number | string): Paint | null {
+    const Module = getModule();
+
+    let numericId: number;
+    if (typeof id === 'string') {
+      const namePtr = allocString(Module, id);
+      try {
+        numericId = Module._tvg_accessor_generate_id(namePtr);
+      } finally {
+        Module._free(namePtr);
+      }
+    } else {
+      numericId = id;
+    }
+
+    const ptr = Module._tvg_picture_get_paint(this.ptr, numericId);
+    if (!ptr) return null;
+
+    return Paint.fromPtr(ptr);
+  }
+
 }
+
+// Tvg_Type = 3 (TVG_TYPE_PICTURE)
+Paint.registerType(3, (ptr) => new Picture(ptr, true));

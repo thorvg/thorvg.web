@@ -149,12 +149,12 @@ export interface StrokeOptions {
  * ```
  */
 export class Shape extends Paint {
-  constructor(ptr?: number) {
+  constructor(ptr?: number, skipRegistry: boolean = false) {
     const Module = getModule();
     if (!ptr) {
       ptr = Module._tvg_shape_new();
     }
-    super(ptr, shapeRegistry);
+    super(ptr, skipRegistry ? undefined : shapeRegistry);
   }
 
   protected _createInstance(ptr: number): Shape {
@@ -691,3 +691,6 @@ export class Shape extends Paint {
     return this;
   }
 }
+
+// Tvg_Type = 1 (TVG_TYPE_SHAPE)
+Paint.registerType(1, (ptr) => new Shape(ptr, true));
