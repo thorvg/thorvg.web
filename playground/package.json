@@ -1,7 +1,15 @@
 {
   "name": "thorvg-playground",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "description": "Interactive playground for testing @thorvg/webcanvas",
+  "homepage": "https://thorvg-playground.vercel.app/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thorvg/thorvg.web.git",
+    "directory": "playground"
+  },
+  "license": "MIT",
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
