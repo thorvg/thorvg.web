@@ -1,7 +1,15 @@
 {
-  "name": "thorvg.showcase",
-  "version": "0.1.0",
+  "name": "thorvg-perf-test",
+  "version": "1.0.0",
   "private": true,
+  "description": "Performance testing app for @thorvg/lottie-player",
+  "homepage": "https://thorvg-perf-test.vercel.app/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thorvg/thorvg.web.git",
+    "directory": "perf-test"
+  },
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
