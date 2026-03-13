@@ -553,15 +553,11 @@ export class Canvas {
    * may be created and destroyed frequently.
    */
   public destroy(): void {
-    // Clear main Scene first
+    // Clear main Scene
     if (this.#mainScene) {
       this.#mainScene.clear();
-      this.#mainScene.dispose();
       this.#mainScene = null;
     }
-
-    // Clear all paints from canvas
-    this.clear();
 
     // Delete canvas
     if (this.#ptr) {
