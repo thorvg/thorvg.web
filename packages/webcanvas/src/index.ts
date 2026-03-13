@@ -54,6 +54,7 @@ import type { RendererType } from './common/constants';
 import ThorVGModuleFactory from '../dist/thorvg';
 
 const THORVG_VERSION = '__THORVG_VERSION__';
+const THORVG_WASM_URL = 'https://unpkg.com/@thorvg/webcanvas@latest/dist/thorvg.wasm';
 
 /**
  * @category Initialization
@@ -208,7 +209,7 @@ async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
 
   // Load WASM module
   Module = await ThorVGModuleFactory({
-    locateFile: locateFile ?? ((path: string) => path),
+    locateFile: locateFile ?? ((path: string) => path.endsWith('.wasm') ? THORVG_WASM_URL : path),
   }) as unknown as ThorVGModule;
 
   // Make Module globally available for class constructors
