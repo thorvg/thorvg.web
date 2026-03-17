@@ -306,6 +306,16 @@ export class BaseLottiePlayer extends LitElement {
     return Float32Array.from(this.TVG?.size() || [0, 0]);
   }
 
+  /**
+   * The device pixel ratio applied to the canvas resolution (readonly)
+   * @beta
+   */
+  @property({ type: Number })
+  public get dpr(): number {
+    if (this.config?.enableDevicePixelRatio === false) return 1;
+    return 1 + ((window.devicePixelRatio - 1) * 0.75);
+  }
+
   protected TVG: TvgLottieAnimation | null = null;
   protected canvas?: HTMLCanvasElement;
   protected config?: RenderConfig;
