@@ -583,6 +583,7 @@ export class BaseLottiePlayer extends LitElement {
    */
   public async load(src: string | object, fileType: FileType = FileType.JSON): Promise<void> {
     try {
+      this.currentState = PlayerState.Loading;
       await this._init();
       const bytes = await parseSrc(src, fileType);
       this.dispatchEvent(new CustomEvent(PlayerEvent.Ready));
