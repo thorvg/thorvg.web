@@ -5,7 +5,8 @@
 
 import { getModule } from '../interop/module';
 import { checkResult } from '../common/errors';
-import { FontRegistry } from '../utils/FontRegistry';
+import type { FontProvider } from './FontProvider';
+import { FontsourceProvider } from '../providers/FontsourceProvider';
 
 /**
  * Supported font file types.
@@ -23,33 +24,8 @@ export interface LoadFontOptions {
 }
 
 /**
- * Options for loading a font from fontsource CDN.
- * @category Font
- */
-export interface FontsourceOptions {
-  /**
-   * Font weight to load.
-   * @default 400
-   */
-  weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
-  /**
-   * Font style to load.
-   * @default 'normal'
-   */
-  style?: 'normal' | 'italic';
-  /**
-   * Unicode subset to load.
-   * @default 'latin'
-   */
-  subset?: string;
-}
-
-/** @internal */
-const FONTSOURCE_CDN = 'https://cdn.jsdelivr.net/fontsource/fonts';
-
-/**
  * Font loader class for managing custom fonts.
- * Fonts are loaded globally and can be referenced by name in Text objects.
+ * Fonts are loaded globally and can be referenced by name in {@link Text} objects.
  * @category Font
  *
  * @example
@@ -64,32 +40,71 @@ const FONTSOURCE_CDN = 'https://cdn.jsdelivr.net/fontsource/fonts';
  *
  * @example
  * ```typescript
- * // Auto-load from fontsource CDN (no manual fetch needed)
+ * // Auto-load from the configured font provider (fontsource CDN by default)
  * await TVG.Font.load('poppins');
  * await TVG.Font.load('roboto', { weight: 700, style: 'italic' });
  *
  * const text = new TVG.Text();
  * text.font('poppins').fontSize(48).text('Hello!').fill(50, 50, 50);
  * ```
+ *
+ * @example
+ * ```typescript
+ * // Use a custom font provider
+ * TVG.Font.provider({
+ *   fetch: async (name) => {
+ *     const res = await fetch(`/my-fonts/${name}.ttf`);
+ *     return { data: new Uint8Array(await res.arrayBuffer()), type: 'ttf' };
+ *   }
+ * });
+ *
+ * await TVG.Font.load('my-font');
+ * ```
  */
 export class Font {
+  private static _provider: FontProvider = new FontsourceProvider();
+  private static readonly _loaded = new Set<string>();
+
   /**
-   * Load font from raw data (Uint8Array)
+   * Set the font provider used when calling `Font.load()` without raw data.
+   *
+   * The default provider fetches from the [fontsource](https://fontsource.org) CDN.
+   * Replace it to load fonts from your own CDN or any other source.
+   *
+   * @param provider - A {@link FontProvider} implementation
+   * @beta
+   *
+   * @example
+   * ```typescript
+   * TVG.Font.provider({
+   *   fetch: async (name) => {
+   *     const res = await fetch(`https://my-cdn.com/fonts/${name}.ttf`);
+   *     return { data: new Uint8Array(await res.arrayBuffer()), type: 'ttf' };
+   *   }
+   * });
+   * ```
+   */
+  public static provider(provider: FontProvider): void {
+    Font._provider = provider;
+  }
+
+
+  /**
+   * Load font from raw data.
    * @param name - Unique name to identify this font
-   * @param data - Raw font data
+   * @param data - Raw font binary data
    * @param options - Load options
    */
   public static load(name: string, data: Uint8Array, options?: LoadFontOptions): void;
 
   /**
-   * Auto-load a font from the fontsource CDN
+   * Auto-load a font using the configured font provider.
    *
-   * The font name must match a package on fontsource (e.g. `'poppins'`, `'roboto'`).
-   * Calling this multiple times with the same arguments is safe — the CDN is only
-   * fetched once regardless of how many times you call it.
+   * With the default {@link FontsourceProvider}, the name must match a fontsource
+   * package slug (e.g. `'poppins'`, `'open-sans'`).
    *
-   * @param name - Font slug as it appears on fontsource (e.g. `'poppins'`, `'open-sans'`)
-   * @param options - Weight, style, and subset options
+   * @param name - Font name passed to the provider
+   * @param options - Provider-specific options (see {@link FontsourceOptions} for defaults)
    *
    * @example
    * ```typescript
@@ -98,11 +113,11 @@ export class Font {
    * await TVG.Font.load('noto-sans', { subset: 'latin-ext' });
    * ```
    */
-  public static load(name: string, options?: FontsourceOptions): Promise<void>;
+  public static load(name: string, options?: Record<string, unknown>): Promise<void>;
 
   public static load(
     name: string,
-    dataOrOptions?: Uint8Array | FontsourceOptions,
+    dataOrOptions?: Uint8Array | Record<string, unknown>,
     loadOptions?: LoadFontOptions,
   ): void | Promise<void> {
     if (dataOrOptions instanceof Uint8Array) {
@@ -110,29 +125,21 @@ export class Font {
       return;
     }
 
-    const opts = {
-      weight: 400,
-      style: 'normal' as const,
-      subset: 'latin',
-      ...dataOrOptions,
-    };
+    if (Font._loaded.has(name)) {
+      return Promise.resolve();
+    }
 
-    const key = `${name.toLowerCase()}:${opts.subset}:${opts.weight}:${opts.style}`;
+    Font._loaded.add(name);
 
-    return FontRegistry.ensure(key, async () => {
-      const slug = name.toLowerCase().replace(/\s+/g, '-');
-      const url = `${FONTSOURCE_CDN}/${slug}@latest/${opts.subset}-${opts.weight}-${opts.style}.ttf`;
-
-      const res = await fetch(url);
-      if (!res.ok) {
-        throw new Error(
-          `Font "${name}" could not be loaded from fontsource (HTTP ${res.status}). ` +
-          `Check that the font exists at https://fontsource.org/fonts/${slug}`,
-        );
-      }
-
-      Font._loadData(name, new Uint8Array(await res.arrayBuffer()), { type: 'ttf' });
-    });
+    return Font._provider
+      .fetch(name, dataOrOptions)
+      .then((result) => {
+        Font._loadData(name, result.data, { type: result.type });
+      })
+      .catch((err) => {
+        Font._loaded.delete(name);
+        throw err;
+      });
   }
 
   /**
@@ -140,6 +147,7 @@ export class Font {
    * @param name - Font name to unload
    */
   public static unload(name: string): void {
+    Font._loaded.delete(name);
     const Module = getModule();
 
     const namePtr = Module._malloc(name.length + 1);

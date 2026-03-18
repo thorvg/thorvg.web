@@ -87,9 +87,9 @@ export class Text extends Paint {
   }
 
   /**
-   * Set the font to use for this text
-   * @param name - Font name (previously loaded via Font.load()) or "default"
-   */
+   * Set the font to use for this text.
+   * @param name - Font name
+    */
   public font(name: string): this {
     const Module = getModule();
 
