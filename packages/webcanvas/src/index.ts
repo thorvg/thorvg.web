@@ -49,6 +49,7 @@ import { LinearGradient } from './core/LinearGradient';
 import { RadialGradient } from './core/RadialGradient';
 import { Font } from './core/Font';
 import { Accessor } from './core/Accessor';
+import { FontsourceProvider } from './providers/FontsourceProvider';
 import { ThorVGResultCode, ThorVGError, setGlobalErrorHandler, handleError, type ErrorHandler } from './common/errors';
 import * as constants from './common/constants';
 import type { RendererType } from './common/constants';
@@ -286,7 +287,7 @@ const ThorVG = {
 export default ThorVG;
 
 // Named exports for advanced usage
-export { init, Canvas, Shape, Scene, Picture, Text, Animation, LinearGradient, RadialGradient, Font, Accessor, constants, ThorVGResultCode, ThorVGError };
+export { init, Canvas, Shape, Scene, Picture, Text, Animation, LinearGradient, RadialGradient, Font, FontsourceProvider, Accessor, constants, ThorVGResultCode, ThorVGError };
 
 // Re-export types
 export type { CanvasOptions } from './core/Canvas';
@@ -296,7 +297,9 @@ export type { RectOptions, StrokeOptions } from './core/Shape';
 export type { LoadDataOptions, PictureSize } from './core/Picture';
 export type { TextLayout, TextOutline } from './core/Text';
 export type { AnimationInfo, AnimationSegment } from './core/Animation';
-export type { LoadFontOptions, FontType, FontsourceOptions } from './core/Font';
+export type { LoadFontOptions, FontType } from './core/Font';
+export type { FontsourceOptions } from './providers/FontsourceProvider';
+export type { FontProvider, FontProviderResult } from './core/FontProvider';
 export type { ColorStop } from './core/Fill';
 /** @category Canvas */
 export type { RendererType } from './common/constants';
