@@ -1,0 +1,32 @@
+"webcanvas":
+  - packages/webcanvas/**/*
+  - wasm/webcanvas/**/*
+  - wasm/common/**/*
+
+"lottie-player":
+  - packages/lottie-player/**/*
+  - wasm/lottie-player/**/*
+  - wasm/common/**/*
+
+"perf-test":
+  - perf-test/**/*
+
+"playground":
+  - playground/**/*
+
+"examples":
+  - examples/**/*
+
+"thorvg":
+  - thorvg/**/*
+
+"infrastructure":
+  - node_modules/**/*
+  - ./github/**/*
+  - package.json
+  - pnpm-lock.yaml
+  - pnpm-workspace.yaml
+
+"test":
+  - packages/webcanvas/test/**/*
+  - packages/lottie-player/tests/**/*
