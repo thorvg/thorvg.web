@@ -14,3 +14,5 @@
 - OnYu Lee @ROWELLI
 - TsingWong @tsingwong
 - Seungwon Lee @nowgnuesLeee
+- Yujin Lee @Ujaa
+- Yukyung Lee @nunomi0
