@@ -24,6 +24,7 @@
 #include <thorvg_lottie.h>
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <limits>
 #include "tvgWasmDefaultFont.h"
 
 using namespace emscripten;
@@ -35,6 +36,14 @@ EMSCRIPTEN_DECLARE_VAL_TYPE(Float32Array);
 EMSCRIPTEN_DECLARE_VAL_TYPE(AssetResolverCallback);
 
 static const char* NoError = "None";
+
+static bool pixelBufferSize(uint32_t w, uint32_t h, size_t& byteCount)
+{
+    const uint64_t pixels = static_cast<uint64_t>(w) * h;
+    if (pixels > std::numeric_limits<size_t>::max() / sizeof(uint32_t)) return false;
+    byteCount = static_cast<size_t>(pixels) * sizeof(uint32_t);
+    return true;
+}
 
 static bool isValidProperty(const val& obj, const char* propName) {
     return obj.hasOwnProperty(propName) && !obj[propName].isUndefined() && !obj[propName].isNull();
@@ -60,6 +69,7 @@ struct TvgEngineMethod
 struct TvgSwEngine : TvgEngineMethod
 {
     uint8_t* buffer = nullptr;
+    uint32_t bufferSize = 0;
 
     ~TvgSwEngine()
     {
@@ -77,14 +87,29 @@ struct TvgSwEngine : TvgEngineMethod
 
     void resize(Canvas* canvas, uint32_t w, uint32_t h) override
     {
+        if (!canvas) return;
+
+        size_t nextBufferSize = 0;
+        if (!pixelBufferSize(w, h, nextBufferSize)) return;
+
+        auto nextBuffer = static_cast<uint8_t*>(std::malloc(nextBufferSize));
+        if (static_cast<SwCanvas*>(canvas)->target(reinterpret_cast<uint32_t*>(nextBuffer), w, w, h, ColorSpace::ABGR8888S) != Result::Success) {
+            std::free(nextBuffer);
+            return;
+        }
         std::free(buffer);
-        buffer = (uint8_t*)std::malloc(w * h * sizeof(uint32_t));
-        static_cast<SwCanvas*>(canvas)->target((uint32_t *)buffer, w, w, h, ColorSpace::ABGR8888S);
+        buffer = nextBuffer;
+        bufferSize = nextBufferSize;
     }
 
     ArrayBuffer output(uint32_t w, uint32_t h) override
     {
-        return ArrayBuffer(val(typed_memory_view(w * h * 4, buffer)));
+        size_t byteCount = 0;
+        if (!pixelBufferSize(w, h, byteCount) || (byteCount > 0 && !buffer) || (byteCount > bufferSize)) {
+            return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
+        }
+
+        return ArrayBuffer(val(typed_memory_view(byteCount, buffer)));
     }
 };
 
