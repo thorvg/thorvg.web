@@ -930,4 +930,139 @@ const html = `<!DOCTYPE html>
 `;
 
 fs.writeFileSync(path.join(__dirname, '../../docs/index.html'), html);
+
+// llms.txt
+const categoryTitles = {
+  initialization: 'Initialization',
+  canvas: 'Canvas',
+  shapes: 'Shapes',
+  scene: 'Scene',
+  picture: 'Picture',
+  text: 'Text',
+  animation: 'Animation',
+  gradients: 'Gradients',
+  font: 'Font',
+  constants: 'Constants',
+  errorHandling: 'Error Handling',
+  other: 'Other',
+};
+
+function generateLlmsTxt() {
+  let out = `# @thorvg/webcanvas\n\n`;
+  out += `> A TypeScript WebCanvas API for ThorVG — high-performance vector graphics rendering\n`;
+  out += `> via WebGL, WebGPU, and Software backends using WebAssembly.\n`;
+  out += `> Install: \`npm install @thorvg/webcanvas\`\n\n`;
+
+  for (const [cat, items] of Object.entries(apis)) {
+    const topLevel = items.filter(item => !item.parent);
+    if (topLevel.length === 0) continue;
+    out += `## ${categoryTitles[cat] || cat}\n\n`;
+    for (const item of topLevel) {
+      const desc = item.comment ? item.comment.split('\n')[0].trim() : '';
+      const anchor = item.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      out += `- [${item.name}](./llms-full.txt#${anchor})${desc ? ': ' + desc : ''}\n`;
+    }
+    out += '\n';
+  }
+
+  out += `## Additional Resources\n\n`;
+  out += `- [Full API Reference](./llms-full.txt)\n`;
+  out += `- [Playground Examples](https://thorvg-playground.vercel.app/)\n`;
+
+  return out;
+}
+
+fs.writeFileSync(path.join(__dirname, '../../docs/llms.txt'), generateLlmsTxt());
+fs.copyFileSync(path.join(__dirname, '../../docs/llms.txt'), path.join(__dirname, '../../llms.txt'));
+
+// llms-full.txt
+function renderParams(params) {
+  if (!params || params.length === 0) return '';
+  let out = '\n**Parameters:**\n';
+  for (const p of params) {
+    const opt = p.optional ? '?' : '';
+    out += `- \`${p.name}${opt}\` \`${p.type}\`${p.comment ? ' — ' + p.comment : ''}\n`;
+  }
+  return out;
+}
+
+function renderExamples(examples) {
+  if (!examples || examples.length === 0) return '';
+  let out = '\n**Example:**\n';
+  for (const ex of examples) {
+    const code = ex.replace(/^```(?:typescript|ts|javascript|js)?\n?/gm, '').replace(/```$/gm, '').trim();
+    out += `\`\`\`typescript\n${code}\n\`\`\`\n`;
+  }
+  return out;
+}
+
+function generateLlmsFullTxt() {
+  let out = `# @thorvg/webcanvas — Full API Reference\n\n`;
+  out += `> Install: \`npm install @thorvg/webcanvas\`\n\n`;
+  out += `## Quick Start\n\n`;
+  out += `\`\`\`typescript\nimport ThorVG from '@thorvg/webcanvas';\n`;
+  out += `import wasmUrl from '@thorvg/webcanvas/dist/thorvg.wasm?url'; // Vite/webpack\n\n`;
+  out += `const TVG = await ThorVG.init({ renderer: 'gl', locateFile: () => wasmUrl });\n`;
+  out += `const canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });\n\n`;
+  out += `const shape = new TVG.Shape();\n`;
+  out += `shape.appendRect(100, 100, 200, 150).fill(255, 0, 0, 255);\n`;
+  out += `canvas.add(shape).render();\n\`\`\`\n\n`;
+  out += `---\n\n`;
+
+  for (const [cat, items] of Object.entries(apis)) {
+    if (items.length === 0) continue;
+    out += `## ${categoryTitles[cat] || cat}\n\n`;
+
+    // Top-level items first
+    const topLevel = items.filter(item => !item.parent);
+    const children = items.filter(item => item.parent);
+
+    for (const item of topLevel) {
+      out += `### ${item.name}\n\n`;
+      out += `**Kind:** ${item.kind}\n\n`;
+      if (item.comment) out += `${item.comment}\n\n`;
+
+      // Constructor
+      if (item.constructor) {
+        out += `**Constructor:**\n`;
+        if (item.constructor.comment) out += `${item.constructor.comment}\n`;
+        out += renderParams(item.constructor.parameters);
+        out += '\n';
+      }
+
+      // Properties (interfaces/types)
+      if (item.properties && item.properties.length > 0) {
+        out += `**Properties:**\n`;
+        for (const prop of item.properties) {
+          const opt = prop.optional ? '?' : '';
+          out += `- \`${prop.name}${opt}\` \`${prop.type}\`${prop.comment ? ' — ' + prop.comment : ''}\n`;
+        }
+        out += '\n';
+      }
+
+      out += renderExamples(item.examples);
+
+      // Methods belonging to this class
+      const methods = children.filter(c => c.parent === item.name);
+      for (const method of methods) {
+        out += `\n#### ${item.name}.${method.shortName}\n\n`;
+        if (method.returnType && method.returnType !== 'void' && method.returnType !== 'any') {
+          out += `**Returns:** \`${method.returnType}\`\n\n`;
+        }
+        if (method.comment) out += `${method.comment}\n\n`;
+        out += renderParams(method.parameters);
+        out += renderExamples(method.examples);
+      }
+
+      out += '\n---\n\n';
+    }
+  }
+
+  return out;
+}
+
+// Place at the root
+fs.writeFileSync(path.join(__dirname, '../../docs/llms-full.txt'), generateLlmsFullTxt());
+fs.copyFileSync(path.join(__dirname, '../../docs/llms-full.txt'), path.join(__dirname, '../../llms-full.txt'));
+
 console.log('✓ Documentation generated: docs/index.html');
