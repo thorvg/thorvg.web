@@ -376,6 +376,65 @@ function generateSidebar() {
 // Generate content display function
 function generateDisplayFunction() {
   return `
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderMarkdown(text) {
+            return typeof marked !== 'undefined'
+                ? marked.parse(text)
+                : escapeHtml(text).replace(/\\n/g, '<br>');
+        }
+
+        function renderParamsList(params) {
+            if (!params || params.length === 0) return '';
+            let html = '<h3>Parameters</h3><ul class="params">';
+            params.forEach(param => {
+                const optional = param.optional ? '?' : '';
+                html += \`<li><code>\${escapeHtml(param.name)}\${optional}</code>: <code>\${escapeHtml(param.type)}</code>\`;
+                if (param.comment) html += \` - \${escapeHtml(param.comment)}\`;
+                html += '</li>';
+            });
+            return html + '</ul>';
+        }
+
+        function renderSection(section, title) {
+            if (!section) return '';
+            let html = \`<h2>\${title}</h2>\`;
+            if (section.comment) html += \`<div class="description">\${renderMarkdown(section.comment)}</div>\`;
+            html += renderParamsList(section.parameters);
+            if (section.returnType && section.returnType !== 'void') {
+                html += \`<p class="meta"><strong>Returns:</strong> <code>\${escapeHtml(section.returnType)}</code></p>\`;
+            }
+            return html;
+        }
+
+        function renderProperties(api) {
+            if (!api.properties || api.properties.length === 0) return '';
+            if (api.kind !== 'Interface' && api.kind !== 'Type alias') return '';
+            let html = '';
+            api.properties.forEach(prop => {
+                const optional = prop.optional ? '?' : '';
+                html += \`<h2>\${escapeHtml(prop.name)}\${optional}</h2>\`;
+                html += \`<p class="meta"><strong>Type:</strong> <code>\${escapeHtml(prop.type)}</code></p>\`;
+                if (prop.comment) html += \`<div class="description">\${renderMarkdown(prop.comment)}</div>\`;
+            });
+            return html;
+        }
+
+        function renderExamples(examples) {
+            if (!examples || examples.length === 0) return '';
+            let html = '<h2>Examples</h2>';
+            examples.forEach(example => {
+                let code = example.replace(/^\`\`\`(?:typescript|ts|javascript|js)?\\n?/gm, '').replace(/\`\`\`$/gm, '').trim();
+                html += \`<pre><code class="language-typescript">\${escapeHtml(code)}</code></pre>\`;
+            });
+            return html;
+        }
+
         function displayAPI(id) {
             let api = null;
             for (const category in apiData) {
@@ -388,12 +447,10 @@ function generateDisplayFunction() {
                 return;
             }
 
-            // Clear README content when displaying API
             const readmeDiv = document.getElementById('readme-content');
-            if (readmeDiv) {
-                readmeDiv.innerHTML = '';
-            }
+            if (readmeDiv) readmeDiv.innerHTML = '';
 
+            const isClassLike = api.kind === 'Class' || api.kind === 'Interface';
             let html = \`<h1>\${escapeHtml(api.name)}</h1>\`;
             html += \`<p class="meta"><strong>Kind:</strong> \${escapeHtml(api.kind)}</p>\`;
 
@@ -403,109 +460,20 @@ function generateDisplayFunction() {
                 html += \`<p class="meta"><strong>Type:</strong> <code>\${escapeHtml(api.type)}</code></p>\`;
             }
 
-            if (api.comment) {
-                // Use marked to render markdown in comments
-                const renderedComment = typeof marked !== 'undefined'
-                    ? marked.parse(api.comment)
-                    : escapeHtml(api.comment).replace(/\\n/g, '<br>');
-                html += \`<div class="description">\${renderedComment}</div>\`;
-            }
-
-            // Show constructor for classes and interfaces
-            if (api.constructor && (api.kind === 'Class' || api.kind === 'Interface')) {
-                html += '<h2>Constructor</h2>';
-                if (api.constructor.comment) {
-                    const renderedComment = typeof marked !== 'undefined'
-                        ? marked.parse(api.constructor.comment)
-                        : escapeHtml(api.constructor.comment).replace(/\\n/g, '<br>');
-                    html += \`<div class="description">\${renderedComment}</div>\`;
-                }
-                if (api.constructor.parameters && api.constructor.parameters.length > 0) {
-                    html += '<h3>Parameters</h3><ul class="params">';
-                    api.constructor.parameters.forEach(param => {
-                        const optional = param.optional ? '?' : '';
-                        html += \`<li><code>\${escapeHtml(param.name)}\${optional}</code>: <code>\${escapeHtml(param.type)}</code>\`;
-                        if (param.comment) html += \` - \${escapeHtml(param.comment)}\`;
-                        html += '</li>';
-                    });
-                    html += '</ul>';
-                }
-            }
-
-            // Show destroy method for classes and interfaces
-            if (api.destroy && (api.kind === 'Class' || api.kind === 'Interface')) {
-                html += '<h2>Destroy</h2>';
-                if (api.destroy.comment) {
-                    const renderedComment = typeof marked !== 'undefined'
-                        ? marked.parse(api.destroy.comment)
-                        : escapeHtml(api.destroy.comment).replace(/\\n/g, '<br>');
-                    html += \`<div class="description">\${renderedComment}</div>\`;
-                }
-                if (api.destroy.parameters && api.destroy.parameters.length > 0) {
-                    html += '<h3>Parameters</h3><ul class="params">';
-                    api.destroy.parameters.forEach(param => {
-                        const optional = param.optional ? '?' : '';
-                        html += \`<li><code>\${escapeHtml(param.name)}\${optional}</code>: <code>\${escapeHtml(param.type)}</code>\`;
-                        if (param.comment) html += \` - \${escapeHtml(param.comment)}\`;
-                        html += '</li>';
-                    });
-                    html += '</ul>';
-                }
-                if (api.destroy.returnType && api.destroy.returnType !== 'void') {
-                    html += \`<p class="meta"><strong>Returns:</strong> <code>\${escapeHtml(api.destroy.returnType)}</code></p>\`;
-                }
-            }
-
-            // Show properties for interfaces and types (with full section structure)
-            if (api.properties && api.properties.length > 0 && (api.kind === 'Interface' || api.kind === 'Type alias')) {
-                api.properties.forEach(prop => {
-                    const optional = prop.optional ? '?' : '';
-                    html += \`<h2>\${escapeHtml(prop.name)}\${optional}</h2>\`;
-                    html += \`<p class="meta"><strong>Type:</strong> <code>\${escapeHtml(prop.type)}</code></p>\`;
-                    if (prop.comment) {
-                        const renderedComment = typeof marked !== 'undefined'
-                            ? marked.parse(prop.comment)
-                            : escapeHtml(prop.comment).replace(/\\n/g, '<br>');
-                        html += \`<div class="description">\${renderedComment}</div>\`;
-                    }
-                });
-            }
-
-            if (api.parameters && api.parameters.length > 0) {
-                html += '<h2>Parameters</h2><ul class="params">';
-                api.parameters.forEach(param => {
-                    const optional = param.optional ? '?' : '';
-                    html += \`<li><code>\${escapeHtml(param.name)}\${optional}</code>: <code>\${escapeHtml(param.type)}</code>\`;
-                    if (param.comment) html += \` - \${escapeHtml(param.comment)}\`;
-                    html += '</li>';
-                });
-                html += '</ul>';
-            }
-
-            if (api.examples && api.examples.length > 0) {
-                html += '<h2>Examples</h2>';
-                api.examples.forEach(example => {
-                    // Remove markdown code fences if present
-                    let code = example.replace(/^\`\`\`(?:typescript|ts|javascript|js)?\\n?/gm, '').replace(/\`\`\`$/gm, '').trim();
-                    html += \`<pre><code class="language-typescript">\${escapeHtml(code)}</code></pre>\`;
-                });
-            }
+            if (api.comment) html += \`<div class="description">\${renderMarkdown(api.comment)}</div>\`;
+            if (isClassLike) html += renderSection(api.constructor, 'Constructor');
+            if (isClassLike) html += renderSection(api.destroy, 'Destroy');
+            html += renderProperties(api);
+            html += renderParamsList(api.parameters);
+            html += renderExamples(api.examples);
 
             content.innerHTML = html;
 
-            // Highlight code blocks with Prism
             if (window.Prism) {
                 content.querySelectorAll('pre code').forEach(block => {
                     window.Prism.highlightElement(block);
                 });
             }
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
         }
   `;
 }
@@ -517,361 +485,7 @@ const html = `<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThorVG WebCanvas API Documentation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            background: #ffffff;
-            color: #333;
-        }
-
-        .sidebar {
-            width: 280px;
-            background: #fafafa;
-            overflow-y: auto;
-            padding: 20px 15px;
-            border-right: 1px solid #e0e0e0;
-        }
-
-        .sidebar h1 {
-            font-size: 16px;
-            margin: 0 0 20px 0;
-            color: #1976d2;
-            font-weight: 600;
-        }
-
-        .sidebar input {
-            width: 100%;
-            padding: 8px 10px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            margin-bottom: 20px;
-            font-size: 13px;
-        }
-
-        .category {
-            margin-bottom: 20px;
-        }
-
-        .category-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #1976d2;
-            margin-bottom: 8px;
-            padding-left: 4px;
-        }
-
-        .api-list {
-            list-style: none;
-        }
-
-        .api-item {
-            padding: 5px 8px;
-            cursor: pointer;
-            font-size: 13px;
-            color: #555;
-            transition: all 0.15s;
-            border-left: 2px solid transparent;
-        }
-
-        .api-item:hover {
-            background: #f0f0f0;
-            color: #1976d2;
-        }
-
-        .api-item.active {
-            background: #e3f2fd;
-            color: #1976d2;
-            border-left-color: #1976d2;
-            font-weight: 500;
-        }
-
-        .api-item.hidden {
-            display: none;
-        }
-
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2rem;
-        }
-
-        .content h1 {
-            color: #1976d2;
-            margin-bottom: 1rem;
-        }
-
-        .content h2 {
-            color: #1976d2;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-
-        .meta {
-            color: #666;
-            margin: 0.5rem 0;
-        }
-
-        .description {
-            line-height: 1.6;
-            margin: 1rem 0;
-        }
-
-        .params {
-            list-style: none;
-            padding-left: 1rem;
-        }
-
-        .params li {
-            margin: 0.5rem 0;
-        }
-
-        code {
-            background: #f5f5f5;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.9em;
-            font-family: 'Monaco', 'Menlo', monospace;
-        }
-
-        pre {
-            background: #f5f5f5;
-            padding: 1rem;
-            border-radius: 4px;
-            overflow-x: auto;
-            margin: 1rem 0;
-        }
-
-        pre code {
-            background: none;
-            padding: 0;
-        }
-
-        /* GitHub-style markdown rendering for README */
-        #readme-content h1,
-        #readme-content h2,
-        #readme-content h3,
-        #readme-content h4,
-        #readme-content h5,
-        #readme-content h6 {
-            margin-top: 24px;
-            margin-bottom: 16px;
-            font-weight: 600;
-            line-height: 1.25;
-        }
-
-        #readme-content h1 {
-            font-size: 2em;
-            padding-bottom: 0.3em;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        #readme-content h2 {
-            font-size: 1.5em;
-            padding-bottom: 0.3em;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        #readme-content h3 {
-            font-size: 1.25em;
-        }
-
-        #readme-content h4 {
-            font-size: 1em;
-        }
-
-        #readme-content p {
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-
-        #readme-content ul,
-        #readme-content ol {
-            margin-top: 0;
-            margin-bottom: 16px;
-            padding-left: 2em;
-        }
-
-        #readme-content ul {
-            list-style-type: disc;
-        }
-
-        #readme-content ul ul {
-            list-style-type: circle;
-        }
-
-        #readme-content ul ul ul {
-            list-style-type: square;
-        }
-
-        #readme-content ol {
-            list-style-type: decimal;
-        }
-
-        #readme-content li {
-            margin-top: 0.25em;
-            margin-bottom: 0.25em;
-        }
-
-        #readme-content li > p {
-            margin-top: 16px;
-        }
-
-        #readme-content li + li {
-            margin-top: 0.25em;
-        }
-
-        #readme-content blockquote {
-            margin: 0;
-            padding: 0 1em;
-            color: #666;
-            border-left: 0.25em solid #ddd;
-            margin-bottom: 16px;
-        }
-
-        #readme-content table {
-            display: block;
-            width: 100%;
-            width: max-content;
-            max-width: 100%;
-            overflow: auto;
-            border-spacing: 0;
-            border-collapse: collapse;
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-
-        #readme-content table th {
-            font-weight: 600;
-            padding: 6px 13px;
-            border: 1px solid #ddd;
-            background-color: #f6f8fa;
-        }
-
-        #readme-content table td {
-            padding: 6px 13px;
-            border: 1px solid #ddd;
-        }
-
-        #readme-content table tr {
-            background-color: #fff;
-            border-top: 1px solid #ddd;
-        }
-
-        #readme-content table tr:nth-child(2n) {
-            background-color: #f6f8fa;
-        }
-
-        #readme-content hr {
-            height: 0.25em;
-            padding: 0;
-            margin: 24px 0;
-            background-color: #e0e0e0;
-            border: 0;
-        }
-
-        #readme-content strong {
-            font-weight: 600;
-        }
-
-        #readme-content em {
-            font-style: italic;
-        }
-
-        #readme-content a {
-            color: #1976d2;
-            text-decoration: none;
-        }
-
-        #readme-content a:hover {
-            text-decoration: underline;
-        }
-
-        #readme-content img {
-            max-width: 100%;
-            box-sizing: content-box;
-        }
-
-        /* API content markdown rendering */
-        .description h1,
-        .description h2,
-        .description h3,
-        .description h4,
-        .description h5,
-        .description h6 {
-            margin-top: 24px;
-            margin-bottom: 16px;
-            font-weight: 600;
-            line-height: 1.25;
-            color: #1976d2;
-        }
-
-        .description h3 {
-            font-size: 1.25em;
-        }
-
-        .description h4 {
-            font-size: 1em;
-        }
-
-        .description ul,
-        .description ol {
-            margin-top: 0;
-            margin-bottom: 16px;
-            padding-left: 2em;
-        }
-
-        .description ul {
-            list-style-type: disc;
-        }
-
-        .description li {
-            margin-top: 0.25em;
-            margin-bottom: 0.25em;
-        }
-
-        .description p {
-            margin-bottom: 16px;
-        }
-
-        .description strong {
-            font-weight: 600;
-        }
-
-        .description code {
-            background: #f5f5f5;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.9em;
-        }
-
-        .description pre {
-            background: #f5f5f5;
-            padding: 1rem;
-            border-radius: 4px;
-            overflow-x: auto;
-            margin: 1rem 0;
-        }
-
-        .description pre code {
-            background: none;
-            padding: 0;
-        }
-
-        .description blockquote {
-            margin: 0;
-            padding: 0 1em;
-            color: #666;
-            border-left: 0.25em solid #ddd;
-            margin-bottom: 16px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="sidebar">
@@ -930,4 +544,140 @@ const html = `<!DOCTYPE html>
 `;
 
 fs.writeFileSync(path.join(__dirname, '../../docs/index.html'), html);
+fs.copyFileSync(path.join(__dirname, 'style.css'), path.join(__dirname, '../../docs/style.css'));
+
+// llms.txt
+const categoryTitles = {
+  initialization: 'Initialization',
+  canvas: 'Canvas',
+  shapes: 'Shapes',
+  scene: 'Scene',
+  picture: 'Picture',
+  text: 'Text',
+  animation: 'Animation',
+  gradients: 'Gradients',
+  font: 'Font',
+  constants: 'Constants',
+  errorHandling: 'Error Handling',
+  other: 'Other',
+};
+
+function generateLlmsTxt() {
+  let out = `# @thorvg/webcanvas\n\n`;
+  out += `> A TypeScript WebCanvas API for ThorVG — high-performance vector graphics rendering\n`;
+  out += `> via WebGL, WebGPU, and Software backends using WebAssembly.\n`;
+  out += `> Install: \`npm install @thorvg/webcanvas\`\n\n`;
+
+  for (const [cat, items] of Object.entries(apis)) {
+    const topLevel = items.filter(item => !item.parent);
+    if (topLevel.length === 0) continue;
+    out += `## ${categoryTitles[cat] || cat}\n\n`;
+    for (const item of topLevel) {
+      const desc = item.comment ? item.comment.split('\n')[0].trim() : '';
+      const anchor = item.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      out += `- [${item.name}](./llms-full.txt#${anchor})${desc ? ': ' + desc : ''}\n`;
+    }
+    out += '\n';
+  }
+
+  out += `## Additional Resources\n\n`;
+  out += `- [Full API Reference](./llms-full.txt)\n`;
+  out += `- [Playground Examples](https://thorvg-playground.vercel.app/)\n`;
+
+  return out;
+}
+
+fs.writeFileSync(path.join(__dirname, '../../docs/llms.txt'), generateLlmsTxt());
+fs.copyFileSync(path.join(__dirname, '../../docs/llms.txt'), path.join(__dirname, '../../llms.txt'));
+
+// llms-full.txt
+function renderParams(params) {
+  if (!params || params.length === 0) return '';
+  let out = '\n**Parameters:**\n';
+  for (const p of params) {
+    const opt = p.optional ? '?' : '';
+    out += `- \`${p.name}${opt}\` \`${p.type}\`${p.comment ? ' — ' + p.comment : ''}\n`;
+  }
+  return out;
+}
+
+function renderExamples(examples) {
+  if (!examples || examples.length === 0) return '';
+  let out = '\n**Example:**\n';
+  for (const ex of examples) {
+    const code = ex.replace(/^```(?:typescript|ts|javascript|js)?\n?/gm, '').replace(/```$/gm, '').trim();
+    out += `\`\`\`typescript\n${code}\n\`\`\`\n`;
+  }
+  return out;
+}
+
+function generateLlmsFullTxt() {
+  let out = `# @thorvg/webcanvas — Full API Reference\n\n`;
+  out += `> Install: \`npm install @thorvg/webcanvas\`\n\n`;
+  out += `## Quick Start\n\n`;
+  out += `\`\`\`typescript\nimport ThorVG from '@thorvg/webcanvas';\n`;
+  out += `import wasmUrl from '@thorvg/webcanvas/dist/thorvg.wasm?url'; // Vite/webpack\n\n`;
+  out += `const TVG = await ThorVG.init({ renderer: 'gl', locateFile: () => wasmUrl });\n`;
+  out += `const canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });\n\n`;
+  out += `const shape = new TVG.Shape();\n`;
+  out += `shape.appendRect(100, 100, 200, 150).fill(255, 0, 0, 255);\n`;
+  out += `canvas.add(shape).render();\n\`\`\`\n\n`;
+  out += `---\n\n`;
+
+  for (const [cat, items] of Object.entries(apis)) {
+    if (items.length === 0) continue;
+    out += `## ${categoryTitles[cat] || cat}\n\n`;
+
+    // Top-level items first
+    const topLevel = items.filter(item => !item.parent);
+    const children = items.filter(item => item.parent);
+
+    for (const item of topLevel) {
+      out += `### ${item.name}\n\n`;
+      out += `**Kind:** ${item.kind}\n\n`;
+      if (item.comment) out += `${item.comment}\n\n`;
+
+      // Constructor
+      if (item.constructor) {
+        out += `**Constructor:**\n`;
+        if (item.constructor.comment) out += `${item.constructor.comment}\n`;
+        out += renderParams(item.constructor.parameters);
+        out += '\n';
+      }
+
+      // Properties (interfaces/types)
+      if (item.properties && item.properties.length > 0) {
+        out += `**Properties:**\n`;
+        for (const prop of item.properties) {
+          const opt = prop.optional ? '?' : '';
+          out += `- \`${prop.name}${opt}\` \`${prop.type}\`${prop.comment ? ' — ' + prop.comment : ''}\n`;
+        }
+        out += '\n';
+      }
+
+      out += renderExamples(item.examples);
+
+      // Methods belonging to this class
+      const methods = children.filter(c => c.parent === item.name);
+      for (const method of methods) {
+        out += `\n#### ${item.name}.${method.shortName}\n\n`;
+        if (method.returnType && method.returnType !== 'void' && method.returnType !== 'any') {
+          out += `**Returns:** \`${method.returnType}\`\n\n`;
+        }
+        if (method.comment) out += `${method.comment}\n\n`;
+        out += renderParams(method.parameters);
+        out += renderExamples(method.examples);
+      }
+
+      out += '\n---\n\n';
+    }
+  }
+
+  return out;
+}
+
+// Place at the root
+fs.writeFileSync(path.join(__dirname, '../../docs/llms-full.txt'), generateLlmsFullTxt());
+fs.copyFileSync(path.join(__dirname, '../../docs/llms-full.txt'), path.join(__dirname, '../../llms-full.txt'));
+
 console.log('✓ Documentation generated: docs/index.html');
