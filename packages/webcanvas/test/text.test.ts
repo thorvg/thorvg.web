@@ -3,6 +3,7 @@ import type { ThorVGNamespace } from '../src/index';
 import { Text } from '../src/core/Text';
 import { ThorVGError } from '../src/common/errors';
 import { TextWrapMode } from '../src/common/constants';
+import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
 function getTVG(): ThorVGNamespace {
   return (globalThis as any).__TVG;
@@ -99,5 +100,15 @@ describe('Text', () => {
     const TVG = getTVG();
     const text = new TVG.Text();
     expect(() => text.font('default')).toThrow(ThorVGError);
+  });
+
+  it('dispose + GC should not double-free', () => {
+    const TVG = getTVG();
+    assertNoDoubleFree(() => new TVG.Text());
+  });
+
+  it.skipIf(!canForceGC)('unreferenced text is cleaned up by GC', async () => {
+    const TVG = getTVG();
+    await assertGCCleanup(() => new TVG.Text());
   });
 });

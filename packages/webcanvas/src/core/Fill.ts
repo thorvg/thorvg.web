@@ -5,6 +5,7 @@
 
 import { WasmObject } from '../interop/WasmObject';
 import { getModule } from '../interop/module';
+import { gradientRegistry } from '../interop/registry';
 import { GradientSpread } from '../common/constants';
 
 /**
@@ -18,9 +19,20 @@ interface ColorStopEntry {
 }
 
 export abstract class Fill extends WasmObject {
+  protected _filled = false;
   protected _stops: ColorStopEntry[] = [];
 
+  constructor(ptr: number) {
+    super(ptr, gradientRegistry);
+  }
+
+  _markFilled(): void {
+    this._filled = true;
+    gradientRegistry.unregister(this); // When filled, the Shape takes ownership
+  }
+
   protected _cleanup(ptr: number): void {
+    if (this._filled) return;
     const Module = getModule();
     Module._tvg_gradient_del(ptr);
   }

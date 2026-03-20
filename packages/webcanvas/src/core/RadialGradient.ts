@@ -5,7 +5,7 @@
 
 import { Fill } from './Fill';
 import { getModule } from '../interop/module';
-import { gradientRegistry } from '../interop/registry';
+
 
 /**
  * Radial gradient for filling shapes
@@ -47,7 +47,7 @@ export class RadialGradient extends Fill {
   constructor(cx: number, cy: number, r: number, fx: number = cx, fy: number = cy, fr: number = 0) {
     const Module = getModule();
     const ptr = Module._tvg_radial_gradient_new();
-    super(ptr, gradientRegistry);
+    super(ptr);
     Module._tvg_radial_gradient_set(ptr, cx, cy, r, fx, fy, fr);
   }
 

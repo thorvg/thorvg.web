@@ -481,10 +481,10 @@ export class Shape extends Paint {
     const Module = getModule();
 
     if (gradientOrR instanceof Fill) {
-      // Gradient fill - apply pending stops before setting
       gradientOrR['_applyStops']();
       const result = Module._tvg_shape_set_gradient(this.ptr, gradientOrR.ptr);
       checkResult(result, 'fill (gradient)');
+      gradientOrR._markFilled();
     } else if (typeof gradientOrR === 'number' && g !== undefined && b !== undefined) {
       // RGB or RGBA color
       const result = Module._tvg_shape_set_fill_color(this.ptr, gradientOrR, g, b, a);
@@ -572,10 +572,10 @@ export class Shape extends Paint {
         checkResult(result, 'stroke (color)');
       }
       if (gradient) {
-        // Apply pending stops before setting stroke gradient
         gradient['_applyStops']();
         const result = Module._tvg_shape_set_stroke_gradient(this.ptr, gradient.ptr);
         checkResult(result, 'stroke (gradient)');
+        gradient._markFilled();
       }
       if (cap !== undefined) {
         const result = Module._tvg_shape_set_stroke_cap(this.ptr, cap);
