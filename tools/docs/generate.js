@@ -886,8 +886,8 @@ const html = `<!DOCTYPE html>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        const apiData = ${JSON.stringify(apis, null, 2)};
-        const readmeMarkdown = ${JSON.stringify(readmeContent)};
+        const apiData = ${JSON.stringify(apis, null, 2).replace(/<\//g, '<\\/')};
+        const readmeMarkdown = ${JSON.stringify(readmeContent).replace(/<\//g, '<\\/')};
         const searchInput = document.getElementById('search');
         const apiItems = document.querySelectorAll('.api-item');
         const content = document.getElementById('content');
