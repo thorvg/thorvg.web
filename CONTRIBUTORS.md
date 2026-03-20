@@ -16,3 +16,4 @@
 - Seungwon Lee @nowgnuesLeee
 - Yujin Lee @Ujaa
 - Yukyung Lee @nunomi0
+- Soongeon Noh @Nor-s
