@@ -1,0 +1,5505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThorVG WebCanvas API Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background: #ffffff;
+            color: #333;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #fafafa;
+            overflow-y: auto;
+            padding: 20px 15px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .sidebar h1 {
+            font-size: 16px;
+            margin: 0 0 20px 0;
+            color: #1976d2;
+            font-weight: 600;
+        }
+
+        .sidebar input {
+            width: 100%;
+            padding: 8px 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .category {
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .api-list {
+            list-style: none;
+        }
+
+        .api-item {
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #555;
+            transition: all 0.15s;
+            border-left: 2px solid transparent;
+        }
+
+        .api-item:hover {
+            background: #f0f0f0;
+            color: #1976d2;
+        }
+
+        .api-item.active {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left-color: #1976d2;
+            font-weight: 500;
+        }
+
+        .api-item.hidden {
+            display: none;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .content h1 {
+            color: #1976d2;
+            margin-bottom: 1rem;
+        }
+
+        .content h2 {
+            color: #1976d2;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .meta {
+            color: #666;
+            margin: 0.5rem 0;
+        }
+
+        .description {
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+
+        .params {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .params li {
+            margin: 0.5rem 0;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* GitHub-style markdown rendering for README */
+        #readme-content h1,
+        #readme-content h2,
+        #readme-content h3,
+        #readme-content h4,
+        #readme-content h5,
+        #readme-content h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        #readme-content h1 {
+            font-size: 2em;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        #readme-content h2 {
+            font-size: 1.5em;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        #readme-content h3 {
+            font-size: 1.25em;
+        }
+
+        #readme-content h4 {
+            font-size: 1em;
+        }
+
+        #readme-content p {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        #readme-content ul,
+        #readme-content ol {
+            margin-top: 0;
+            margin-bottom: 16px;
+            padding-left: 2em;
+        }
+
+        #readme-content ul {
+            list-style-type: disc;
+        }
+
+        #readme-content ul ul {
+            list-style-type: circle;
+        }
+
+        #readme-content ul ul ul {
+            list-style-type: square;
+        }
+
+        #readme-content ol {
+            list-style-type: decimal;
+        }
+
+        #readme-content li {
+            margin-top: 0.25em;
+            margin-bottom: 0.25em;
+        }
+
+        #readme-content li > p {
+            margin-top: 16px;
+        }
+
+        #readme-content li + li {
+            margin-top: 0.25em;
+        }
+
+        #readme-content blockquote {
+            margin: 0;
+            padding: 0 1em;
+            color: #666;
+            border-left: 0.25em solid #ddd;
+            margin-bottom: 16px;
+        }
+
+        #readme-content table {
+            display: block;
+            width: 100%;
+            width: max-content;
+            max-width: 100%;
+            overflow: auto;
+            border-spacing: 0;
+            border-collapse: collapse;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        #readme-content table th {
+            font-weight: 600;
+            padding: 6px 13px;
+            border: 1px solid #ddd;
+            background-color: #f6f8fa;
+        }
+
+        #readme-content table td {
+            padding: 6px 13px;
+            border: 1px solid #ddd;
+        }
+
+        #readme-content table tr {
+            background-color: #fff;
+            border-top: 1px solid #ddd;
+        }
+
+        #readme-content table tr:nth-child(2n) {
+            background-color: #f6f8fa;
+        }
+
+        #readme-content hr {
+            height: 0.25em;
+            padding: 0;
+            margin: 24px 0;
+            background-color: #e0e0e0;
+            border: 0;
+        }
+
+        #readme-content strong {
+            font-weight: 600;
+        }
+
+        #readme-content em {
+            font-style: italic;
+        }
+
+        #readme-content a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+
+        #readme-content a:hover {
+            text-decoration: underline;
+        }
+
+        #readme-content img {
+            max-width: 100%;
+            box-sizing: content-box;
+        }
+
+        /* API content markdown rendering */
+        .description h1,
+        .description h2,
+        .description h3,
+        .description h4,
+        .description h5,
+        .description h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+            color: #1976d2;
+        }
+
+        .description h3 {
+            font-size: 1.25em;
+        }
+
+        .description h4 {
+            font-size: 1em;
+        }
+
+        .description ul,
+        .description ol {
+            margin-top: 0;
+            margin-bottom: 16px;
+            padding-left: 2em;
+        }
+
+        .description ul {
+            list-style-type: disc;
+        }
+
+        .description li {
+            margin-top: 0.25em;
+            margin-bottom: 0.25em;
+        }
+
+        .description p {
+            margin-bottom: 16px;
+        }
+
+        .description strong {
+            font-weight: 600;
+        }
+
+        .description code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .description pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .description pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .description blockquote {
+            margin: 0;
+            padding: 0 1em;
+            color: #666;
+            border-left: 0.25em solid #ddd;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>ThorVG WebCanvas</h1>
+        <input type="text" id="search" placeholder="Search APIs...">
+        
+        <div class="category">
+            <div class="category-title">Initialization</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="34">init</li>
+                <li class="api-item" data-id="3">InitOptions</li>
+            </ul>
+        </div>
+        
+        <div class="category">
+            <div class="category-title">Canvas</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="37">Canvas</li>
+                <li class="api-item" data-id="52">Canvas.add</li>
+                <li class="api-item" data-id="58">Canvas.clear</li>
+                <li class="api-item" data-id="82">Canvas.dpr</li>
+                <li class="api-item" data-id="55">Canvas.remove</li>
+                <li class="api-item" data-id="62">Canvas.render</li>
+                <li class="api-item" data-id="80">Canvas.renderer</li>
+                <li class="api-item" data-id="68">Canvas.resize</li>
+                <li class="api-item" data-id="60">Canvas.update</li>
+                <li class="api-item" data-id="72">Canvas.viewport</li>
+                <li class="api-item" data-id="842">CanvasOptions</li>
+                <li class="api-item" data-id="909">RendererType</li>
+            </ul>
+        </div>
+        
+        <div class="category">
+            <div class="category-title">Shapes</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="852">Bounds</li>
+                <li class="api-item" data-id="857">Matrix</li>
+                <li class="api-item" data-id="867">RectOptions</li>
+                <li class="api-item" data-id="84">Shape</li>
+                <li class="api-item" data-id="124">Shape.appendCircle</li>
+                <li class="api-item" data-id="117">Shape.appendRect</li>
+                <li class="api-item" data-id="176">Shape.blend</li>
+                <li class="api-item" data-id="187">Shape.bounds</li>
+                <li class="api-item" data-id="199">Shape.clip</li>
+                <li class="api-item" data-id="115">Shape.close</li>
+                <li class="api-item" data-id="107">Shape.cubicTo</li>
+                <li class="api-item" data-id="193">Shape.duplicate</li>
+                <li class="api-item" data-id="139">Shape.fill</li>
+                <li class="api-item" data-id="131">Shape.fillRule</li>
+                <li class="api-item" data-id="89">Shape.fromPtr</li>
+                <li class="api-item" data-id="157">Shape.id</li>
+                <li class="api-item" data-id="206">Shape.intersects</li>
+                <li class="api-item" data-id="103">Shape.lineTo</li>
+                <li class="api-item" data-id="202">Shape.mask</li>
+                <li class="api-item" data-id="99">Shape.moveTo</li>
+                <li class="api-item" data-id="179">Shape.opacity</li>
+                <li class="api-item" data-id="172">Shape.origin</li>
+                <li class="api-item" data-id="85">Shape.registerType</li>
+                <li class="api-item" data-id="152">Shape.reset</li>
+                <li class="api-item" data-id="165">Shape.rotate</li>
+                <li class="api-item" data-id="168">Shape.scale</li>
+                <li class="api-item" data-id="147">Shape.stroke</li>
+                <li class="api-item" data-id="196">Shape.transform</li>
+                <li class="api-item" data-id="161">Shape.translate</li>
+                <li class="api-item" data-id="134">Shape.trimPath</li>
+                <li class="api-item" data-id="183">Shape.visible</li>
+                <li class="api-item" data-id="871">StrokeOptions</li>
+            </ul>
+        </div>
+        
+        <div class="category">
+            <div class="category-title">Scene</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="222">Scene</li>
+                <li class="api-item" data-id="237">Scene.add</li>
+                <li class="api-item" data-id="312">Scene.blend</li>
+                <li class="api-item" data-id="323">Scene.bounds</li>
+                <li class="api-item" data-id="243">Scene.clear</li>
+                <li class="api-item" data-id="335">Scene.clip</li>
+                <li class="api-item" data-id="253">Scene.dropShadow</li>
+                <li class="api-item" data-id="329">Scene.duplicate</li>
+                <li class="api-item" data-id="263">Scene.fillEffect</li>
+                <li class="api-item" data-id="227">Scene.fromPtr</li>
+                <li class="api-item" data-id="247">Scene.gaussianBlur</li>
+                <li class="api-item" data-id="293">Scene.id</li>
+                <li class="api-item" data-id="342">Scene.intersects</li>
+                <li class="api-item" data-id="338">Scene.mask</li>
+                <li class="api-item" data-id="315">Scene.opacity</li>
+                <li class="api-item" data-id="308">Scene.origin</li>
+                <li class="api-item" data-id="223">Scene.registerType</li>
+                <li class="api-item" data-id="240">Scene.remove</li>
+                <li class="api-item" data-id="245">Scene.resetEffects</li>
+                <li class="api-item" data-id="301">Scene.rotate</li>
+                <li class="api-item" data-id="304">Scene.scale</li>
+                <li class="api-item" data-id="269">Scene.tint</li>
+                <li class="api-item" data-id="332">Scene.transform</li>
+                <li class="api-item" data-id="297">Scene.translate</li>
+                <li class="api-item" data-id="278">Scene.tritone</li>
+                <li class="api-item" data-id="319">Scene.visible</li>
+            </ul>
+        </div>
+        
+        <div class="category">
+            <div class="category-title">Picture</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="880">LoadDataOptions</li>
+                <li class="api-item" data-id="910">MimeType</li>
+                <li class="api-item" data-id="358">Picture</li>
+                <li class="api-item" data-id="409">Picture.blend</li>
+                <li class="api-item" data-id="420">Picture.bounds</li>
+                <li class="api-item" data-id="432">Picture.clip</li>
+                <li class="api-item" data-id="426">Picture.duplicate</li>
+                <li class="api-item" data-id="363">Picture.fromPtr</li>
+                <li class="api-item" data-id="390">Picture.id</li>
+                <li class="api-item" data-id="439">Picture.intersects</li>
+                <li class="api-item" data-id="373">Picture.load</li>
+                <li class="api-item" data-id="435">Picture.mask</li>
+                <li class="api-item" data-id="412">Picture.opacity</li>
+                <li class="api-item" data-id="405">Picture.origin</li>
+                <li class="api-item" data-id="382">Picture.paint</li>
+                <li class="api-item" data-id="359">Picture.registerType</li>
+                <li class="api-item" data-id="398">Picture.rotate</li>
+                <li class="api-item" data-id="401">Picture.scale</li>
+                <li class="api-item" data-id="377">Picture.size</li>
+                <li class="api-item" data-id="429">Picture.transform</li>
+                <li class="api-item" data-id="394">Picture.translate</li>
+                <li class="api-item" data-id="416">Picture.visible</li>
+                <li class="api-item" data-id="885">PictureSize</li>
+            </ul>
+        </div>
+        
+        <div class="category">
+            <div class="category-title">Text</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="455">Text</li>
+                <li class="api-item" data-id="486">Text.align</li>
+                <li class="api-item" data-id="532">Text.blend</li>
+                <li class="api-item" data-id="543">Text.bounds</li>
+                <li class="api-item" data-id="555">Text.clip</li>
+                <li class="api-item" data-id="549">Text.duplicate</li>
+                <li class="api-item" data-id="479">Text.fill</li>
+                <li class="api-item" data-id="470">Text.font</li>
+                <li class="api-item" data-id="476">Text.fontSize</li>
+                <li class="api-item" data-id="460">Text.fromPtr</li>
+                <li class="api-item" data-id="513">Text.id</li>
+                <li class="api-item" data-id="562">Text.intersects</li>
+                <li class="api-item" data-id="501">Text.italic</li>
+                <li class="api-item" data-id="490">Text.layout</li>
+                <li class="api-item" data-id="558">Text.mask</li>
+                <li class="api-item" data-id="535">Text.opacity</li>
+                <li class="api-item" data-id="528">Text.origin</li>
+                <li class="api-item" data-id="504">Text.outline</li>
+                <li class="api-item" data-id="456">Text.registerType</li>
+                <li class="api-item" data-id="521">Text.rotate</li>
+                <li class="api-item" data-id="524">Text.scale</li>
+                <li class="api-item" data-id="497">Text.spacing</li>
+                <li class="api-item" data-id="473">Text.text</li>
+                <li class="api-item" data-id="552">Text.transform</li>
+                <li class="api-item" data-id="517">Text.translate</li>
+                <li class="api-item" data-id="539">Text.visible</li>
+                <li class="api-item" data-id="494">Text.wrap</li>
+                <li class="api-item" data-id="888">TextLayout</li>
+                <li class="api-item" data-id="891">TextOutline</li>
+            </ul>
+        </div>
+        
+        <div class="category">
+            <div class="category-title">Animation</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="578">Animation</li>
+                <li class="api-item" data-id="602">Animation.frame</li>
+                <li class="api-item" data-id="629">Animation.getCurrentTime</li>
+                <li class="api-item" data-id="624">Animation.getLoop</li>
+                <li class="api-item" data-id="600">Animation.info</li>
+                <li class="api-item" data-id="619">Animation.isPlaying</li>
+                <li class="api-item" data-id="597">Animation.load</li>
+                <li class="api-item" data-id="615">Animation.pause</li>
+                <li class="api-item" data-id="595">Animation.picture</li>
+                <li class="api-item" data-id="609">Animation.play</li>
+                <li class="api-item" data-id="626">Animation.seek</li>
+                <li class="api-item" data-id="606">Animation.segment</li>
+                <li class="api-item" data-id="621">Animation.setLoop</li>
+                <li class="api-item" data-id="617">Animation.stop</li>
+                <li class="api-item" data-id="894">AnimationInfo</li>
+                <li class="api-item" data-id="898">AnimationSegment</li>
+            </ul>
+        </div>
+        
+        <div class="category">
+            <div class="category-title">Gradients</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="908">ColorStop</li>
+                <li class="api-item" data-id="638">LinearGradient</li>
+                <li class="api-item" data-id="651">LinearGradient.addStop</li>
+                <li class="api-item" data-id="645">LinearGradient.build</li>
+                <li class="api-item" data-id="655">LinearGradient.clearStops</li>
+                <li class="api-item" data-id="657">LinearGradient.setStops</li>
+                <li class="api-item" data-id="662">LinearGradient.spread</li>
+                <li class="api-item" data-id="675">RadialGradient</li>
+                <li class="api-item" data-id="690">RadialGradient.addStop</li>
+                <li class="api-item" data-id="684">RadialGradient.build</li>
+                <li class="api-item" data-id="694">RadialGradient.clearStops</li>
+                <li class="api-item" data-id="696">RadialGradient.setStops</li>
+                <li class="api-item" data-id="701">RadialGradient.spread</li>
+            </ul>
+        </div>
+        
+        <div class="category">
+            <div class="category-title">Font</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="714">Font</li>
+                <li class="api-item" data-id="715">Font.load</li>
+                <li class="api-item" data-id="723">Font.unload</li>
+                <li class="api-item" data-id="904">FontsourceOptions</li>
+                <li class="api-item" data-id="903">FontType</li>
+                <li class="api-item" data-id="901">LoadFontOptions</li>
+            </ul>
+        </div>
+        
+        <div class="category">
+            <div class="category-title">Error Handling</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="846">ErrorContext</li>
+                <li class="api-item" data-id="848">ErrorHandler</li>
+                <li class="api-item" data-id="830">ThorVGError</li>
+                <li class="api-item" data-id="831">ThorVGError.fromCode</li>
+                <li class="api-item" data-id="822">ThorVGResultCode</li>
+                <li class="api-item" data-id="826">ThorVGResultCode.FailedAllocation</li>
+                <li class="api-item" data-id="825">ThorVGResultCode.InsufficientCondition</li>
+                <li class="api-item" data-id="824">ThorVGResultCode.InvalidArguments</li>
+                <li class="api-item" data-id="827">ThorVGResultCode.MemoryCorruption</li>
+                <li class="api-item" data-id="828">ThorVGResultCode.NotSupported</li>
+                <li class="api-item" data-id="823">ThorVGResultCode.Success</li>
+                <li class="api-item" data-id="829">ThorVGResultCode.Unknown</li>
+            </ul>
+        </div>
+        
+        <div class="category">
+            <div class="category-title">Other</div>
+            <ul class="api-list">
+                <li class="api-item" data-id="733">Accessor</li>
+                <li class="api-item" data-id="734">Accessor.id</li>
+                <li class="api-item" data-id="737">Accessor.set</li>
+                <li class="api-item" data-id="1">getGlobalRenderer</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="content" id="content">
+        <div id="readme-content"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const apiData = {
+  "initialization": [
+    {
+      "id": 3,
+      "name": "InitOptions",
+      "shortName": "InitOptions",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "locateFile",
+          "type": "(path: string) => string",
+          "comment": "Optional function to locate WASM files. If not provided, assumes WASM files are in the same directory as the JavaScript bundle.",
+          "optional": true
+        },
+        {
+          "name": "renderer",
+          "type": "RendererType",
+          "comment": "Renderer type: 'sw' (Software), 'gl' (WebGL), or 'wg' (WebGPU). Default: 'gl'. WebGPU provides best performance but requires Chrome 113+ or Edge 113+.",
+          "optional": true
+        },
+        {
+          "name": "onError",
+          "type": "ErrorHandler",
+          "comment": "Global error handler for all ThorVG operations. If provided, errors will be passed to this handler instead of being thrown.",
+          "optional": true
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 34,
+      "name": "init",
+      "shortName": "init",
+      "kind": "Class",
+      "type": "any",
+      "comment": "Initialize ThorVG WASM module and rendering engine.\n\nThis is the entry point for using ThorVG WebCanvas. It loads the WebAssembly module\nand initializes the rendering engine with the specified backend (Software, WebGL, or WebGPU).",
+      "examples": [
+        "```typescript\n// Initialize with default WebGL renderer\nconst TVG = await ThorVG.init();\nconst canvas = new TVG.Canvas('#canvas');\n```",
+        "```typescript\n// Initialize with custom WASM file location\nconst TVG = await ThorVG.init({\n  locateFile: (path) => `/public/wasm/${path}`,\n  renderer: 'gl'\n});\n```",
+        "```typescript\n// Initialize with WebGPU for maximum performance\nconst TVG = await ThorVG.init({\n  locateFile: (path) => '../dist/' + path.split('/').pop(),\n  renderer: 'wg'\n});\n```",
+        "```typescript\n// Initialize with Software renderer for maximum compatibility\nconst TVG = await ThorVG.init({\n  renderer: 'sw'\n});\n```"
+      ],
+      "parameters": [
+        {
+          "name": "options",
+          "type": "InitOptions",
+          "comment": "Initialization options",
+          "optional": false
+        }
+      ],
+      "returnType": "Promise",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    }
+  ],
+  "canvas": [
+    {
+      "id": 842,
+      "name": "CanvasOptions",
+      "shortName": "CanvasOptions",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Configuration options for Canvas initialization.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "Canvas width in pixels. Default: 800",
+          "optional": true
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "Canvas height in pixels. Default: 600",
+          "optional": true
+        },
+        {
+          "name": "enableDevicePixelRatio",
+          "type": "boolean",
+          "comment": "Enable device pixel ratio for high-DPI displays. Default: true",
+          "optional": true
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 37,
+      "name": "Canvas",
+      "shortName": "Canvas",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Canvas rendering context for ThorVG vector graphics.\n\nManages the rendering pipeline and provides methods for adding/removing Paint objects\nand controlling the render loop.",
+      "examples": [
+        "```typescript\n// Initialize with renderer\nconst TVG = await ThorVG.init({ renderer: 'gl' });\n\n// Basic canvas setup with shapes\nconst canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });\n\nconst shape = new TVG.Shape();\nshape.appendRect(100, 100, 200, 150, 10)\n     .fill(255, 100, 50, 255);\n\ncanvas.add(shape).render();\n```",
+        "```typescript\n// Animation loop\nconst canvas = new TVG.Canvas('#canvas');\nconst shape = new TVG.Shape();\n\nlet rotation = 0;\nfunction animate() {\n  shape.reset()\n       .appendRect(0, 0, 100, 100)\n       .fill(100, 150, 255, 255)\n       .rotate(rotation++)\n       .translate(400, 300);\n\n  canvas.update().render();\n  requestAnimationFrame(animate);\n}\nanimate();\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "Creates a new Canvas rendering context.\n\nThe renderer is determined by the global setting from ThorVG.init().",
+        "parameters": [
+          {
+            "name": "selector",
+            "type": "string",
+            "comment": "CSS selector for the target HTML canvas element (e.g., '#canvas', '.my-canvas')",
+            "optional": false
+          },
+          {
+            "name": "options",
+            "type": "CanvasOptions",
+            "comment": "Configuration options for the canvas",
+            "optional": false
+          }
+        ]
+      },
+      "destroy": {
+        "comment": "Destroys the canvas and frees its WASM memory.\n\nAfter calling destroy(), this canvas instance cannot be used.\nThe ThorVG module remains loaded and new canvases can be created.",
+        "parameters": [],
+        "returnType": "void"
+      },
+      "properties": [
+        {
+          "name": "renderer",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "dpr",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 52,
+      "name": "Canvas.add",
+      "shortName": "add",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Adds a Paint object to the canvas for rendering.\n\nPaint objects include Shape, Scene, Picture, Text, and Animation.picture.\nObjects are rendered in the order they are added (painter's algorithm).",
+      "examples": [
+        "```typescript\nconst shape = new TVG.Shape();\nconst text = new TVG.Text();\ncanvas.add(shape);\ncanvas.add(text);\n```",
+        "```typescript\n// Method chaining\ncanvas.add(shape1)\n      .add(shape2)\n      .render();\n```"
+      ],
+      "parameters": [
+        {
+          "name": "paint",
+          "type": "Paint",
+          "comment": "A Paint object to add to the canvas",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Canvas"
+    },
+    {
+      "id": 55,
+      "name": "Canvas.remove",
+      "shortName": "remove",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Removes one or all Paint objects from the canvas.",
+      "examples": [
+        "```typescript\n// Remove a specific paint\ncanvas.remove(shape);\n```",
+        "```typescript\n// Remove all paints\ncanvas.remove();\n```"
+      ],
+      "parameters": [
+        {
+          "name": "paint",
+          "type": "Paint",
+          "comment": "Optional Paint object to remove. If omitted, removes all Paint objects.",
+          "optional": true
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Canvas"
+    },
+    {
+      "id": 58,
+      "name": "Canvas.clear",
+      "shortName": "clear",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Clears all Paint objects from the canvas and renders an empty frame.\n\nThis is equivalent to remove() without arguments,\nbut also immediately renders the cleared canvas.",
+      "examples": [
+        "```typescript\ncanvas.clear(); // Clears and renders empty canvas\n```"
+      ],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Canvas"
+    },
+    {
+      "id": 60,
+      "name": "Canvas.update",
+      "shortName": "update",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Updates the canvas state before rendering.\n\nThis method should be called before render when working with animations\nor when Paint objects have been modified. It ensures all transformations and\nchanges are processed.",
+      "examples": [
+        "```typescript\n// Animation loop pattern\nfunction animate() {\n  animation.frame(currentFrame++);\n  canvas.update().render();\n  requestAnimationFrame(animate);\n}\n```"
+      ],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Canvas"
+    },
+    {
+      "id": 62,
+      "name": "Canvas.render",
+      "shortName": "render",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Renders all Paint objects to the canvas.\n\nThis method draws all added Paint objects to the canvas using the configured\nrendering backend (Software, WebGL, or WebGPU).",
+      "examples": [
+        "```typescript\n// Static rendering\ncanvas.add(shape).add(text).render();\n```",
+        "```typescript\n// Animation loop\nfunction animate() {\n  canvas.update().render();\n  requestAnimationFrame(animate);\n}\n```"
+      ],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Canvas"
+    },
+    {
+      "id": 68,
+      "name": "Canvas.resize",
+      "shortName": "resize",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Resizes the canvas to new dimensions.",
+      "examples": [
+        "```typescript\ncanvas.resize(1920, 1080).render();\n```",
+        "```typescript\n// Responsive canvas\nwindow.addEventListener('resize', () => {\n  canvas.resize(window.innerWidth, window.innerHeight).render();\n});\n```"
+      ],
+      "parameters": [
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "New width in pixels",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "New height in pixels",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Canvas"
+    },
+    {
+      "id": 72,
+      "name": "Canvas.viewport",
+      "shortName": "viewport",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets the viewport for rendering a specific region of the canvas.\n\nThe viewport defines the rectangular region where rendering occurs.\nUseful for rendering to a portion of the canvas or implementing split-screen views.",
+      "examples": [
+        "```typescript\n// Render to top-left quarter of canvas\ncanvas.viewport(0, 0, canvas.width / 2, canvas.height / 2);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "X coordinate of the viewport origin",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "Y coordinate of the viewport origin",
+          "optional": false
+        },
+        {
+          "name": "w",
+          "type": "number",
+          "comment": "Viewport width",
+          "optional": false
+        },
+        {
+          "name": "h",
+          "type": "number",
+          "comment": "Viewport height",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Canvas"
+    },
+    {
+      "id": 80,
+      "name": "Canvas.renderer",
+      "shortName": "renderer",
+      "kind": "Accessor",
+      "type": "any",
+      "comment": "Gets the rendering backend type currently in use.",
+      "examples": [
+        "```typescript\nconst canvas = new TVG.Canvas('#canvas', { renderer: 'wg' });\nconsole.log(canvas.renderer); // 'wg'\n```"
+      ],
+      "parameters": [],
+      "returnType": "string",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Canvas"
+    },
+    {
+      "id": 82,
+      "name": "Canvas.dpr",
+      "shortName": "dpr",
+      "kind": "Accessor",
+      "type": "any",
+      "comment": "Gets the current device pixel ratio applied to this canvas.\n\nThorVG uses an optimized DPR formula for best performance:\n`1 + ((window.devicePixelRatio - 1) * 0.75)`\n\nThis provides a balance between visual quality and rendering performance,\nespecially on high-DPI displays.",
+      "examples": [
+        "```typescript\n// Getting the current DPR\nconst canvas = new TVG.Canvas('#canvas', {\n  enableDevicePixelRatio: true\n});\n\nconsole.log(canvas.dpr); // e.g., 1.75 on a 2x display\nconsole.log(window.devicePixelRatio); // e.g., 2.0\n```",
+        "```typescript\n// Using DPR for responsive calculations\nconst canvas = new TVG.Canvas('#canvas');\nconst shape = new TVG.Shape();\n\n// Adjust stroke width based on DPR for consistent appearance\nconst strokeWidth = 2 / canvas.dpr;\nshape.appendCircle(100, 100, 50)\n     .stroke(255, 0, 0, 255)\n     .strokeWidth(strokeWidth);\n```"
+      ],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Canvas"
+    },
+    {
+      "id": 909,
+      "name": "RendererType",
+      "shortName": "RendererType",
+      "kind": "Object Literal",
+      "type": "'sw' | 'gl' | 'wg'",
+      "comment": "Rendering backend type for Canvas.\n\nThorVG supports three rendering backends, each with different performance\ncharacteristics and browser compatibility:\n\n## Available Renderers\n\n### `'sw'` - Software Renderer\n- **Rendering**: CPU-based software rendering\n- **Performance**: Slower, but works everywhere\n- **Compatibility**: All browsers and devices\n- **Best for**: Maximum compatibility, simple graphics, server-side rendering\n\n### `'gl'` - WebGL Renderer (Recommended)\n- **Rendering**: GPU-accelerated using WebGL 2.0\n- **Performance**: Excellent performance with wide browser support\n- **Compatibility**: Chrome 56+, Firefox 51+, Safari 15+, Edge 79+\n- **Best for**: Production applications, interactive graphics, animations\n- **Recommended for most use cases**\n\n### `'wg'` - WebGPU Renderer\n- **Rendering**: Next-generation GPU API\n- **Performance**: Best performance for complex scenes\n- **Compatibility**: Chrome 113+, Edge 113+ (limited support)\n- **Best for**: Maximum performance, modern browsers only",
+      "examples": [
+        "```typescript\n// Recommended setup with WebGL\nconst TVG = await ThorVG.init({ renderer: 'gl' });\nconst canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });\n```",
+        "```typescript\n// Maximum performance with WebGPU (modern browsers only)\nconst TVG = await ThorVG.init({ renderer: 'wg' });\n```",
+        "```typescript\n// Maximum compatibility with Software renderer\nconst TVG = await ThorVG.init({ renderer: 'sw' });\n```"
+      ],
+      "parameters": [],
+      "returnType": "'sw' | 'gl' | 'wg'",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    }
+  ],
+  "shapes": [
+    {
+      "id": 852,
+      "name": "Bounds",
+      "shortName": "Bounds",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 857,
+      "name": "Matrix",
+      "shortName": "Matrix",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "A 3x3 transformation matrix for 2D transformations.\n\nThe matrix elements represent:\n- e11, e12: Rotation/scale in X\n- e21, e22: Rotation/scale in Y\n- e13, e23: Translation in X and Y\n- e31, e32: Always 0 (reserved for 3D)\n- e33: Always 1 (homogeneous coordinate)\n\nMatrix layout:\n```\n| e11  e12  e13 |\n| e21  e22  e23 |\n| e31  e32  e33 |\n```",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "e11",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "e12",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "e13",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "e21",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "e22",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "e23",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "e31",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "e32",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "e33",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 867,
+      "name": "RectOptions",
+      "shortName": "RectOptions",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Options for creating rectangles with rounded corners.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "rx",
+          "type": "number",
+          "comment": "Horizontal corner radius. Default: 0",
+          "optional": true
+        },
+        {
+          "name": "ry",
+          "type": "number",
+          "comment": "Vertical corner radius. Default: 0",
+          "optional": true
+        },
+        {
+          "name": "clockwise",
+          "type": "boolean",
+          "comment": "Path direction. true = clockwise, false = counter-clockwise. Default: true",
+          "optional": true
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 871,
+      "name": "StrokeOptions",
+      "shortName": "StrokeOptions",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Comprehensive stroke styling options.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "Stroke width in pixels",
+          "optional": true
+        },
+        {
+          "name": "color",
+          "type": "unknown",
+          "comment": "Stroke color as [r, g, b, a] with values 0-255. Alpha is optional, defaults to 255.",
+          "optional": true
+        },
+        {
+          "name": "gradient",
+          "type": "Fill",
+          "comment": "Gradient fill for the stroke",
+          "optional": true
+        },
+        {
+          "name": "cap",
+          "type": "StrokeCap",
+          "comment": "Line cap style: StrokeCap.Butt, StrokeCap.Round, or StrokeCap.Square. Default: StrokeCap.Butt",
+          "optional": true
+        },
+        {
+          "name": "join",
+          "type": "StrokeJoin",
+          "comment": "Line join style: StrokeJoin.Miter, StrokeJoin.Round, or StrokeJoin.Bevel. Default: StrokeJoin.Miter",
+          "optional": true
+        },
+        {
+          "name": "miterLimit",
+          "type": "number",
+          "comment": "Miter limit for 'miter' joins. Default: 4",
+          "optional": true
+        },
+        {
+          "name": "dash",
+          "type": "number[]",
+          "comment": "Dash pattern as array of dash/gap lengths. Empty array [] resets to solid line.",
+          "optional": true
+        },
+        {
+          "name": "dashOffset",
+          "type": "number",
+          "comment": "Dash pattern offset. Use with dash to shift pattern start position.",
+          "optional": true
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 84,
+      "name": "Shape",
+      "shortName": "Shape",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Shape class for creating and manipulating vector graphics paths.\n\nExtends Paint to inherit transformation and opacity methods.",
+      "examples": [
+        "```typescript\n// Drawing basic shapes\nconst shape = new TVG.Shape();\n\n// Rectangle with rounded corners\nshape.appendRect(50, 50, 200, 100, 10)\n     .fill(255, 100, 100, 255)\n     .stroke(50, 50, 50, 255, 2);\n\ncanvas.add(shape);\n```",
+        "```typescript\n// Drawing paths with gradients\nconst shape = new TVG.Shape();\nshape.moveTo(100, 100)\n     .lineTo(200, 150)\n     .lineTo(150, 250)\n     .close();\n\nconst gradient = new TVG.LinearGradient(100, 100, 200, 250);\ngradient.addStop(0, [255, 0, 0, 255])\n        .addStop(1, [0, 0, 255, 255]);\n\nshape.fillGradient(gradient);\ncanvas.add(shape);\n```",
+        "```typescript\n// Complex path with transformations\nconst shape = new TVG.Shape();\nshape.appendCircle(0, 0, 50)\n     .fill(100, 200, 255, 255)\n     .translate(400, 300)\n     .scale(1.5)\n     .rotate(45);\n\ncanvas.add(shape);\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": [
+          {
+            "name": "ptr",
+            "type": "number",
+            "comment": "",
+            "optional": true
+          },
+          {
+            "name": "skipRegistry",
+            "type": "boolean",
+            "comment": "",
+            "optional": false
+          }
+        ]
+      },
+      "destroy": null,
+      "properties": [
+        {
+          "name": "id",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "ptr",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "isDisposed",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 85,
+      "name": "Shape.registerType",
+      "shortName": "registerType",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Register a subclass factory for a given Tvg_Type value.\nCalled by each subclass at module load time.",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "type",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "factory",
+          "type": "PaintFactory",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 157,
+      "name": "Shape.id",
+      "shortName": "id",
+      "kind": "Accessor",
+      "type": "any",
+      "comment": "The ID of this paint object.\nIDs are used to identify paint objects within a picture's scene tree.\nAssign a string to generate a hash ID from the name, or a number to set directly.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 161,
+      "name": "Shape.translate",
+      "shortName": "translate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Translate the paint by (x, y)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 165,
+      "name": "Shape.rotate",
+      "shortName": "rotate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Rotate the paint by angle (in degrees)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "angle",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 168,
+      "name": "Shape.scale",
+      "shortName": "scale",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Scale the paint by (sx, sy). If sy is not provided, use sx for both",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "sx",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "sy",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 172,
+      "name": "Shape.origin",
+      "shortName": "origin",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the origin point for transformations (rotation, scale).\nThe origin is specified as normalized coordinates (0.0 to 1.0).\n- (0, 0) = top-left corner\n- (0.5, 0.5) = center (default)\n- (1, 1) = bottom-right corner",
+      "examples": [
+        "```typescript\nconst picture = new TVG.Picture();\npicture.load(svgData, { type: 'svg' });\n\n// Set origin to center for rotation around center\npicture.origin(0.5, 0.5);\npicture.translate(300, 300);\npicture.rotate(45);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "Normalized X coordinate (0.0 to 1.0)",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "Normalized Y coordinate (0.0 to 1.0)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 176,
+      "name": "Shape.blend",
+      "shortName": "blend",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the blending method for this paint.\nBlending determines how this paint is combined with the content below it.",
+      "examples": [
+        "```typescript\nconst scene = new TVG.Scene();\nscene.blend(BlendMethod.Add);\n\nconst shape = new TVG.Shape();\nshape.appendCircle(100, 100, 50, 50);\nshape.fill(255, 0, 0, 255);\nshape.blend(BlendMethod.Multiply);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "method",
+          "type": "BlendMethod",
+          "comment": "The blending method to use",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 179,
+      "name": "Shape.opacity",
+      "shortName": "opacity",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get or set the opacity (0 to 255)",
+      "examples": [
+        "```typescript\n// Set opacity to 50% (half transparent)\nshape.opacity(128);\n\n// Set to fully opaque\nshape.opacity(255);\n\n// Get current opacity value\nconst currentOpacity = shape.opacity(); // returns 0-255\n```"
+      ],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 183,
+      "name": "Shape.visible",
+      "shortName": "visible",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get or set the visibility",
+      "examples": [],
+      "parameters": [],
+      "returnType": "boolean",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 187,
+      "name": "Shape.bounds",
+      "shortName": "bounds",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get the bounding box of this paint",
+      "examples": [],
+      "parameters": [],
+      "returnType": "Bounds",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 193,
+      "name": "Shape.duplicate",
+      "shortName": "duplicate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Duplicate this paint object",
+      "examples": [],
+      "parameters": [],
+      "returnType": "T",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 196,
+      "name": "Shape.transform",
+      "shortName": "transform",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Applies a custom transformation matrix to the paint.\n\nThis method allows you to apply complex transformations that combine\ntranslation, rotation, scaling, and skewing in a single operation.\nThe matrix is multiplied with any existing transformations.",
+      "examples": [
+        "```typescript\n// Apply a combined transformation\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 100, 100);\n\n// Create a matrix for: scale(2, 1.5) + rotate(45deg) + translate(100, 50)\nconst rad = (45 * Math.PI) / 180;\nconst cos = Math.cos(rad);\nconst sin = Math.sin(rad);\n\nshape.transform({\n  e11: 2 * cos,   e12: -2 * sin,  e13: 100,\n  e21: 1.5 * sin, e22: 1.5 * cos, e23: 50,\n  e31: 0,         e32: 0,         e33: 1\n});\n```",
+        "```typescript\n// Create a skew transformation\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 100, 100);\n\n// Skew in X direction\nshape.transform({\n  e11: 1,   e12: 0.5, e13: 0,\n  e21: 0,   e22: 1,   e23: 0,\n  e31: 0,   e32: 0,   e33: 1\n});\n```"
+      ],
+      "parameters": [
+        {
+          "name": "matrix",
+          "type": "Matrix",
+          "comment": "A 3x3 transformation matrix",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 199,
+      "name": "Shape.clip",
+      "shortName": "clip",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets a clipping path for this paint object.\n\nThe clipping path restricts the area where the paint will be rendered.\nOnly the parts of the paint that overlap with the clipper shape will be visible.",
+      "examples": [
+        "```typescript\nconst circle = new TVG.Shape();\ncircle.appendCircle(150, 150, 100);\n\nconst rect = new TVG.Shape();\nrect.appendRect(0, 0, 300, 300)\n    .fill(255, 0, 0, 255)\n    .clip(circle);\n\ncanvas.add(rect);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "clipper",
+          "type": "Paint",
+          "comment": "A Paint object (typically a Shape) to use as the clipping path",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 202,
+      "name": "Shape.mask",
+      "shortName": "mask",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets a masking target object and the masking method.\n\nThe masking restricts the transparency of the source paint using the target paint.",
+      "examples": [
+        "```typescript\nconst mask = new TVG.Shape();\nmask.appendCircle(200, 200, 125);\nmask.fill(255, 255, 255);\n\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 400, 400)\n    .fill(255, 0, 0, 255)\n    .mask(mask, MaskMethod.Alpha);\n\ncanvas.add(shape);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "target",
+          "type": "Paint",
+          "comment": "A Paint object to use as the masking target",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "MaskMethod",
+          "comment": "The method used to mask the source object with the target",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 206,
+      "name": "Shape.intersects",
+      "shortName": "intersects",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Checks if the paint intersects with the given rectangular region.",
+      "examples": [
+        "```typescript\nconst shape = new TVG.Shape();\nshape.appendRect(100, 100, 200, 200);\n\n// Check if shape intersects with a region\nif (shape.intersects(150, 150, 100, 100)) {\n  console.log('Shape intersects with region');\n}\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "The x-coordinate of the region's top-left corner",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "The y-coordinate of the region's top-left corner",
+          "optional": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "The width of the region",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "The height of the region",
+          "optional": false
+        }
+      ],
+      "returnType": "boolean",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 89,
+      "name": "Shape.fromPtr",
+      "shortName": "fromPtr",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Create a correctly-typed Paint subclass from a raw WASM pointer.\nThe returned object does NOT own the pointer (won't be freed by GC).",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "ptr",
+          "type": "number",
+          "comment": "A raw WASM paint pointer",
+          "optional": false
+        }
+      ],
+      "returnType": "Paint",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 99,
+      "name": "Shape.moveTo",
+      "shortName": "moveTo",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Moves the path cursor to a new point without drawing.\n\nThis starts a new subpath at the specified coordinates. Subsequent drawing commands\nwill start from this point.",
+      "examples": [
+        "```typescript\nshape.moveTo(100, 100)\n     .lineTo(200, 200);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "X coordinate",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "Y coordinate",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 103,
+      "name": "Shape.lineTo",
+      "shortName": "lineTo",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Draws a straight line from the current point to the specified coordinates.",
+      "examples": [
+        "```typescript\n// Draw a triangle\nshape.moveTo(100, 50)\n     .lineTo(150, 150)\n     .lineTo(50, 150)\n     .close();\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "End X coordinate",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "End Y coordinate",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 107,
+      "name": "Shape.cubicTo",
+      "shortName": "cubicTo",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Draws a cubic Bézier curve from the current point to (x, y).",
+      "examples": [
+        "```typescript\n// Draw a smooth curve\nshape.moveTo(50, 100)\n     .cubicTo(50, 50, 150, 50, 150, 100);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "cx1",
+          "type": "number",
+          "comment": "X coordinate of first control point",
+          "optional": false
+        },
+        {
+          "name": "cy1",
+          "type": "number",
+          "comment": "Y coordinate of first control point",
+          "optional": false
+        },
+        {
+          "name": "cx2",
+          "type": "number",
+          "comment": "X coordinate of second control point",
+          "optional": false
+        },
+        {
+          "name": "cy2",
+          "type": "number",
+          "comment": "Y coordinate of second control point",
+          "optional": false
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "End X coordinate",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "End Y coordinate",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 115,
+      "name": "Shape.close",
+      "shortName": "close",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Closes the current subpath by drawing a straight line back to the starting point.",
+      "examples": [
+        "```typescript\nshape.moveTo(100, 50)\n     .lineTo(150, 150)\n     .lineTo(50, 150)\n     .close(); // Completes the triangle\n```"
+      ],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 117,
+      "name": "Shape.appendRect",
+      "shortName": "appendRect",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Appends a rectangle path to the shape.\n\nCreates a rectangular path with optional rounded corners. Multiple rectangles\ncan be added to the same shape.",
+      "examples": [
+        "```typescript\n// Simple rectangle\nshape.appendRect(50, 50, 200, 100);\n```",
+        "```typescript\n// Rounded rectangle\nshape.appendRect(50, 50, 200, 100, { rx: 10, ry: 10 });\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "X coordinate of the top-left corner",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "Y coordinate of the top-left corner",
+          "optional": false
+        },
+        {
+          "name": "w",
+          "type": "number",
+          "comment": "Width of the rectangle",
+          "optional": false
+        },
+        {
+          "name": "h",
+          "type": "number",
+          "comment": "Height of the rectangle",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "RectOptions",
+          "comment": "Optional corner rounding and path direction",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 124,
+      "name": "Shape.appendCircle",
+      "shortName": "appendCircle",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Appends a circle or ellipse path to the shape.\n\nCreates a circular or elliptical path. If only one radius is provided,\ncreates a perfect circle. If two radii are provided, creates an ellipse.",
+      "examples": [
+        "```typescript\n// Perfect circle\nshape.appendCircle(150, 150, 50)\n     .fill(255, 0, 0, 255);\n```",
+        "```typescript\n// Ellipse\nshape.appendCircle(150, 150, 80, 50)\n     .fill(0, 100, 255, 255);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "cx",
+          "type": "number",
+          "comment": "X coordinate of the center",
+          "optional": false
+        },
+        {
+          "name": "cy",
+          "type": "number",
+          "comment": "Y coordinate of the center",
+          "optional": false
+        },
+        {
+          "name": "rx",
+          "type": "number",
+          "comment": "Horizontal radius",
+          "optional": false
+        },
+        {
+          "name": "ry",
+          "type": "number",
+          "comment": "Vertical radius (defaults to rx for perfect circle)",
+          "optional": false
+        },
+        {
+          "name": "clockwise",
+          "type": "boolean",
+          "comment": "Path direction. Default: true",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 131,
+      "name": "Shape.fillRule",
+      "shortName": "fillRule",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets the fill rule for the shape.\n\nThe fill rule determines how the interior of a shape is calculated when the path\nintersects itself or when multiple subpaths overlap.",
+      "examples": [
+        "```typescript\nconst star = new TVG.Shape();\n// Draw a self-intersecting star\nstar.moveTo(100, 10)\n    .lineTo(40, 180)\n    .lineTo(190, 60)\n    .lineTo(10, 60)\n    .lineTo(160, 180)\n    .close()\n    .fillRule(FillRule.EvenOdd)  // Use even-odd rule for star shape\n    .fill(255, 200, 0, 255);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "rule",
+          "type": "FillRule",
+          "comment": "Fill rule: 'winding' (non-zero) or 'evenodd'",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 134,
+      "name": "Shape.trimPath",
+      "shortName": "trimPath",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets the trim of the shape along the defined path segment, controlling which part is visible.\n\nThis method allows you to trim/cut paths, showing only a portion from the begin to end point.\nThis is particularly useful for animations (e.g., drawing a line progressively) or creating\npartial shapes like arcs from circles.\n\nIf the values exceed the 0-1 range, they wrap around (similar to angle wrapping).",
+      "examples": [
+        "```typescript\n// Draw half a circle (arc)\nconst arc = new TVG.Shape();\narc.appendCircle(150, 150, 100)\n   .trimPath(0, 0.5)  // Show only first half\n   .stroke({ width: 5, color: [255, 0, 0, 255] });\n```",
+        "```typescript\n// Animated line drawing effect\nconst line = new TVG.Shape();\nline.moveTo(50, 100)\n    .lineTo(250, 100)\n    .trimPath(0, progress)  // progress from 0 to 1\n    .stroke({ width: 3, color: [0, 100, 255, 255] });\n```",
+        "```typescript\n// Trim multiple paths separately\nconst shape = new TVG.Shape();\nshape.appendRect(50, 50, 100, 100)\n     .appendCircle(200, 100, 50)\n     .trimPath(0.25, 0.75, true)  // Trim each path separately\n     .stroke({ width: 2, color: [0, 0, 0, 255] });\n```"
+      ],
+      "parameters": [
+        {
+          "name": "begin",
+          "type": "number",
+          "comment": "Start of the segment to display (0.0 to 1.0, where 0 is the path start)",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "number",
+          "comment": "End of the segment to display (0.0 to 1.0, where 1 is the path end)",
+          "optional": false
+        },
+        {
+          "name": "simultaneous",
+          "type": "boolean",
+          "comment": "How to handle multiple paths within the shape:\n  - `true` (default): Trimming applied simultaneously to all paths\n  - `false`: All paths treated as one entity with combined length",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 139,
+      "name": "Shape.fill",
+      "shortName": "fill",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets the fill for the shape with either a solid color or gradient.\n\nThis method supports two calling patterns:\n1. Solid color: `fill(r, g, b, a?)`\n2. Gradient: `fill(gradient)`",
+      "examples": [
+        "```typescript\n// Solid color fill\nshape.fill(255, 0, 0, 255); // Red\nshape.fill(0, 255, 0);      // Green (alpha defaults to 255)\n```",
+        "```typescript\n// Gradient fill\nconst gradient = new TVG.LinearGradient(0, 0, 200, 0);\ngradient.addStop(0, [255, 0, 0, 255])\n        .addStop(1, [0, 0, 255, 255]);\nshape.fill(gradient);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "gradient",
+          "type": "Fill",
+          "comment": "LinearGradient or RadialGradient to use as fill",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 147,
+      "name": "Shape.stroke",
+      "shortName": "stroke",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets the stroke styling for the shape.\n\nThis method supports two calling patterns:\n1. Simple width: `stroke(width)`\n2. Full options: `stroke({ width, color, gradient, cap, join, miterLimit })`",
+      "examples": [
+        "```typescript\n// Simple stroke\nshape.appendCircle(150, 150, 50)\n     .stroke(3);\n```",
+        "```typescript\n// Stroke with color and caps\nshape.appendRect(50, 50, 200, 100)\n     .stroke({\n       width: 5,\n       color: [0, 0, 0, 255],\n       cap: StrokeCap.Round,\n       join: StrokeJoin.Round\n     });\n```",
+        "```typescript\n// Stroke with gradient\nconst gradient = new TVG.LinearGradient(0, 0, 200, 0);\ngradient.addStop(0, [255, 0, 0, 255])\n        .addStop(1, [0, 0, 255, 255]);\n\nshape.appendCircle(150, 150, 50)\n     .stroke({\n       width: 10,\n       gradient: gradient,\n       cap: StrokeCap.Round\n     });\n```"
+      ],
+      "parameters": [
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "Stroke width in pixels",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    },
+    {
+      "id": 152,
+      "name": "Shape.reset",
+      "shortName": "reset",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Resets the shape's path data while retaining fill and stroke properties.\n\nThis method clears all path commands (moveTo, lineTo, cubicTo, appendRect, etc.)\nbut preserves the shape's fill color, gradient, stroke settings, and transformations.\nThis is useful for animations where you want to redraw the path while keeping\nthe same styling.",
+      "examples": [
+        "```typescript\n// Animating shape changes while keeping styles\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 100, 100);\nshape.fill(255, 0, 0, 255);\nshape.stroke({ width: 5, color: [0, 0, 255, 255] });\n\n// Later, change the shape but keep the fill/stroke\nshape.reset();\nshape.appendCircle(50, 50, 40);\n// Still has red fill and blue stroke!\n```"
+      ],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Shape"
+    }
+  ],
+  "scene": [
+    {
+      "id": 222,
+      "name": "Scene",
+      "shortName": "Scene",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Scene class for hierarchical grouping of Paint objects",
+      "examples": [
+        "```typescript\n// Grouping shapes in a scene\nconst scene = new TVG.Scene();\n\nconst background = new TVG.Shape();\nbackground.appendRect(0, 0, 800, 600).fill(240, 240, 240, 255);\n\nconst circle = new TVG.Shape();\ncircle.appendCircle(100, 100, 50).fill(255, 100, 100, 255);\n\nscene.add(background);\nscene.add(circle);\ncanvas.add(scene);\n```",
+        "```typescript\n// Scene transformations affect all children\nconst scene = new TVG.Scene();\n\nfor (let i = 0; i < 5; i++) {\n  const shape = new TVG.Shape();\n  shape.appendRect(i * 60, 100, 50, 50)\n       .fill(100 + i * 30, 150, 255 - i * 30, 255);\n  scene.add(shape);\n}\n\n// Transform entire group\nscene.translate(200, 200).rotate(30);\ncanvas.add(scene);\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": [
+          {
+            "name": "ptr",
+            "type": "number",
+            "comment": "",
+            "optional": true
+          },
+          {
+            "name": "skipRegistry",
+            "type": "boolean",
+            "comment": "",
+            "optional": false
+          }
+        ]
+      },
+      "destroy": null,
+      "properties": [
+        {
+          "name": "id",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "ptr",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "isDisposed",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 223,
+      "name": "Scene.registerType",
+      "shortName": "registerType",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Register a subclass factory for a given Tvg_Type value.\nCalled by each subclass at module load time.",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "type",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "factory",
+          "type": "PaintFactory",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 293,
+      "name": "Scene.id",
+      "shortName": "id",
+      "kind": "Accessor",
+      "type": "any",
+      "comment": "The ID of this paint object.\nIDs are used to identify paint objects within a picture's scene tree.\nAssign a string to generate a hash ID from the name, or a number to set directly.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 297,
+      "name": "Scene.translate",
+      "shortName": "translate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Translate the paint by (x, y)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 301,
+      "name": "Scene.rotate",
+      "shortName": "rotate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Rotate the paint by angle (in degrees)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "angle",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 304,
+      "name": "Scene.scale",
+      "shortName": "scale",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Scale the paint by (sx, sy). If sy is not provided, use sx for both",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "sx",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "sy",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 308,
+      "name": "Scene.origin",
+      "shortName": "origin",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the origin point for transformations (rotation, scale).\nThe origin is specified as normalized coordinates (0.0 to 1.0).\n- (0, 0) = top-left corner\n- (0.5, 0.5) = center (default)\n- (1, 1) = bottom-right corner",
+      "examples": [
+        "```typescript\nconst picture = new TVG.Picture();\npicture.load(svgData, { type: 'svg' });\n\n// Set origin to center for rotation around center\npicture.origin(0.5, 0.5);\npicture.translate(300, 300);\npicture.rotate(45);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "Normalized X coordinate (0.0 to 1.0)",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "Normalized Y coordinate (0.0 to 1.0)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 312,
+      "name": "Scene.blend",
+      "shortName": "blend",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the blending method for this paint.\nBlending determines how this paint is combined with the content below it.",
+      "examples": [
+        "```typescript\nconst scene = new TVG.Scene();\nscene.blend(BlendMethod.Add);\n\nconst shape = new TVG.Shape();\nshape.appendCircle(100, 100, 50, 50);\nshape.fill(255, 0, 0, 255);\nshape.blend(BlendMethod.Multiply);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "method",
+          "type": "BlendMethod",
+          "comment": "The blending method to use",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 315,
+      "name": "Scene.opacity",
+      "shortName": "opacity",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get or set the opacity (0 to 255)",
+      "examples": [
+        "```typescript\n// Set opacity to 50% (half transparent)\nshape.opacity(128);\n\n// Set to fully opaque\nshape.opacity(255);\n\n// Get current opacity value\nconst currentOpacity = shape.opacity(); // returns 0-255\n```"
+      ],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 319,
+      "name": "Scene.visible",
+      "shortName": "visible",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get or set the visibility",
+      "examples": [],
+      "parameters": [],
+      "returnType": "boolean",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 323,
+      "name": "Scene.bounds",
+      "shortName": "bounds",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get the bounding box of this paint",
+      "examples": [],
+      "parameters": [],
+      "returnType": "Bounds",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 329,
+      "name": "Scene.duplicate",
+      "shortName": "duplicate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Duplicate this paint object",
+      "examples": [],
+      "parameters": [],
+      "returnType": "T",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 332,
+      "name": "Scene.transform",
+      "shortName": "transform",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Applies a custom transformation matrix to the paint.\n\nThis method allows you to apply complex transformations that combine\ntranslation, rotation, scaling, and skewing in a single operation.\nThe matrix is multiplied with any existing transformations.",
+      "examples": [
+        "```typescript\n// Apply a combined transformation\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 100, 100);\n\n// Create a matrix for: scale(2, 1.5) + rotate(45deg) + translate(100, 50)\nconst rad = (45 * Math.PI) / 180;\nconst cos = Math.cos(rad);\nconst sin = Math.sin(rad);\n\nshape.transform({\n  e11: 2 * cos,   e12: -2 * sin,  e13: 100,\n  e21: 1.5 * sin, e22: 1.5 * cos, e23: 50,\n  e31: 0,         e32: 0,         e33: 1\n});\n```",
+        "```typescript\n// Create a skew transformation\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 100, 100);\n\n// Skew in X direction\nshape.transform({\n  e11: 1,   e12: 0.5, e13: 0,\n  e21: 0,   e22: 1,   e23: 0,\n  e31: 0,   e32: 0,   e33: 1\n});\n```"
+      ],
+      "parameters": [
+        {
+          "name": "matrix",
+          "type": "Matrix",
+          "comment": "A 3x3 transformation matrix",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 335,
+      "name": "Scene.clip",
+      "shortName": "clip",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets a clipping path for this paint object.\n\nThe clipping path restricts the area where the paint will be rendered.\nOnly the parts of the paint that overlap with the clipper shape will be visible.",
+      "examples": [
+        "```typescript\nconst circle = new TVG.Shape();\ncircle.appendCircle(150, 150, 100);\n\nconst rect = new TVG.Shape();\nrect.appendRect(0, 0, 300, 300)\n    .fill(255, 0, 0, 255)\n    .clip(circle);\n\ncanvas.add(rect);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "clipper",
+          "type": "Paint",
+          "comment": "A Paint object (typically a Shape) to use as the clipping path",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 338,
+      "name": "Scene.mask",
+      "shortName": "mask",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets a masking target object and the masking method.\n\nThe masking restricts the transparency of the source paint using the target paint.",
+      "examples": [
+        "```typescript\nconst mask = new TVG.Shape();\nmask.appendCircle(200, 200, 125);\nmask.fill(255, 255, 255);\n\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 400, 400)\n    .fill(255, 0, 0, 255)\n    .mask(mask, MaskMethod.Alpha);\n\ncanvas.add(shape);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "target",
+          "type": "Paint",
+          "comment": "A Paint object to use as the masking target",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "MaskMethod",
+          "comment": "The method used to mask the source object with the target",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 342,
+      "name": "Scene.intersects",
+      "shortName": "intersects",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Checks if the paint intersects with the given rectangular region.",
+      "examples": [
+        "```typescript\nconst shape = new TVG.Shape();\nshape.appendRect(100, 100, 200, 200);\n\n// Check if shape intersects with a region\nif (shape.intersects(150, 150, 100, 100)) {\n  console.log('Shape intersects with region');\n}\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "The x-coordinate of the region's top-left corner",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "The y-coordinate of the region's top-left corner",
+          "optional": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "The width of the region",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "The height of the region",
+          "optional": false
+        }
+      ],
+      "returnType": "boolean",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 227,
+      "name": "Scene.fromPtr",
+      "shortName": "fromPtr",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Create a correctly-typed Paint subclass from a raw WASM pointer.\nThe returned object does NOT own the pointer (won't be freed by GC).",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "ptr",
+          "type": "number",
+          "comment": "A raw WASM paint pointer",
+          "optional": false
+        }
+      ],
+      "returnType": "Paint",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 237,
+      "name": "Scene.add",
+      "shortName": "add",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Add a paint to the scene",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "paint",
+          "type": "Paint",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 240,
+      "name": "Scene.remove",
+      "shortName": "remove",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Remove paint(s) from the scene\nIf no paint is provided, removes all paints",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "paint",
+          "type": "Paint",
+          "comment": "",
+          "optional": true
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 243,
+      "name": "Scene.clear",
+      "shortName": "clear",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Clear all paints from the scene (alias for remove())",
+      "examples": [],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 245,
+      "name": "Scene.resetEffects",
+      "shortName": "resetEffects",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Reset all previously applied scene effects, restoring the scene to its original state.",
+      "examples": [
+        "```typescript\nconst scene = new TVG.Scene();\nscene.dropShadow(128, 128, 128, 200, 45, 5, 2, 60);\nscene.resetEffects(); // Remove all effects\n```"
+      ],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 247,
+      "name": "Scene.gaussianBlur",
+      "shortName": "gaussianBlur",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Apply a Gaussian blur effect to the scene.",
+      "examples": [
+        "```typescript\nconst scene = new TVG.Scene();\nscene.add(shape1);\nscene.add(shape2);\nscene.gaussianBlur(1.5, 0, 0, 75); // Apply blur to entire scene\n```"
+      ],
+      "parameters": [
+        {
+          "name": "sigma",
+          "type": "number",
+          "comment": "Blur intensity (> 0)",
+          "optional": false
+        },
+        {
+          "name": "direction",
+          "type": "number",
+          "comment": "Blur direction: 0 (both), 1 (horizontal), 2 (vertical)",
+          "optional": false
+        },
+        {
+          "name": "border",
+          "type": "number",
+          "comment": "Border mode: 0 (duplicate), 1 (wrap)",
+          "optional": false
+        },
+        {
+          "name": "quality",
+          "type": "number",
+          "comment": "Blur quality (0-100)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 253,
+      "name": "Scene.dropShadow",
+      "shortName": "dropShadow",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Apply a drop shadow effect with Gaussian blur filter to the scene.",
+      "examples": [
+        "```typescript\nconst scene = new TVG.Scene();\nscene.add(shape);\n// Add gray drop shadow at 45° angle, 5px distance, 2px blur\nscene.dropShadow(128, 128, 128, 200, 45, 5, 2, 60);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "r",
+          "type": "number",
+          "comment": "Red component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "g",
+          "type": "number",
+          "comment": "Green component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "number",
+          "comment": "Blue component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "a",
+          "type": "number",
+          "comment": "Alpha/opacity (0-255)",
+          "optional": false
+        },
+        {
+          "name": "angle",
+          "type": "number",
+          "comment": "Shadow angle in degrees (0-360)",
+          "optional": false
+        },
+        {
+          "name": "distance",
+          "type": "number",
+          "comment": "Shadow distance/offset",
+          "optional": false
+        },
+        {
+          "name": "sigma",
+          "type": "number",
+          "comment": "Blur intensity for the shadow (> 0)",
+          "optional": false
+        },
+        {
+          "name": "quality",
+          "type": "number",
+          "comment": "Blur quality (0-100)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 263,
+      "name": "Scene.fillEffect",
+      "shortName": "fillEffect",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Override the scene content color with a given fill color.",
+      "examples": [
+        "```typescript\nconst scene = new TVG.Scene();\nscene.add(shape1);\nscene.add(shape2);\nscene.fillEffect(255, 0, 0, 128); // Fill entire scene with semi-transparent red\n```"
+      ],
+      "parameters": [
+        {
+          "name": "r",
+          "type": "number",
+          "comment": "Red component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "g",
+          "type": "number",
+          "comment": "Green component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "number",
+          "comment": "Blue component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "a",
+          "type": "number",
+          "comment": "Alpha/opacity (0-255)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 269,
+      "name": "Scene.tint",
+      "shortName": "tint",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Apply a tint effect to the scene using black and white color parameters.",
+      "examples": [
+        "```typescript\nconst scene = new TVG.Scene();\nscene.add(picture);\n// Apply sepia-like tint\nscene.tint(112, 66, 20, 255, 236, 184, 50);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "blackR",
+          "type": "number",
+          "comment": "Black tint red component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "blackG",
+          "type": "number",
+          "comment": "Black tint green component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "blackB",
+          "type": "number",
+          "comment": "Black tint blue component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "whiteR",
+          "type": "number",
+          "comment": "White tint red component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "whiteG",
+          "type": "number",
+          "comment": "White tint green component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "whiteB",
+          "type": "number",
+          "comment": "White tint blue component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "intensity",
+          "type": "number",
+          "comment": "Tint intensity (0-100)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    },
+    {
+      "id": 278,
+      "name": "Scene.tritone",
+      "shortName": "tritone",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Apply a tritone color effect to the scene using three color parameters for shadows, midtones, and highlights.\nA blending factor determines the mix between the original color and the tritone colors.",
+      "examples": [
+        "```typescript\nconst scene = new TVG.Scene();\nscene.add(picture);\n// Apply tritone: dark blue shadows, gray midtones, yellow highlights\nscene.tritone(0, 0, 128, 128, 128, 128, 255, 255, 0, 128);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "shadowR",
+          "type": "number",
+          "comment": "Shadow red component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "shadowG",
+          "type": "number",
+          "comment": "Shadow green component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "shadowB",
+          "type": "number",
+          "comment": "Shadow blue component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "midtoneR",
+          "type": "number",
+          "comment": "Midtone red component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "midtoneG",
+          "type": "number",
+          "comment": "Midtone green component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "midtoneB",
+          "type": "number",
+          "comment": "Midtone blue component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "highlightR",
+          "type": "number",
+          "comment": "Highlight red component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "highlightG",
+          "type": "number",
+          "comment": "Highlight green component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "highlightB",
+          "type": "number",
+          "comment": "Highlight blue component (0-255)",
+          "optional": false
+        },
+        {
+          "name": "blend",
+          "type": "number",
+          "comment": "Blend factor (0-255)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Scene"
+    }
+  ],
+  "picture": [
+    {
+      "id": 880,
+      "name": "LoadDataOptions",
+      "shortName": "LoadDataOptions",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "type",
+          "type": "MimeType",
+          "comment": "MIME type or format hint (e.g., 'svg', 'png', 'jpg', 'raw')",
+          "optional": true
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "Width of raw image (required for type='raw')",
+          "optional": true
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "Height of raw image (required for type='raw')",
+          "optional": true
+        },
+        {
+          "name": "colorSpace",
+          "type": "ColorSpace",
+          "comment": "Color space of raw image (required for type='raw', default: ColorSpace.ARGB8888)",
+          "optional": true
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 885,
+      "name": "PictureSize",
+      "shortName": "PictureSize",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 358,
+      "name": "Picture",
+      "shortName": "Picture",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Picture class for loading and displaying images and vector graphics",
+      "examples": [
+        "```typescript\n// Loading an SVG image\nconst picture = new TVG.Picture();\n\nfetch('/images/logo.svg')\n  .then(res => res.text())\n  .then(svgData => {\n    picture.load(svgData, { type: 'svg' });\n    const size = picture.size();\n    picture.size(200, 200 * size.height / size.width); // Scale\n    canvas.add(picture).render();\n  });\n```",
+        "```typescript\n// Loading a Lottie animation as static image\nconst picture = new TVG.Picture();\n\nfetch('/animations/loading.json')\n  .then(res => res.text())\n  .then(lottieData => {\n    picture.load(lottieData, { type: 'lottie' });\n    picture.translate(400, 300);\n    canvas.add(picture);\n  });\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": [
+          {
+            "name": "ptr",
+            "type": "number",
+            "comment": "",
+            "optional": true
+          },
+          {
+            "name": "skipRegistry",
+            "type": "boolean",
+            "comment": "",
+            "optional": false
+          }
+        ]
+      },
+      "destroy": null,
+      "properties": [
+        {
+          "name": "id",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "ptr",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "isDisposed",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 359,
+      "name": "Picture.registerType",
+      "shortName": "registerType",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Register a subclass factory for a given Tvg_Type value.\nCalled by each subclass at module load time.",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "type",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "factory",
+          "type": "PaintFactory",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 390,
+      "name": "Picture.id",
+      "shortName": "id",
+      "kind": "Accessor",
+      "type": "any",
+      "comment": "The ID of this paint object.\nIDs are used to identify paint objects within a picture's scene tree.\nAssign a string to generate a hash ID from the name, or a number to set directly.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 394,
+      "name": "Picture.translate",
+      "shortName": "translate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Translate the paint by (x, y)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 398,
+      "name": "Picture.rotate",
+      "shortName": "rotate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Rotate the paint by angle (in degrees)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "angle",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 401,
+      "name": "Picture.scale",
+      "shortName": "scale",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Scale the paint by (sx, sy). If sy is not provided, use sx for both",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "sx",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "sy",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 405,
+      "name": "Picture.origin",
+      "shortName": "origin",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the origin point for transformations (rotation, scale).\nThe origin is specified as normalized coordinates (0.0 to 1.0).\n- (0, 0) = top-left corner\n- (0.5, 0.5) = center (default)\n- (1, 1) = bottom-right corner",
+      "examples": [
+        "```typescript\nconst picture = new TVG.Picture();\npicture.load(svgData, { type: 'svg' });\n\n// Set origin to center for rotation around center\npicture.origin(0.5, 0.5);\npicture.translate(300, 300);\npicture.rotate(45);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "Normalized X coordinate (0.0 to 1.0)",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "Normalized Y coordinate (0.0 to 1.0)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 409,
+      "name": "Picture.blend",
+      "shortName": "blend",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the blending method for this paint.\nBlending determines how this paint is combined with the content below it.",
+      "examples": [
+        "```typescript\nconst scene = new TVG.Scene();\nscene.blend(BlendMethod.Add);\n\nconst shape = new TVG.Shape();\nshape.appendCircle(100, 100, 50, 50);\nshape.fill(255, 0, 0, 255);\nshape.blend(BlendMethod.Multiply);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "method",
+          "type": "BlendMethod",
+          "comment": "The blending method to use",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 412,
+      "name": "Picture.opacity",
+      "shortName": "opacity",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get or set the opacity (0 to 255)",
+      "examples": [
+        "```typescript\n// Set opacity to 50% (half transparent)\nshape.opacity(128);\n\n// Set to fully opaque\nshape.opacity(255);\n\n// Get current opacity value\nconst currentOpacity = shape.opacity(); // returns 0-255\n```"
+      ],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 416,
+      "name": "Picture.visible",
+      "shortName": "visible",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get or set the visibility",
+      "examples": [],
+      "parameters": [],
+      "returnType": "boolean",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 420,
+      "name": "Picture.bounds",
+      "shortName": "bounds",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get the bounding box of this paint",
+      "examples": [],
+      "parameters": [],
+      "returnType": "Bounds",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 426,
+      "name": "Picture.duplicate",
+      "shortName": "duplicate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Duplicate this paint object",
+      "examples": [],
+      "parameters": [],
+      "returnType": "T",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 429,
+      "name": "Picture.transform",
+      "shortName": "transform",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Applies a custom transformation matrix to the paint.\n\nThis method allows you to apply complex transformations that combine\ntranslation, rotation, scaling, and skewing in a single operation.\nThe matrix is multiplied with any existing transformations.",
+      "examples": [
+        "```typescript\n// Apply a combined transformation\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 100, 100);\n\n// Create a matrix for: scale(2, 1.5) + rotate(45deg) + translate(100, 50)\nconst rad = (45 * Math.PI) / 180;\nconst cos = Math.cos(rad);\nconst sin = Math.sin(rad);\n\nshape.transform({\n  e11: 2 * cos,   e12: -2 * sin,  e13: 100,\n  e21: 1.5 * sin, e22: 1.5 * cos, e23: 50,\n  e31: 0,         e32: 0,         e33: 1\n});\n```",
+        "```typescript\n// Create a skew transformation\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 100, 100);\n\n// Skew in X direction\nshape.transform({\n  e11: 1,   e12: 0.5, e13: 0,\n  e21: 0,   e22: 1,   e23: 0,\n  e31: 0,   e32: 0,   e33: 1\n});\n```"
+      ],
+      "parameters": [
+        {
+          "name": "matrix",
+          "type": "Matrix",
+          "comment": "A 3x3 transformation matrix",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 432,
+      "name": "Picture.clip",
+      "shortName": "clip",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets a clipping path for this paint object.\n\nThe clipping path restricts the area where the paint will be rendered.\nOnly the parts of the paint that overlap with the clipper shape will be visible.",
+      "examples": [
+        "```typescript\nconst circle = new TVG.Shape();\ncircle.appendCircle(150, 150, 100);\n\nconst rect = new TVG.Shape();\nrect.appendRect(0, 0, 300, 300)\n    .fill(255, 0, 0, 255)\n    .clip(circle);\n\ncanvas.add(rect);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "clipper",
+          "type": "Paint",
+          "comment": "A Paint object (typically a Shape) to use as the clipping path",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 435,
+      "name": "Picture.mask",
+      "shortName": "mask",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets a masking target object and the masking method.\n\nThe masking restricts the transparency of the source paint using the target paint.",
+      "examples": [
+        "```typescript\nconst mask = new TVG.Shape();\nmask.appendCircle(200, 200, 125);\nmask.fill(255, 255, 255);\n\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 400, 400)\n    .fill(255, 0, 0, 255)\n    .mask(mask, MaskMethod.Alpha);\n\ncanvas.add(shape);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "target",
+          "type": "Paint",
+          "comment": "A Paint object to use as the masking target",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "MaskMethod",
+          "comment": "The method used to mask the source object with the target",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 439,
+      "name": "Picture.intersects",
+      "shortName": "intersects",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Checks if the paint intersects with the given rectangular region.",
+      "examples": [
+        "```typescript\nconst shape = new TVG.Shape();\nshape.appendRect(100, 100, 200, 200);\n\n// Check if shape intersects with a region\nif (shape.intersects(150, 150, 100, 100)) {\n  console.log('Shape intersects with region');\n}\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "The x-coordinate of the region's top-left corner",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "The y-coordinate of the region's top-left corner",
+          "optional": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "The width of the region",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "The height of the region",
+          "optional": false
+        }
+      ],
+      "returnType": "boolean",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 363,
+      "name": "Picture.fromPtr",
+      "shortName": "fromPtr",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Create a correctly-typed Paint subclass from a raw WASM pointer.\nThe returned object does NOT own the pointer (won't be freed by GC).",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "ptr",
+          "type": "number",
+          "comment": "A raw WASM paint pointer",
+          "optional": false
+        }
+      ],
+      "returnType": "Paint",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 373,
+      "name": "Picture.load",
+      "shortName": "load",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Load picture from raw data (Uint8Array or string for SVG)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "data",
+          "type": "string | Uint8Array",
+          "comment": "Raw image data as Uint8Array or SVG string",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "LoadDataOptions",
+          "comment": "Load options including type hint",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 377,
+      "name": "Picture.size",
+      "shortName": "size",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the size of the picture (scales it)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "Target width",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "Target height",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 382,
+      "name": "Picture.paint",
+      "shortName": "paint",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Retrieve a paint object from this picture's scene tree by ID.",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "id",
+          "type": "number",
+          "comment": "A numeric hash ID or a string name (which will be hashed via Accessor.id)",
+          "optional": false
+        }
+      ],
+      "returnType": "Paint | null",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Picture"
+    },
+    {
+      "id": 910,
+      "name": "MimeType",
+      "shortName": "MimeType",
+      "kind": "Object Literal",
+      "type": "'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' | 'lottie+json'",
+      "comment": "MIME type or format hint for loading picture data.\n\nSupported image and vector file formats for Picture class.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' | 'lottie+json'",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    }
+  ],
+  "text": [
+    {
+      "id": 888,
+      "name": "TextLayout",
+      "shortName": "TextLayout",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "",
+          "optional": true
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 891,
+      "name": "TextOutline",
+      "shortName": "TextOutline",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "color",
+          "type": "unknown",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 455,
+      "name": "Text",
+      "shortName": "Text",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Text rendering class with font support",
+      "examples": [
+        "```typescript\n// Basic text rendering\nconst text = new TVG.Text();\ntext.font('Arial', 48)\n    .text('Hello ThorVG!')\n    .fill(50, 50, 50, 255)\n    .translate(100, 200);\n\ncanvas.add(text);\n```",
+        "```typescript\n// Text with custom font and styling\n// Load custom font first\nconst fontData = await fetch('/fonts/custom.ttf').then(r => r.arrayBuffer());\nTVG.Font.load('CustomFont', new Uint8Array(fontData));\n\nconst text = new TVG.Text();\ntext.font('CustomFont', 64)\n    .text('Custom Font')\n    .fill(100, 150, 255, 255)\n    .stroke(50, 50, 50, 255, 2);\n\ncanvas.add(text);\n```",
+        "```typescript\n// Multi-line text with wrapping\nconst text = new TVG.Text();\ntext.font('Arial')\n    .fontSize(24)\n    .text('This is a long text that will wrap across multiple lines')\n    .fill(50, 50, 50)\n    .layout(300, 200)\n    .wrap(TextWrapMode.Word);\n\ncanvas.add(text);\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": [
+          {
+            "name": "ptr",
+            "type": "number",
+            "comment": "",
+            "optional": true
+          },
+          {
+            "name": "skipRegistry",
+            "type": "boolean",
+            "comment": "",
+            "optional": false
+          }
+        ]
+      },
+      "destroy": null,
+      "properties": [
+        {
+          "name": "id",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "ptr",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "isDisposed",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 456,
+      "name": "Text.registerType",
+      "shortName": "registerType",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Register a subclass factory for a given Tvg_Type value.\nCalled by each subclass at module load time.",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "type",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "factory",
+          "type": "PaintFactory",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 513,
+      "name": "Text.id",
+      "shortName": "id",
+      "kind": "Accessor",
+      "type": "any",
+      "comment": "The ID of this paint object.\nIDs are used to identify paint objects within a picture's scene tree.\nAssign a string to generate a hash ID from the name, or a number to set directly.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 517,
+      "name": "Text.translate",
+      "shortName": "translate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Translate the paint by (x, y)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 521,
+      "name": "Text.rotate",
+      "shortName": "rotate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Rotate the paint by angle (in degrees)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "angle",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 524,
+      "name": "Text.scale",
+      "shortName": "scale",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Scale the paint by (sx, sy). If sy is not provided, use sx for both",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "sx",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "sy",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 528,
+      "name": "Text.origin",
+      "shortName": "origin",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the origin point for transformations (rotation, scale).\nThe origin is specified as normalized coordinates (0.0 to 1.0).\n- (0, 0) = top-left corner\n- (0.5, 0.5) = center (default)\n- (1, 1) = bottom-right corner",
+      "examples": [
+        "```typescript\nconst picture = new TVG.Picture();\npicture.load(svgData, { type: 'svg' });\n\n// Set origin to center for rotation around center\npicture.origin(0.5, 0.5);\npicture.translate(300, 300);\npicture.rotate(45);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "Normalized X coordinate (0.0 to 1.0)",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "Normalized Y coordinate (0.0 to 1.0)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 532,
+      "name": "Text.blend",
+      "shortName": "blend",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the blending method for this paint.\nBlending determines how this paint is combined with the content below it.",
+      "examples": [
+        "```typescript\nconst scene = new TVG.Scene();\nscene.blend(BlendMethod.Add);\n\nconst shape = new TVG.Shape();\nshape.appendCircle(100, 100, 50, 50);\nshape.fill(255, 0, 0, 255);\nshape.blend(BlendMethod.Multiply);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "method",
+          "type": "BlendMethod",
+          "comment": "The blending method to use",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 535,
+      "name": "Text.opacity",
+      "shortName": "opacity",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get or set the opacity (0 to 255)",
+      "examples": [
+        "```typescript\n// Set opacity to 50% (half transparent)\nshape.opacity(128);\n\n// Set to fully opaque\nshape.opacity(255);\n\n// Get current opacity value\nconst currentOpacity = shape.opacity(); // returns 0-255\n```"
+      ],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 539,
+      "name": "Text.visible",
+      "shortName": "visible",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get or set the visibility",
+      "examples": [],
+      "parameters": [],
+      "returnType": "boolean",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 543,
+      "name": "Text.bounds",
+      "shortName": "bounds",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get the bounding box of this paint",
+      "examples": [],
+      "parameters": [],
+      "returnType": "Bounds",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 549,
+      "name": "Text.duplicate",
+      "shortName": "duplicate",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Duplicate this paint object",
+      "examples": [],
+      "parameters": [],
+      "returnType": "T",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 552,
+      "name": "Text.transform",
+      "shortName": "transform",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Applies a custom transformation matrix to the paint.\n\nThis method allows you to apply complex transformations that combine\ntranslation, rotation, scaling, and skewing in a single operation.\nThe matrix is multiplied with any existing transformations.",
+      "examples": [
+        "```typescript\n// Apply a combined transformation\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 100, 100);\n\n// Create a matrix for: scale(2, 1.5) + rotate(45deg) + translate(100, 50)\nconst rad = (45 * Math.PI) / 180;\nconst cos = Math.cos(rad);\nconst sin = Math.sin(rad);\n\nshape.transform({\n  e11: 2 * cos,   e12: -2 * sin,  e13: 100,\n  e21: 1.5 * sin, e22: 1.5 * cos, e23: 50,\n  e31: 0,         e32: 0,         e33: 1\n});\n```",
+        "```typescript\n// Create a skew transformation\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 100, 100);\n\n// Skew in X direction\nshape.transform({\n  e11: 1,   e12: 0.5, e13: 0,\n  e21: 0,   e22: 1,   e23: 0,\n  e31: 0,   e32: 0,   e33: 1\n});\n```"
+      ],
+      "parameters": [
+        {
+          "name": "matrix",
+          "type": "Matrix",
+          "comment": "A 3x3 transformation matrix",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 555,
+      "name": "Text.clip",
+      "shortName": "clip",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets a clipping path for this paint object.\n\nThe clipping path restricts the area where the paint will be rendered.\nOnly the parts of the paint that overlap with the clipper shape will be visible.",
+      "examples": [
+        "```typescript\nconst circle = new TVG.Shape();\ncircle.appendCircle(150, 150, 100);\n\nconst rect = new TVG.Shape();\nrect.appendRect(0, 0, 300, 300)\n    .fill(255, 0, 0, 255)\n    .clip(circle);\n\ncanvas.add(rect);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "clipper",
+          "type": "Paint",
+          "comment": "A Paint object (typically a Shape) to use as the clipping path",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 558,
+      "name": "Text.mask",
+      "shortName": "mask",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Sets a masking target object and the masking method.\n\nThe masking restricts the transparency of the source paint using the target paint.",
+      "examples": [
+        "```typescript\nconst mask = new TVG.Shape();\nmask.appendCircle(200, 200, 125);\nmask.fill(255, 255, 255);\n\nconst shape = new TVG.Shape();\nshape.appendRect(0, 0, 400, 400)\n    .fill(255, 0, 0, 255)\n    .mask(mask, MaskMethod.Alpha);\n\ncanvas.add(shape);\n```"
+      ],
+      "parameters": [
+        {
+          "name": "target",
+          "type": "Paint",
+          "comment": "A Paint object to use as the masking target",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "MaskMethod",
+          "comment": "The method used to mask the source object with the target",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 562,
+      "name": "Text.intersects",
+      "shortName": "intersects",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Checks if the paint intersects with the given rectangular region.",
+      "examples": [
+        "```typescript\nconst shape = new TVG.Shape();\nshape.appendRect(100, 100, 200, 200);\n\n// Check if shape intersects with a region\nif (shape.intersects(150, 150, 100, 100)) {\n  console.log('Shape intersects with region');\n}\n```"
+      ],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "The x-coordinate of the region's top-left corner",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "The y-coordinate of the region's top-left corner",
+          "optional": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "The width of the region",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "The height of the region",
+          "optional": false
+        }
+      ],
+      "returnType": "boolean",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 460,
+      "name": "Text.fromPtr",
+      "shortName": "fromPtr",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Create a correctly-typed Paint subclass from a raw WASM pointer.\nThe returned object does NOT own the pointer (won't be freed by GC).",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "ptr",
+          "type": "number",
+          "comment": "A raw WASM paint pointer",
+          "optional": false
+        }
+      ],
+      "returnType": "Paint",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 470,
+      "name": "Text.font",
+      "shortName": "font",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the font to use for this text",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "comment": "Font name (previously loaded via Font.load()) or \"default\"",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 473,
+      "name": "Text.text",
+      "shortName": "text",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the text content (UTF-8 supported)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "content",
+          "type": "string",
+          "comment": "Text content to display",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 476,
+      "name": "Text.fontSize",
+      "shortName": "fontSize",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the font size",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "size",
+          "type": "number",
+          "comment": "Font size in pixels",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 479,
+      "name": "Text.fill",
+      "shortName": "fill",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set text color (RGB) or fill with gradient",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "gradient",
+          "type": "Fill",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 486,
+      "name": "Text.align",
+      "shortName": "align",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set text alignment/anchor point",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "x",
+          "type": "number",
+          "comment": "Horizontal alignment/anchor in [0..1]: 0=left/start, 0.5=center, 1=right/end (Default: 0)",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "comment": "Vertical alignment/anchor in [0..1]: 0=top, 0.5=middle, 1=bottom (Default: 0)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 490,
+      "name": "Text.layout",
+      "shortName": "layout",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set text layout constraints (for wrapping)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "Maximum width (0 = no constraint)",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "comment": "Maximum height (0 = no constraint)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 494,
+      "name": "Text.wrap",
+      "shortName": "wrap",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set text wrap mode",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "mode",
+          "type": "TextWrapMode",
+          "comment": "Wrap mode: TextWrapMode.None, TextWrapMode.Character, TextWrapMode.Word, TextWrapMode.Smart, or TextWrapMode.Ellipsis",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 497,
+      "name": "Text.spacing",
+      "shortName": "spacing",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set text spacing (letter and line spacing)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "letter",
+          "type": "number",
+          "comment": "Letter spacing scale factor (1.0 = default, >1.0 = wider, <1.0 = narrower)",
+          "optional": false
+        },
+        {
+          "name": "line",
+          "type": "number",
+          "comment": "Line spacing scale factor (1.0 = default, >1.0 = wider, <1.0 = narrower)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 501,
+      "name": "Text.italic",
+      "shortName": "italic",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set italic style with shear factor",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "shear",
+          "type": "number",
+          "comment": "Shear factor (0.0 = no italic, default: 0.18, typical range: 0.1-0.3)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    },
+    {
+      "id": 504,
+      "name": "Text.outline",
+      "shortName": "outline",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set text outline (stroke)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "width",
+          "type": "number",
+          "comment": "Outline width",
+          "optional": false
+        },
+        {
+          "name": "r",
+          "type": "number",
+          "comment": "Red (0-255)",
+          "optional": false
+        },
+        {
+          "name": "g",
+          "type": "number",
+          "comment": "Green (0-255)",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "number",
+          "comment": "Blue (0-255)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Text"
+    }
+  ],
+  "animation": [
+    {
+      "id": 894,
+      "name": "AnimationInfo",
+      "shortName": "AnimationInfo",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "totalFrames",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "fps",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 898,
+      "name": "AnimationSegment",
+      "shortName": "AnimationSegment",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "start",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 578,
+      "name": "Animation",
+      "shortName": "Animation",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Animation controller for Lottie animations\nThe Animation owns a Picture internally and manages frame updates",
+      "examples": [
+        "```typescript\n// Loading and playing a Lottie animation\nconst animation = new TVG.Animation();\n\nfetch('/animations/loader.json')\n  .then(res => res.text())\n  .then(lottieData => {\n    animation.load(lottieData);\n    const picture = animation.picture();\n\n    // Center and scale animation\n    const size = picture.size();\n    picture.translate(400 - size.width / 2, 300 - size.height / 2);\n\n    canvas.add(picture);\n    animation.play();\n  });\n```",
+        "```typescript\n// Controlling animation playback\nconst animation = new TVG.Animation();\nanimation.load(lottieData);\n\nconst info = animation.getInfo();\nconsole.log(`Duration: ${info.duration}s, FPS: ${info.fps}`);\n\n// Play with custom loop and speed\nanimation.loop(true).play();\n\n// Pause after 2 seconds\nsetTimeout(() => animation.pause(), 2000);\n\n// Jump to specific frame\nanimation.frame(30).render();\n```",
+        "```typescript\n// Animation segments and callbacks\nconst animation = new TVG.Animation();\nanimation.load(lottieData);\n\n// Play specific segment\nanimation.segment({ start: 0, end: 60 });\n\n// Listen to frame updates\nanimation.onFrame((frame) => {\n  console.log(`Current frame: ${frame}`);\n});\n\nanimation.play();\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": []
+      },
+      "destroy": null,
+      "properties": [
+        {
+          "name": "ptr",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "picture",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 595,
+      "name": "Animation.picture",
+      "shortName": "picture",
+      "kind": "Accessor",
+      "type": "any",
+      "comment": "Get the Picture object that contains the animation content\nThe Picture is owned by the Animation and should not be manually disposed",
+      "examples": [],
+      "parameters": [],
+      "returnType": "Picture | null",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 597,
+      "name": "Animation.load",
+      "shortName": "load",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Load Lottie animation from raw data",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "data",
+          "type": "string | Uint8Array",
+          "comment": "Lottie JSON data as Uint8Array or string",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 600,
+      "name": "Animation.info",
+      "shortName": "info",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get animation information (frames, duration, fps)",
+      "examples": [],
+      "parameters": [],
+      "returnType": "AnimationInfo | null",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 602,
+      "name": "Animation.frame",
+      "shortName": "frame",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get or set the current frame",
+      "examples": [],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 606,
+      "name": "Animation.segment",
+      "shortName": "segment",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set animation segment/marker (for partial playback)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "segment",
+          "type": "number",
+          "comment": "Segment index (0-based)",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 609,
+      "name": "Animation.play",
+      "shortName": "play",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Play the animation",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "onFrame",
+          "type": "(frame: number) => void",
+          "comment": "Optional callback called on each frame update",
+          "optional": true
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 615,
+      "name": "Animation.pause",
+      "shortName": "pause",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Pause the animation",
+      "examples": [],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 617,
+      "name": "Animation.stop",
+      "shortName": "stop",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Stop the animation and reset to frame 0",
+      "examples": [],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 619,
+      "name": "Animation.isPlaying",
+      "shortName": "isPlaying",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Check if animation is currently playing",
+      "examples": [],
+      "parameters": [],
+      "returnType": "boolean",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 621,
+      "name": "Animation.setLoop",
+      "shortName": "setLoop",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set whether animation should loop",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "loop",
+          "type": "boolean",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 624,
+      "name": "Animation.getLoop",
+      "shortName": "getLoop",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get loop status",
+      "examples": [],
+      "parameters": [],
+      "returnType": "boolean",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 626,
+      "name": "Animation.seek",
+      "shortName": "seek",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Seek to a specific time (in seconds)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "time",
+          "type": "number",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    },
+    {
+      "id": 629,
+      "name": "Animation.getCurrentTime",
+      "shortName": "getCurrentTime",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Get current time (in seconds)",
+      "examples": [],
+      "parameters": [],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Animation"
+    }
+  ],
+  "gradients": [
+    {
+      "id": 908,
+      "name": "ColorStop",
+      "shortName": "ColorStop",
+      "kind": "Object Literal",
+      "type": "unknown",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "unknown",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    },
+    {
+      "id": 638,
+      "name": "LinearGradient",
+      "shortName": "LinearGradient",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Linear gradient for filling shapes",
+      "examples": [
+        "```typescript\n// Basic linear gradient\nconst gradient = new TVG.LinearGradient(100, 100, 300, 100);\ngradient.addStop(0, [255, 0, 0, 255])    // Red\n        .addStop(0.5, [255, 255, 0, 255]) // Yellow\n        .addStop(1, [0, 255, 0, 255]);    // Green\n\nconst shape = new TVG.Shape();\nshape.appendRect(100, 100, 200, 100)\n     .fillGradient(gradient);\n\ncanvas.add(shape);\n```",
+        "```typescript\n// Vertical gradient with transparency\nconst gradient = new TVG.LinearGradient(200, 100, 200, 300);\ngradient.addStop(0, [100, 150, 255, 255])\n        .addStop(1, [100, 150, 255, 0])\n        .spread(GradientSpread.Pad);\n\nconst shape = new TVG.Shape();\nshape.appendRect(150, 100, 100, 200)\n     .fillGradient(gradient);\n\ncanvas.add(shape);\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": [
+          {
+            "name": "x1",
+            "type": "number",
+            "comment": "",
+            "optional": false
+          },
+          {
+            "name": "y1",
+            "type": "number",
+            "comment": "",
+            "optional": false
+          },
+          {
+            "name": "x2",
+            "type": "number",
+            "comment": "",
+            "optional": false
+          },
+          {
+            "name": "y2",
+            "type": "number",
+            "comment": "",
+            "optional": false
+          }
+        ]
+      },
+      "destroy": null,
+      "properties": [
+        {
+          "name": "_stops",
+          "type": "ColorStopEntry[]",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "ptr",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "isDisposed",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 651,
+      "name": "LinearGradient.addStop",
+      "shortName": "addStop",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Add a color stop to the gradient",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "offset",
+          "type": "number",
+          "comment": "Position of the stop (0.0 to 1.0)",
+          "optional": false
+        },
+        {
+          "name": "color",
+          "type": "ColorStop",
+          "comment": "RGBA color [r, g, b, a] where each value is 0-255",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "LinearGradient"
+    },
+    {
+      "id": 655,
+      "name": "LinearGradient.clearStops",
+      "shortName": "clearStops",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Clear all pending color stops\nUse this to reset stops before adding new ones",
+      "examples": [
+        "```typescript\nconst gradient = new TVG.LinearGradient(0, 0, 200, 0);\ngradient.addStop(0, [255, 0, 0, 255])\n        .addStop(1, [0, 0, 255, 255]);\n\n// Change stops\ngradient.clearStops()\n        .addStop(0, [0, 255, 0, 255])\n        .addStop(1, [255, 255, 0, 255]);\n\nshape.fill(gradient);\n```"
+      ],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "LinearGradient"
+    },
+    {
+      "id": 657,
+      "name": "LinearGradient.setStops",
+      "shortName": "setStops",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Replace all color stops with new ones\nThis is a convenience method that clears existing stops and adds new ones in one call",
+      "examples": [
+        "```typescript\nconst gradient = new TVG.LinearGradient(0, 0, 200, 0);\ngradient.setStops(\n  [0, [255, 0, 0, 255]],      // Red at start\n  [0.5, [255, 255, 0, 255]],  // Yellow at middle\n  [1, [0, 255, 0, 255]]       // Green at end\n);\n\nshape.fill(gradient);\n\n// Later, completely replace stops\ngradient.setStops(\n  [0, [0, 0, 255, 255]],   // Blue at start\n  [1, [255, 0, 255, 255]]  // Magenta at end\n);\n\nshape.fill(gradient);  // Re-apply with new stops\n```"
+      ],
+      "parameters": [
+        {
+          "name": "stops",
+          "type": "unknown[]",
+          "comment": "Variable number of [offset, color] tuples",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "LinearGradient"
+    },
+    {
+      "id": 662,
+      "name": "LinearGradient.spread",
+      "shortName": "spread",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the gradient spread method",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "type",
+          "type": "GradientSpread",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "LinearGradient"
+    },
+    {
+      "id": 645,
+      "name": "LinearGradient.build",
+      "shortName": "build",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Build the gradient (apply all color stops)\nThis should be called after all addStop() calls",
+      "examples": [],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "LinearGradient"
+    },
+    {
+      "id": 675,
+      "name": "RadialGradient",
+      "shortName": "RadialGradient",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Radial gradient for filling shapes",
+      "examples": [
+        "```typescript\n// Basic radial gradient\nconst gradient = new TVG.RadialGradient(200, 200, 100);\ngradient.addStop(0, [255, 255, 255, 255])  // White center\n        .addStop(1, [100, 100, 255, 255]);  // Blue edge\n\nconst shape = new TVG.Shape();\nshape.appendCircle(200, 200, 100)\n     .fillGradient(gradient);\n\ncanvas.add(shape);\n```",
+        "```typescript\n// Radial gradient with focal point\n// Create gradient with offset focal point for lighting effect\nconst gradient = new TVG.RadialGradient(\n  200, 200, 100,  // Center and radius\n  170, 170, 0     // Focal point (offset)\n);\ngradient.addStop(0, [255, 255, 200, 255])\n        .addStop(1, [255, 100, 100, 255]);\n\nconst shape = new TVG.Shape();\nshape.appendCircle(200, 200, 100)\n     .fillGradient(gradient);\n\ncanvas.add(shape);\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": [
+          {
+            "name": "cx",
+            "type": "number",
+            "comment": "",
+            "optional": false
+          },
+          {
+            "name": "cy",
+            "type": "number",
+            "comment": "",
+            "optional": false
+          },
+          {
+            "name": "r",
+            "type": "number",
+            "comment": "",
+            "optional": false
+          },
+          {
+            "name": "fx",
+            "type": "number",
+            "comment": "",
+            "optional": false
+          },
+          {
+            "name": "fy",
+            "type": "number",
+            "comment": "",
+            "optional": false
+          },
+          {
+            "name": "fr",
+            "type": "number",
+            "comment": "",
+            "optional": false
+          }
+        ]
+      },
+      "destroy": null,
+      "properties": [
+        {
+          "name": "_stops",
+          "type": "ColorStopEntry[]",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "ptr",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "isDisposed",
+          "type": "any",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 690,
+      "name": "RadialGradient.addStop",
+      "shortName": "addStop",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Add a color stop to the gradient",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "offset",
+          "type": "number",
+          "comment": "Position of the stop (0.0 to 1.0)",
+          "optional": false
+        },
+        {
+          "name": "color",
+          "type": "ColorStop",
+          "comment": "RGBA color [r, g, b, a] where each value is 0-255",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "RadialGradient"
+    },
+    {
+      "id": 694,
+      "name": "RadialGradient.clearStops",
+      "shortName": "clearStops",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Clear all pending color stops\nUse this to reset stops before adding new ones",
+      "examples": [
+        "```typescript\nconst gradient = new TVG.LinearGradient(0, 0, 200, 0);\ngradient.addStop(0, [255, 0, 0, 255])\n        .addStop(1, [0, 0, 255, 255]);\n\n// Change stops\ngradient.clearStops()\n        .addStop(0, [0, 255, 0, 255])\n        .addStop(1, [255, 255, 0, 255]);\n\nshape.fill(gradient);\n```"
+      ],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "RadialGradient"
+    },
+    {
+      "id": 696,
+      "name": "RadialGradient.setStops",
+      "shortName": "setStops",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Replace all color stops with new ones\nThis is a convenience method that clears existing stops and adds new ones in one call",
+      "examples": [
+        "```typescript\nconst gradient = new TVG.LinearGradient(0, 0, 200, 0);\ngradient.setStops(\n  [0, [255, 0, 0, 255]],      // Red at start\n  [0.5, [255, 255, 0, 255]],  // Yellow at middle\n  [1, [0, 255, 0, 255]]       // Green at end\n);\n\nshape.fill(gradient);\n\n// Later, completely replace stops\ngradient.setStops(\n  [0, [0, 0, 255, 255]],   // Blue at start\n  [1, [255, 0, 255, 255]]  // Magenta at end\n);\n\nshape.fill(gradient);  // Re-apply with new stops\n```"
+      ],
+      "parameters": [
+        {
+          "name": "stops",
+          "type": "unknown[]",
+          "comment": "Variable number of [offset, color] tuples",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "RadialGradient"
+    },
+    {
+      "id": 701,
+      "name": "RadialGradient.spread",
+      "shortName": "spread",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the gradient spread method",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "type",
+          "type": "GradientSpread",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "RadialGradient"
+    },
+    {
+      "id": 684,
+      "name": "RadialGradient.build",
+      "shortName": "build",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Build the gradient (apply all color stops)\nThis should be called after all addStop() calls",
+      "examples": [],
+      "parameters": [],
+      "returnType": "this",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "RadialGradient"
+    }
+  ],
+  "font": [
+    {
+      "id": 903,
+      "name": "FontType",
+      "shortName": "FontType",
+      "kind": "Object Literal",
+      "type": "'ttf'",
+      "comment": "Supported font file types.\n- `'ttf'`: TrueType Font",
+      "examples": [],
+      "parameters": [],
+      "returnType": "'ttf'",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    },
+    {
+      "id": 901,
+      "name": "LoadFontOptions",
+      "shortName": "LoadFontOptions",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "type",
+          "type": "'ttf'",
+          "comment": "Font type ('ttf')",
+          "optional": true
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 904,
+      "name": "FontsourceOptions",
+      "shortName": "FontsourceOptions",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Options for loading a font from fontsource CDN.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "weight",
+          "type": "800 | 600 | 100 | 200 | 300 | 400 | 500 | 700 | 900",
+          "comment": "Font weight to load.",
+          "optional": true
+        },
+        {
+          "name": "style",
+          "type": "'italic' | 'normal'",
+          "comment": "Font style to load.",
+          "optional": true
+        },
+        {
+          "name": "subset",
+          "type": "string",
+          "comment": "Unicode subset to load.",
+          "optional": true
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 714,
+      "name": "Font",
+      "shortName": "Font",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Font loader class for managing custom fonts.\nFonts are loaded globally and can be referenced by name in Text objects.",
+      "examples": [
+        "```typescript\n// Load font from raw data\nconst fontData = await fetch('/fonts/Roboto-Regular.ttf').then(r => r.arrayBuffer());\nTVG.Font.load('Roboto', new Uint8Array(fontData));\n\nconst text = new TVG.Text();\ntext.font('Roboto').fontSize(48).text('Hello!').fill(50, 50, 50);\n```",
+        "```typescript\n// Auto-load from fontsource CDN (no manual fetch needed)\nawait TVG.Font.load('poppins');\nawait TVG.Font.load('roboto', { weight: 700, style: 'italic' });\n\nconst text = new TVG.Text();\ntext.font('poppins').fontSize(48).text('Hello!').fill(50, 50, 50);\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": []
+      },
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    },
+    {
+      "id": 715,
+      "name": "Font.load",
+      "shortName": "load",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Load font from raw data (Uint8Array)",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "comment": "Unique name to identify this font",
+          "optional": false
+        },
+        {
+          "name": "data",
+          "type": "Uint8Array",
+          "comment": "Raw font data",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "LoadFontOptions",
+          "comment": "Load options",
+          "optional": true
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Font"
+    },
+    {
+      "id": 723,
+      "name": "Font.unload",
+      "shortName": "unload",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Unload a previously loaded font.",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "comment": "Font name to unload",
+          "optional": false
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Font"
+    }
+  ],
+  "constants": [],
+  "errorHandling": [
+    {
+      "id": 822,
+      "name": "ThorVGResultCode",
+      "shortName": "ThorVGResultCode",
+      "kind": "Enum Member",
+      "type": "any",
+      "comment": "ThorVG error result codes returned by native WASM operations.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    },
+    {
+      "id": 823,
+      "name": "ThorVGResultCode.Success",
+      "shortName": "Success",
+      "kind": "Variable",
+      "type": "0",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "0",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "ThorVGResultCode"
+    },
+    {
+      "id": 824,
+      "name": "ThorVGResultCode.InvalidArguments",
+      "shortName": "InvalidArguments",
+      "kind": "Variable",
+      "type": "1",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "1",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "ThorVGResultCode"
+    },
+    {
+      "id": 825,
+      "name": "ThorVGResultCode.InsufficientCondition",
+      "shortName": "InsufficientCondition",
+      "kind": "Variable",
+      "type": "2",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "2",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "ThorVGResultCode"
+    },
+    {
+      "id": 826,
+      "name": "ThorVGResultCode.FailedAllocation",
+      "shortName": "FailedAllocation",
+      "kind": "Variable",
+      "type": "3",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "3",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "ThorVGResultCode"
+    },
+    {
+      "id": 827,
+      "name": "ThorVGResultCode.MemoryCorruption",
+      "shortName": "MemoryCorruption",
+      "kind": "Variable",
+      "type": "4",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "4",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "ThorVGResultCode"
+    },
+    {
+      "id": 828,
+      "name": "ThorVGResultCode.NotSupported",
+      "shortName": "NotSupported",
+      "kind": "Variable",
+      "type": "5",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "5",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "ThorVGResultCode"
+    },
+    {
+      "id": 829,
+      "name": "ThorVGResultCode.Unknown",
+      "shortName": "Unknown",
+      "kind": "Variable",
+      "type": "6",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "6",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "ThorVGResultCode"
+    },
+    {
+      "id": 830,
+      "name": "ThorVGError",
+      "shortName": "ThorVGError",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Error class for ThorVG WASM operations.\nContains error code and operation information.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": [
+          {
+            "name": "message",
+            "type": "string",
+            "comment": "",
+            "optional": false
+          },
+          {
+            "name": "code",
+            "type": "ThorVGResultCode",
+            "comment": "",
+            "optional": false
+          },
+          {
+            "name": "operation",
+            "type": "string",
+            "comment": "",
+            "optional": false
+          }
+        ]
+      },
+      "destroy": null,
+      "properties": [
+        {
+          "name": "code",
+          "type": "ThorVGResultCode",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "operation",
+          "type": "string",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 831,
+      "name": "ThorVGError.fromCode",
+      "shortName": "fromCode",
+      "kind": "Method",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "code",
+          "type": "ThorVGResultCode",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "operation",
+          "type": "string",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "ThorVGError",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "ThorVGError"
+    },
+    {
+      "id": 846,
+      "name": "ErrorContext",
+      "shortName": "ErrorContext",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Context information provided when an error occurs.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "operation",
+          "type": "string",
+          "comment": "The operation that failed (e.g., 'moveTo', 'render', 'update')",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 848,
+      "name": "ErrorHandler",
+      "shortName": "ErrorHandler",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Error handler callback function.\n\nHandles both ThorVG WASM errors (ThorVGError) and JavaScript errors (Error).\nUse instanceof to distinguish between error types.",
+      "examples": [
+        "```typescript\nimport { init } from '@thorvg/webcanvas';\n\nconst TVG = await init({\n  onError: (error, context) => {\n    if (error instanceof ThorVGError) {\n      // WASM error - has error.code\n      console.log('WASM error code:', error.code);\n    } else {\n      // JavaScript error\n      console.log('JS error:', error.message);\n    }\n  }\n});\n```"
+      ],
+      "parameters": [
+        {
+          "name": "error",
+          "type": "Error",
+          "comment": "",
+          "optional": false
+        },
+        {
+          "name": "context",
+          "type": "ErrorContext",
+          "comment": "",
+          "optional": false
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    }
+  ],
+  "other": [
+    {
+      "id": 733,
+      "name": "Accessor",
+      "shortName": "Accessor",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": []
+      },
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    },
+    {
+      "id": 734,
+      "name": "Accessor.id",
+      "shortName": "id",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Generate a unique hash ID from a string name (DJB2 hash).",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "comment": "The string name to hash",
+          "optional": false
+        }
+      ],
+      "returnType": "number",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Accessor"
+    },
+    {
+      "id": 737,
+      "name": "Accessor.set",
+      "shortName": "set",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Traverse all descendant paint nodes of a picture and invoke a callback on each.\nThe callback receives the correctly typed Paint subclass (Shape, Scene, Picture, or Text).\nReturn false from the callback to stop traversal early.",
+      "examples": [
+        "```typescript\nAccessor.set(picture, (paint) => {\n  if (paint instanceof TVG.Shape) {\n    paint.fill(0, 0, 255);\n  }\n  return true; // continue traversal\n});\n```"
+      ],
+      "parameters": [
+        {
+          "name": "picture",
+          "type": "Picture",
+          "comment": "The root picture to traverse",
+          "optional": false
+        },
+        {
+          "name": "callback",
+          "type": "(paint: Paint) => boolean",
+          "comment": "Called for each descendant paint. Return false to stop.",
+          "optional": false
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Accessor"
+    },
+    {
+      "id": 1,
+      "name": "getGlobalRenderer",
+      "shortName": "getGlobalRenderer",
+      "kind": "Class",
+      "type": "any",
+      "comment": "Get the currently configured renderer",
+      "examples": [],
+      "parameters": [],
+      "returnType": "RendererType",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    }
+  ]
+};
+        const readmeMarkdown = "# ThorVG for Web\n<p align=\"center\">\n  <img width=\"800\" height=\"auto\" src=\"https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png\">\n</p>\n\n[![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas)\n\n# @thorvg/webcanvas\n\nA high-performance TypeScript Canvas API for [ThorVG](https://github.com/thorvg/thorvg), providing an object-oriented interface with fluent API pattern for vector graphics rendering using WebAssembly.\n\n## Installation\n\n- Import from CDN\n```html\n<script src=\"https://unpkg.com/@thorvg/webcanvas@latest/dist/webcanvas.js\"></script>\n```\n\n- Install from [NPM](https://www.npmjs.com/package/@thorvg/webcanvas)\n```bash\nnpm install @thorvg/webcanvas\n```\n\n## Contents\n- [Quick Start](#quick-start)\n- [Render Backends](#render-backends)\n- [Memory Management](#memory-management)\n- [Documentation](#documentation)\n- [Examples](#examples)\n\n\n## Quick Start\n\nThorVG renders vector shapes to a given canvas buffer. The following is a quick start to show you how to use the essential APIs.\n\nFirst, you should initialize the ThorVG engine:\n\n```typescript\nimport ThorVG from '@thorvg/webcanvas';\n\nconst TVG = await ThorVG.init({ renderer: 'gl' });  // WebGL renderer\n```\n\nThen it would be best if you prepared an empty canvas for drawing on it:\n\n```typescript\nconst canvas = new TVG.Canvas('#canvas', {\n  width: 800,\n  height: 600\n});\n```\n\nNext you can draw multiple shapes on the canvas:\n\n```typescript\nconst rect = new TVG.Shape();                              // generate a shape\nrect.appendRect(50, 50, 200, 200, { rx: 20, ry: 20 });    // define it as a rounded rectangle (x, y, w, h, rx, ry)\nrect.fill(100, 100, 100);                                  // set its color (r, g, b)\ncanvas.add(rect);                                          // add the rectangle to the canvas\n\nconst circle = new TVG.Shape();                            // generate a shape\ncircle.appendCircle(400, 400, 100, 100);                   // define it as a circle (cx, cy, rx, ry)\n\nconst fill = new TVG.RadialGradient(400, 400, 150);       // generate a radial gradient (cx, cy, radius)\n\nfill.setStops(                                             // set the gradient colors info\n  [0.0, [255, 255, 255, 255]],                             // 1st color values (offset, [r, g, b, a])\n  [1.0, [0, 0, 0, 255]]                                    // 2nd color values (offset, [r, g, b, a])\n);\n\ncircle.fill(fill);                                         // set the circle fill\ncanvas.add(circle);                                        // add the circle to the canvas\n```\n\nThis code generates the following result:\n\n<p align=\"center\">\n  <img width=\"416\" height=\"auto\" src=\"https://github.com/thorvg/thorvg.site/blob/main/readme/example_shapes.png\">\n</p>\n\nYou can also draw your own shapes and use dashed stroking:\n\n```typescript\nconst path = new TVG.Shape();                              // generate a path\npath.moveTo(199, 34);                                      // set sequential path coordinates\npath.lineTo(253, 143);\npath.lineTo(374, 160);\npath.lineTo(287, 244);\npath.lineTo(307, 365);\npath.lineTo(199, 309);\npath.lineTo(97, 365);\npath.lineTo(112, 245);\npath.lineTo(26, 161);\npath.lineTo(146, 143);\npath.close();\n\npath.fill(150, 150, 255);                                  // path color\n\npath.stroke({\n  width: 3,                                                // stroke width\n  color: [0, 0, 255, 255],                                 // stroke color (r, g, b, a)\n  cap: TVG.StrokeCap.Round,                                // stroke cap style\n  join: TVG.StrokeJoin.Round,                              // stroke join style\n  dash: [10, 10]                                           // stroke dash pattern (line, gap)\n});\n\ncanvas.add(path);                                          // add the path to the canvas\n```\n\nThe code generates the following result:\n\n<p align=\"center\">\n  <img width=\"300\" height=\"auto\" src=\"https://github.com/thorvg/thorvg.site/blob/main/readme/example_path.png\">\n</p>\n\nNow begin rendering & finish it at a particular time:\n\n```typescript\ncanvas.render();\n```\n\nThen you can acquire the rendered image from the canvas element.\n\nLastly, terminate the engine after its usage:\n\n```typescript\nTVG.term();\n```\n\n[Back to contents](#contents)\n<br />\n\n## Render Backends\n\nThorVG WebCanvas supports both WebGL and the next-generation WebGPU, optimized for modern browsers and high-performance rendering pipelines. Designed to empower developers with cutting-edge graphics capabilities.\n\n| Backend | Browser Support |\n|---------|-----------------|\n| **WebGL (gl)** | Chrome/Firefox/Safari 90+ |\n| **WebGPU (wg)** | Chrome/Edge 113+/Firefox 141+/Safari 26+ |\n\n### Backend-Specific Initialization\n\n```typescript\n// WebGL renderer\nconst TVG = await ThorVG.init({ renderer: 'gl' });\n\n// WebGPU renderer (requires async init)\nconst TVG = await ThorVG.init({ renderer: 'wg' });\n```\n\n[Back to contents](#contents)\n<br />\n\n## Memory Management\n\nWebCanvas provides automatic memory management through FinalizationRegistry, but you can also manage memory explicitly:\n\n```typescript\n// Automatic cleanup when GC runs\nconst shape = new TVG.Shape();\ncanvas.add(shape);\nshape = null; // Call dispose()\n\n// Automatic cleanup on page unload (registry.ts)\nwindow.addEventListener('beforeunload', () => {\n  if (hasModule()) {\n    const Module = getModule();\n    Module.term(); // Terminate WASM\n  }\n});\n\n// Explicit cleanup (recommended for predictable memory management)\nshape.dispose();\npicture.dispose();\nanimation.dispose();\n\n// Terminate WASM module (call this when done)\nTVG.term();\n```\n\n[Back to contents](#contents)\n<br />\n\n## Documentation\n\n- **[API Documentation](https://thorvg.github.io/thorvg.web)** - Standard TypeDoc hierarchical documentation\n- **[Manual Documentation](./API_USAGE.md)** - Complete API documentation with detailed method signatures\n\n[Back to contents](#contents)\n<br />\n\n## Examples\n\n- [Basic Usage](../../examples/basic-usage.html) - Getting started with shapes\n- [Animation](../../examples/animation-example.html) - Frame-based animations\n- [Scene Composition](../../examples/scene.html) - Hierarchical grouping\n- [Picture Loading](../../examples/picture-example.html) - SVG and images\n- [Text Rendering](../../examples/text-example.html) - Typography\n- [Live Editor](../../examples/live-editor.html) - Interactive playground\n\n[Back to contents](#contents)\n<br />\n\n";
+        const searchInput = document.getElementById('search');
+        const apiItems = document.querySelectorAll('.api-item');
+        const content = document.getElementById('content');
+
+        // Display README on initial load
+        const readmeDiv = document.getElementById('readme-content');
+        if (readmeDiv && readmeMarkdown && typeof marked !== 'undefined') {
+            readmeDiv.innerHTML = marked.parse(readmeMarkdown);
+            // Highlight code blocks in README
+            if (window.Prism) {
+                readmeDiv.querySelectorAll('pre code').forEach(block => {
+                    window.Prism.highlightElement(block);
+                });
+            }
+        }
+
+        
+        function displayAPI(id) {
+            let api = null;
+            for (const category in apiData) {
+                api = apiData[category].find(a => a.id === id);
+                if (api) break;
+            }
+
+            if (!api) {
+                content.innerHTML = '<h1>Not Found</h1>';
+                return;
+            }
+
+            // Clear README content when displaying API
+            const readmeDiv = document.getElementById('readme-content');
+            if (readmeDiv) {
+                readmeDiv.innerHTML = '';
+            }
+
+            let html = `<h1>${escapeHtml(api.name)}</h1>`;
+            html += `<p class="meta"><strong>Kind:</strong> ${escapeHtml(api.kind)}</p>`;
+
+            if (api.returnType && api.returnType !== 'any' && api.returnType !== 'void') {
+                html += `<p class="meta"><strong>Returns:</strong> <code>${escapeHtml(api.returnType)}</code></p>`;
+            } else if (api.type && api.type !== 'any') {
+                html += `<p class="meta"><strong>Type:</strong> <code>${escapeHtml(api.type)}</code></p>`;
+            }
+
+            if (api.comment) {
+                // Use marked to render markdown in comments
+                const renderedComment = typeof marked !== 'undefined'
+                    ? marked.parse(api.comment)
+                    : escapeHtml(api.comment).replace(/\n/g, '<br>');
+                html += `<div class="description">${renderedComment}</div>`;
+            }
+
+            // Show constructor for classes and interfaces
+            if (api.constructor && (api.kind === 'Class' || api.kind === 'Interface')) {
+                html += '<h2>Constructor</h2>';
+                if (api.constructor.comment) {
+                    const renderedComment = typeof marked !== 'undefined'
+                        ? marked.parse(api.constructor.comment)
+                        : escapeHtml(api.constructor.comment).replace(/\n/g, '<br>');
+                    html += `<div class="description">${renderedComment}</div>`;
+                }
+                if (api.constructor.parameters && api.constructor.parameters.length > 0) {
+                    html += '<h3>Parameters</h3><ul class="params">';
+                    api.constructor.parameters.forEach(param => {
+                        const optional = param.optional ? '?' : '';
+                        html += `<li><code>${escapeHtml(param.name)}${optional}</code>: <code>${escapeHtml(param.type)}</code>`;
+                        if (param.comment) html += ` - ${escapeHtml(param.comment)}`;
+                        html += '</li>';
+                    });
+                    html += '</ul>';
+                }
+            }
+
+            // Show destroy method for classes and interfaces
+            if (api.destroy && (api.kind === 'Class' || api.kind === 'Interface')) {
+                html += '<h2>Destroy</h2>';
+                if (api.destroy.comment) {
+                    const renderedComment = typeof marked !== 'undefined'
+                        ? marked.parse(api.destroy.comment)
+                        : escapeHtml(api.destroy.comment).replace(/\n/g, '<br>');
+                    html += `<div class="description">${renderedComment}</div>`;
+                }
+                if (api.destroy.parameters && api.destroy.parameters.length > 0) {
+                    html += '<h3>Parameters</h3><ul class="params">';
+                    api.destroy.parameters.forEach(param => {
+                        const optional = param.optional ? '?' : '';
+                        html += `<li><code>${escapeHtml(param.name)}${optional}</code>: <code>${escapeHtml(param.type)}</code>`;
+                        if (param.comment) html += ` - ${escapeHtml(param.comment)}`;
+                        html += '</li>';
+                    });
+                    html += '</ul>';
+                }
+                if (api.destroy.returnType && api.destroy.returnType !== 'void') {
+                    html += `<p class="meta"><strong>Returns:</strong> <code>${escapeHtml(api.destroy.returnType)}</code></p>`;
+                }
+            }
+
+            // Show properties for interfaces and types (with full section structure)
+            if (api.properties && api.properties.length > 0 && (api.kind === 'Interface' || api.kind === 'Type alias')) {
+                api.properties.forEach(prop => {
+                    const optional = prop.optional ? '?' : '';
+                    html += `<h2>${escapeHtml(prop.name)}${optional}</h2>`;
+                    html += `<p class="meta"><strong>Type:</strong> <code>${escapeHtml(prop.type)}</code></p>`;
+                    if (prop.comment) {
+                        const renderedComment = typeof marked !== 'undefined'
+                            ? marked.parse(prop.comment)
+                            : escapeHtml(prop.comment).replace(/\n/g, '<br>');
+                        html += `<div class="description">${renderedComment}</div>`;
+                    }
+                });
+            }
+
+            if (api.parameters && api.parameters.length > 0) {
+                html += '<h2>Parameters</h2><ul class="params">';
+                api.parameters.forEach(param => {
+                    const optional = param.optional ? '?' : '';
+                    html += `<li><code>${escapeHtml(param.name)}${optional}</code>: <code>${escapeHtml(param.type)}</code>`;
+                    if (param.comment) html += ` - ${escapeHtml(param.comment)}`;
+                    html += '</li>';
+                });
+                html += '</ul>';
+            }
+
+            if (api.examples && api.examples.length > 0) {
+                html += '<h2>Examples</h2>';
+                api.examples.forEach(example => {
+                    // Remove markdown code fences if present
+                    let code = example.replace(/^```(?:typescript|ts|javascript|js)?\n?/gm, '').replace(/```$/gm, '').trim();
+                    html += `<pre><code class="language-typescript">${escapeHtml(code)}</code></pre>`;
+                });
+            }
+
+            content.innerHTML = html;
+
+            // Highlight code blocks with Prism
+            if (window.Prism) {
+                content.querySelectorAll('pre code').forEach(block => {
+                    window.Prism.highlightElement(block);
+                });
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+  
+
+        apiItems.forEach(item => {
+            item.addEventListener('click', () => {
+                apiItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                const id = parseInt(item.getAttribute('data-id'));
+                displayAPI(id);
+            });
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            apiItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.classList.toggle('hidden', !text.includes(searchTerm));
+            });
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+</body>
+</html>
