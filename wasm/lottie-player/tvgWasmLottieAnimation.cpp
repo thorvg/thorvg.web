@@ -78,6 +78,8 @@ struct TvgSwEngine : TvgEngineMethod
     void resize(Canvas* canvas, uint32_t w, uint32_t h) override
     {
         std::free(buffer);
+        buffer = nullptr;
+        if (w == 0 || h == 0) return;
         buffer = (uint8_t*)std::malloc(w * h * sizeof(uint32_t));
         static_cast<SwCanvas*>(canvas)->target((uint32_t *)buffer, w, w, h, ColorSpace::ABGR8888S);
     }
@@ -357,6 +359,7 @@ public:
         errorMsg = NoError;
 
         if (!canvas || !animation) return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
+        if (width == 0 || height == 0) return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
 
         if (!updated) return engine->output(width, height);
 
@@ -375,6 +378,7 @@ public:
     bool update()
     {
         if (!updated) return true;
+        if (width == 0 || height == 0) return true;
 
         errorMsg = NoError;
 
@@ -418,10 +422,11 @@ public:
 
         engine->resize(canvas, width, height);
 
+        if (width == 0 || height == 0) return;
+
         auto scale = (psize[0] > psize[1]) ? width / psize[0] : height / psize[1];
         animation->picture()->scale(scale);
         animation->picture()->translate(width * 0.5f, height * 0.5f);
-
 
         updated = true;
     }
