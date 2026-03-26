@@ -10,6 +10,14 @@ export default defineConfig({
     setupFiles: ['./test/setup.ts'],
     testTimeout: 30000,
     execArgv: ['--expose-gc'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.d.ts'],
+      reportsDirectory: './coverage',
+      all: true,
+    },
   },
   resolve: {
     alias: {

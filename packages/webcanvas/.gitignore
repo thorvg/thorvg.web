@@ -2,6 +2,9 @@
 dist/
 build_wasm_wcanvas/
 
+# Test coverage
+coverage/
+
 # Generated documentation
 /docs/
 
