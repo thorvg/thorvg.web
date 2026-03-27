@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script src="../packages/lottie-player/dist/lottie-player.js"></script>
+    <style>
+      body { margin: 0; padding: 8px; font-family: Arial, sans-serif; }
+      #status { font-size: 12px; color: #999; margin-bottom: 4px; }
+      lottie-player { display: block; width: 200px; height: 200px; border: 1px solid #eee; }
+    </style>
+  </head>
+  <body>
+    <div id="status">Loading...</div>
+    <div id="container"></div>
+
+    <script>
+      const container = document.getElementById('container');
+      const status = document.getElementById('status');
+
+      const player = document.createElement('lottie-player');
+      player.fileType = 'svg';
+      player.src = 'resources/test.svg';
+      player.style.width = '200px';
+      player.style.height = '200px';
+      player.wasmUrl = '../packages/lottie-player/dist/thorvg.wasm';
+      player.renderConfig = { renderer: 'wg' };
+
+      player.addEventListener('load', () => {
+        status.textContent = 'Loaded (WG)';
+        status.style.color = '#4CAF50';
+      });
+
+      player.addEventListener('error', (e) => {
+        status.textContent = 'Error: ' + (e.detail?.message || 'unknown');
+        status.style.color = '#E53935';
+      });
+
+      container.appendChild(player);
+    </script>
+  </body>
+</html>
