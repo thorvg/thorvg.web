@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>SVG Static Render Examples</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+      h1 { font-size: 18px; }
+      p { color: #555; font-size: 14px; margin-bottom: 16px; }
+      .grid { display: flex; gap: 16px; flex-wrap: wrap; }
+      .cell { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px; }
+      .cell h3 { margin: 0 0 8px; font-size: 14px; }
+      iframe { border: none; width: 220px; height: 240px; }
+    </style>
+  </head>
+  <body>
+    <h1>SVG Display Samples</h1>
+    <div class="grid">
+      <div class="cell">
+        <h3>Software (SW) - baseline</h3>
+        <iframe src="svg-static-render-sw.html"></iframe>
+      </div>
+      <div class="cell">
+        <h3>WebGL (GL)</h3>
+        <iframe src="svg-static-render-gl.html"></iframe>
+      </div>
+      <div class="cell">
+        <h3>WebGPU (WG)</h3>
+        <iframe src="svg-static-render-wg.html"></iframe>
+      </div>
+    </div>
+  </body>
+</html>
