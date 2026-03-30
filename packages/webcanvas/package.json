@@ -25,6 +25,7 @@
     "build:watch": "npm run clean && sh ./wasm_wcanvas_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
     "test": "vitest run",
+    "test:sw": "TEST_RENDERER=sw vitest run --config vitest.browser.config.ts",
     "test:gl": "TEST_RENDERER=gl vitest run --config vitest.browser.config.ts",
     "test:wg": "TEST_RENDERER=wg vitest run --config vitest.browser.config.ts",
     "lint": "eslint ./src --ext .ts",
