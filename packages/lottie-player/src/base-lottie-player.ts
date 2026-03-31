@@ -323,6 +323,8 @@ export class BaseLottiePlayer extends LitElement {
   private _beginTime: number = Date.now();
   private _counter: number = 1;
   private _timer?: ReturnType<typeof setInterval>;
+  private _rafId?: number;
+  private _dirty: boolean = false;
   private _observer?: IntersectionObserver;
   private _observable: boolean = false;
   private _assetResolverCallback?: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string };
@@ -420,7 +422,7 @@ export class BaseLottiePlayer extends LitElement {
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     this.canvas = this.querySelector('.thorvg') as HTMLCanvasElement;
-    
+
     this.canvas.id = `thorvg-${_generateUID()}`;
     this.canvas.width = this.canvas.offsetWidth;
     this.canvas.height = this.canvas.offsetHeight;
@@ -443,15 +445,37 @@ export class BaseLottiePlayer extends LitElement {
     return this;
   }
 
-  private async _animLoop(){
-    if (!this.TVG) {
-      return;
-    }
+  private _scheduleLoop(): void {
+    if (this._rafId !== undefined) return;
 
-    if (await this._update()) {
-      this._render();
-      window.requestAnimationFrame(this._animLoop.bind(this));
-    }
+    const loop = async () => {
+      if (!this.TVG || this.currentState === PlayerState.Destroyed) {
+        this._rafId = undefined;
+        return;
+      }
+
+      if (this.currentState === PlayerState.Playing && await this._update()) {
+        this._dirty = true;
+      }
+
+      if (this._dirty) {
+        this._dirty = false;
+        this._render();
+      }
+
+      if (this.currentState === PlayerState.Playing || this._dirty) {
+        this._rafId = window.requestAnimationFrame(loop);
+        return;
+      }
+      this._rafId = undefined;
+    };
+
+    this._rafId = window.requestAnimationFrame(loop);
+  }
+
+  private _requestRender(): void {
+    this._dirty = true;
+    this._scheduleLoop();
   }
 
   private _loadBytes(data: Uint8Array): void {
@@ -468,9 +492,9 @@ export class BaseLottiePlayer extends LitElement {
       throw new Error(`Unable to load an image. Error: ${this.TVG.error()}`);
     }
 
-    this._render();
+    this._requestRender();
     this.dispatchEvent(new CustomEvent(PlayerEvent.Load));
-    
+
     if (this.autoPlay) {
       this.play();
     }
@@ -569,7 +593,7 @@ export class BaseLottiePlayer extends LitElement {
     if (!this.TVG) {
       return;
     }
-    
+
     this.pause();
     this.currentFrame = curFrame;
     this.TVG.frame(curFrame);
@@ -621,7 +645,7 @@ export class BaseLottiePlayer extends LitElement {
 
     if (this._observable) {
       this.currentState = PlayerState.Playing;
-      window.requestAnimationFrame(this._animLoop.bind(this));
+      this._scheduleLoop();
       return;
     }
 
@@ -667,7 +691,7 @@ export class BaseLottiePlayer extends LitElement {
   public async seek(frame: number): Promise<void> {
     this._frame(frame);
     await this._update();
-    this._render();
+    this._requestRender();
   }
 
   /**
@@ -679,10 +703,7 @@ export class BaseLottiePlayer extends LitElement {
   public resize(width: number, height: number) {
     this.canvas!.width = width;
     this.canvas!.height = height;
-
-    if (this.currentState !== PlayerState.Playing) {
-      this._render();
-    }
+    this._requestRender();
   }
 
   /**
@@ -698,11 +719,16 @@ export class BaseLottiePlayer extends LitElement {
     this.TVG = null;
     this.currentState = PlayerState.Destroyed;
 
+    if (this._rafId !== undefined) {
+      window.cancelAnimationFrame(this._rafId);
+      this._rafId = undefined;
+    }
+
     if (this._observer) {
       this._observer.disconnect();
       this._observer = undefined;
     }
-    
+
     this.dispatchEvent(new CustomEvent(PlayerEvent.Destroyed));
     this.remove();
   }
@@ -782,8 +808,8 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    if (this.TVG.quality(value) && this.currentState !== PlayerState.Playing) {
-      this._render();
+    if (this.TVG.quality(value)) {
+      this._requestRender();
     }
   }
 
