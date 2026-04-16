@@ -1,0 +1,3282 @@
+# @thorvg/webcanvas — Full API Reference
+
+> Install: `npm install @thorvg/webcanvas`
+
+## Quick Start
+
+```typescript
+import ThorVG from '@thorvg/webcanvas';
+import wasmUrl from '@thorvg/webcanvas/dist/thorvg.wasm?url'; // Vite/webpack
+
+const TVG = await ThorVG.init({ renderer: 'gl', locateFile: () => wasmUrl });
+const canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });
+
+const shape = new TVG.Shape();
+shape.appendRect(100, 100, 200, 150).fill(255, 0, 0, 255);
+canvas.add(shape).render();
+```
+
+---
+## Initialization
+
+### InitOptions
+
+**Kind:** Interface
+
+**Properties:**
+- `locateFile?` `(path: string) => string` — Optional function to locate WASM files. If not provided, assumes WASM files are in the same directory as the JavaScript bundle.
+- `renderer?` `RendererType` — Renderer type: 'sw' (Software), 'gl' (WebGL), or 'wg' (WebGPU). Default: 'gl'. WebGPU provides best performance but requires Chrome 113+ or Edge 113+.
+- `onError?` `ErrorHandler` — Global error handler for all ThorVG operations. If provided, errors will be passed to this handler instead of being thrown.
+
+
+---
+
+### init
+
+**Kind:** Class
+
+Initialize ThorVG WASM module and rendering engine.
+
+This is the entry point for using ThorVG WebCanvas. It loads the WebAssembly module
+and initializes the rendering engine with the specified backend (Software, WebGL, or WebGPU).
+
+
+**Example:**
+```typescript
+// Initialize with default WebGL renderer
+const TVG = await ThorVG.init();
+const canvas = new TVG.Canvas('#canvas');
+```
+```typescript
+// Initialize with custom WASM file location
+const TVG = await ThorVG.init({
+  locateFile: (path) => `/public/wasm/${path}`,
+  renderer: 'gl'
+});
+```
+```typescript
+// Initialize with WebGPU for maximum performance
+const TVG = await ThorVG.init({
+  locateFile: (path) => '../dist/' + path.split('/').pop(),
+  renderer: 'wg'
+});
+```
+```typescript
+// Initialize with Software renderer for maximum compatibility
+const TVG = await ThorVG.init({
+  renderer: 'sw'
+});
+```
+
+---
+
+## Canvas
+
+### CanvasOptions
+
+**Kind:** Interface
+
+Configuration options for Canvas initialization.
+
+**Properties:**
+- `width?` `number` — Canvas width in pixels. Default: 800
+- `height?` `number` — Canvas height in pixels. Default: 600
+- `enableDevicePixelRatio?` `boolean` — Enable device pixel ratio for high-DPI displays. Default: true
+
+
+---
+
+### Canvas
+
+**Kind:** Interface
+
+Canvas rendering context for ThorVG vector graphics.
+
+Manages the rendering pipeline and provides methods for adding/removing Paint objects
+and controlling the render loop.
+
+**Constructor:**
+Creates a new Canvas rendering context.
+
+The renderer is determined by the global setting from ThorVG.init().
+
+**Parameters:**
+- `selector` `string` — CSS selector for the target HTML canvas element (e.g., '#canvas', '.my-canvas')
+- `options` `CanvasOptions` — Configuration options for the canvas
+
+**Properties:**
+- `renderer` `any`
+- `dpr` `any`
+
+
+**Example:**
+```typescript
+// Initialize with renderer
+const TVG = await ThorVG.init({ renderer: 'gl' });
+
+// Basic canvas setup with shapes
+const canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });
+
+const shape = new TVG.Shape();
+shape.appendRect(100, 100, 200, 150, 10)
+     .fill(255, 100, 50, 255);
+
+canvas.add(shape).render();
+```
+```typescript
+// Animation loop
+const canvas = new TVG.Canvas('#canvas');
+const shape = new TVG.Shape();
+
+let rotation = 0;
+function animate() {
+  shape.reset()
+       .appendRect(0, 0, 100, 100)
+       .fill(100, 150, 255, 255)
+       .rotate(rotation++)
+       .translate(400, 300);
+
+  canvas.update().render();
+  requestAnimationFrame(animate);
+}
+animate();
+```
+
+#### Canvas.add
+
+**Returns:** `this`
+
+Adds a Paint object to the canvas for rendering.
+
+Paint objects include Shape, Scene, Picture, Text, and Animation.picture.
+Objects are rendered in the order they are added (painter's algorithm).
+
+
+**Parameters:**
+- `paint` `Paint` — A Paint object to add to the canvas
+
+**Example:**
+```typescript
+const shape = new TVG.Shape();
+const text = new TVG.Text();
+canvas.add(shape);
+canvas.add(text);
+```
+```typescript
+// Method chaining
+canvas.add(shape1)
+      .add(shape2)
+      .render();
+```
+
+#### Canvas.remove
+
+**Returns:** `this`
+
+Removes one or all Paint objects from the canvas.
+
+
+**Parameters:**
+- `paint?` `Paint` — Optional Paint object to remove. If omitted, removes all Paint objects.
+
+**Example:**
+```typescript
+// Remove a specific paint
+canvas.remove(shape);
+```
+```typescript
+// Remove all paints
+canvas.remove();
+```
+
+#### Canvas.clear
+
+**Returns:** `this`
+
+Clears all Paint objects from the canvas and renders an empty frame.
+
+This is equivalent to remove() without arguments,
+but also immediately renders the cleared canvas.
+
+
+**Example:**
+```typescript
+canvas.clear(); // Clears and renders empty canvas
+```
+
+#### Canvas.update
+
+**Returns:** `this`
+
+Updates the canvas state before rendering.
+
+This method should be called before render when working with animations
+or when Paint objects have been modified. It ensures all transformations and
+changes are processed.
+
+
+**Example:**
+```typescript
+// Animation loop pattern
+function animate() {
+  animation.frame(currentFrame++);
+  canvas.update().render();
+  requestAnimationFrame(animate);
+}
+```
+
+#### Canvas.render
+
+**Returns:** `this`
+
+Renders all Paint objects to the canvas.
+
+This method draws all added Paint objects to the canvas using the configured
+rendering backend (Software, WebGL, or WebGPU).
+
+
+**Example:**
+```typescript
+// Static rendering
+canvas.add(shape).add(text).render();
+```
+```typescript
+// Animation loop
+function animate() {
+  canvas.update().render();
+  requestAnimationFrame(animate);
+}
+```
+
+#### Canvas.resize
+
+**Returns:** `this`
+
+Resizes the canvas to new dimensions.
+
+
+**Parameters:**
+- `width` `number` — New width in pixels
+- `height` `number` — New height in pixels
+
+**Example:**
+```typescript
+canvas.resize(1920, 1080).render();
+```
+```typescript
+// Responsive canvas
+window.addEventListener('resize', () => {
+  canvas.resize(window.innerWidth, window.innerHeight).render();
+});
+```
+
+#### Canvas.viewport
+
+**Returns:** `this`
+
+Sets the viewport for rendering a specific region of the canvas.
+
+The viewport defines the rectangular region where rendering occurs.
+Useful for rendering to a portion of the canvas or implementing split-screen views.
+
+
+**Parameters:**
+- `x` `number` — X coordinate of the viewport origin
+- `y` `number` — Y coordinate of the viewport origin
+- `w` `number` — Viewport width
+- `h` `number` — Viewport height
+
+**Example:**
+```typescript
+// Render to top-left quarter of canvas
+canvas.viewport(0, 0, canvas.width / 2, canvas.height / 2);
+```
+
+#### Canvas.renderer
+
+**Returns:** `string`
+
+Gets the rendering backend type currently in use.
+
+
+**Example:**
+```typescript
+const canvas = new TVG.Canvas('#canvas', { renderer: 'wg' });
+console.log(canvas.renderer); // 'wg'
+```
+
+#### Canvas.dpr
+
+**Returns:** `number`
+
+Gets the current device pixel ratio applied to this canvas.
+
+ThorVG uses an optimized DPR formula for best performance:
+`1 + ((window.devicePixelRatio - 1) * 0.75)`
+
+This provides a balance between visual quality and rendering performance,
+especially on high-DPI displays.
+
+
+**Example:**
+```typescript
+// Getting the current DPR
+const canvas = new TVG.Canvas('#canvas', {
+  enableDevicePixelRatio: true
+});
+
+console.log(canvas.dpr); // e.g., 1.75 on a 2x display
+console.log(window.devicePixelRatio); // e.g., 2.0
+```
+```typescript
+// Using DPR for responsive calculations
+const canvas = new TVG.Canvas('#canvas');
+const shape = new TVG.Shape();
+
+// Adjust stroke width based on DPR for consistent appearance
+const strokeWidth = 2 / canvas.dpr;
+shape.appendCircle(100, 100, 50)
+     .stroke(255, 0, 0, 255)
+     .strokeWidth(strokeWidth);
+```
+
+---
+
+### RendererType
+
+**Kind:** Object Literal
+
+Rendering backend type for Canvas.
+
+ThorVG supports three rendering backends, each with different performance
+characteristics and browser compatibility:
+
+## Available Renderers
+
+### `'sw'` - Software Renderer
+- **Rendering**: CPU-based software rendering
+- **Performance**: Slower, but works everywhere
+- **Compatibility**: All browsers and devices
+- **Best for**: Maximum compatibility, simple graphics, server-side rendering
+
+### `'gl'` - WebGL Renderer (Recommended)
+- **Rendering**: GPU-accelerated using WebGL 2.0
+- **Performance**: Excellent performance with wide browser support
+- **Compatibility**: Chrome 56+, Firefox 51+, Safari 15+, Edge 79+
+- **Best for**: Production applications, interactive graphics, animations
+- **Recommended for most use cases**
+
+### `'wg'` - WebGPU Renderer
+- **Rendering**: Next-generation GPU API
+- **Performance**: Best performance for complex scenes
+- **Compatibility**: Chrome 113+, Edge 113+ (limited support)
+- **Best for**: Maximum performance, modern browsers only
+
+
+**Example:**
+```typescript
+// Recommended setup with WebGL
+const TVG = await ThorVG.init({ renderer: 'gl' });
+const canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });
+```
+```typescript
+// Maximum performance with WebGPU (modern browsers only)
+const TVG = await ThorVG.init({ renderer: 'wg' });
+```
+```typescript
+// Maximum compatibility with Software renderer
+const TVG = await ThorVG.init({ renderer: 'sw' });
+```
+
+---
+
+## Shapes
+
+### Bounds
+
+**Kind:** Interface
+
+**Properties:**
+- `x` `number`
+- `y` `number`
+- `width` `number`
+- `height` `number`
+
+
+---
+
+### Matrix
+
+**Kind:** Interface
+
+A 3x3 transformation matrix for 2D transformations.
+
+The matrix elements represent:
+- e11, e12: Rotation/scale in X
+- e21, e22: Rotation/scale in Y
+- e13, e23: Translation in X and Y
+- e31, e32: Always 0 (reserved for 3D)
+- e33: Always 1 (homogeneous coordinate)
+
+Matrix layout:
+```
+| e11  e12  e13 |
+| e21  e22  e23 |
+| e31  e32  e33 |
+```
+
+**Properties:**
+- `e11` `number`
+- `e12` `number`
+- `e13` `number`
+- `e21` `number`
+- `e22` `number`
+- `e23` `number`
+- `e31` `number`
+- `e32` `number`
+- `e33` `number`
+
+
+---
+
+### RectOptions
+
+**Kind:** Interface
+
+Options for creating rectangles with rounded corners.
+
+**Properties:**
+- `rx?` `number` — Horizontal corner radius. Default: 0
+- `ry?` `number` — Vertical corner radius. Default: 0
+- `clockwise?` `boolean` — Path direction. true = clockwise, false = counter-clockwise. Default: true
+
+
+---
+
+### StrokeOptions
+
+**Kind:** Interface
+
+Comprehensive stroke styling options.
+
+**Properties:**
+- `width?` `number` — Stroke width in pixels
+- `color?` `unknown` — Stroke color as [r, g, b, a] with values 0-255. Alpha is optional, defaults to 255.
+- `gradient?` `Fill` — Gradient fill for the stroke
+- `cap?` `StrokeCap` — Line cap style: StrokeCap.Butt, StrokeCap.Round, or StrokeCap.Square. Default: StrokeCap.Butt
+- `join?` `StrokeJoin` — Line join style: StrokeJoin.Miter, StrokeJoin.Round, or StrokeJoin.Bevel. Default: StrokeJoin.Miter
+- `miterLimit?` `number` — Miter limit for 'miter' joins. Default: 4
+- `dash?` `number[]` — Dash pattern as array of dash/gap lengths. Empty array [] resets to solid line.
+- `dashOffset?` `number` — Dash pattern offset. Use with dash to shift pattern start position.
+
+
+---
+
+### Shape
+
+**Kind:** Interface
+
+Shape class for creating and manipulating vector graphics paths.
+
+Extends Paint to inherit transformation and opacity methods.
+
+**Constructor:**
+
+**Parameters:**
+- `ptr?` `number`
+- `skipRegistry` `boolean`
+
+**Properties:**
+- `id` `any`
+- `ptr` `any`
+- `isDisposed` `any`
+
+
+**Example:**
+```typescript
+// Drawing basic shapes
+const shape = new TVG.Shape();
+
+// Rectangle with rounded corners
+shape.appendRect(50, 50, 200, 100, 10)
+     .fill(255, 100, 100, 255)
+     .stroke(50, 50, 50, 255, 2);
+
+canvas.add(shape);
+```
+```typescript
+// Drawing paths with gradients
+const shape = new TVG.Shape();
+shape.moveTo(100, 100)
+     .lineTo(200, 150)
+     .lineTo(150, 250)
+     .close();
+
+const gradient = new TVG.LinearGradient(100, 100, 200, 250);
+gradient.addStop(0, [255, 0, 0, 255])
+        .addStop(1, [0, 0, 255, 255]);
+
+shape.fillGradient(gradient);
+canvas.add(shape);
+```
+```typescript
+// Complex path with transformations
+const shape = new TVG.Shape();
+shape.appendCircle(0, 0, 50)
+     .fill(100, 200, 255, 255)
+     .translate(400, 300)
+     .scale(1.5)
+     .rotate(45);
+
+canvas.add(shape);
+```
+
+#### Shape.registerType
+
+Register a subclass factory for a given Tvg_Type value.
+Called by each subclass at module load time.
+
+
+**Parameters:**
+- `type` `number`
+- `factory` `PaintFactory`
+
+#### Shape.id
+
+**Returns:** `number`
+
+The ID of this paint object.
+IDs are used to identify paint objects within a picture's scene tree.
+Assign a string to generate a hash ID from the name, or a number to set directly.
+
+
+#### Shape.translate
+
+**Returns:** `this`
+
+Translate the paint by (x, y)
+
+
+**Parameters:**
+- `x` `number`
+- `y` `number`
+
+#### Shape.rotate
+
+**Returns:** `this`
+
+Rotate the paint by angle (in degrees)
+
+
+**Parameters:**
+- `angle` `number`
+
+#### Shape.scale
+
+**Returns:** `this`
+
+Scale the paint by (sx, sy). If sy is not provided, use sx for both
+
+
+**Parameters:**
+- `sx` `number`
+- `sy` `number`
+
+#### Shape.origin
+
+**Returns:** `this`
+
+Set the origin point for transformations (rotation, scale).
+The origin is specified as normalized coordinates (0.0 to 1.0).
+- (0, 0) = top-left corner
+- (0.5, 0.5) = center (default)
+- (1, 1) = bottom-right corner
+
+
+**Parameters:**
+- `x` `number` — Normalized X coordinate (0.0 to 1.0)
+- `y` `number` — Normalized Y coordinate (0.0 to 1.0)
+
+**Example:**
+```typescript
+const picture = new TVG.Picture();
+picture.load(svgData, { type: 'svg' });
+
+// Set origin to center for rotation around center
+picture.origin(0.5, 0.5);
+picture.translate(300, 300);
+picture.rotate(45);
+```
+
+#### Shape.blend
+
+**Returns:** `this`
+
+Set the blending method for this paint.
+Blending determines how this paint is combined with the content below it.
+
+
+**Parameters:**
+- `method` `BlendMethod` — The blending method to use
+
+**Example:**
+```typescript
+const scene = new TVG.Scene();
+scene.blend(BlendMethod.Add);
+
+const shape = new TVG.Shape();
+shape.appendCircle(100, 100, 50, 50);
+shape.fill(255, 0, 0, 255);
+shape.blend(BlendMethod.Multiply);
+```
+
+#### Shape.opacity
+
+**Returns:** `number`
+
+Get or set the opacity (0 to 255)
+
+
+**Example:**
+```typescript
+// Set opacity to 50% (half transparent)
+shape.opacity(128);
+
+// Set to fully opaque
+shape.opacity(255);
+
+// Get current opacity value
+const currentOpacity = shape.opacity(); // returns 0-255
+```
+
+#### Shape.visible
+
+**Returns:** `boolean`
+
+Get or set the visibility
+
+
+#### Shape.bounds
+
+**Returns:** `Bounds`
+
+Get the bounding box of this paint
+
+
+#### Shape.duplicate
+
+**Returns:** `T`
+
+Duplicate this paint object
+
+
+#### Shape.transform
+
+**Returns:** `this`
+
+Applies a custom transformation matrix to the paint.
+
+This method allows you to apply complex transformations that combine
+translation, rotation, scaling, and skewing in a single operation.
+The matrix is multiplied with any existing transformations.
+
+
+**Parameters:**
+- `matrix` `Matrix` — A 3x3 transformation matrix
+
+**Example:**
+```typescript
+// Apply a combined transformation
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 100, 100);
+
+// Create a matrix for: scale(2, 1.5) + rotate(45deg) + translate(100, 50)
+const rad = (45 * Math.PI) / 180;
+const cos = Math.cos(rad);
+const sin = Math.sin(rad);
+
+shape.transform({
+  e11: 2 * cos,   e12: -2 * sin,  e13: 100,
+  e21: 1.5 * sin, e22: 1.5 * cos, e23: 50,
+  e31: 0,         e32: 0,         e33: 1
+});
+```
+```typescript
+// Create a skew transformation
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 100, 100);
+
+// Skew in X direction
+shape.transform({
+  e11: 1,   e12: 0.5, e13: 0,
+  e21: 0,   e22: 1,   e23: 0,
+  e31: 0,   e32: 0,   e33: 1
+});
+```
+
+#### Shape.clip
+
+**Returns:** `this`
+
+Sets a clipping path for this paint object.
+
+The clipping path restricts the area where the paint will be rendered.
+Only the parts of the paint that overlap with the clipper shape will be visible.
+
+
+**Parameters:**
+- `clipper` `Paint` — A Paint object (typically a Shape) to use as the clipping path
+
+**Example:**
+```typescript
+const circle = new TVG.Shape();
+circle.appendCircle(150, 150, 100);
+
+const rect = new TVG.Shape();
+rect.appendRect(0, 0, 300, 300)
+    .fill(255, 0, 0, 255)
+    .clip(circle);
+
+canvas.add(rect);
+```
+
+#### Shape.mask
+
+**Returns:** `this`
+
+Sets a masking target object and the masking method.
+
+The masking restricts the transparency of the source paint using the target paint.
+
+
+**Parameters:**
+- `target` `Paint` — A Paint object to use as the masking target
+- `method` `MaskMethod` — The method used to mask the source object with the target
+
+**Example:**
+```typescript
+const mask = new TVG.Shape();
+mask.appendCircle(200, 200, 125);
+mask.fill(255, 255, 255);
+
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 400, 400)
+    .fill(255, 0, 0, 255)
+    .mask(mask, MaskMethod.Alpha);
+
+canvas.add(shape);
+```
+
+#### Shape.intersects
+
+**Returns:** `boolean`
+
+Checks if the paint intersects with the given rectangular region.
+
+
+**Parameters:**
+- `x` `number` — The x-coordinate of the region's top-left corner
+- `y` `number` — The y-coordinate of the region's top-left corner
+- `width` `number` — The width of the region
+- `height` `number` — The height of the region
+
+**Example:**
+```typescript
+const shape = new TVG.Shape();
+shape.appendRect(100, 100, 200, 200);
+
+// Check if shape intersects with a region
+if (shape.intersects(150, 150, 100, 100)) {
+  console.log('Shape intersects with region');
+}
+```
+
+#### Shape.fromPtr
+
+**Returns:** `Paint`
+
+Create a correctly-typed Paint subclass from a raw WASM pointer.
+The returned object does NOT own the pointer (won't be freed by GC).
+
+
+**Parameters:**
+- `ptr` `number` — A raw WASM paint pointer
+
+#### Shape.moveTo
+
+**Returns:** `this`
+
+Moves the path cursor to a new point without drawing.
+
+This starts a new subpath at the specified coordinates. Subsequent drawing commands
+will start from this point.
+
+
+**Parameters:**
+- `x` `number` — X coordinate
+- `y` `number` — Y coordinate
+
+**Example:**
+```typescript
+shape.moveTo(100, 100)
+     .lineTo(200, 200);
+```
+
+#### Shape.lineTo
+
+**Returns:** `this`
+
+Draws a straight line from the current point to the specified coordinates.
+
+
+**Parameters:**
+- `x` `number` — End X coordinate
+- `y` `number` — End Y coordinate
+
+**Example:**
+```typescript
+// Draw a triangle
+shape.moveTo(100, 50)
+     .lineTo(150, 150)
+     .lineTo(50, 150)
+     .close();
+```
+
+#### Shape.cubicTo
+
+**Returns:** `this`
+
+Draws a cubic Bézier curve from the current point to (x, y).
+
+
+**Parameters:**
+- `cx1` `number` — X coordinate of first control point
+- `cy1` `number` — Y coordinate of first control point
+- `cx2` `number` — X coordinate of second control point
+- `cy2` `number` — Y coordinate of second control point
+- `x` `number` — End X coordinate
+- `y` `number` — End Y coordinate
+
+**Example:**
+```typescript
+// Draw a smooth curve
+shape.moveTo(50, 100)
+     .cubicTo(50, 50, 150, 50, 150, 100);
+```
+
+#### Shape.close
+
+**Returns:** `this`
+
+Closes the current subpath by drawing a straight line back to the starting point.
+
+
+**Example:**
+```typescript
+shape.moveTo(100, 50)
+     .lineTo(150, 150)
+     .lineTo(50, 150)
+     .close(); // Completes the triangle
+```
+
+#### Shape.appendRect
+
+**Returns:** `this`
+
+Appends a rectangle path to the shape.
+
+Creates a rectangular path with optional rounded corners. Multiple rectangles
+can be added to the same shape.
+
+
+**Parameters:**
+- `x` `number` — X coordinate of the top-left corner
+- `y` `number` — Y coordinate of the top-left corner
+- `w` `number` — Width of the rectangle
+- `h` `number` — Height of the rectangle
+- `options` `RectOptions` — Optional corner rounding and path direction
+
+**Example:**
+```typescript
+// Simple rectangle
+shape.appendRect(50, 50, 200, 100);
+```
+```typescript
+// Rounded rectangle
+shape.appendRect(50, 50, 200, 100, { rx: 10, ry: 10 });
+```
+
+#### Shape.appendCircle
+
+**Returns:** `this`
+
+Appends a circle or ellipse path to the shape.
+
+Creates a circular or elliptical path. If only one radius is provided,
+creates a perfect circle. If two radii are provided, creates an ellipse.
+
+
+**Parameters:**
+- `cx` `number` — X coordinate of the center
+- `cy` `number` — Y coordinate of the center
+- `rx` `number` — Horizontal radius
+- `ry` `number` — Vertical radius (defaults to rx for perfect circle)
+- `clockwise` `boolean` — Path direction. Default: true
+
+**Example:**
+```typescript
+// Perfect circle
+shape.appendCircle(150, 150, 50)
+     .fill(255, 0, 0, 255);
+```
+```typescript
+// Ellipse
+shape.appendCircle(150, 150, 80, 50)
+     .fill(0, 100, 255, 255);
+```
+
+#### Shape.fillRule
+
+**Returns:** `this`
+
+Sets the fill rule for the shape.
+
+The fill rule determines how the interior of a shape is calculated when the path
+intersects itself or when multiple subpaths overlap.
+
+
+**Parameters:**
+- `rule` `FillRule` — Fill rule: 'winding' (non-zero) or 'evenodd'
+
+**Example:**
+```typescript
+const star = new TVG.Shape();
+// Draw a self-intersecting star
+star.moveTo(100, 10)
+    .lineTo(40, 180)
+    .lineTo(190, 60)
+    .lineTo(10, 60)
+    .lineTo(160, 180)
+    .close()
+    .fillRule(FillRule.EvenOdd)  // Use even-odd rule for star shape
+    .fill(255, 200, 0, 255);
+```
+
+#### Shape.trimPath
+
+**Returns:** `this`
+
+Sets the trim of the shape along the defined path segment, controlling which part is visible.
+
+This method allows you to trim/cut paths, showing only a portion from the begin to end point.
+This is particularly useful for animations (e.g., drawing a line progressively) or creating
+partial shapes like arcs from circles.
+
+If the values exceed the 0-1 range, they wrap around (similar to angle wrapping).
+
+
+**Parameters:**
+- `begin` `number` — Start of the segment to display (0.0 to 1.0, where 0 is the path start)
+- `end` `number` — End of the segment to display (0.0 to 1.0, where 1 is the path end)
+- `simultaneous` `boolean` — How to handle multiple paths within the shape:
+  - `true` (default): Trimming applied simultaneously to all paths
+  - `false`: All paths treated as one entity with combined length
+
+**Example:**
+```typescript
+// Draw half a circle (arc)
+const arc = new TVG.Shape();
+arc.appendCircle(150, 150, 100)
+   .trimPath(0, 0.5)  // Show only first half
+   .stroke({ width: 5, color: [255, 0, 0, 255] });
+```
+```typescript
+// Animated line drawing effect
+const line = new TVG.Shape();
+line.moveTo(50, 100)
+    .lineTo(250, 100)
+    .trimPath(0, progress)  // progress from 0 to 1
+    .stroke({ width: 3, color: [0, 100, 255, 255] });
+```
+```typescript
+// Trim multiple paths separately
+const shape = new TVG.Shape();
+shape.appendRect(50, 50, 100, 100)
+     .appendCircle(200, 100, 50)
+     .trimPath(0.25, 0.75, true)  // Trim each path separately
+     .stroke({ width: 2, color: [0, 0, 0, 255] });
+```
+
+#### Shape.fill
+
+**Returns:** `this`
+
+Sets the fill for the shape with either a solid color or gradient.
+
+This method supports two calling patterns:
+1. Solid color: `fill(r, g, b, a?)`
+2. Gradient: `fill(gradient)`
+
+
+**Parameters:**
+- `gradient` `Fill` — LinearGradient or RadialGradient to use as fill
+
+**Example:**
+```typescript
+// Solid color fill
+shape.fill(255, 0, 0, 255); // Red
+shape.fill(0, 255, 0);      // Green (alpha defaults to 255)
+```
+```typescript
+// Gradient fill
+const gradient = new TVG.LinearGradient(0, 0, 200, 0);
+gradient.addStop(0, [255, 0, 0, 255])
+        .addStop(1, [0, 0, 255, 255]);
+shape.fill(gradient);
+```
+
+#### Shape.stroke
+
+**Returns:** `this`
+
+Sets the stroke styling for the shape.
+
+This method supports two calling patterns:
+1. Simple width: `stroke(width)`
+2. Full options: `stroke({ width, color, gradient, cap, join, miterLimit })`
+
+
+**Parameters:**
+- `width` `number` — Stroke width in pixels
+
+**Example:**
+```typescript
+// Simple stroke
+shape.appendCircle(150, 150, 50)
+     .stroke(3);
+```
+```typescript
+// Stroke with color and caps
+shape.appendRect(50, 50, 200, 100)
+     .stroke({
+       width: 5,
+       color: [0, 0, 0, 255],
+       cap: StrokeCap.Round,
+       join: StrokeJoin.Round
+     });
+```
+```typescript
+// Stroke with gradient
+const gradient = new TVG.LinearGradient(0, 0, 200, 0);
+gradient.addStop(0, [255, 0, 0, 255])
+        .addStop(1, [0, 0, 255, 255]);
+
+shape.appendCircle(150, 150, 50)
+     .stroke({
+       width: 10,
+       gradient: gradient,
+       cap: StrokeCap.Round
+     });
+```
+
+#### Shape.reset
+
+**Returns:** `this`
+
+Resets the shape's path data while retaining fill and stroke properties.
+
+This method clears all path commands (moveTo, lineTo, cubicTo, appendRect, etc.)
+but preserves the shape's fill color, gradient, stroke settings, and transformations.
+This is useful for animations where you want to redraw the path while keeping
+the same styling.
+
+
+**Example:**
+```typescript
+// Animating shape changes while keeping styles
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 100, 100);
+shape.fill(255, 0, 0, 255);
+shape.stroke({ width: 5, color: [0, 0, 255, 255] });
+
+// Later, change the shape but keep the fill/stroke
+shape.reset();
+shape.appendCircle(50, 50, 40);
+// Still has red fill and blue stroke!
+```
+
+---
+
+## Scene
+
+### Scene
+
+**Kind:** Interface
+
+Scene class for hierarchical grouping of Paint objects
+
+**Constructor:**
+
+**Parameters:**
+- `ptr?` `number`
+- `skipRegistry` `boolean`
+
+**Properties:**
+- `id` `any`
+- `ptr` `any`
+- `isDisposed` `any`
+
+
+**Example:**
+```typescript
+// Grouping shapes in a scene
+const scene = new TVG.Scene();
+
+const background = new TVG.Shape();
+background.appendRect(0, 0, 800, 600).fill(240, 240, 240, 255);
+
+const circle = new TVG.Shape();
+circle.appendCircle(100, 100, 50).fill(255, 100, 100, 255);
+
+scene.add(background);
+scene.add(circle);
+canvas.add(scene);
+```
+```typescript
+// Scene transformations affect all children
+const scene = new TVG.Scene();
+
+for (let i = 0; i < 5; i++) {
+  const shape = new TVG.Shape();
+  shape.appendRect(i * 60, 100, 50, 50)
+       .fill(100 + i * 30, 150, 255 - i * 30, 255);
+  scene.add(shape);
+}
+
+// Transform entire group
+scene.translate(200, 200).rotate(30);
+canvas.add(scene);
+```
+
+#### Scene.registerType
+
+Register a subclass factory for a given Tvg_Type value.
+Called by each subclass at module load time.
+
+
+**Parameters:**
+- `type` `number`
+- `factory` `PaintFactory`
+
+#### Scene.id
+
+**Returns:** `number`
+
+The ID of this paint object.
+IDs are used to identify paint objects within a picture's scene tree.
+Assign a string to generate a hash ID from the name, or a number to set directly.
+
+
+#### Scene.translate
+
+**Returns:** `this`
+
+Translate the paint by (x, y)
+
+
+**Parameters:**
+- `x` `number`
+- `y` `number`
+
+#### Scene.rotate
+
+**Returns:** `this`
+
+Rotate the paint by angle (in degrees)
+
+
+**Parameters:**
+- `angle` `number`
+
+#### Scene.scale
+
+**Returns:** `this`
+
+Scale the paint by (sx, sy). If sy is not provided, use sx for both
+
+
+**Parameters:**
+- `sx` `number`
+- `sy` `number`
+
+#### Scene.origin
+
+**Returns:** `this`
+
+Set the origin point for transformations (rotation, scale).
+The origin is specified as normalized coordinates (0.0 to 1.0).
+- (0, 0) = top-left corner
+- (0.5, 0.5) = center (default)
+- (1, 1) = bottom-right corner
+
+
+**Parameters:**
+- `x` `number` — Normalized X coordinate (0.0 to 1.0)
+- `y` `number` — Normalized Y coordinate (0.0 to 1.0)
+
+**Example:**
+```typescript
+const picture = new TVG.Picture();
+picture.load(svgData, { type: 'svg' });
+
+// Set origin to center for rotation around center
+picture.origin(0.5, 0.5);
+picture.translate(300, 300);
+picture.rotate(45);
+```
+
+#### Scene.blend
+
+**Returns:** `this`
+
+Set the blending method for this paint.
+Blending determines how this paint is combined with the content below it.
+
+
+**Parameters:**
+- `method` `BlendMethod` — The blending method to use
+
+**Example:**
+```typescript
+const scene = new TVG.Scene();
+scene.blend(BlendMethod.Add);
+
+const shape = new TVG.Shape();
+shape.appendCircle(100, 100, 50, 50);
+shape.fill(255, 0, 0, 255);
+shape.blend(BlendMethod.Multiply);
+```
+
+#### Scene.opacity
+
+**Returns:** `number`
+
+Get or set the opacity (0 to 255)
+
+
+**Example:**
+```typescript
+// Set opacity to 50% (half transparent)
+shape.opacity(128);
+
+// Set to fully opaque
+shape.opacity(255);
+
+// Get current opacity value
+const currentOpacity = shape.opacity(); // returns 0-255
+```
+
+#### Scene.visible
+
+**Returns:** `boolean`
+
+Get or set the visibility
+
+
+#### Scene.bounds
+
+**Returns:** `Bounds`
+
+Get the bounding box of this paint
+
+
+#### Scene.duplicate
+
+**Returns:** `T`
+
+Duplicate this paint object
+
+
+#### Scene.transform
+
+**Returns:** `this`
+
+Applies a custom transformation matrix to the paint.
+
+This method allows you to apply complex transformations that combine
+translation, rotation, scaling, and skewing in a single operation.
+The matrix is multiplied with any existing transformations.
+
+
+**Parameters:**
+- `matrix` `Matrix` — A 3x3 transformation matrix
+
+**Example:**
+```typescript
+// Apply a combined transformation
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 100, 100);
+
+// Create a matrix for: scale(2, 1.5) + rotate(45deg) + translate(100, 50)
+const rad = (45 * Math.PI) / 180;
+const cos = Math.cos(rad);
+const sin = Math.sin(rad);
+
+shape.transform({
+  e11: 2 * cos,   e12: -2 * sin,  e13: 100,
+  e21: 1.5 * sin, e22: 1.5 * cos, e23: 50,
+  e31: 0,         e32: 0,         e33: 1
+});
+```
+```typescript
+// Create a skew transformation
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 100, 100);
+
+// Skew in X direction
+shape.transform({
+  e11: 1,   e12: 0.5, e13: 0,
+  e21: 0,   e22: 1,   e23: 0,
+  e31: 0,   e32: 0,   e33: 1
+});
+```
+
+#### Scene.clip
+
+**Returns:** `this`
+
+Sets a clipping path for this paint object.
+
+The clipping path restricts the area where the paint will be rendered.
+Only the parts of the paint that overlap with the clipper shape will be visible.
+
+
+**Parameters:**
+- `clipper` `Paint` — A Paint object (typically a Shape) to use as the clipping path
+
+**Example:**
+```typescript
+const circle = new TVG.Shape();
+circle.appendCircle(150, 150, 100);
+
+const rect = new TVG.Shape();
+rect.appendRect(0, 0, 300, 300)
+    .fill(255, 0, 0, 255)
+    .clip(circle);
+
+canvas.add(rect);
+```
+
+#### Scene.mask
+
+**Returns:** `this`
+
+Sets a masking target object and the masking method.
+
+The masking restricts the transparency of the source paint using the target paint.
+
+
+**Parameters:**
+- `target` `Paint` — A Paint object to use as the masking target
+- `method` `MaskMethod` — The method used to mask the source object with the target
+
+**Example:**
+```typescript
+const mask = new TVG.Shape();
+mask.appendCircle(200, 200, 125);
+mask.fill(255, 255, 255);
+
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 400, 400)
+    .fill(255, 0, 0, 255)
+    .mask(mask, MaskMethod.Alpha);
+
+canvas.add(shape);
+```
+
+#### Scene.intersects
+
+**Returns:** `boolean`
+
+Checks if the paint intersects with the given rectangular region.
+
+
+**Parameters:**
+- `x` `number` — The x-coordinate of the region's top-left corner
+- `y` `number` — The y-coordinate of the region's top-left corner
+- `width` `number` — The width of the region
+- `height` `number` — The height of the region
+
+**Example:**
+```typescript
+const shape = new TVG.Shape();
+shape.appendRect(100, 100, 200, 200);
+
+// Check if shape intersects with a region
+if (shape.intersects(150, 150, 100, 100)) {
+  console.log('Shape intersects with region');
+}
+```
+
+#### Scene.fromPtr
+
+**Returns:** `Paint`
+
+Create a correctly-typed Paint subclass from a raw WASM pointer.
+The returned object does NOT own the pointer (won't be freed by GC).
+
+
+**Parameters:**
+- `ptr` `number` — A raw WASM paint pointer
+
+#### Scene.add
+
+**Returns:** `this`
+
+Add a paint to the scene
+
+
+**Parameters:**
+- `paint` `Paint`
+
+#### Scene.remove
+
+**Returns:** `this`
+
+Remove paint(s) from the scene
+If no paint is provided, removes all paints
+
+
+**Parameters:**
+- `paint?` `Paint`
+
+#### Scene.clear
+
+**Returns:** `this`
+
+Clear all paints from the scene (alias for remove())
+
+
+#### Scene.resetEffects
+
+**Returns:** `this`
+
+Reset all previously applied scene effects, restoring the scene to its original state.
+
+
+**Example:**
+```typescript
+const scene = new TVG.Scene();
+scene.dropShadow(128, 128, 128, 200, 45, 5, 2, 60);
+scene.resetEffects(); // Remove all effects
+```
+
+#### Scene.gaussianBlur
+
+**Returns:** `this`
+
+Apply a Gaussian blur effect to the scene.
+
+
+**Parameters:**
+- `sigma` `number` — Blur intensity (> 0)
+- `direction` `number` — Blur direction: 0 (both), 1 (horizontal), 2 (vertical)
+- `border` `number` — Border mode: 0 (duplicate), 1 (wrap)
+- `quality` `number` — Blur quality (0-100)
+
+**Example:**
+```typescript
+const scene = new TVG.Scene();
+scene.add(shape1);
+scene.add(shape2);
+scene.gaussianBlur(1.5, 0, 0, 75); // Apply blur to entire scene
+```
+
+#### Scene.dropShadow
+
+**Returns:** `this`
+
+Apply a drop shadow effect with Gaussian blur filter to the scene.
+
+
+**Parameters:**
+- `r` `number` — Red component (0-255)
+- `g` `number` — Green component (0-255)
+- `b` `number` — Blue component (0-255)
+- `a` `number` — Alpha/opacity (0-255)
+- `angle` `number` — Shadow angle in degrees (0-360)
+- `distance` `number` — Shadow distance/offset
+- `sigma` `number` — Blur intensity for the shadow (> 0)
+- `quality` `number` — Blur quality (0-100)
+
+**Example:**
+```typescript
+const scene = new TVG.Scene();
+scene.add(shape);
+// Add gray drop shadow at 45° angle, 5px distance, 2px blur
+scene.dropShadow(128, 128, 128, 200, 45, 5, 2, 60);
+```
+
+#### Scene.fillEffect
+
+**Returns:** `this`
+
+Override the scene content color with a given fill color.
+
+
+**Parameters:**
+- `r` `number` — Red component (0-255)
+- `g` `number` — Green component (0-255)
+- `b` `number` — Blue component (0-255)
+- `a` `number` — Alpha/opacity (0-255)
+
+**Example:**
+```typescript
+const scene = new TVG.Scene();
+scene.add(shape1);
+scene.add(shape2);
+scene.fillEffect(255, 0, 0, 128); // Fill entire scene with semi-transparent red
+```
+
+#### Scene.tint
+
+**Returns:** `this`
+
+Apply a tint effect to the scene using black and white color parameters.
+
+
+**Parameters:**
+- `blackR` `number` — Black tint red component (0-255)
+- `blackG` `number` — Black tint green component (0-255)
+- `blackB` `number` — Black tint blue component (0-255)
+- `whiteR` `number` — White tint red component (0-255)
+- `whiteG` `number` — White tint green component (0-255)
+- `whiteB` `number` — White tint blue component (0-255)
+- `intensity` `number` — Tint intensity (0-100)
+
+**Example:**
+```typescript
+const scene = new TVG.Scene();
+scene.add(picture);
+// Apply sepia-like tint
+scene.tint(112, 66, 20, 255, 236, 184, 50);
+```
+
+#### Scene.tritone
+
+**Returns:** `this`
+
+Apply a tritone color effect to the scene using three color parameters for shadows, midtones, and highlights.
+A blending factor determines the mix between the original color and the tritone colors.
+
+
+**Parameters:**
+- `shadowR` `number` — Shadow red component (0-255)
+- `shadowG` `number` — Shadow green component (0-255)
+- `shadowB` `number` — Shadow blue component (0-255)
+- `midtoneR` `number` — Midtone red component (0-255)
+- `midtoneG` `number` — Midtone green component (0-255)
+- `midtoneB` `number` — Midtone blue component (0-255)
+- `highlightR` `number` — Highlight red component (0-255)
+- `highlightG` `number` — Highlight green component (0-255)
+- `highlightB` `number` — Highlight blue component (0-255)
+- `blend` `number` — Blend factor (0-255)
+
+**Example:**
+```typescript
+const scene = new TVG.Scene();
+scene.add(picture);
+// Apply tritone: dark blue shadows, gray midtones, yellow highlights
+scene.tritone(0, 0, 128, 128, 128, 128, 255, 255, 0, 128);
+```
+
+---
+
+## Picture
+
+### LoadDataOptions
+
+**Kind:** Interface
+
+**Properties:**
+- `type?` `MimeType` — MIME type or format hint (e.g., 'svg', 'png', 'jpg', 'raw')
+- `width?` `number` — Width of raw image (required for type='raw')
+- `height?` `number` — Height of raw image (required for type='raw')
+- `colorSpace?` `ColorSpace` — Color space of raw image (required for type='raw', default: ColorSpace.ARGB8888)
+
+
+---
+
+### PictureSize
+
+**Kind:** Interface
+
+**Properties:**
+- `width` `number`
+- `height` `number`
+
+
+---
+
+### Picture
+
+**Kind:** Interface
+
+Picture class for loading and displaying images and vector graphics
+
+**Constructor:**
+
+**Parameters:**
+- `ptr?` `number`
+- `skipRegistry` `boolean`
+
+**Properties:**
+- `id` `any`
+- `ptr` `any`
+- `isDisposed` `any`
+
+
+**Example:**
+```typescript
+// Loading an SVG image
+const picture = new TVG.Picture();
+
+fetch('/images/logo.svg')
+  .then(res => res.text())
+  .then(svgData => {
+    picture.load(svgData, { type: 'svg' });
+    const size = picture.size();
+    picture.size(200, 200 * size.height / size.width); // Scale
+    canvas.add(picture).render();
+  });
+```
+```typescript
+// Loading a Lottie animation as static image
+const picture = new TVG.Picture();
+
+fetch('/animations/loading.json')
+  .then(res => res.text())
+  .then(lottieData => {
+    picture.load(lottieData, { type: 'lottie' });
+    picture.translate(400, 300);
+    canvas.add(picture);
+  });
+```
+
+#### Picture.registerType
+
+Register a subclass factory for a given Tvg_Type value.
+Called by each subclass at module load time.
+
+
+**Parameters:**
+- `type` `number`
+- `factory` `PaintFactory`
+
+#### Picture.id
+
+**Returns:** `number`
+
+The ID of this paint object.
+IDs are used to identify paint objects within a picture's scene tree.
+Assign a string to generate a hash ID from the name, or a number to set directly.
+
+
+#### Picture.translate
+
+**Returns:** `this`
+
+Translate the paint by (x, y)
+
+
+**Parameters:**
+- `x` `number`
+- `y` `number`
+
+#### Picture.rotate
+
+**Returns:** `this`
+
+Rotate the paint by angle (in degrees)
+
+
+**Parameters:**
+- `angle` `number`
+
+#### Picture.scale
+
+**Returns:** `this`
+
+Scale the paint by (sx, sy). If sy is not provided, use sx for both
+
+
+**Parameters:**
+- `sx` `number`
+- `sy` `number`
+
+#### Picture.origin
+
+**Returns:** `this`
+
+Set the origin point for transformations (rotation, scale).
+The origin is specified as normalized coordinates (0.0 to 1.0).
+- (0, 0) = top-left corner
+- (0.5, 0.5) = center (default)
+- (1, 1) = bottom-right corner
+
+
+**Parameters:**
+- `x` `number` — Normalized X coordinate (0.0 to 1.0)
+- `y` `number` — Normalized Y coordinate (0.0 to 1.0)
+
+**Example:**
+```typescript
+const picture = new TVG.Picture();
+picture.load(svgData, { type: 'svg' });
+
+// Set origin to center for rotation around center
+picture.origin(0.5, 0.5);
+picture.translate(300, 300);
+picture.rotate(45);
+```
+
+#### Picture.blend
+
+**Returns:** `this`
+
+Set the blending method for this paint.
+Blending determines how this paint is combined with the content below it.
+
+
+**Parameters:**
+- `method` `BlendMethod` — The blending method to use
+
+**Example:**
+```typescript
+const scene = new TVG.Scene();
+scene.blend(BlendMethod.Add);
+
+const shape = new TVG.Shape();
+shape.appendCircle(100, 100, 50, 50);
+shape.fill(255, 0, 0, 255);
+shape.blend(BlendMethod.Multiply);
+```
+
+#### Picture.opacity
+
+**Returns:** `number`
+
+Get or set the opacity (0 to 255)
+
+
+**Example:**
+```typescript
+// Set opacity to 50% (half transparent)
+shape.opacity(128);
+
+// Set to fully opaque
+shape.opacity(255);
+
+// Get current opacity value
+const currentOpacity = shape.opacity(); // returns 0-255
+```
+
+#### Picture.visible
+
+**Returns:** `boolean`
+
+Get or set the visibility
+
+
+#### Picture.bounds
+
+**Returns:** `Bounds`
+
+Get the bounding box of this paint
+
+
+#### Picture.duplicate
+
+**Returns:** `T`
+
+Duplicate this paint object
+
+
+#### Picture.transform
+
+**Returns:** `this`
+
+Applies a custom transformation matrix to the paint.
+
+This method allows you to apply complex transformations that combine
+translation, rotation, scaling, and skewing in a single operation.
+The matrix is multiplied with any existing transformations.
+
+
+**Parameters:**
+- `matrix` `Matrix` — A 3x3 transformation matrix
+
+**Example:**
+```typescript
+// Apply a combined transformation
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 100, 100);
+
+// Create a matrix for: scale(2, 1.5) + rotate(45deg) + translate(100, 50)
+const rad = (45 * Math.PI) / 180;
+const cos = Math.cos(rad);
+const sin = Math.sin(rad);
+
+shape.transform({
+  e11: 2 * cos,   e12: -2 * sin,  e13: 100,
+  e21: 1.5 * sin, e22: 1.5 * cos, e23: 50,
+  e31: 0,         e32: 0,         e33: 1
+});
+```
+```typescript
+// Create a skew transformation
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 100, 100);
+
+// Skew in X direction
+shape.transform({
+  e11: 1,   e12: 0.5, e13: 0,
+  e21: 0,   e22: 1,   e23: 0,
+  e31: 0,   e32: 0,   e33: 1
+});
+```
+
+#### Picture.clip
+
+**Returns:** `this`
+
+Sets a clipping path for this paint object.
+
+The clipping path restricts the area where the paint will be rendered.
+Only the parts of the paint that overlap with the clipper shape will be visible.
+
+
+**Parameters:**
+- `clipper` `Paint` — A Paint object (typically a Shape) to use as the clipping path
+
+**Example:**
+```typescript
+const circle = new TVG.Shape();
+circle.appendCircle(150, 150, 100);
+
+const rect = new TVG.Shape();
+rect.appendRect(0, 0, 300, 300)
+    .fill(255, 0, 0, 255)
+    .clip(circle);
+
+canvas.add(rect);
+```
+
+#### Picture.mask
+
+**Returns:** `this`
+
+Sets a masking target object and the masking method.
+
+The masking restricts the transparency of the source paint using the target paint.
+
+
+**Parameters:**
+- `target` `Paint` — A Paint object to use as the masking target
+- `method` `MaskMethod` — The method used to mask the source object with the target
+
+**Example:**
+```typescript
+const mask = new TVG.Shape();
+mask.appendCircle(200, 200, 125);
+mask.fill(255, 255, 255);
+
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 400, 400)
+    .fill(255, 0, 0, 255)
+    .mask(mask, MaskMethod.Alpha);
+
+canvas.add(shape);
+```
+
+#### Picture.intersects
+
+**Returns:** `boolean`
+
+Checks if the paint intersects with the given rectangular region.
+
+
+**Parameters:**
+- `x` `number` — The x-coordinate of the region's top-left corner
+- `y` `number` — The y-coordinate of the region's top-left corner
+- `width` `number` — The width of the region
+- `height` `number` — The height of the region
+
+**Example:**
+```typescript
+const shape = new TVG.Shape();
+shape.appendRect(100, 100, 200, 200);
+
+// Check if shape intersects with a region
+if (shape.intersects(150, 150, 100, 100)) {
+  console.log('Shape intersects with region');
+}
+```
+
+#### Picture.fromPtr
+
+**Returns:** `Paint`
+
+Create a correctly-typed Paint subclass from a raw WASM pointer.
+The returned object does NOT own the pointer (won't be freed by GC).
+
+
+**Parameters:**
+- `ptr` `number` — A raw WASM paint pointer
+
+#### Picture.load
+
+**Returns:** `this`
+
+Load picture from raw data (Uint8Array or string for SVG)
+
+
+**Parameters:**
+- `data` `string | Uint8Array` — Raw image data as Uint8Array or SVG string
+- `options` `LoadDataOptions` — Load options including type hint
+
+#### Picture.size
+
+**Returns:** `this`
+
+Set the size of the picture (scales it)
+
+
+**Parameters:**
+- `width` `number` — Target width
+- `height` `number` — Target height
+
+#### Picture.paint
+
+**Returns:** `Paint | null`
+
+Retrieve a paint object from this picture's scene tree by ID.
+
+
+**Parameters:**
+- `id` `number` — A numeric hash ID or a string name (which will be hashed via Accessor.id)
+
+---
+
+### MimeType
+
+**Kind:** Object Literal
+
+MIME type or format hint for loading picture data.
+
+Supported image and vector file formats for Picture class.
+
+
+---
+
+## Text
+
+### TextLayout
+
+**Kind:** Interface
+
+**Properties:**
+- `width` `number`
+- `height?` `number`
+
+
+---
+
+### TextOutline
+
+**Kind:** Interface
+
+**Properties:**
+- `width` `number`
+- `color` `unknown`
+
+
+---
+
+### Text
+
+**Kind:** Interface
+
+Text rendering class with font support
+
+**Constructor:**
+
+**Parameters:**
+- `ptr?` `number`
+- `skipRegistry` `boolean`
+
+**Properties:**
+- `id` `any`
+- `ptr` `any`
+- `isDisposed` `any`
+
+
+**Example:**
+```typescript
+// Basic text rendering
+const text = new TVG.Text();
+text.font('Arial', 48)
+    .text('Hello ThorVG!')
+    .fill(50, 50, 50, 255)
+    .translate(100, 200);
+
+canvas.add(text);
+```
+```typescript
+// Text with custom font and styling
+// Load custom font first
+const fontData = await fetch('/fonts/custom.ttf').then(r => r.arrayBuffer());
+TVG.Font.load('CustomFont', new Uint8Array(fontData));
+
+const text = new TVG.Text();
+text.font('CustomFont', 64)
+    .text('Custom Font')
+    .fill(100, 150, 255, 255)
+    .stroke(50, 50, 50, 255, 2);
+
+canvas.add(text);
+```
+```typescript
+// Multi-line text with wrapping
+const text = new TVG.Text();
+text.font('Arial')
+    .fontSize(24)
+    .text('This is a long text that will wrap across multiple lines')
+    .fill(50, 50, 50)
+    .layout(300, 200)
+    .wrap(TextWrapMode.Word);
+
+canvas.add(text);
+```
+
+#### Text.registerType
+
+Register a subclass factory for a given Tvg_Type value.
+Called by each subclass at module load time.
+
+
+**Parameters:**
+- `type` `number`
+- `factory` `PaintFactory`
+
+#### Text.id
+
+**Returns:** `number`
+
+The ID of this paint object.
+IDs are used to identify paint objects within a picture's scene tree.
+Assign a string to generate a hash ID from the name, or a number to set directly.
+
+
+#### Text.translate
+
+**Returns:** `this`
+
+Translate the paint by (x, y)
+
+
+**Parameters:**
+- `x` `number`
+- `y` `number`
+
+#### Text.rotate
+
+**Returns:** `this`
+
+Rotate the paint by angle (in degrees)
+
+
+**Parameters:**
+- `angle` `number`
+
+#### Text.scale
+
+**Returns:** `this`
+
+Scale the paint by (sx, sy). If sy is not provided, use sx for both
+
+
+**Parameters:**
+- `sx` `number`
+- `sy` `number`
+
+#### Text.origin
+
+**Returns:** `this`
+
+Set the origin point for transformations (rotation, scale).
+The origin is specified as normalized coordinates (0.0 to 1.0).
+- (0, 0) = top-left corner
+- (0.5, 0.5) = center (default)
+- (1, 1) = bottom-right corner
+
+
+**Parameters:**
+- `x` `number` — Normalized X coordinate (0.0 to 1.0)
+- `y` `number` — Normalized Y coordinate (0.0 to 1.0)
+
+**Example:**
+```typescript
+const picture = new TVG.Picture();
+picture.load(svgData, { type: 'svg' });
+
+// Set origin to center for rotation around center
+picture.origin(0.5, 0.5);
+picture.translate(300, 300);
+picture.rotate(45);
+```
+
+#### Text.blend
+
+**Returns:** `this`
+
+Set the blending method for this paint.
+Blending determines how this paint is combined with the content below it.
+
+
+**Parameters:**
+- `method` `BlendMethod` — The blending method to use
+
+**Example:**
+```typescript
+const scene = new TVG.Scene();
+scene.blend(BlendMethod.Add);
+
+const shape = new TVG.Shape();
+shape.appendCircle(100, 100, 50, 50);
+shape.fill(255, 0, 0, 255);
+shape.blend(BlendMethod.Multiply);
+```
+
+#### Text.opacity
+
+**Returns:** `number`
+
+Get or set the opacity (0 to 255)
+
+
+**Example:**
+```typescript
+// Set opacity to 50% (half transparent)
+shape.opacity(128);
+
+// Set to fully opaque
+shape.opacity(255);
+
+// Get current opacity value
+const currentOpacity = shape.opacity(); // returns 0-255
+```
+
+#### Text.visible
+
+**Returns:** `boolean`
+
+Get or set the visibility
+
+
+#### Text.bounds
+
+**Returns:** `Bounds`
+
+Get the bounding box of this paint
+
+
+#### Text.duplicate
+
+**Returns:** `T`
+
+Duplicate this paint object
+
+
+#### Text.transform
+
+**Returns:** `this`
+
+Applies a custom transformation matrix to the paint.
+
+This method allows you to apply complex transformations that combine
+translation, rotation, scaling, and skewing in a single operation.
+The matrix is multiplied with any existing transformations.
+
+
+**Parameters:**
+- `matrix` `Matrix` — A 3x3 transformation matrix
+
+**Example:**
+```typescript
+// Apply a combined transformation
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 100, 100);
+
+// Create a matrix for: scale(2, 1.5) + rotate(45deg) + translate(100, 50)
+const rad = (45 * Math.PI) / 180;
+const cos = Math.cos(rad);
+const sin = Math.sin(rad);
+
+shape.transform({
+  e11: 2 * cos,   e12: -2 * sin,  e13: 100,
+  e21: 1.5 * sin, e22: 1.5 * cos, e23: 50,
+  e31: 0,         e32: 0,         e33: 1
+});
+```
+```typescript
+// Create a skew transformation
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 100, 100);
+
+// Skew in X direction
+shape.transform({
+  e11: 1,   e12: 0.5, e13: 0,
+  e21: 0,   e22: 1,   e23: 0,
+  e31: 0,   e32: 0,   e33: 1
+});
+```
+
+#### Text.clip
+
+**Returns:** `this`
+
+Sets a clipping path for this paint object.
+
+The clipping path restricts the area where the paint will be rendered.
+Only the parts of the paint that overlap with the clipper shape will be visible.
+
+
+**Parameters:**
+- `clipper` `Paint` — A Paint object (typically a Shape) to use as the clipping path
+
+**Example:**
+```typescript
+const circle = new TVG.Shape();
+circle.appendCircle(150, 150, 100);
+
+const rect = new TVG.Shape();
+rect.appendRect(0, 0, 300, 300)
+    .fill(255, 0, 0, 255)
+    .clip(circle);
+
+canvas.add(rect);
+```
+
+#### Text.mask
+
+**Returns:** `this`
+
+Sets a masking target object and the masking method.
+
+The masking restricts the transparency of the source paint using the target paint.
+
+
+**Parameters:**
+- `target` `Paint` — A Paint object to use as the masking target
+- `method` `MaskMethod` — The method used to mask the source object with the target
+
+**Example:**
+```typescript
+const mask = new TVG.Shape();
+mask.appendCircle(200, 200, 125);
+mask.fill(255, 255, 255);
+
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 400, 400)
+    .fill(255, 0, 0, 255)
+    .mask(mask, MaskMethod.Alpha);
+
+canvas.add(shape);
+```
+
+#### Text.intersects
+
+**Returns:** `boolean`
+
+Checks if the paint intersects with the given rectangular region.
+
+
+**Parameters:**
+- `x` `number` — The x-coordinate of the region's top-left corner
+- `y` `number` — The y-coordinate of the region's top-left corner
+- `width` `number` — The width of the region
+- `height` `number` — The height of the region
+
+**Example:**
+```typescript
+const shape = new TVG.Shape();
+shape.appendRect(100, 100, 200, 200);
+
+// Check if shape intersects with a region
+if (shape.intersects(150, 150, 100, 100)) {
+  console.log('Shape intersects with region');
+}
+```
+
+#### Text.fromPtr
+
+**Returns:** `Paint`
+
+Create a correctly-typed Paint subclass from a raw WASM pointer.
+The returned object does NOT own the pointer (won't be freed by GC).
+
+
+**Parameters:**
+- `ptr` `number` — A raw WASM paint pointer
+
+#### Text.font
+
+**Returns:** `this`
+
+Set the font to use for this text.
+
+
+**Parameters:**
+- `name` `string` — Font name
+
+#### Text.text
+
+**Returns:** `this`
+
+Set the text content (UTF-8 supported)
+
+
+**Parameters:**
+- `content` `string` — Text content to display
+
+#### Text.fontSize
+
+**Returns:** `this`
+
+Set the font size
+
+
+**Parameters:**
+- `size` `number` — Font size in pixels
+
+#### Text.fill
+
+**Returns:** `this`
+
+Set text color (RGB) or fill with gradient
+
+
+**Parameters:**
+- `gradient` `Fill`
+
+#### Text.align
+
+**Returns:** `this`
+
+Set text alignment/anchor point
+
+
+**Parameters:**
+- `x` `number` — Horizontal alignment/anchor in [0..1]: 0=left/start, 0.5=center, 1=right/end (Default: 0)
+- `y` `number` — Vertical alignment/anchor in [0..1]: 0=top, 0.5=middle, 1=bottom (Default: 0)
+
+#### Text.layout
+
+**Returns:** `this`
+
+Set text layout constraints (for wrapping)
+
+
+**Parameters:**
+- `width` `number` — Maximum width (0 = no constraint)
+- `height` `number` — Maximum height (0 = no constraint)
+
+#### Text.wrap
+
+**Returns:** `this`
+
+Set text wrap mode
+
+
+**Parameters:**
+- `mode` `TextWrapMode` — Wrap mode: TextWrapMode.None, TextWrapMode.Character, TextWrapMode.Word, TextWrapMode.Smart, or TextWrapMode.Ellipsis
+
+#### Text.spacing
+
+**Returns:** `this`
+
+Set text spacing (letter and line spacing)
+
+
+**Parameters:**
+- `letter` `number` — Letter spacing scale factor (1.0 = default, >1.0 = wider, <1.0 = narrower)
+- `line` `number` — Line spacing scale factor (1.0 = default, >1.0 = wider, <1.0 = narrower)
+
+#### Text.italic
+
+**Returns:** `this`
+
+Set italic style with shear factor
+
+
+**Parameters:**
+- `shear` `number` — Shear factor (0.0 = no italic, default: 0.18, typical range: 0.1-0.3)
+
+#### Text.outline
+
+**Returns:** `this`
+
+Set text outline (stroke)
+
+
+**Parameters:**
+- `width` `number` — Outline width
+- `r` `number` — Red (0-255)
+- `g` `number` — Green (0-255)
+- `b` `number` — Blue (0-255)
+
+---
+
+## Animation
+
+### AnimationInfo
+
+**Kind:** Interface
+
+**Properties:**
+- `totalFrames` `number`
+- `duration` `number`
+- `fps` `number`
+
+
+---
+
+### AnimationSegment
+
+**Kind:** Interface
+
+**Properties:**
+- `start` `number`
+- `end` `number`
+
+
+---
+
+### Animation
+
+**Kind:** Interface
+
+Animation controller for Lottie animations
+The Animation owns a Picture internally and manages frame updates
+
+**Constructor:**
+
+**Properties:**
+- `ptr` `any`
+- `picture` `any`
+
+
+**Example:**
+```typescript
+// Loading and playing a Lottie animation
+const animation = new TVG.Animation();
+
+fetch('/animations/loader.json')
+  .then(res => res.text())
+  .then(lottieData => {
+    animation.load(lottieData);
+    const picture = animation.picture();
+
+    // Center and scale animation
+    const size = picture.size();
+    picture.translate(400 - size.width / 2, 300 - size.height / 2);
+
+    canvas.add(picture);
+    animation.play();
+  });
+```
+```typescript
+// Controlling animation playback
+const animation = new TVG.Animation();
+animation.load(lottieData);
+
+const info = animation.getInfo();
+console.log(`Duration: ${info.duration}s, FPS: ${info.fps}`);
+
+// Play with custom loop and speed
+animation.loop(true).play();
+
+// Pause after 2 seconds
+setTimeout(() => animation.pause(), 2000);
+
+// Jump to specific frame
+animation.frame(30).render();
+```
+```typescript
+// Animation segments and callbacks
+const animation = new TVG.Animation();
+animation.load(lottieData);
+
+// Play specific segment
+animation.segment({ start: 0, end: 60 });
+
+// Listen to frame updates
+animation.onFrame((frame) => {
+  console.log(`Current frame: ${frame}`);
+});
+
+animation.play();
+```
+
+#### Animation.picture
+
+**Returns:** `Picture | null`
+
+Get the Picture object that contains the animation content
+The Picture is owned by the Animation and should not be manually disposed
+
+
+#### Animation.load
+
+**Returns:** `this`
+
+Load Lottie animation from raw data
+
+
+**Parameters:**
+- `data` `string | Uint8Array` — Lottie JSON data as Uint8Array or string
+
+#### Animation.info
+
+**Returns:** `AnimationInfo | null`
+
+Get animation information (frames, duration, fps)
+
+
+#### Animation.frame
+
+**Returns:** `number`
+
+Get or set the current frame
+
+
+#### Animation.segment
+
+**Returns:** `this`
+
+Set animation segment/marker (for partial playback)
+
+
+**Parameters:**
+- `segment` `number` — Segment index (0-based)
+
+#### Animation.play
+
+**Returns:** `this`
+
+Play the animation
+
+
+**Parameters:**
+- `onFrame?` `(frame: number) => void` — Optional callback called on each frame update
+
+#### Animation.pause
+
+**Returns:** `this`
+
+Pause the animation
+
+
+#### Animation.stop
+
+**Returns:** `this`
+
+Stop the animation and reset to frame 0
+
+
+#### Animation.isPlaying
+
+**Returns:** `boolean`
+
+Check if animation is currently playing
+
+
+#### Animation.setLoop
+
+**Returns:** `this`
+
+Set whether animation should loop
+
+
+**Parameters:**
+- `loop` `boolean`
+
+#### Animation.getLoop
+
+**Returns:** `boolean`
+
+Get loop status
+
+
+#### Animation.seek
+
+**Returns:** `this`
+
+Seek to a specific time (in seconds)
+
+
+**Parameters:**
+- `time` `number`
+
+#### Animation.getCurrentTime
+
+**Returns:** `number`
+
+Get current time (in seconds)
+
+
+---
+
+## Gradients
+
+### ColorStop
+
+**Kind:** Object Literal
+
+
+---
+
+### LinearGradient
+
+**Kind:** Interface
+
+Linear gradient for filling shapes
+
+**Constructor:**
+
+**Parameters:**
+- `x1` `number`
+- `y1` `number`
+- `x2` `number`
+- `y2` `number`
+
+**Properties:**
+- `_filled` `boolean`
+- `_stops` `ColorStopEntry[]`
+- `ptr` `any`
+- `isDisposed` `any`
+
+
+**Example:**
+```typescript
+// Basic linear gradient
+const gradient = new TVG.LinearGradient(100, 100, 300, 100);
+gradient.addStop(0, [255, 0, 0, 255])    // Red
+        .addStop(0.5, [255, 255, 0, 255]) // Yellow
+        .addStop(1, [0, 255, 0, 255]);    // Green
+
+const shape = new TVG.Shape();
+shape.appendRect(100, 100, 200, 100)
+     .fillGradient(gradient);
+
+canvas.add(shape);
+```
+```typescript
+// Vertical gradient with transparency
+const gradient = new TVG.LinearGradient(200, 100, 200, 300);
+gradient.addStop(0, [100, 150, 255, 255])
+        .addStop(1, [100, 150, 255, 0])
+        .spread(GradientSpread.Pad);
+
+const shape = new TVG.Shape();
+shape.appendRect(150, 100, 100, 200)
+     .fillGradient(gradient);
+
+canvas.add(shape);
+```
+
+#### LinearGradient.addStop
+
+**Returns:** `this`
+
+Add a color stop to the gradient
+
+
+**Parameters:**
+- `offset` `number` — Position of the stop (0.0 to 1.0)
+- `color` `ColorStop` — RGBA color [r, g, b, a] where each value is 0-255
+
+#### LinearGradient.clearStops
+
+**Returns:** `this`
+
+Clear all pending color stops
+Use this to reset stops before adding new ones
+
+
+**Example:**
+```typescript
+const gradient = new TVG.LinearGradient(0, 0, 200, 0);
+gradient.addStop(0, [255, 0, 0, 255])
+        .addStop(1, [0, 0, 255, 255]);
+
+// Change stops
+gradient.clearStops()
+        .addStop(0, [0, 255, 0, 255])
+        .addStop(1, [255, 255, 0, 255]);
+
+shape.fill(gradient);
+```
+
+#### LinearGradient.setStops
+
+**Returns:** `this`
+
+Replace all color stops with new ones
+This is a convenience method that clears existing stops and adds new ones in one call
+
+
+**Parameters:**
+- `stops` `unknown[]` — Variable number of [offset, color] tuples
+
+**Example:**
+```typescript
+const gradient = new TVG.LinearGradient(0, 0, 200, 0);
+gradient.setStops(
+  [0, [255, 0, 0, 255]],      // Red at start
+  [0.5, [255, 255, 0, 255]],  // Yellow at middle
+  [1, [0, 255, 0, 255]]       // Green at end
+);
+
+shape.fill(gradient);
+
+// Later, completely replace stops
+gradient.setStops(
+  [0, [0, 0, 255, 255]],   // Blue at start
+  [1, [255, 0, 255, 255]]  // Magenta at end
+);
+
+shape.fill(gradient);  // Re-apply with new stops
+```
+
+#### LinearGradient.spread
+
+**Returns:** `this`
+
+Set the gradient spread method
+
+
+**Parameters:**
+- `type` `GradientSpread`
+
+#### LinearGradient.build
+
+**Returns:** `this`
+
+Build the gradient (apply all color stops)
+This should be called after all addStop() calls
+
+
+---
+
+### RadialGradient
+
+**Kind:** Interface
+
+Radial gradient for filling shapes
+
+**Constructor:**
+
+**Parameters:**
+- `cx` `number`
+- `cy` `number`
+- `r` `number`
+- `fx` `number`
+- `fy` `number`
+- `fr` `number`
+
+**Properties:**
+- `_filled` `boolean`
+- `_stops` `ColorStopEntry[]`
+- `ptr` `any`
+- `isDisposed` `any`
+
+
+**Example:**
+```typescript
+// Basic radial gradient
+const gradient = new TVG.RadialGradient(200, 200, 100);
+gradient.addStop(0, [255, 255, 255, 255])  // White center
+        .addStop(1, [100, 100, 255, 255]);  // Blue edge
+
+const shape = new TVG.Shape();
+shape.appendCircle(200, 200, 100)
+     .fillGradient(gradient);
+
+canvas.add(shape);
+```
+```typescript
+// Radial gradient with focal point
+// Create gradient with offset focal point for lighting effect
+const gradient = new TVG.RadialGradient(
+  200, 200, 100,  // Center and radius
+  170, 170, 0     // Focal point (offset)
+);
+gradient.addStop(0, [255, 255, 200, 255])
+        .addStop(1, [255, 100, 100, 255]);
+
+const shape = new TVG.Shape();
+shape.appendCircle(200, 200, 100)
+     .fillGradient(gradient);
+
+canvas.add(shape);
+```
+
+#### RadialGradient.addStop
+
+**Returns:** `this`
+
+Add a color stop to the gradient
+
+
+**Parameters:**
+- `offset` `number` — Position of the stop (0.0 to 1.0)
+- `color` `ColorStop` — RGBA color [r, g, b, a] where each value is 0-255
+
+#### RadialGradient.clearStops
+
+**Returns:** `this`
+
+Clear all pending color stops
+Use this to reset stops before adding new ones
+
+
+**Example:**
+```typescript
+const gradient = new TVG.LinearGradient(0, 0, 200, 0);
+gradient.addStop(0, [255, 0, 0, 255])
+        .addStop(1, [0, 0, 255, 255]);
+
+// Change stops
+gradient.clearStops()
+        .addStop(0, [0, 255, 0, 255])
+        .addStop(1, [255, 255, 0, 255]);
+
+shape.fill(gradient);
+```
+
+#### RadialGradient.setStops
+
+**Returns:** `this`
+
+Replace all color stops with new ones
+This is a convenience method that clears existing stops and adds new ones in one call
+
+
+**Parameters:**
+- `stops` `unknown[]` — Variable number of [offset, color] tuples
+
+**Example:**
+```typescript
+const gradient = new TVG.LinearGradient(0, 0, 200, 0);
+gradient.setStops(
+  [0, [255, 0, 0, 255]],      // Red at start
+  [0.5, [255, 255, 0, 255]],  // Yellow at middle
+  [1, [0, 255, 0, 255]]       // Green at end
+);
+
+shape.fill(gradient);
+
+// Later, completely replace stops
+gradient.setStops(
+  [0, [0, 0, 255, 255]],   // Blue at start
+  [1, [255, 0, 255, 255]]  // Magenta at end
+);
+
+shape.fill(gradient);  // Re-apply with new stops
+```
+
+#### RadialGradient.spread
+
+**Returns:** `this`
+
+Set the gradient spread method
+
+
+**Parameters:**
+- `type` `GradientSpread`
+
+#### RadialGradient.build
+
+**Returns:** `this`
+
+Build the gradient (apply all color stops)
+This should be called after all addStop() calls
+
+
+---
+
+## Font
+
+### FontType
+
+**Kind:** Object Literal
+
+Supported font file types.
+- `'ttf'`: TrueType Font
+
+
+---
+
+### LoadFontOptions
+
+**Kind:** Interface
+
+**Properties:**
+- `type?` `'ttf'` — Font type ('ttf')
+
+
+---
+
+### Font
+
+**Kind:** Interface
+
+Font loader class for managing custom fonts.
+Fonts are loaded globally and can be referenced by name in Text objects.
+
+**Constructor:**
+
+
+**Example:**
+```typescript
+// Load font from raw data
+const fontData = await fetch('/fonts/Roboto-Regular.ttf').then(r => r.arrayBuffer());
+TVG.Font.load('Roboto', new Uint8Array(fontData));
+
+const text = new TVG.Text();
+text.font('Roboto').fontSize(48).text('Hello!').fill(50, 50, 50);
+```
+```typescript
+// Auto-load from the configured font provider (fontsource CDN by default)
+await TVG.Font.load('poppins');
+await TVG.Font.load('roboto', { weight: 700, style: 'italic' });
+
+const text = new TVG.Text();
+text.font('poppins').fontSize(48).text('Hello!').fill(50, 50, 50);
+```
+```typescript
+// Use a custom font provider
+TVG.Font.provider({
+  fetch: async (name) => {
+    const res = await fetch(`/my-fonts/${name}.ttf`);
+    return { data: new Uint8Array(await res.arrayBuffer()), type: 'ttf' };
+  }
+});
+
+await TVG.Font.load('my-font');
+```
+
+#### Font.provider
+
+Set the font provider used when calling `Font.load()` without raw data.
+
+The default provider fetches from the [fontsource](https://fontsource.org) CDN.
+Replace it to load fonts from your own CDN or any other source.
+
+
+**Parameters:**
+- `provider` `FontProvider` — A FontProvider implementation
+
+**Example:**
+```typescript
+TVG.Font.provider({
+  fetch: async (name) => {
+    const res = await fetch(`https://my-cdn.com/fonts/${name}.ttf`);
+    return { data: new Uint8Array(await res.arrayBuffer()), type: 'ttf' };
+  }
+});
+```
+
+#### Font.load
+
+Load font from raw data.
+
+
+**Parameters:**
+- `name` `string` — Unique name to identify this font
+- `data` `Uint8Array` — Raw font binary data
+- `options?` `LoadFontOptions` — Load options
+
+#### Font.unload
+
+Unload a previously loaded font.
+
+
+**Parameters:**
+- `name` `string` — Font name to unload
+
+---
+
+### FontProviderResult
+
+**Kind:** Interface
+
+Result returned by a FontProvider after fetching font data.
+
+**Properties:**
+- `data` `Uint8Array` — Raw font binary data
+- `type` `'ttf'` — Font format
+
+
+---
+
+### FontProvider
+
+**Kind:** Interface
+
+Interface for pluggable font sources.
+
+A font provider resolves a font name into binary font data.
+Implement this interface to load fonts from any source — a self-hosted
+CDN, a local server, or any custom storage.
+
+
+**Example:**
+```typescript
+TVG.Font.provider({
+  fetch: async (name) => {
+    const res = await fetch(`/my-fonts/${name}.ttf`);
+    return { data: new Uint8Array(await res.arrayBuffer()), type: 'ttf' };
+  }
+});
+
+await TVG.Font.load('my-font');
+```
+
+#### FontProvider.fetch
+
+**Returns:** `Promise`
+
+Fetch font data by name.
+
+
+**Parameters:**
+- `name` `string` — Font name as provided by the caller
+- `options?` `Record` — Provider-specific options
+
+---
+
+### FontsourceOptions
+
+**Kind:** Interface
+
+Options for loading a font from the fontsource CDN.
+
+**Properties:**
+- `weight?` `800 | 600 | 100 | 200 | 300 | 400 | 500 | 700 | 900` — Font weight to load.
+- `style?` `'italic' | 'normal'` — Font style to load.
+- `subset?` `string` — Unicode subset to load.
+
+
+---
+
+### FontsourceProvider
+
+**Kind:** Interface
+
+Font provider that fetches fonts from the [fontsource](https://fontsource.org) CDN.
+
+This is the default provider used by Font.load when no raw data is supplied.
+
+**Constructor:**
+
+
+**Example:**
+```typescript
+// Restore to default (if you previously swapped it out)
+TVG.Font.provider(new FontsourceProvider());
+```
+
+#### FontsourceProvider.fetch
+
+**Returns:** `Promise`
+
+Fetch font data by name.
+
+
+**Parameters:**
+- `name` `string` — Font name as provided by the caller
+- `options?` `FontsourceOptions` — Provider-specific options
+
+---
+
+## Error Handling
+
+### ThorVGResultCode
+
+**Kind:** Enum Member
+
+ThorVG error result codes returned by native WASM operations.
+
+
+#### ThorVGResultCode.Success
+
+**Returns:** `0`
+
+
+#### ThorVGResultCode.InvalidArguments
+
+**Returns:** `1`
+
+
+#### ThorVGResultCode.InsufficientCondition
+
+**Returns:** `2`
+
+
+#### ThorVGResultCode.FailedAllocation
+
+**Returns:** `3`
+
+
+#### ThorVGResultCode.MemoryCorruption
+
+**Returns:** `4`
+
+
+#### ThorVGResultCode.NotSupported
+
+**Returns:** `5`
+
+
+#### ThorVGResultCode.Unknown
+
+**Returns:** `6`
+
+
+---
+
+### ThorVGError
+
+**Kind:** Interface
+
+Error class for ThorVG WASM operations.
+Contains error code and operation information.
+
+**Constructor:**
+
+**Parameters:**
+- `message` `string`
+- `code` `ThorVGResultCode`
+- `operation` `string`
+
+**Properties:**
+- `code` `ThorVGResultCode`
+- `operation` `string`
+
+
+#### ThorVGError.fromCode
+
+**Returns:** `ThorVGError`
+
+
+**Parameters:**
+- `code` `ThorVGResultCode`
+- `operation` `string`
+
+---
+
+### ErrorContext
+
+**Kind:** Interface
+
+Context information provided when an error occurs.
+
+**Properties:**
+- `operation` `string` — The operation that failed (e.g., 'moveTo', 'render', 'update')
+
+
+---
+
+### ErrorHandler
+
+**Kind:** Interface
+
+Error handler callback function.
+
+Handles both ThorVG WASM errors (ThorVGError) and JavaScript errors (Error).
+Use instanceof to distinguish between error types.
+
+
+**Example:**
+```typescript
+import { init } from '@thorvg/webcanvas';
+
+const TVG = await init({
+  onError: (error, context) => {
+    if (error instanceof ThorVGError) {
+      // WASM error - has error.code
+      console.log('WASM error code:', error.code);
+    } else {
+      // JavaScript error
+      console.log('JS error:', error.message);
+    }
+  }
+});
+```
+
+---
+
+## Other
+
+### Accessor
+
+**Kind:** Interface
+
+**Constructor:**
+
+
+#### Accessor.id
+
+**Returns:** `number`
+
+Generate a unique hash ID from a string name (DJB2 hash).
+
+
+**Parameters:**
+- `name` `string` — The string name to hash
+
+#### Accessor.set
+
+Traverse all descendant paint nodes of a picture and invoke a callback on each.
+The callback receives the correctly typed Paint subclass (Shape, Scene, Picture, or Text).
+Return false from the callback to stop traversal early.
+
+
+**Parameters:**
+- `picture` `Picture` — The root picture to traverse
+- `callback` `(paint: Paint) => boolean` — Called for each descendant paint. Return false to stop.
+
+**Example:**
+```typescript
+Accessor.set(picture, (paint) => {
+  if (paint instanceof TVG.Shape) {
+    paint.fill(0, 0, 255);
+  }
+  return true; // continue traversal
+});
+```
+
+---
+
+### getGlobalRenderer
+
+**Kind:** Class
+
+Get the currently configured renderer
+
+
+---
+

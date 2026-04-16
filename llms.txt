@@ -1,0 +1,80 @@
+# @thorvg/webcanvas
+
+> A TypeScript WebCanvas API for ThorVG — high-performance vector graphics rendering
+> via WebGL, WebGPU, and Software backends using WebAssembly.
+> Install: `npm install @thorvg/webcanvas`
+
+## Initialization
+
+- [InitOptions](./llms-full.txt#initoptions)
+- [init](./llms-full.txt#init): Initialize ThorVG WASM module and rendering engine.
+
+## Canvas
+
+- [CanvasOptions](./llms-full.txt#canvasoptions): Configuration options for Canvas initialization.
+- [Canvas](./llms-full.txt#canvas): Canvas rendering context for ThorVG vector graphics.
+- [RendererType](./llms-full.txt#renderertype): Rendering backend type for Canvas.
+
+## Shapes
+
+- [Bounds](./llms-full.txt#bounds)
+- [Matrix](./llms-full.txt#matrix): A 3x3 transformation matrix for 2D transformations.
+- [RectOptions](./llms-full.txt#rectoptions): Options for creating rectangles with rounded corners.
+- [StrokeOptions](./llms-full.txt#strokeoptions): Comprehensive stroke styling options.
+- [Shape](./llms-full.txt#shape): Shape class for creating and manipulating vector graphics paths.
+
+## Scene
+
+- [Scene](./llms-full.txt#scene): Scene class for hierarchical grouping of Paint objects
+
+## Picture
+
+- [LoadDataOptions](./llms-full.txt#loaddataoptions)
+- [PictureSize](./llms-full.txt#picturesize)
+- [Picture](./llms-full.txt#picture): Picture class for loading and displaying images and vector graphics
+- [MimeType](./llms-full.txt#mimetype): MIME type or format hint for loading picture data.
+
+## Text
+
+- [TextLayout](./llms-full.txt#textlayout)
+- [TextOutline](./llms-full.txt#textoutline)
+- [Text](./llms-full.txt#text): Text rendering class with font support
+
+## Animation
+
+- [AnimationInfo](./llms-full.txt#animationinfo)
+- [AnimationSegment](./llms-full.txt#animationsegment)
+- [Animation](./llms-full.txt#animation): Animation controller for Lottie animations
+
+## Gradients
+
+- [ColorStop](./llms-full.txt#colorstop)
+- [LinearGradient](./llms-full.txt#lineargradient): Linear gradient for filling shapes
+- [RadialGradient](./llms-full.txt#radialgradient): Radial gradient for filling shapes
+
+## Font
+
+- [FontType](./llms-full.txt#fonttype): Supported font file types.
+- [LoadFontOptions](./llms-full.txt#loadfontoptions)
+- [Font](./llms-full.txt#font): Font loader class for managing custom fonts.
+- [FontProviderResult](./llms-full.txt#fontproviderresult): Result returned by a FontProvider after fetching font data.
+- [FontProvider](./llms-full.txt#fontprovider): Interface for pluggable font sources.
+- [FontsourceOptions](./llms-full.txt#fontsourceoptions): Options for loading a font from the fontsource CDN.
+- [FontsourceProvider](./llms-full.txt#fontsourceprovider): Font provider that fetches fonts from the [fontsource](https://fontsource.org) CDN.
+
+## Error Handling
+
+- [ThorVGResultCode](./llms-full.txt#thorvgresultcode): ThorVG error result codes returned by native WASM operations.
+- [ThorVGError](./llms-full.txt#thorvgerror): Error class for ThorVG WASM operations.
+- [ErrorContext](./llms-full.txt#errorcontext): Context information provided when an error occurs.
+- [ErrorHandler](./llms-full.txt#errorhandler): Error handler callback function.
+
+## Other
+
+- [Accessor](./llms-full.txt#accessor)
+- [getGlobalRenderer](./llms-full.txt#getglobalrenderer): Get the currently configured renderer
+
+## Additional Resources
+
+- [Full API Reference](./llms-full.txt)
+- [Playground Examples](https://thorvg-playground.vercel.app/)

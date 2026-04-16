@@ -5,361 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThorVG WebCanvas API Documentation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            background: #ffffff;
-            color: #333;
-        }
-
-        .sidebar {
-            width: 280px;
-            background: #fafafa;
-            overflow-y: auto;
-            padding: 20px 15px;
-            border-right: 1px solid #e0e0e0;
-        }
-
-        .sidebar h1 {
-            font-size: 16px;
-            margin: 0 0 20px 0;
-            color: #1976d2;
-            font-weight: 600;
-        }
-
-        .sidebar input {
-            width: 100%;
-            padding: 8px 10px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            margin-bottom: 20px;
-            font-size: 13px;
-        }
-
-        .category {
-            margin-bottom: 20px;
-        }
-
-        .category-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #1976d2;
-            margin-bottom: 8px;
-            padding-left: 4px;
-        }
-
-        .api-list {
-            list-style: none;
-        }
-
-        .api-item {
-            padding: 5px 8px;
-            cursor: pointer;
-            font-size: 13px;
-            color: #555;
-            transition: all 0.15s;
-            border-left: 2px solid transparent;
-        }
-
-        .api-item:hover {
-            background: #f0f0f0;
-            color: #1976d2;
-        }
-
-        .api-item.active {
-            background: #e3f2fd;
-            color: #1976d2;
-            border-left-color: #1976d2;
-            font-weight: 500;
-        }
-
-        .api-item.hidden {
-            display: none;
-        }
-
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2rem;
-        }
-
-        .content h1 {
-            color: #1976d2;
-            margin-bottom: 1rem;
-        }
-
-        .content h2 {
-            color: #1976d2;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-
-        .meta {
-            color: #666;
-            margin: 0.5rem 0;
-        }
-
-        .description {
-            line-height: 1.6;
-            margin: 1rem 0;
-        }
-
-        .params {
-            list-style: none;
-            padding-left: 1rem;
-        }
-
-        .params li {
-            margin: 0.5rem 0;
-        }
-
-        code {
-            background: #f5f5f5;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.9em;
-            font-family: 'Monaco', 'Menlo', monospace;
-        }
-
-        pre {
-            background: #f5f5f5;
-            padding: 1rem;
-            border-radius: 4px;
-            overflow-x: auto;
-            margin: 1rem 0;
-        }
-
-        pre code {
-            background: none;
-            padding: 0;
-        }
-
-        /* GitHub-style markdown rendering for README */
-        #readme-content h1,
-        #readme-content h2,
-        #readme-content h3,
-        #readme-content h4,
-        #readme-content h5,
-        #readme-content h6 {
-            margin-top: 24px;
-            margin-bottom: 16px;
-            font-weight: 600;
-            line-height: 1.25;
-        }
-
-        #readme-content h1 {
-            font-size: 2em;
-            padding-bottom: 0.3em;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        #readme-content h2 {
-            font-size: 1.5em;
-            padding-bottom: 0.3em;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        #readme-content h3 {
-            font-size: 1.25em;
-        }
-
-        #readme-content h4 {
-            font-size: 1em;
-        }
-
-        #readme-content p {
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-
-        #readme-content ul,
-        #readme-content ol {
-            margin-top: 0;
-            margin-bottom: 16px;
-            padding-left: 2em;
-        }
-
-        #readme-content ul {
-            list-style-type: disc;
-        }
-
-        #readme-content ul ul {
-            list-style-type: circle;
-        }
-
-        #readme-content ul ul ul {
-            list-style-type: square;
-        }
-
-        #readme-content ol {
-            list-style-type: decimal;
-        }
-
-        #readme-content li {
-            margin-top: 0.25em;
-            margin-bottom: 0.25em;
-        }
-
-        #readme-content li > p {
-            margin-top: 16px;
-        }
-
-        #readme-content li + li {
-            margin-top: 0.25em;
-        }
-
-        #readme-content blockquote {
-            margin: 0;
-            padding: 0 1em;
-            color: #666;
-            border-left: 0.25em solid #ddd;
-            margin-bottom: 16px;
-        }
-
-        #readme-content table {
-            display: block;
-            width: 100%;
-            width: max-content;
-            max-width: 100%;
-            overflow: auto;
-            border-spacing: 0;
-            border-collapse: collapse;
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-
-        #readme-content table th {
-            font-weight: 600;
-            padding: 6px 13px;
-            border: 1px solid #ddd;
-            background-color: #f6f8fa;
-        }
-
-        #readme-content table td {
-            padding: 6px 13px;
-            border: 1px solid #ddd;
-        }
-
-        #readme-content table tr {
-            background-color: #fff;
-            border-top: 1px solid #ddd;
-        }
-
-        #readme-content table tr:nth-child(2n) {
-            background-color: #f6f8fa;
-        }
-
-        #readme-content hr {
-            height: 0.25em;
-            padding: 0;
-            margin: 24px 0;
-            background-color: #e0e0e0;
-            border: 0;
-        }
-
-        #readme-content strong {
-            font-weight: 600;
-        }
-
-        #readme-content em {
-            font-style: italic;
-        }
-
-        #readme-content a {
-            color: #1976d2;
-            text-decoration: none;
-        }
-
-        #readme-content a:hover {
-            text-decoration: underline;
-        }
-
-        #readme-content img {
-            max-width: 100%;
-            box-sizing: content-box;
-        }
-
-        /* API content markdown rendering */
-        .description h1,
-        .description h2,
-        .description h3,
-        .description h4,
-        .description h5,
-        .description h6 {
-            margin-top: 24px;
-            margin-bottom: 16px;
-            font-weight: 600;
-            line-height: 1.25;
-            color: #1976d2;
-        }
-
-        .description h3 {
-            font-size: 1.25em;
-        }
-
-        .description h4 {
-            font-size: 1em;
-        }
-
-        .description ul,
-        .description ol {
-            margin-top: 0;
-            margin-bottom: 16px;
-            padding-left: 2em;
-        }
-
-        .description ul {
-            list-style-type: disc;
-        }
-
-        .description li {
-            margin-top: 0.25em;
-            margin-bottom: 0.25em;
-        }
-
-        .description p {
-            margin-bottom: 16px;
-        }
-
-        .description strong {
-            font-weight: 600;
-        }
-
-        .description code {
-            background: #f5f5f5;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.9em;
-        }
-
-        .description pre {
-            background: #f5f5f5;
-            padding: 1rem;
-            border-radius: 4px;
-            overflow-x: auto;
-            margin: 1rem 0;
-        }
-
-        .description pre code {
-            background: none;
-            padding: 0;
-        }
-
-        .description blockquote {
-            margin: 0;
-            padding: 0 1em;
-            color: #666;
-            border-left: 0.25em solid #ddd;
-            margin-bottom: 16px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="sidebar">
@@ -387,17 +33,17 @@
                 <li class="api-item" data-id="68">Canvas.resize</li>
                 <li class="api-item" data-id="60">Canvas.update</li>
                 <li class="api-item" data-id="72">Canvas.viewport</li>
-                <li class="api-item" data-id="842">CanvasOptions</li>
-                <li class="api-item" data-id="909">RendererType</li>
+                <li class="api-item" data-id="866">CanvasOptions</li>
+                <li class="api-item" data-id="941">RendererType</li>
             </ul>
         </div>
         
         <div class="category">
             <div class="category-title">Shapes</div>
             <ul class="api-list">
-                <li class="api-item" data-id="852">Bounds</li>
-                <li class="api-item" data-id="857">Matrix</li>
-                <li class="api-item" data-id="867">RectOptions</li>
+                <li class="api-item" data-id="876">Bounds</li>
+                <li class="api-item" data-id="881">Matrix</li>
+                <li class="api-item" data-id="891">RectOptions</li>
                 <li class="api-item" data-id="84">Shape</li>
                 <li class="api-item" data-id="124">Shape.appendCircle</li>
                 <li class="api-item" data-id="117">Shape.appendRect</li>
@@ -426,183 +72,189 @@
                 <li class="api-item" data-id="161">Shape.translate</li>
                 <li class="api-item" data-id="134">Shape.trimPath</li>
                 <li class="api-item" data-id="183">Shape.visible</li>
-                <li class="api-item" data-id="871">StrokeOptions</li>
+                <li class="api-item" data-id="895">StrokeOptions</li>
             </ul>
         </div>
         
         <div class="category">
             <div class="category-title">Scene</div>
             <ul class="api-list">
-                <li class="api-item" data-id="222">Scene</li>
-                <li class="api-item" data-id="237">Scene.add</li>
-                <li class="api-item" data-id="312">Scene.blend</li>
-                <li class="api-item" data-id="323">Scene.bounds</li>
-                <li class="api-item" data-id="243">Scene.clear</li>
-                <li class="api-item" data-id="335">Scene.clip</li>
-                <li class="api-item" data-id="253">Scene.dropShadow</li>
-                <li class="api-item" data-id="329">Scene.duplicate</li>
-                <li class="api-item" data-id="263">Scene.fillEffect</li>
-                <li class="api-item" data-id="227">Scene.fromPtr</li>
-                <li class="api-item" data-id="247">Scene.gaussianBlur</li>
-                <li class="api-item" data-id="293">Scene.id</li>
-                <li class="api-item" data-id="342">Scene.intersects</li>
-                <li class="api-item" data-id="338">Scene.mask</li>
-                <li class="api-item" data-id="315">Scene.opacity</li>
-                <li class="api-item" data-id="308">Scene.origin</li>
-                <li class="api-item" data-id="223">Scene.registerType</li>
-                <li class="api-item" data-id="240">Scene.remove</li>
-                <li class="api-item" data-id="245">Scene.resetEffects</li>
-                <li class="api-item" data-id="301">Scene.rotate</li>
-                <li class="api-item" data-id="304">Scene.scale</li>
-                <li class="api-item" data-id="269">Scene.tint</li>
-                <li class="api-item" data-id="332">Scene.transform</li>
-                <li class="api-item" data-id="297">Scene.translate</li>
-                <li class="api-item" data-id="278">Scene.tritone</li>
-                <li class="api-item" data-id="319">Scene.visible</li>
+                <li class="api-item" data-id="223">Scene</li>
+                <li class="api-item" data-id="238">Scene.add</li>
+                <li class="api-item" data-id="313">Scene.blend</li>
+                <li class="api-item" data-id="324">Scene.bounds</li>
+                <li class="api-item" data-id="244">Scene.clear</li>
+                <li class="api-item" data-id="336">Scene.clip</li>
+                <li class="api-item" data-id="254">Scene.dropShadow</li>
+                <li class="api-item" data-id="330">Scene.duplicate</li>
+                <li class="api-item" data-id="264">Scene.fillEffect</li>
+                <li class="api-item" data-id="228">Scene.fromPtr</li>
+                <li class="api-item" data-id="248">Scene.gaussianBlur</li>
+                <li class="api-item" data-id="294">Scene.id</li>
+                <li class="api-item" data-id="343">Scene.intersects</li>
+                <li class="api-item" data-id="339">Scene.mask</li>
+                <li class="api-item" data-id="316">Scene.opacity</li>
+                <li class="api-item" data-id="309">Scene.origin</li>
+                <li class="api-item" data-id="224">Scene.registerType</li>
+                <li class="api-item" data-id="241">Scene.remove</li>
+                <li class="api-item" data-id="246">Scene.resetEffects</li>
+                <li class="api-item" data-id="302">Scene.rotate</li>
+                <li class="api-item" data-id="305">Scene.scale</li>
+                <li class="api-item" data-id="270">Scene.tint</li>
+                <li class="api-item" data-id="333">Scene.transform</li>
+                <li class="api-item" data-id="298">Scene.translate</li>
+                <li class="api-item" data-id="279">Scene.tritone</li>
+                <li class="api-item" data-id="320">Scene.visible</li>
             </ul>
         </div>
         
         <div class="category">
             <div class="category-title">Picture</div>
             <ul class="api-list">
-                <li class="api-item" data-id="880">LoadDataOptions</li>
-                <li class="api-item" data-id="910">MimeType</li>
-                <li class="api-item" data-id="358">Picture</li>
-                <li class="api-item" data-id="409">Picture.blend</li>
-                <li class="api-item" data-id="420">Picture.bounds</li>
-                <li class="api-item" data-id="432">Picture.clip</li>
-                <li class="api-item" data-id="426">Picture.duplicate</li>
-                <li class="api-item" data-id="363">Picture.fromPtr</li>
-                <li class="api-item" data-id="390">Picture.id</li>
-                <li class="api-item" data-id="439">Picture.intersects</li>
-                <li class="api-item" data-id="373">Picture.load</li>
-                <li class="api-item" data-id="435">Picture.mask</li>
-                <li class="api-item" data-id="412">Picture.opacity</li>
-                <li class="api-item" data-id="405">Picture.origin</li>
-                <li class="api-item" data-id="382">Picture.paint</li>
-                <li class="api-item" data-id="359">Picture.registerType</li>
-                <li class="api-item" data-id="398">Picture.rotate</li>
-                <li class="api-item" data-id="401">Picture.scale</li>
-                <li class="api-item" data-id="377">Picture.size</li>
-                <li class="api-item" data-id="429">Picture.transform</li>
-                <li class="api-item" data-id="394">Picture.translate</li>
-                <li class="api-item" data-id="416">Picture.visible</li>
-                <li class="api-item" data-id="885">PictureSize</li>
+                <li class="api-item" data-id="904">LoadDataOptions</li>
+                <li class="api-item" data-id="942">MimeType</li>
+                <li class="api-item" data-id="360">Picture</li>
+                <li class="api-item" data-id="411">Picture.blend</li>
+                <li class="api-item" data-id="422">Picture.bounds</li>
+                <li class="api-item" data-id="434">Picture.clip</li>
+                <li class="api-item" data-id="428">Picture.duplicate</li>
+                <li class="api-item" data-id="365">Picture.fromPtr</li>
+                <li class="api-item" data-id="392">Picture.id</li>
+                <li class="api-item" data-id="441">Picture.intersects</li>
+                <li class="api-item" data-id="375">Picture.load</li>
+                <li class="api-item" data-id="437">Picture.mask</li>
+                <li class="api-item" data-id="414">Picture.opacity</li>
+                <li class="api-item" data-id="407">Picture.origin</li>
+                <li class="api-item" data-id="384">Picture.paint</li>
+                <li class="api-item" data-id="361">Picture.registerType</li>
+                <li class="api-item" data-id="400">Picture.rotate</li>
+                <li class="api-item" data-id="403">Picture.scale</li>
+                <li class="api-item" data-id="379">Picture.size</li>
+                <li class="api-item" data-id="431">Picture.transform</li>
+                <li class="api-item" data-id="396">Picture.translate</li>
+                <li class="api-item" data-id="418">Picture.visible</li>
+                <li class="api-item" data-id="909">PictureSize</li>
             </ul>
         </div>
         
         <div class="category">
             <div class="category-title">Text</div>
             <ul class="api-list">
-                <li class="api-item" data-id="455">Text</li>
-                <li class="api-item" data-id="486">Text.align</li>
-                <li class="api-item" data-id="532">Text.blend</li>
-                <li class="api-item" data-id="543">Text.bounds</li>
-                <li class="api-item" data-id="555">Text.clip</li>
-                <li class="api-item" data-id="549">Text.duplicate</li>
-                <li class="api-item" data-id="479">Text.fill</li>
-                <li class="api-item" data-id="470">Text.font</li>
-                <li class="api-item" data-id="476">Text.fontSize</li>
-                <li class="api-item" data-id="460">Text.fromPtr</li>
-                <li class="api-item" data-id="513">Text.id</li>
-                <li class="api-item" data-id="562">Text.intersects</li>
-                <li class="api-item" data-id="501">Text.italic</li>
-                <li class="api-item" data-id="490">Text.layout</li>
-                <li class="api-item" data-id="558">Text.mask</li>
-                <li class="api-item" data-id="535">Text.opacity</li>
-                <li class="api-item" data-id="528">Text.origin</li>
-                <li class="api-item" data-id="504">Text.outline</li>
-                <li class="api-item" data-id="456">Text.registerType</li>
-                <li class="api-item" data-id="521">Text.rotate</li>
-                <li class="api-item" data-id="524">Text.scale</li>
-                <li class="api-item" data-id="497">Text.spacing</li>
-                <li class="api-item" data-id="473">Text.text</li>
-                <li class="api-item" data-id="552">Text.transform</li>
-                <li class="api-item" data-id="517">Text.translate</li>
-                <li class="api-item" data-id="539">Text.visible</li>
-                <li class="api-item" data-id="494">Text.wrap</li>
-                <li class="api-item" data-id="888">TextLayout</li>
-                <li class="api-item" data-id="891">TextOutline</li>
+                <li class="api-item" data-id="458">Text</li>
+                <li class="api-item" data-id="489">Text.align</li>
+                <li class="api-item" data-id="535">Text.blend</li>
+                <li class="api-item" data-id="546">Text.bounds</li>
+                <li class="api-item" data-id="558">Text.clip</li>
+                <li class="api-item" data-id="552">Text.duplicate</li>
+                <li class="api-item" data-id="482">Text.fill</li>
+                <li class="api-item" data-id="473">Text.font</li>
+                <li class="api-item" data-id="479">Text.fontSize</li>
+                <li class="api-item" data-id="463">Text.fromPtr</li>
+                <li class="api-item" data-id="516">Text.id</li>
+                <li class="api-item" data-id="565">Text.intersects</li>
+                <li class="api-item" data-id="504">Text.italic</li>
+                <li class="api-item" data-id="493">Text.layout</li>
+                <li class="api-item" data-id="561">Text.mask</li>
+                <li class="api-item" data-id="538">Text.opacity</li>
+                <li class="api-item" data-id="531">Text.origin</li>
+                <li class="api-item" data-id="507">Text.outline</li>
+                <li class="api-item" data-id="459">Text.registerType</li>
+                <li class="api-item" data-id="524">Text.rotate</li>
+                <li class="api-item" data-id="527">Text.scale</li>
+                <li class="api-item" data-id="500">Text.spacing</li>
+                <li class="api-item" data-id="476">Text.text</li>
+                <li class="api-item" data-id="555">Text.transform</li>
+                <li class="api-item" data-id="520">Text.translate</li>
+                <li class="api-item" data-id="542">Text.visible</li>
+                <li class="api-item" data-id="497">Text.wrap</li>
+                <li class="api-item" data-id="912">TextLayout</li>
+                <li class="api-item" data-id="915">TextOutline</li>
             </ul>
         </div>
         
         <div class="category">
             <div class="category-title">Animation</div>
             <ul class="api-list">
-                <li class="api-item" data-id="578">Animation</li>
-                <li class="api-item" data-id="602">Animation.frame</li>
-                <li class="api-item" data-id="629">Animation.getCurrentTime</li>
-                <li class="api-item" data-id="624">Animation.getLoop</li>
-                <li class="api-item" data-id="600">Animation.info</li>
-                <li class="api-item" data-id="619">Animation.isPlaying</li>
-                <li class="api-item" data-id="597">Animation.load</li>
-                <li class="api-item" data-id="615">Animation.pause</li>
-                <li class="api-item" data-id="595">Animation.picture</li>
-                <li class="api-item" data-id="609">Animation.play</li>
-                <li class="api-item" data-id="626">Animation.seek</li>
-                <li class="api-item" data-id="606">Animation.segment</li>
-                <li class="api-item" data-id="621">Animation.setLoop</li>
-                <li class="api-item" data-id="617">Animation.stop</li>
-                <li class="api-item" data-id="894">AnimationInfo</li>
-                <li class="api-item" data-id="898">AnimationSegment</li>
+                <li class="api-item" data-id="582">Animation</li>
+                <li class="api-item" data-id="606">Animation.frame</li>
+                <li class="api-item" data-id="633">Animation.getCurrentTime</li>
+                <li class="api-item" data-id="628">Animation.getLoop</li>
+                <li class="api-item" data-id="604">Animation.info</li>
+                <li class="api-item" data-id="623">Animation.isPlaying</li>
+                <li class="api-item" data-id="601">Animation.load</li>
+                <li class="api-item" data-id="619">Animation.pause</li>
+                <li class="api-item" data-id="599">Animation.picture</li>
+                <li class="api-item" data-id="613">Animation.play</li>
+                <li class="api-item" data-id="630">Animation.seek</li>
+                <li class="api-item" data-id="610">Animation.segment</li>
+                <li class="api-item" data-id="625">Animation.setLoop</li>
+                <li class="api-item" data-id="621">Animation.stop</li>
+                <li class="api-item" data-id="918">AnimationInfo</li>
+                <li class="api-item" data-id="922">AnimationSegment</li>
             </ul>
         </div>
         
         <div class="category">
             <div class="category-title">Gradients</div>
             <ul class="api-list">
-                <li class="api-item" data-id="908">ColorStop</li>
-                <li class="api-item" data-id="638">LinearGradient</li>
-                <li class="api-item" data-id="651">LinearGradient.addStop</li>
-                <li class="api-item" data-id="645">LinearGradient.build</li>
-                <li class="api-item" data-id="655">LinearGradient.clearStops</li>
-                <li class="api-item" data-id="657">LinearGradient.setStops</li>
-                <li class="api-item" data-id="662">LinearGradient.spread</li>
-                <li class="api-item" data-id="675">RadialGradient</li>
-                <li class="api-item" data-id="690">RadialGradient.addStop</li>
-                <li class="api-item" data-id="684">RadialGradient.build</li>
-                <li class="api-item" data-id="694">RadialGradient.clearStops</li>
-                <li class="api-item" data-id="696">RadialGradient.setStops</li>
-                <li class="api-item" data-id="701">RadialGradient.spread</li>
+                <li class="api-item" data-id="940">ColorStop</li>
+                <li class="api-item" data-id="642">LinearGradient</li>
+                <li class="api-item" data-id="658">LinearGradient.addStop</li>
+                <li class="api-item" data-id="649">LinearGradient.build</li>
+                <li class="api-item" data-id="662">LinearGradient.clearStops</li>
+                <li class="api-item" data-id="664">LinearGradient.setStops</li>
+                <li class="api-item" data-id="669">LinearGradient.spread</li>
+                <li class="api-item" data-id="683">RadialGradient</li>
+                <li class="api-item" data-id="701">RadialGradient.addStop</li>
+                <li class="api-item" data-id="692">RadialGradient.build</li>
+                <li class="api-item" data-id="705">RadialGradient.clearStops</li>
+                <li class="api-item" data-id="707">RadialGradient.setStops</li>
+                <li class="api-item" data-id="712">RadialGradient.spread</li>
             </ul>
         </div>
         
         <div class="category">
             <div class="category-title">Font</div>
             <ul class="api-list">
-                <li class="api-item" data-id="714">Font</li>
-                <li class="api-item" data-id="715">Font.load</li>
-                <li class="api-item" data-id="723">Font.unload</li>
-                <li class="api-item" data-id="904">FontsourceOptions</li>
-                <li class="api-item" data-id="903">FontType</li>
-                <li class="api-item" data-id="901">LoadFontOptions</li>
+                <li class="api-item" data-id="726">Font</li>
+                <li class="api-item" data-id="732">Font.load</li>
+                <li class="api-item" data-id="729">Font.provider</li>
+                <li class="api-item" data-id="740">Font.unload</li>
+                <li class="api-item" data-id="932">FontProvider</li>
+                <li class="api-item" data-id="933">FontProvider.fetch</li>
+                <li class="api-item" data-id="937">FontProviderResult</li>
+                <li class="api-item" data-id="928">FontsourceOptions</li>
+                <li class="api-item" data-id="750">FontsourceProvider</li>
+                <li class="api-item" data-id="753">FontsourceProvider.fetch</li>
+                <li class="api-item" data-id="927">FontType</li>
+                <li class="api-item" data-id="925">LoadFontOptions</li>
             </ul>
         </div>
         
         <div class="category">
             <div class="category-title">Error Handling</div>
             <ul class="api-list">
-                <li class="api-item" data-id="846">ErrorContext</li>
-                <li class="api-item" data-id="848">ErrorHandler</li>
-                <li class="api-item" data-id="830">ThorVGError</li>
-                <li class="api-item" data-id="831">ThorVGError.fromCode</li>
-                <li class="api-item" data-id="822">ThorVGResultCode</li>
-                <li class="api-item" data-id="826">ThorVGResultCode.FailedAllocation</li>
-                <li class="api-item" data-id="825">ThorVGResultCode.InsufficientCondition</li>
-                <li class="api-item" data-id="824">ThorVGResultCode.InvalidArguments</li>
-                <li class="api-item" data-id="827">ThorVGResultCode.MemoryCorruption</li>
-                <li class="api-item" data-id="828">ThorVGResultCode.NotSupported</li>
-                <li class="api-item" data-id="823">ThorVGResultCode.Success</li>
-                <li class="api-item" data-id="829">ThorVGResultCode.Unknown</li>
+                <li class="api-item" data-id="870">ErrorContext</li>
+                <li class="api-item" data-id="872">ErrorHandler</li>
+                <li class="api-item" data-id="854">ThorVGError</li>
+                <li class="api-item" data-id="855">ThorVGError.fromCode</li>
+                <li class="api-item" data-id="846">ThorVGResultCode</li>
+                <li class="api-item" data-id="850">ThorVGResultCode.FailedAllocation</li>
+                <li class="api-item" data-id="849">ThorVGResultCode.InsufficientCondition</li>
+                <li class="api-item" data-id="848">ThorVGResultCode.InvalidArguments</li>
+                <li class="api-item" data-id="851">ThorVGResultCode.MemoryCorruption</li>
+                <li class="api-item" data-id="852">ThorVGResultCode.NotSupported</li>
+                <li class="api-item" data-id="847">ThorVGResultCode.Success</li>
+                <li class="api-item" data-id="853">ThorVGResultCode.Unknown</li>
             </ul>
         </div>
         
         <div class="category">
             <div class="category-title">Other</div>
             <ul class="api-list">
-                <li class="api-item" data-id="733">Accessor</li>
-                <li class="api-item" data-id="734">Accessor.id</li>
-                <li class="api-item" data-id="737">Accessor.set</li>
+                <li class="api-item" data-id="757">Accessor</li>
+                <li class="api-item" data-id="758">Accessor.id</li>
+                <li class="api-item" data-id="761">Accessor.set</li>
                 <li class="api-item" data-id="1">getGlobalRenderer</li>
             </ul>
         </div>
@@ -680,7 +332,7 @@
   ],
   "canvas": [
     {
-      "id": 842,
+      "id": 866,
       "name": "CanvasOptions",
       "shortName": "CanvasOptions",
       "kind": "Interface",
@@ -975,7 +627,7 @@
       "parent": "Canvas"
     },
     {
-      "id": 909,
+      "id": 941,
       "name": "RendererType",
       "shortName": "RendererType",
       "kind": "Object Literal",
@@ -996,7 +648,7 @@
   ],
   "shapes": [
     {
-      "id": 852,
+      "id": 876,
       "name": "Bounds",
       "shortName": "Bounds",
       "kind": "Interface",
@@ -1036,7 +688,7 @@
       "parent": ""
     },
     {
-      "id": 857,
+      "id": 881,
       "name": "Matrix",
       "shortName": "Matrix",
       "kind": "Interface",
@@ -1106,7 +758,7 @@
       "parent": ""
     },
     {
-      "id": 867,
+      "id": 891,
       "name": "RectOptions",
       "shortName": "RectOptions",
       "kind": "Interface",
@@ -1140,7 +792,7 @@
       "parent": ""
     },
     {
-      "id": 871,
+      "id": 895,
       "name": "StrokeOptions",
       "shortName": "StrokeOptions",
       "kind": "Interface",
@@ -1999,7 +1651,7 @@
   ],
   "scene": [
     {
-      "id": 222,
+      "id": 223,
       "name": "Scene",
       "shortName": "Scene",
       "kind": "Interface",
@@ -2052,7 +1704,7 @@
       "parent": ""
     },
     {
-      "id": 223,
+      "id": 224,
       "name": "Scene.registerType",
       "shortName": "registerType",
       "kind": "Method",
@@ -2080,7 +1732,7 @@
       "parent": "Scene"
     },
     {
-      "id": 293,
+      "id": 294,
       "name": "Scene.id",
       "shortName": "id",
       "kind": "Accessor",
@@ -2095,7 +1747,7 @@
       "parent": "Scene"
     },
     {
-      "id": 297,
+      "id": 298,
       "name": "Scene.translate",
       "shortName": "translate",
       "kind": "Method",
@@ -2123,7 +1775,7 @@
       "parent": "Scene"
     },
     {
-      "id": 301,
+      "id": 302,
       "name": "Scene.rotate",
       "shortName": "rotate",
       "kind": "Method",
@@ -2145,7 +1797,7 @@
       "parent": "Scene"
     },
     {
-      "id": 304,
+      "id": 305,
       "name": "Scene.scale",
       "shortName": "scale",
       "kind": "Method",
@@ -2173,7 +1825,7 @@
       "parent": "Scene"
     },
     {
-      "id": 308,
+      "id": 309,
       "name": "Scene.origin",
       "shortName": "origin",
       "kind": "Method",
@@ -2203,7 +1855,7 @@
       "parent": "Scene"
     },
     {
-      "id": 312,
+      "id": 313,
       "name": "Scene.blend",
       "shortName": "blend",
       "kind": "Method",
@@ -2227,7 +1879,7 @@
       "parent": "Scene"
     },
     {
-      "id": 315,
+      "id": 316,
       "name": "Scene.opacity",
       "shortName": "opacity",
       "kind": "Method",
@@ -2244,7 +1896,7 @@
       "parent": "Scene"
     },
     {
-      "id": 319,
+      "id": 320,
       "name": "Scene.visible",
       "shortName": "visible",
       "kind": "Method",
@@ -2259,7 +1911,7 @@
       "parent": "Scene"
     },
     {
-      "id": 323,
+      "id": 324,
       "name": "Scene.bounds",
       "shortName": "bounds",
       "kind": "Method",
@@ -2274,7 +1926,7 @@
       "parent": "Scene"
     },
     {
-      "id": 329,
+      "id": 330,
       "name": "Scene.duplicate",
       "shortName": "duplicate",
       "kind": "Method",
@@ -2289,7 +1941,7 @@
       "parent": "Scene"
     },
     {
-      "id": 332,
+      "id": 333,
       "name": "Scene.transform",
       "shortName": "transform",
       "kind": "Method",
@@ -2314,7 +1966,7 @@
       "parent": "Scene"
     },
     {
-      "id": 335,
+      "id": 336,
       "name": "Scene.clip",
       "shortName": "clip",
       "kind": "Method",
@@ -2338,7 +1990,7 @@
       "parent": "Scene"
     },
     {
-      "id": 338,
+      "id": 339,
       "name": "Scene.mask",
       "shortName": "mask",
       "kind": "Method",
@@ -2368,7 +2020,7 @@
       "parent": "Scene"
     },
     {
-      "id": 342,
+      "id": 343,
       "name": "Scene.intersects",
       "shortName": "intersects",
       "kind": "Method",
@@ -2410,7 +2062,7 @@
       "parent": "Scene"
     },
     {
-      "id": 227,
+      "id": 228,
       "name": "Scene.fromPtr",
       "shortName": "fromPtr",
       "kind": "Method",
@@ -2432,7 +2084,7 @@
       "parent": "Scene"
     },
     {
-      "id": 237,
+      "id": 238,
       "name": "Scene.add",
       "shortName": "add",
       "kind": "Method",
@@ -2454,7 +2106,7 @@
       "parent": "Scene"
     },
     {
-      "id": 240,
+      "id": 241,
       "name": "Scene.remove",
       "shortName": "remove",
       "kind": "Method",
@@ -2476,7 +2128,7 @@
       "parent": "Scene"
     },
     {
-      "id": 243,
+      "id": 244,
       "name": "Scene.clear",
       "shortName": "clear",
       "kind": "Method",
@@ -2491,7 +2143,7 @@
       "parent": "Scene"
     },
     {
-      "id": 245,
+      "id": 246,
       "name": "Scene.resetEffects",
       "shortName": "resetEffects",
       "kind": "Method",
@@ -2508,7 +2160,7 @@
       "parent": "Scene"
     },
     {
-      "id": 247,
+      "id": 248,
       "name": "Scene.gaussianBlur",
       "shortName": "gaussianBlur",
       "kind": "Method",
@@ -2550,7 +2202,7 @@
       "parent": "Scene"
     },
     {
-      "id": 253,
+      "id": 254,
       "name": "Scene.dropShadow",
       "shortName": "dropShadow",
       "kind": "Method",
@@ -2616,7 +2268,7 @@
       "parent": "Scene"
     },
     {
-      "id": 263,
+      "id": 264,
       "name": "Scene.fillEffect",
       "shortName": "fillEffect",
       "kind": "Method",
@@ -2658,7 +2310,7 @@
       "parent": "Scene"
     },
     {
-      "id": 269,
+      "id": 270,
       "name": "Scene.tint",
       "shortName": "tint",
       "kind": "Method",
@@ -2718,7 +2370,7 @@
       "parent": "Scene"
     },
     {
-      "id": 278,
+      "id": 279,
       "name": "Scene.tritone",
       "shortName": "tritone",
       "kind": "Method",
@@ -2798,7 +2450,7 @@
   ],
   "picture": [
     {
-      "id": 880,
+      "id": 904,
       "name": "LoadDataOptions",
       "shortName": "LoadDataOptions",
       "kind": "Interface",
@@ -2838,7 +2490,7 @@
       "parent": ""
     },
     {
-      "id": 885,
+      "id": 909,
       "name": "PictureSize",
       "shortName": "PictureSize",
       "kind": "Interface",
@@ -2866,7 +2518,7 @@
       "parent": ""
     },
     {
-      "id": 358,
+      "id": 360,
       "name": "Picture",
       "shortName": "Picture",
       "kind": "Interface",
@@ -2919,7 +2571,7 @@
       "parent": ""
     },
     {
-      "id": 359,
+      "id": 361,
       "name": "Picture.registerType",
       "shortName": "registerType",
       "kind": "Method",
@@ -2947,7 +2599,7 @@
       "parent": "Picture"
     },
     {
-      "id": 390,
+      "id": 392,
       "name": "Picture.id",
       "shortName": "id",
       "kind": "Accessor",
@@ -2962,7 +2614,7 @@
       "parent": "Picture"
     },
     {
-      "id": 394,
+      "id": 396,
       "name": "Picture.translate",
       "shortName": "translate",
       "kind": "Method",
@@ -2990,7 +2642,7 @@
       "parent": "Picture"
     },
     {
-      "id": 398,
+      "id": 400,
       "name": "Picture.rotate",
       "shortName": "rotate",
       "kind": "Method",
@@ -3012,7 +2664,7 @@
       "parent": "Picture"
     },
     {
-      "id": 401,
+      "id": 403,
       "name": "Picture.scale",
       "shortName": "scale",
       "kind": "Method",
@@ -3040,7 +2692,7 @@
       "parent": "Picture"
     },
     {
-      "id": 405,
+      "id": 407,
       "name": "Picture.origin",
       "shortName": "origin",
       "kind": "Method",
@@ -3070,7 +2722,7 @@
       "parent": "Picture"
     },
     {
-      "id": 409,
+      "id": 411,
       "name": "Picture.blend",
       "shortName": "blend",
       "kind": "Method",
@@ -3094,7 +2746,7 @@
       "parent": "Picture"
     },
     {
-      "id": 412,
+      "id": 414,
       "name": "Picture.opacity",
       "shortName": "opacity",
       "kind": "Method",
@@ -3111,7 +2763,7 @@
       "parent": "Picture"
     },
     {
-      "id": 416,
+      "id": 418,
       "name": "Picture.visible",
       "shortName": "visible",
       "kind": "Method",
@@ -3126,7 +2778,7 @@
       "parent": "Picture"
     },
     {
-      "id": 420,
+      "id": 422,
       "name": "Picture.bounds",
       "shortName": "bounds",
       "kind": "Method",
@@ -3141,7 +2793,7 @@
       "parent": "Picture"
     },
     {
-      "id": 426,
+      "id": 428,
       "name": "Picture.duplicate",
       "shortName": "duplicate",
       "kind": "Method",
@@ -3156,7 +2808,7 @@
       "parent": "Picture"
     },
     {
-      "id": 429,
+      "id": 431,
       "name": "Picture.transform",
       "shortName": "transform",
       "kind": "Method",
@@ -3181,7 +2833,7 @@
       "parent": "Picture"
     },
     {
-      "id": 432,
+      "id": 434,
       "name": "Picture.clip",
       "shortName": "clip",
       "kind": "Method",
@@ -3205,7 +2857,7 @@
       "parent": "Picture"
     },
     {
-      "id": 435,
+      "id": 437,
       "name": "Picture.mask",
       "shortName": "mask",
       "kind": "Method",
@@ -3235,7 +2887,7 @@
       "parent": "Picture"
     },
     {
-      "id": 439,
+      "id": 441,
       "name": "Picture.intersects",
       "shortName": "intersects",
       "kind": "Method",
@@ -3277,7 +2929,7 @@
       "parent": "Picture"
     },
     {
-      "id": 363,
+      "id": 365,
       "name": "Picture.fromPtr",
       "shortName": "fromPtr",
       "kind": "Method",
@@ -3299,7 +2951,7 @@
       "parent": "Picture"
     },
     {
-      "id": 373,
+      "id": 375,
       "name": "Picture.load",
       "shortName": "load",
       "kind": "Method",
@@ -3327,7 +2979,7 @@
       "parent": "Picture"
     },
     {
-      "id": 377,
+      "id": 379,
       "name": "Picture.size",
       "shortName": "size",
       "kind": "Method",
@@ -3355,7 +3007,7 @@
       "parent": "Picture"
     },
     {
-      "id": 382,
+      "id": 384,
       "name": "Picture.paint",
       "shortName": "paint",
       "kind": "Method",
@@ -3377,7 +3029,7 @@
       "parent": "Picture"
     },
     {
-      "id": 910,
+      "id": 942,
       "name": "MimeType",
       "shortName": "MimeType",
       "kind": "Object Literal",
@@ -3394,7 +3046,7 @@
   ],
   "text": [
     {
-      "id": 888,
+      "id": 912,
       "name": "TextLayout",
       "shortName": "TextLayout",
       "kind": "Interface",
@@ -3422,7 +3074,7 @@
       "parent": ""
     },
     {
-      "id": 891,
+      "id": 915,
       "name": "TextOutline",
       "shortName": "TextOutline",
       "kind": "Interface",
@@ -3450,7 +3102,7 @@
       "parent": ""
     },
     {
-      "id": 455,
+      "id": 458,
       "name": "Text",
       "shortName": "Text",
       "kind": "Interface",
@@ -3504,7 +3156,7 @@
       "parent": ""
     },
     {
-      "id": 456,
+      "id": 459,
       "name": "Text.registerType",
       "shortName": "registerType",
       "kind": "Method",
@@ -3532,7 +3184,7 @@
       "parent": "Text"
     },
     {
-      "id": 513,
+      "id": 516,
       "name": "Text.id",
       "shortName": "id",
       "kind": "Accessor",
@@ -3547,7 +3199,7 @@
       "parent": "Text"
     },
     {
-      "id": 517,
+      "id": 520,
       "name": "Text.translate",
       "shortName": "translate",
       "kind": "Method",
@@ -3575,7 +3227,7 @@
       "parent": "Text"
     },
     {
-      "id": 521,
+      "id": 524,
       "name": "Text.rotate",
       "shortName": "rotate",
       "kind": "Method",
@@ -3597,7 +3249,7 @@
       "parent": "Text"
     },
     {
-      "id": 524,
+      "id": 527,
       "name": "Text.scale",
       "shortName": "scale",
       "kind": "Method",
@@ -3625,7 +3277,7 @@
       "parent": "Text"
     },
     {
-      "id": 528,
+      "id": 531,
       "name": "Text.origin",
       "shortName": "origin",
       "kind": "Method",
@@ -3655,7 +3307,7 @@
       "parent": "Text"
     },
     {
-      "id": 532,
+      "id": 535,
       "name": "Text.blend",
       "shortName": "blend",
       "kind": "Method",
@@ -3679,7 +3331,7 @@
       "parent": "Text"
     },
     {
-      "id": 535,
+      "id": 538,
       "name": "Text.opacity",
       "shortName": "opacity",
       "kind": "Method",
@@ -3696,7 +3348,7 @@
       "parent": "Text"
     },
     {
-      "id": 539,
+      "id": 542,
       "name": "Text.visible",
       "shortName": "visible",
       "kind": "Method",
@@ -3711,7 +3363,7 @@
       "parent": "Text"
     },
     {
-      "id": 543,
+      "id": 546,
       "name": "Text.bounds",
       "shortName": "bounds",
       "kind": "Method",
@@ -3726,7 +3378,7 @@
       "parent": "Text"
     },
     {
-      "id": 549,
+      "id": 552,
       "name": "Text.duplicate",
       "shortName": "duplicate",
       "kind": "Method",
@@ -3741,7 +3393,7 @@
       "parent": "Text"
     },
     {
-      "id": 552,
+      "id": 555,
       "name": "Text.transform",
       "shortName": "transform",
       "kind": "Method",
@@ -3766,7 +3418,7 @@
       "parent": "Text"
     },
     {
-      "id": 555,
+      "id": 558,
       "name": "Text.clip",
       "shortName": "clip",
       "kind": "Method",
@@ -3790,7 +3442,7 @@
       "parent": "Text"
     },
     {
-      "id": 558,
+      "id": 561,
       "name": "Text.mask",
       "shortName": "mask",
       "kind": "Method",
@@ -3820,7 +3472,7 @@
       "parent": "Text"
     },
     {
-      "id": 562,
+      "id": 565,
       "name": "Text.intersects",
       "shortName": "intersects",
       "kind": "Method",
@@ -3862,7 +3514,7 @@
       "parent": "Text"
     },
     {
-      "id": 460,
+      "id": 463,
       "name": "Text.fromPtr",
       "shortName": "fromPtr",
       "kind": "Method",
@@ -3884,18 +3536,18 @@
       "parent": "Text"
     },
     {
-      "id": 470,
+      "id": 473,
       "name": "Text.font",
       "shortName": "font",
       "kind": "Method",
       "type": "any",
-      "comment": "Set the font to use for this text",
+      "comment": "Set the font to use for this text.",
       "examples": [],
       "parameters": [
         {
           "name": "name",
           "type": "string",
-          "comment": "Font name (previously loaded via Font.load()) or \"default\"",
+          "comment": "Font name",
           "optional": false
         }
       ],
@@ -3906,7 +3558,7 @@
       "parent": "Text"
     },
     {
-      "id": 473,
+      "id": 476,
       "name": "Text.text",
       "shortName": "text",
       "kind": "Method",
@@ -3928,7 +3580,7 @@
       "parent": "Text"
     },
     {
-      "id": 476,
+      "id": 479,
       "name": "Text.fontSize",
       "shortName": "fontSize",
       "kind": "Method",
@@ -3950,7 +3602,7 @@
       "parent": "Text"
     },
     {
-      "id": 479,
+      "id": 482,
       "name": "Text.fill",
       "shortName": "fill",
       "kind": "Method",
@@ -3972,7 +3624,7 @@
       "parent": "Text"
     },
     {
-      "id": 486,
+      "id": 489,
       "name": "Text.align",
       "shortName": "align",
       "kind": "Method",
@@ -4000,7 +3652,7 @@
       "parent": "Text"
     },
     {
-      "id": 490,
+      "id": 493,
       "name": "Text.layout",
       "shortName": "layout",
       "kind": "Method",
@@ -4028,7 +3680,7 @@
       "parent": "Text"
     },
     {
-      "id": 494,
+      "id": 497,
       "name": "Text.wrap",
       "shortName": "wrap",
       "kind": "Method",
@@ -4050,7 +3702,7 @@
       "parent": "Text"
     },
     {
-      "id": 497,
+      "id": 500,
       "name": "Text.spacing",
       "shortName": "spacing",
       "kind": "Method",
@@ -4078,7 +3730,7 @@
       "parent": "Text"
     },
     {
-      "id": 501,
+      "id": 504,
       "name": "Text.italic",
       "shortName": "italic",
       "kind": "Method",
@@ -4100,7 +3752,7 @@
       "parent": "Text"
     },
     {
-      "id": 504,
+      "id": 507,
       "name": "Text.outline",
       "shortName": "outline",
       "kind": "Method",
@@ -4142,7 +3794,7 @@
   ],
   "animation": [
     {
-      "id": 894,
+      "id": 918,
       "name": "AnimationInfo",
       "shortName": "AnimationInfo",
       "kind": "Interface",
@@ -4176,7 +3828,7 @@
       "parent": ""
     },
     {
-      "id": 898,
+      "id": 922,
       "name": "AnimationSegment",
       "shortName": "AnimationSegment",
       "kind": "Interface",
@@ -4204,7 +3856,7 @@
       "parent": ""
     },
     {
-      "id": 578,
+      "id": 582,
       "name": "Animation",
       "shortName": "Animation",
       "kind": "Interface",
@@ -4239,7 +3891,7 @@
       "parent": ""
     },
     {
-      "id": 595,
+      "id": 599,
       "name": "Animation.picture",
       "shortName": "picture",
       "kind": "Accessor",
@@ -4254,7 +3906,7 @@
       "parent": "Animation"
     },
     {
-      "id": 597,
+      "id": 601,
       "name": "Animation.load",
       "shortName": "load",
       "kind": "Method",
@@ -4276,7 +3928,7 @@
       "parent": "Animation"
     },
     {
-      "id": 600,
+      "id": 604,
       "name": "Animation.info",
       "shortName": "info",
       "kind": "Method",
@@ -4291,7 +3943,7 @@
       "parent": "Animation"
     },
     {
-      "id": 602,
+      "id": 606,
       "name": "Animation.frame",
       "shortName": "frame",
       "kind": "Method",
@@ -4306,7 +3958,7 @@
       "parent": "Animation"
     },
     {
-      "id": 606,
+      "id": 610,
       "name": "Animation.segment",
       "shortName": "segment",
       "kind": "Method",
@@ -4328,7 +3980,7 @@
       "parent": "Animation"
     },
     {
-      "id": 609,
+      "id": 613,
       "name": "Animation.play",
       "shortName": "play",
       "kind": "Method",
@@ -4350,7 +4002,7 @@
       "parent": "Animation"
     },
     {
-      "id": 615,
+      "id": 619,
       "name": "Animation.pause",
       "shortName": "pause",
       "kind": "Method",
@@ -4365,7 +4017,7 @@
       "parent": "Animation"
     },
     {
-      "id": 617,
+      "id": 621,
       "name": "Animation.stop",
       "shortName": "stop",
       "kind": "Method",
@@ -4380,7 +4032,7 @@
       "parent": "Animation"
     },
     {
-      "id": 619,
+      "id": 623,
       "name": "Animation.isPlaying",
       "shortName": "isPlaying",
       "kind": "Method",
@@ -4395,7 +4047,7 @@
       "parent": "Animation"
     },
     {
-      "id": 621,
+      "id": 625,
       "name": "Animation.setLoop",
       "shortName": "setLoop",
       "kind": "Method",
@@ -4417,7 +4069,7 @@
       "parent": "Animation"
     },
     {
-      "id": 624,
+      "id": 628,
       "name": "Animation.getLoop",
       "shortName": "getLoop",
       "kind": "Method",
@@ -4432,7 +4084,7 @@
       "parent": "Animation"
     },
     {
-      "id": 626,
+      "id": 630,
       "name": "Animation.seek",
       "shortName": "seek",
       "kind": "Method",
@@ -4454,7 +4106,7 @@
       "parent": "Animation"
     },
     {
-      "id": 629,
+      "id": 633,
       "name": "Animation.getCurrentTime",
       "shortName": "getCurrentTime",
       "kind": "Method",
@@ -4471,7 +4123,7 @@
   ],
   "gradients": [
     {
-      "id": 908,
+      "id": 940,
       "name": "ColorStop",
       "shortName": "ColorStop",
       "kind": "Object Literal",
@@ -4486,7 +4138,7 @@
       "parent": ""
     },
     {
-      "id": 638,
+      "id": 642,
       "name": "LinearGradient",
       "shortName": "LinearGradient",
       "kind": "Interface",
@@ -4530,6 +4182,12 @@
       "destroy": null,
       "properties": [
         {
+          "name": "_filled",
+          "type": "boolean",
+          "comment": "",
+          "optional": false
+        },
+        {
           "name": "_stops",
           "type": "ColorStopEntry[]",
           "comment": "",
@@ -4551,7 +4209,7 @@
       "parent": ""
     },
     {
-      "id": 651,
+      "id": 658,
       "name": "LinearGradient.addStop",
       "shortName": "addStop",
       "kind": "Method",
@@ -4579,7 +4237,7 @@
       "parent": "LinearGradient"
     },
     {
-      "id": 655,
+      "id": 662,
       "name": "LinearGradient.clearStops",
       "shortName": "clearStops",
       "kind": "Method",
@@ -4596,7 +4254,7 @@
       "parent": "LinearGradient"
     },
     {
-      "id": 657,
+      "id": 664,
       "name": "LinearGradient.setStops",
       "shortName": "setStops",
       "kind": "Method",
@@ -4620,7 +4278,7 @@
       "parent": "LinearGradient"
     },
     {
-      "id": 662,
+      "id": 669,
       "name": "LinearGradient.spread",
       "shortName": "spread",
       "kind": "Method",
@@ -4642,7 +4300,7 @@
       "parent": "LinearGradient"
     },
     {
-      "id": 645,
+      "id": 649,
       "name": "LinearGradient.build",
       "shortName": "build",
       "kind": "Method",
@@ -4657,7 +4315,7 @@
       "parent": "LinearGradient"
     },
     {
-      "id": 675,
+      "id": 683,
       "name": "RadialGradient",
       "shortName": "RadialGradient",
       "kind": "Interface",
@@ -4713,6 +4371,12 @@
       "destroy": null,
       "properties": [
         {
+          "name": "_filled",
+          "type": "boolean",
+          "comment": "",
+          "optional": false
+        },
+        {
           "name": "_stops",
           "type": "ColorStopEntry[]",
           "comment": "",
@@ -4734,7 +4398,7 @@
       "parent": ""
     },
     {
-      "id": 690,
+      "id": 701,
       "name": "RadialGradient.addStop",
       "shortName": "addStop",
       "kind": "Method",
@@ -4762,7 +4426,7 @@
       "parent": "RadialGradient"
     },
     {
-      "id": 694,
+      "id": 705,
       "name": "RadialGradient.clearStops",
       "shortName": "clearStops",
       "kind": "Method",
@@ -4779,7 +4443,7 @@
       "parent": "RadialGradient"
     },
     {
-      "id": 696,
+      "id": 707,
       "name": "RadialGradient.setStops",
       "shortName": "setStops",
       "kind": "Method",
@@ -4803,7 +4467,7 @@
       "parent": "RadialGradient"
     },
     {
-      "id": 701,
+      "id": 712,
       "name": "RadialGradient.spread",
       "shortName": "spread",
       "kind": "Method",
@@ -4825,7 +4489,7 @@
       "parent": "RadialGradient"
     },
     {
-      "id": 684,
+      "id": 692,
       "name": "RadialGradient.build",
       "shortName": "build",
       "kind": "Method",
@@ -4842,7 +4506,7 @@
   ],
   "font": [
     {
-      "id": 903,
+      "id": 927,
       "name": "FontType",
       "shortName": "FontType",
       "kind": "Object Literal",
@@ -4857,7 +4521,7 @@
       "parent": ""
     },
     {
-      "id": 901,
+      "id": 925,
       "name": "LoadFontOptions",
       "shortName": "LoadFontOptions",
       "kind": "Interface",
@@ -4879,12 +4543,187 @@
       "parent": ""
     },
     {
-      "id": 904,
+      "id": 726,
+      "name": "Font",
+      "shortName": "Font",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Font loader class for managing custom fonts.\nFonts are loaded globally and can be referenced by name in Text objects.",
+      "examples": [
+        "```typescript\n// Load font from raw data\nconst fontData = await fetch('/fonts/Roboto-Regular.ttf').then(r => r.arrayBuffer());\nTVG.Font.load('Roboto', new Uint8Array(fontData));\n\nconst text = new TVG.Text();\ntext.font('Roboto').fontSize(48).text('Hello!').fill(50, 50, 50);\n```",
+        "```typescript\n// Auto-load from the configured font provider (fontsource CDN by default)\nawait TVG.Font.load('poppins');\nawait TVG.Font.load('roboto', { weight: 700, style: 'italic' });\n\nconst text = new TVG.Text();\ntext.font('poppins').fontSize(48).text('Hello!').fill(50, 50, 50);\n```",
+        "```typescript\n// Use a custom font provider\nTVG.Font.provider({\n  fetch: async (name) => {\n    const res = await fetch(`/my-fonts/${name}.ttf`);\n    return { data: new Uint8Array(await res.arrayBuffer()), type: 'ttf' };\n  }\n});\n\nawait TVG.Font.load('my-font');\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": {
+        "comment": "",
+        "parameters": []
+      },
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    },
+    {
+      "id": 729,
+      "name": "Font.provider",
+      "shortName": "provider",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Set the font provider used when calling `Font.load()` without raw data.\n\nThe default provider fetches from the [fontsource](https://fontsource.org) CDN.\nReplace it to load fonts from your own CDN or any other source.",
+      "examples": [
+        "```typescript\nTVG.Font.provider({\n  fetch: async (name) => {\n    const res = await fetch(`https://my-cdn.com/fonts/${name}.ttf`);\n    return { data: new Uint8Array(await res.arrayBuffer()), type: 'ttf' };\n  }\n});\n```"
+      ],
+      "parameters": [
+        {
+          "name": "provider",
+          "type": "FontProvider",
+          "comment": "A FontProvider implementation",
+          "optional": false
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Font"
+    },
+    {
+      "id": 732,
+      "name": "Font.load",
+      "shortName": "load",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Load font from raw data.",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "comment": "Unique name to identify this font",
+          "optional": false
+        },
+        {
+          "name": "data",
+          "type": "Uint8Array",
+          "comment": "Raw font binary data",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "LoadFontOptions",
+          "comment": "Load options",
+          "optional": true
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Font"
+    },
+    {
+      "id": 740,
+      "name": "Font.unload",
+      "shortName": "unload",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Unload a previously loaded font.",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "comment": "Font name to unload",
+          "optional": false
+        }
+      ],
+      "returnType": "void",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "Font"
+    },
+    {
+      "id": 937,
+      "name": "FontProviderResult",
+      "shortName": "FontProviderResult",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Result returned by a FontProvider after fetching font data.",
+      "examples": [],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [
+        {
+          "name": "data",
+          "type": "Uint8Array",
+          "comment": "Raw font binary data",
+          "optional": false
+        },
+        {
+          "name": "type",
+          "type": "'ttf'",
+          "comment": "Font format",
+          "optional": false
+        }
+      ],
+      "parent": ""
+    },
+    {
+      "id": 932,
+      "name": "FontProvider",
+      "shortName": "FontProvider",
+      "kind": "Interface",
+      "type": "any",
+      "comment": "Interface for pluggable font sources.\n\nA font provider resolves a font name into binary font data.\nImplement this interface to load fonts from any source — a self-hosted\nCDN, a local server, or any custom storage.",
+      "examples": [
+        "```typescript\nTVG.Font.provider({\n  fetch: async (name) => {\n    const res = await fetch(`/my-fonts/${name}.ttf`);\n    return { data: new Uint8Array(await res.arrayBuffer()), type: 'ttf' };\n  }\n});\n\nawait TVG.Font.load('my-font');\n```"
+      ],
+      "parameters": [],
+      "returnType": "any",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": ""
+    },
+    {
+      "id": 933,
+      "name": "FontProvider.fetch",
+      "shortName": "fetch",
+      "kind": "Method",
+      "type": "any",
+      "comment": "Fetch font data by name.",
+      "examples": [],
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "comment": "Font name as provided by the caller",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "Record",
+          "comment": "Provider-specific options",
+          "optional": true
+        }
+      ],
+      "returnType": "Promise",
+      "constructor": null,
+      "destroy": null,
+      "properties": [],
+      "parent": "FontProvider"
+    },
+    {
+      "id": 928,
       "name": "FontsourceOptions",
       "shortName": "FontsourceOptions",
       "kind": "Interface",
       "type": "any",
-      "comment": "Options for loading a font from fontsource CDN.",
+      "comment": "Options for loading a font from the fontsource CDN.",
       "examples": [],
       "parameters": [],
       "returnType": "any",
@@ -4913,15 +4752,14 @@
       "parent": ""
     },
     {
-      "id": 714,
-      "name": "Font",
-      "shortName": "Font",
+      "id": 750,
+      "name": "FontsourceProvider",
+      "shortName": "FontsourceProvider",
       "kind": "Interface",
       "type": "any",
-      "comment": "Font loader class for managing custom fonts.\nFonts are loaded globally and can be referenced by name in Text objects.",
+      "comment": "Font provider that fetches fonts from the [fontsource](https://fontsource.org) CDN.\n\nThis is the default provider used by Font.load when no raw data is supplied.",
       "examples": [
-        "```typescript\n// Load font from raw data\nconst fontData = await fetch('/fonts/Roboto-Regular.ttf').then(r => r.arrayBuffer());\nTVG.Font.load('Roboto', new Uint8Array(fontData));\n\nconst text = new TVG.Text();\ntext.font('Roboto').fontSize(48).text('Hello!').fill(50, 50, 50);\n```",
-        "```typescript\n// Auto-load from fontsource CDN (no manual fetch needed)\nawait TVG.Font.load('poppins');\nawait TVG.Font.load('roboto', { weight: 700, style: 'italic' });\n\nconst text = new TVG.Text();\ntext.font('poppins').fontSize(48).text('Hello!').fill(50, 50, 50);\n```"
+        "```typescript\n// Restore to default (if you previously swapped it out)\nTVG.Font.provider(new FontsourceProvider());\n```"
       ],
       "parameters": [],
       "returnType": "any",
@@ -4934,66 +4772,38 @@
       "parent": ""
     },
     {
-      "id": 715,
-      "name": "Font.load",
-      "shortName": "load",
+      "id": 753,
+      "name": "FontsourceProvider.fetch",
+      "shortName": "fetch",
       "kind": "Method",
       "type": "any",
-      "comment": "Load font from raw data (Uint8Array)",
+      "comment": "Fetch font data by name.",
       "examples": [],
       "parameters": [
         {
           "name": "name",
           "type": "string",
-          "comment": "Unique name to identify this font",
-          "optional": false
-        },
-        {
-          "name": "data",
-          "type": "Uint8Array",
-          "comment": "Raw font data",
+          "comment": "Font name as provided by the caller",
           "optional": false
         },
         {
           "name": "options",
-          "type": "LoadFontOptions",
-          "comment": "Load options",
+          "type": "FontsourceOptions",
+          "comment": "Provider-specific options",
           "optional": true
         }
       ],
-      "returnType": "void",
+      "returnType": "Promise",
       "constructor": null,
       "destroy": null,
       "properties": [],
-      "parent": "Font"
-    },
-    {
-      "id": 723,
-      "name": "Font.unload",
-      "shortName": "unload",
-      "kind": "Method",
-      "type": "any",
-      "comment": "Unload a previously loaded font.",
-      "examples": [],
-      "parameters": [
-        {
-          "name": "name",
-          "type": "string",
-          "comment": "Font name to unload",
-          "optional": false
-        }
-      ],
-      "returnType": "void",
-      "constructor": null,
-      "destroy": null,
-      "properties": [],
-      "parent": "Font"
+      "parent": "FontsourceProvider"
     }
   ],
   "constants": [],
   "errorHandling": [
     {
-      "id": 822,
+      "id": 846,
       "name": "ThorVGResultCode",
       "shortName": "ThorVGResultCode",
       "kind": "Enum Member",
@@ -5008,7 +4818,7 @@
       "parent": ""
     },
     {
-      "id": 823,
+      "id": 847,
       "name": "ThorVGResultCode.Success",
       "shortName": "Success",
       "kind": "Variable",
@@ -5023,7 +4833,7 @@
       "parent": "ThorVGResultCode"
     },
     {
-      "id": 824,
+      "id": 848,
       "name": "ThorVGResultCode.InvalidArguments",
       "shortName": "InvalidArguments",
       "kind": "Variable",
@@ -5038,7 +4848,7 @@
       "parent": "ThorVGResultCode"
     },
     {
-      "id": 825,
+      "id": 849,
       "name": "ThorVGResultCode.InsufficientCondition",
       "shortName": "InsufficientCondition",
       "kind": "Variable",
@@ -5053,7 +4863,7 @@
       "parent": "ThorVGResultCode"
     },
     {
-      "id": 826,
+      "id": 850,
       "name": "ThorVGResultCode.FailedAllocation",
       "shortName": "FailedAllocation",
       "kind": "Variable",
@@ -5068,7 +4878,7 @@
       "parent": "ThorVGResultCode"
     },
     {
-      "id": 827,
+      "id": 851,
       "name": "ThorVGResultCode.MemoryCorruption",
       "shortName": "MemoryCorruption",
       "kind": "Variable",
@@ -5083,7 +4893,7 @@
       "parent": "ThorVGResultCode"
     },
     {
-      "id": 828,
+      "id": 852,
       "name": "ThorVGResultCode.NotSupported",
       "shortName": "NotSupported",
       "kind": "Variable",
@@ -5098,7 +4908,7 @@
       "parent": "ThorVGResultCode"
     },
     {
-      "id": 829,
+      "id": 853,
       "name": "ThorVGResultCode.Unknown",
       "shortName": "Unknown",
       "kind": "Variable",
@@ -5113,7 +4923,7 @@
       "parent": "ThorVGResultCode"
     },
     {
-      "id": 830,
+      "id": 854,
       "name": "ThorVGError",
       "shortName": "ThorVGError",
       "kind": "Interface",
@@ -5163,7 +4973,7 @@
       "parent": ""
     },
     {
-      "id": 831,
+      "id": 855,
       "name": "ThorVGError.fromCode",
       "shortName": "fromCode",
       "kind": "Method",
@@ -5191,7 +5001,7 @@
       "parent": "ThorVGError"
     },
     {
-      "id": 846,
+      "id": 870,
       "name": "ErrorContext",
       "shortName": "ErrorContext",
       "kind": "Interface",
@@ -5213,7 +5023,7 @@
       "parent": ""
     },
     {
-      "id": 848,
+      "id": 872,
       "name": "ErrorHandler",
       "shortName": "ErrorHandler",
       "kind": "Interface",
@@ -5245,7 +5055,7 @@
   ],
   "other": [
     {
-      "id": 733,
+      "id": 757,
       "name": "Accessor",
       "shortName": "Accessor",
       "kind": "Interface",
@@ -5263,7 +5073,7 @@
       "parent": ""
     },
     {
-      "id": 734,
+      "id": 758,
       "name": "Accessor.id",
       "shortName": "id",
       "kind": "Method",
@@ -5285,7 +5095,7 @@
       "parent": "Accessor"
     },
     {
-      "id": 737,
+      "id": 761,
       "name": "Accessor.set",
       "shortName": "set",
       "kind": "Method",
@@ -5331,7 +5141,7 @@
     }
   ]
 };
-        const readmeMarkdown = "# ThorVG for Web\n<p align=\"center\">\n  <img width=\"800\" height=\"auto\" src=\"https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png\">\n<\/p>\n\n[![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas)\n\n# @thorvg/webcanvas\n\nA high-performance TypeScript Canvas API for [ThorVG](https://github.com/thorvg/thorvg), providing an object-oriented interface with fluent API pattern for vector graphics rendering using WebAssembly.\n\n## Installation\n\n- Import from CDN\n```html\n<script src=\"https://unpkg.com/@thorvg/webcanvas@latest/dist/webcanvas.js\"><\/script>\n```\n\n- Install from [NPM](https://www.npmjs.com/package/@thorvg/webcanvas)\n```bash\nnpm install @thorvg/webcanvas\n```\n\n## Contents\n- [Quick Start](#quick-start)\n- [Render Backends](#render-backends)\n- [Memory Management](#memory-management)\n- [Documentation](#documentation)\n- [Examples](#examples)\n\n\n## Quick Start\n\nThorVG renders vector shapes to a given canvas buffer. The following is a quick start to show you how to use the essential APIs.\n\nFirst, you should initialize the ThorVG engine:\n\n```typescript\nimport ThorVG from '@thorvg/webcanvas';\n\nconst TVG = await ThorVG.init({ renderer: 'gl' });  // WebGL renderer\n```\n\nThen it would be best if you prepared an empty canvas for drawing on it:\n\n```typescript\nconst canvas = new TVG.Canvas('#canvas', {\n  width: 800,\n  height: 600\n});\n```\n\nNext you can draw multiple shapes on the canvas:\n\n```typescript\nconst rect = new TVG.Shape();                              // generate a shape\nrect.appendRect(50, 50, 200, 200, { rx: 20, ry: 20 });    // define it as a rounded rectangle (x, y, w, h, rx, ry)\nrect.fill(100, 100, 100);                                  // set its color (r, g, b)\ncanvas.add(rect);                                          // add the rectangle to the canvas\n\nconst circle = new TVG.Shape();                            // generate a shape\ncircle.appendCircle(400, 400, 100, 100);                   // define it as a circle (cx, cy, rx, ry)\n\nconst fill = new TVG.RadialGradient(400, 400, 150);       // generate a radial gradient (cx, cy, radius)\n\nfill.setStops(                                             // set the gradient colors info\n  [0.0, [255, 255, 255, 255]],                             // 1st color values (offset, [r, g, b, a])\n  [1.0, [0, 0, 0, 255]]                                    // 2nd color values (offset, [r, g, b, a])\n);\n\ncircle.fill(fill);                                         // set the circle fill\ncanvas.add(circle);                                        // add the circle to the canvas\n```\n\nThis code generates the following result:\n\n<p align=\"center\">\n  <img width=\"416\" height=\"auto\" src=\"https://github.com/thorvg/thorvg.site/blob/main/readme/example_shapes.png\">\n<\/p>\n\nYou can also draw your own shapes and use dashed stroking:\n\n```typescript\nconst path = new TVG.Shape();                              // generate a path\npath.moveTo(199, 34);                                      // set sequential path coordinates\npath.lineTo(253, 143);\npath.lineTo(374, 160);\npath.lineTo(287, 244);\npath.lineTo(307, 365);\npath.lineTo(199, 309);\npath.lineTo(97, 365);\npath.lineTo(112, 245);\npath.lineTo(26, 161);\npath.lineTo(146, 143);\npath.close();\n\npath.fill(150, 150, 255);                                  // path color\n\npath.stroke({\n  width: 3,                                                // stroke width\n  color: [0, 0, 255, 255],                                 // stroke color (r, g, b, a)\n  cap: TVG.StrokeCap.Round,                                // stroke cap style\n  join: TVG.StrokeJoin.Round,                              // stroke join style\n  dash: [10, 10]                                           // stroke dash pattern (line, gap)\n});\n\ncanvas.add(path);                                          // add the path to the canvas\n```\n\nThe code generates the following result:\n\n<p align=\"center\">\n  <img width=\"300\" height=\"auto\" src=\"https://github.com/thorvg/thorvg.site/blob/main/readme/example_path.png\">\n<\/p>\n\nNow begin rendering & finish it at a particular time:\n\n```typescript\ncanvas.render();\n```\n\nThen you can acquire the rendered image from the canvas element.\n\nLastly, terminate the engine after its usage:\n\n```typescript\nTVG.term();\n```\n\n[Back to contents](#contents)\n<br />\n\n## Render Backends\n\nThorVG WebCanvas supports both WebGL and the next-generation WebGPU, optimized for modern browsers and high-performance rendering pipelines. Designed to empower developers with cutting-edge graphics capabilities.\n\n| Backend | Browser Support |\n|---------|-----------------|\n| **WebGL (gl)** | Chrome/Firefox/Safari 90+ |\n| **WebGPU (wg)** | Chrome/Edge 113+/Firefox 141+/Safari 26+ |\n\n### Backend-Specific Initialization\n\n```typescript\n// WebGL renderer\nconst TVG = await ThorVG.init({ renderer: 'gl' });\n\n// WebGPU renderer (requires async init)\nconst TVG = await ThorVG.init({ renderer: 'wg' });\n```\n\n[Back to contents](#contents)\n<br />\n\n## Memory Management\n\nWebCanvas provides automatic memory management through FinalizationRegistry, but you can also manage memory explicitly:\n\n```typescript\n// Automatic cleanup when GC runs\nconst shape = new TVG.Shape();\ncanvas.add(shape);\nshape = null; // Call dispose()\n\n// Automatic cleanup on page unload (registry.ts)\nwindow.addEventListener('beforeunload', () => {\n  if (hasModule()) {\n    const Module = getModule();\n    Module.term(); // Terminate WASM\n  }\n});\n\n// Explicit cleanup (recommended for predictable memory management)\nshape.dispose();\npicture.dispose();\nanimation.dispose();\n\n// Terminate WASM module (call this when done)\nTVG.term();\n```\n\n[Back to contents](#contents)\n<br />\n\n## Documentation\n\n- **[API Documentation](https://thorvg.github.io/thorvg.web)** - Standard TypeDoc hierarchical documentation\n- **[Manual Documentation](./API_USAGE.md)** - Complete API documentation with detailed method signatures\n\n[Back to contents](#contents)\n<br />\n\n## Examples\n\n- [Basic Usage](../../examples/basic-usage.html) - Getting started with shapes\n- [Animation](../../examples/animation-example.html) - Frame-based animations\n- [Scene Composition](../../examples/scene.html) - Hierarchical grouping\n- [Picture Loading](../../examples/picture-example.html) - SVG and images\n- [Text Rendering](../../examples/text-example.html) - Typography\n- [Live Editor](../../examples/live-editor.html) - Interactive playground\n\n[Back to contents](#contents)\n<br />\n\n";
+        const readmeMarkdown = "# ThorVG for Web\n<p align=\"center\">\n  <img width=\"800\" height=\"auto\" src=\"https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png\">\n</p>\n\n[![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas)\n\n# @thorvg/webcanvas\n\nA high-performance TypeScript Canvas API for [ThorVG](https://github.com/thorvg/thorvg), providing an object-oriented interface with fluent API pattern for vector graphics rendering using WebAssembly.\n\n## Installation\n\n- Import from CDN\n```html\n<script src=\"https://unpkg.com/@thorvg/webcanvas@latest/dist/webcanvas.js\"></script>\n```\n\n- Install from [NPM](https://www.npmjs.com/package/@thorvg/webcanvas)\n```bash\nnpm install @thorvg/webcanvas\n```\n\n## Contents\n- [Quick Start](#quick-start)\n- [Render Backends](#render-backends)\n- [Memory Management](#memory-management)\n- [Documentation](#documentation)\n- [Examples](#examples)\n\n\n## Quick Start\n\nThorVG renders vector shapes to a given canvas buffer. The following is a quick start to show you how to use the essential APIs.\n\nFirst, you should initialize the ThorVG engine:\n\n```typescript\nimport ThorVG from '@thorvg/webcanvas';\n\nconst TVG = await ThorVG.init({ renderer: 'gl' });  // WebGL renderer\n```\n\nThen it would be best if you prepared an empty canvas for drawing on it:\n\n```typescript\nconst canvas = new TVG.Canvas('#canvas', {\n  width: 800,\n  height: 600\n});\n```\n\nNext you can draw multiple shapes on the canvas:\n\n```typescript\nconst rect = new TVG.Shape();                              // generate a shape\nrect.appendRect(50, 50, 200, 200, { rx: 20, ry: 20 });    // define it as a rounded rectangle (x, y, w, h, rx, ry)\nrect.fill(100, 100, 100);                                  // set its color (r, g, b)\ncanvas.add(rect);                                          // add the rectangle to the canvas\n\nconst circle = new TVG.Shape();                            // generate a shape\ncircle.appendCircle(400, 400, 100, 100);                   // define it as a circle (cx, cy, rx, ry)\n\nconst fill = new TVG.RadialGradient(400, 400, 150);       // generate a radial gradient (cx, cy, radius)\n\nfill.setStops(                                             // set the gradient colors info\n  [0.0, [255, 255, 255, 255]],                             // 1st color values (offset, [r, g, b, a])\n  [1.0, [0, 0, 0, 255]]                                    // 2nd color values (offset, [r, g, b, a])\n);\n\ncircle.fill(fill);                                         // set the circle fill\ncanvas.add(circle);                                        // add the circle to the canvas\n```\n\nThis code generates the following result:\n\n<p align=\"center\">\n  <img width=\"416\" height=\"auto\" src=\"https://github.com/thorvg/thorvg.site/blob/main/readme/example_shapes.png\">\n</p>\n\nYou can also draw your own shapes and use dashed stroking:\n\n```typescript\nconst path = new TVG.Shape();                              // generate a path\npath.moveTo(199, 34);                                      // set sequential path coordinates\npath.lineTo(253, 143);\npath.lineTo(374, 160);\npath.lineTo(287, 244);\npath.lineTo(307, 365);\npath.lineTo(199, 309);\npath.lineTo(97, 365);\npath.lineTo(112, 245);\npath.lineTo(26, 161);\npath.lineTo(146, 143);\npath.close();\n\npath.fill(150, 150, 255);                                  // path color\n\npath.stroke({\n  width: 3,                                                // stroke width\n  color: [0, 0, 255, 255],                                 // stroke color (r, g, b, a)\n  cap: TVG.StrokeCap.Round,                                // stroke cap style\n  join: TVG.StrokeJoin.Round,                              // stroke join style\n  dash: [10, 10]                                           // stroke dash pattern (line, gap)\n});\n\ncanvas.add(path);                                          // add the path to the canvas\n```\n\nThe code generates the following result:\n\n<p align=\"center\">\n  <img width=\"300\" height=\"auto\" src=\"https://github.com/thorvg/thorvg.site/blob/main/readme/example_path.png\">\n</p>\n\nNow begin rendering & finish it at a particular time:\n\n```typescript\ncanvas.render();\n```\n\nThen you can acquire the rendered image from the canvas element.\n\nLastly, terminate the engine after its usage:\n\n```typescript\nTVG.term();\n```\n\n[Back to contents](#contents)\n<br />\n\n## Render Backends\n\nThorVG WebCanvas supports both WebGL and the next-generation WebGPU, optimized for modern browsers and high-performance rendering pipelines. Designed to empower developers with cutting-edge graphics capabilities.\n\n| Backend | Browser Support |\n|---------|-----------------|\n| **WebGL (gl)** | Chrome/Firefox/Safari 90+ |\n| **WebGPU (wg)** | Chrome/Edge 113+/Firefox 141+/Safari 26+ |\n\n### Backend-Specific Initialization\n\n```typescript\n// WebGL renderer\nconst TVG = await ThorVG.init({ renderer: 'gl' });\n\n// WebGPU renderer (requires async init)\nconst TVG = await ThorVG.init({ renderer: 'wg' });\n```\n\n[Back to contents](#contents)\n<br />\n\n## Memory Management\n\nWebCanvas provides automatic memory management through FinalizationRegistry, but you can also manage memory explicitly:\n\n```typescript\n// Automatic cleanup when GC runs\nconst shape = new TVG.Shape();\ncanvas.add(shape);\nshape = null; // Call dispose()\n\n// Automatic cleanup on page unload (registry.ts)\nwindow.addEventListener('beforeunload', () => {\n  if (hasModule()) {\n    const Module = getModule();\n    Module.term(); // Terminate WASM\n  }\n});\n\n// Explicit cleanup (recommended for predictable memory management)\nshape.dispose();\npicture.dispose();\nanimation.dispose();\n\n// Terminate WASM module (call this when done)\nTVG.term();\n```\n\n[Back to contents](#contents)\n<br />\n\n## Documentation\n\n- **[API Documentation](https://thorvg.github.io/thorvg.web)** - Standard TypeDoc hierarchical documentation\n- **[Manual Documentation](./API_USAGE.md)** - Complete API documentation with detailed method signatures\n\n[Back to contents](#contents)\n<br />\n\n## Examples\n\n- [Basic Usage](../../examples/basic-usage.html) - Getting started with shapes\n- [Animation](../../examples/animation-example.html) - Frame-based animations\n- [Scene Composition](../../examples/scene.html) - Hierarchical grouping\n- [Picture Loading](../../examples/picture-example.html) - SVG and images\n- [Text Rendering](../../examples/text-example.html) - Typography\n- [Live Editor](../../examples/live-editor.html) - Interactive playground\n\n[Back to contents](#contents)\n<br />\n\n";
         const searchInput = document.getElementById('search');
         const apiItems = document.querySelectorAll('.api-item');
         const content = document.getElementById('content');
@@ -5349,6 +5159,65 @@
         }
 
         
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderMarkdown(text) {
+            return typeof marked !== 'undefined'
+                ? marked.parse(text)
+                : escapeHtml(text).replace(/\n/g, '<br>');
+        }
+
+        function renderParamsList(params) {
+            if (!params || params.length === 0) return '';
+            let html = '<h3>Parameters</h3><ul class="params">';
+            params.forEach(param => {
+                const optional = param.optional ? '?' : '';
+                html += `<li><code>${escapeHtml(param.name)}${optional}</code>: <code>${escapeHtml(param.type)}</code>`;
+                if (param.comment) html += ` - ${escapeHtml(param.comment)}`;
+                html += '</li>';
+            });
+            return html + '</ul>';
+        }
+
+        function renderSection(section, title) {
+            if (!section) return '';
+            let html = `<h2>${title}</h2>`;
+            if (section.comment) html += `<div class="description">${renderMarkdown(section.comment)}</div>`;
+            html += renderParamsList(section.parameters);
+            if (section.returnType && section.returnType !== 'void') {
+                html += `<p class="meta"><strong>Returns:</strong> <code>${escapeHtml(section.returnType)}</code></p>`;
+            }
+            return html;
+        }
+
+        function renderProperties(api) {
+            if (!api.properties || api.properties.length === 0) return '';
+            if (api.kind !== 'Interface' && api.kind !== 'Type alias') return '';
+            let html = '';
+            api.properties.forEach(prop => {
+                const optional = prop.optional ? '?' : '';
+                html += `<h2>${escapeHtml(prop.name)}${optional}</h2>`;
+                html += `<p class="meta"><strong>Type:</strong> <code>${escapeHtml(prop.type)}</code></p>`;
+                if (prop.comment) html += `<div class="description">${renderMarkdown(prop.comment)}</div>`;
+            });
+            return html;
+        }
+
+        function renderExamples(examples) {
+            if (!examples || examples.length === 0) return '';
+            let html = '<h2>Examples</h2>';
+            examples.forEach(example => {
+                let code = example.replace(/^```(?:typescript|ts|javascript|js)?\n?/gm, '').replace(/```$/gm, '').trim();
+                html += `<pre><code class="language-typescript">${escapeHtml(code)}</code></pre>`;
+            });
+            return html;
+        }
+
         function displayAPI(id) {
             let api = null;
             for (const category in apiData) {
@@ -5361,12 +5230,10 @@
                 return;
             }
 
-            // Clear README content when displaying API
             const readmeDiv = document.getElementById('readme-content');
-            if (readmeDiv) {
-                readmeDiv.innerHTML = '';
-            }
+            if (readmeDiv) readmeDiv.innerHTML = '';
 
+            const isClassLike = api.kind === 'Class' || api.kind === 'Interface';
             let html = `<h1>${escapeHtml(api.name)}</h1>`;
             html += `<p class="meta"><strong>Kind:</strong> ${escapeHtml(api.kind)}</p>`;
 
@@ -5376,109 +5243,20 @@
                 html += `<p class="meta"><strong>Type:</strong> <code>${escapeHtml(api.type)}</code></p>`;
             }
 
-            if (api.comment) {
-                // Use marked to render markdown in comments
-                const renderedComment = typeof marked !== 'undefined'
-                    ? marked.parse(api.comment)
-                    : escapeHtml(api.comment).replace(/\n/g, '<br>');
-                html += `<div class="description">${renderedComment}</div>`;
-            }
-
-            // Show constructor for classes and interfaces
-            if (api.constructor && (api.kind === 'Class' || api.kind === 'Interface')) {
-                html += '<h2>Constructor</h2>';
-                if (api.constructor.comment) {
-                    const renderedComment = typeof marked !== 'undefined'
-                        ? marked.parse(api.constructor.comment)
-                        : escapeHtml(api.constructor.comment).replace(/\n/g, '<br>');
-                    html += `<div class="description">${renderedComment}</div>`;
-                }
-                if (api.constructor.parameters && api.constructor.parameters.length > 0) {
-                    html += '<h3>Parameters</h3><ul class="params">';
-                    api.constructor.parameters.forEach(param => {
-                        const optional = param.optional ? '?' : '';
-                        html += `<li><code>${escapeHtml(param.name)}${optional}</code>: <code>${escapeHtml(param.type)}</code>`;
-                        if (param.comment) html += ` - ${escapeHtml(param.comment)}`;
-                        html += '</li>';
-                    });
-                    html += '</ul>';
-                }
-            }
-
-            // Show destroy method for classes and interfaces
-            if (api.destroy && (api.kind === 'Class' || api.kind === 'Interface')) {
-                html += '<h2>Destroy</h2>';
-                if (api.destroy.comment) {
-                    const renderedComment = typeof marked !== 'undefined'
-                        ? marked.parse(api.destroy.comment)
-                        : escapeHtml(api.destroy.comment).replace(/\n/g, '<br>');
-                    html += `<div class="description">${renderedComment}</div>`;
-                }
-                if (api.destroy.parameters && api.destroy.parameters.length > 0) {
-                    html += '<h3>Parameters</h3><ul class="params">';
-                    api.destroy.parameters.forEach(param => {
-                        const optional = param.optional ? '?' : '';
-                        html += `<li><code>${escapeHtml(param.name)}${optional}</code>: <code>${escapeHtml(param.type)}</code>`;
-                        if (param.comment) html += ` - ${escapeHtml(param.comment)}`;
-                        html += '</li>';
-                    });
-                    html += '</ul>';
-                }
-                if (api.destroy.returnType && api.destroy.returnType !== 'void') {
-                    html += `<p class="meta"><strong>Returns:</strong> <code>${escapeHtml(api.destroy.returnType)}</code></p>`;
-                }
-            }
-
-            // Show properties for interfaces and types (with full section structure)
-            if (api.properties && api.properties.length > 0 && (api.kind === 'Interface' || api.kind === 'Type alias')) {
-                api.properties.forEach(prop => {
-                    const optional = prop.optional ? '?' : '';
-                    html += `<h2>${escapeHtml(prop.name)}${optional}</h2>`;
-                    html += `<p class="meta"><strong>Type:</strong> <code>${escapeHtml(prop.type)}</code></p>`;
-                    if (prop.comment) {
-                        const renderedComment = typeof marked !== 'undefined'
-                            ? marked.parse(prop.comment)
-                            : escapeHtml(prop.comment).replace(/\n/g, '<br>');
-                        html += `<div class="description">${renderedComment}</div>`;
-                    }
-                });
-            }
-
-            if (api.parameters && api.parameters.length > 0) {
-                html += '<h2>Parameters</h2><ul class="params">';
-                api.parameters.forEach(param => {
-                    const optional = param.optional ? '?' : '';
-                    html += `<li><code>${escapeHtml(param.name)}${optional}</code>: <code>${escapeHtml(param.type)}</code>`;
-                    if (param.comment) html += ` - ${escapeHtml(param.comment)}`;
-                    html += '</li>';
-                });
-                html += '</ul>';
-            }
-
-            if (api.examples && api.examples.length > 0) {
-                html += '<h2>Examples</h2>';
-                api.examples.forEach(example => {
-                    // Remove markdown code fences if present
-                    let code = example.replace(/^```(?:typescript|ts|javascript|js)?\n?/gm, '').replace(/```$/gm, '').trim();
-                    html += `<pre><code class="language-typescript">${escapeHtml(code)}</code></pre>`;
-                });
-            }
+            if (api.comment) html += `<div class="description">${renderMarkdown(api.comment)}</div>`;
+            if (isClassLike) html += renderSection(api.constructor, 'Constructor');
+            if (isClassLike) html += renderSection(api.destroy, 'Destroy');
+            html += renderProperties(api);
+            html += renderParamsList(api.parameters);
+            html += renderExamples(api.examples);
 
             content.innerHTML = html;
 
-            // Highlight code blocks with Prism
             if (window.Prism) {
                 content.querySelectorAll('pre code').forEach(block => {
                     window.Prism.highlightElement(block);
                 });
             }
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
         }
   
 
