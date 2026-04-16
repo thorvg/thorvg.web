@@ -148,19 +148,22 @@ export function initProfiler() {
 
 	var statsFPS = new Stats();
 	statsFPS.showPanel( 0 );
-	statsFPS.dom.style.cssText = 'position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000';
+	statsFPS.dom.style.cssText = 'position:fixed;bottom:0;left:0;cursor:pointer;opacity:0.9;z-index:10000';
+	statsFPS.dom.setAttribute( 'data-profiler', 'true' );
 	document.body.appendChild( statsFPS.dom );
 
 	var statsMS = new Stats();
 	statsMS.showPanel( 1 );
-	statsMS.dom.style.cssText = 'position:fixed;top:0;left:80px;cursor:pointer;opacity:0.9;z-index:10000';
+	statsMS.dom.style.cssText = 'position:fixed;bottom:0;left:80px;cursor:pointer;opacity:0.9;z-index:10000';
+	statsMS.dom.setAttribute( 'data-profiler', 'true' );
 	document.body.appendChild( statsMS.dom );
 
 	var statsMB;
 	if ( self.performance && self.performance.memory ) {
 		statsMB = new Stats();
 		statsMB.showPanel( 2 );
-		statsMB.dom.style.cssText = 'position:fixed;top:0;left:160px;cursor:pointer;opacity:0.9;z-index:10000';
+		statsMB.dom.style.cssText = 'position:fixed;bottom:0;left:160px;cursor:pointer;opacity:0.9;z-index:10000';
+		statsMB.dom.setAttribute( 'data-profiler', 'true' );
 		document.body.appendChild( statsMB.dom );
 	}
 
