@@ -1,525 +1,458 @@
-'use client'
-import { Listbox, ListboxOption, ListboxOptions, Transition } from '@headlessui/react';
-import { Fragment, useEffect, useState } from 'react';
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
-import { isMobile } from 'react-device-detect';
-import wasmUrl from "../node_modules/@thorvg/lottie-player/dist/thorvg.wasm";
+'use client';
+
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import wasmUrl from '../node_modules/@thorvg/webcanvas/dist/thorvg.wasm';
 import { initProfiler } from '../lib/profiler';
-
-const animations = [
-  '1643-exploding-star.json',
-  '5317-fireworkds.json',
-  '5344-honey-sack-hud.json',
-  '11555.json',
-  '27746-joypixels-partying-face-emoji-animation.json',
-  'R_QPKIVi.json',
-  'abstract_circle.json',
-  'alien.json',
-  'anubis.json',
-  'balloons_with_string.json',
-  'birth_stone_logo.json',
-  'calculator.json',
-  'card_hover.json',
-  'cat_loader.json',
-  'coin.json',
-  'confetti.json',
-  'confetti2.json',
-  'confettiBird.json',
-  'dancing_book.json',
-  'dancing_star.json',
-  'dash-offset.json',
-  'day_to_night.json',
-  'dodecahedron.json',
-  'down.json',
-  'dropball.json',
-  'duck.json',
-  'emoji_enjoying.json',
-  'emoji.json',
-  'fleche.json',
-  'flipping_page.json',
-  'fly_in_beaker.json',
-  'focal_test.json',
-  'foodrating.json',
-  'frog_vr.json',
-  'fun_animation.json',
-  'funky_chicken.json',
-  'game_finished.json',
-  'geometric.json',
-  'glow_loading.json',
-  'ghost.json',
-  'ghost2.json',
-  'gradient_background.json',
-  'gradient_infinite.json',
-  'gradient_sleepy_loader.json',
-  'gradient_smoke.json',
-  'graph.json',
-  'growup.json',
-  'guitar.json',
-  'hamburger.json',
-  'happy_holidays.json',
-  'happy_trio.json',
-  'heart_fill.json',
-  'hola.json',
-  'holdanimation.json',
-  'hourglass.json',
-  'isometric.json',
-  'kote.json',
-  'la_communaute.json',
-  '1f409.json',
-  'like_button.json',
-  'like.json',
-  'loading_rectangle.json',
-  'lolo_walk.json',
-  'lolo.json',
-  'loveface_emoji.json',
-  'masking.json',
-  'material_wave_loading.json',
-  'merging_shapes.json',
-  'message.json',
-  'monkey.json',
-  'morphing_anim.json',
-  'new_design.json',
-  'page_slide.json',
-  'personal_character.json',
-  'polystar_anim.json',
-  'polystar.json',
-  'property_market.json',
-  'pumpkin.json',
-  'ripple_loading_animation.json',
-  'rufo.json',
-  'sample.json',
-  'seawalk.json',
-  'shutup.json',
-  'skullboy.json',
-  'starburst.json',
-  'starstrips.json',
-  'starts_transparent.json',
-  'stroke_dash.json',
-  'swinging.json',
-  'text_anim.json',
-  'text2.json',
-  'textblock.json',
-  'textrange.json',
-  'threads.json',
-  'train.json',
-  'uk_flag.json',
-  'voice_recognition.json',
-  'water_filling.json',
-  'waves.json',
-  'yarn_loading.json'
-];
-
-const urlPrefix = 'https://raw.githubusercontent.com/thorvg/thorvg.example/main/res/lottie/';
-
-const countOptions = [
-  { id: 0, name: 10 },
-  { id: 1, name: 20 },
-  { id: 2, name: 50 },
-  { id: 3, name: 100 },
-  //{ id: 4, name: 200 },
-  //{ id: 5, name: 500 },
-  //{ id: 6, name: 1000 },
-];
-
-const playerOptions = [
-  { id: 1, name: 'ThorVG(Software)' }
-];
-
-if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
-  playerOptions.push({ id: 2, name: 'ThorVG(WebGPU)' });
-}
-
-function classNames(...classes: any) {
-  return classes.filter(Boolean).join(' ')
-}
-
-function setQueryStringParameter(name: string, value: any) {
-  const params = new URLSearchParams(window.location.search);
-  params.set(name, value);
-  window.history.replaceState({}, '', decodeURIComponent(`${window.location.pathname}?${params}`));
-}
-
-const MIN_WIDTH = 50;
-const MAX_WIDTH = 180;
-const RANGE = MAX_WIDTH - MIN_WIDTH;
+import { loadThorVGModule, getWasmUrl, type ThorVGVersion } from '../lib/thorvg-loader';
+import { type Renderer, RENDERER_LABELS, COUNT_OPTIONS, MIN_SIZE, MAX_SIZE } from '../lib/constants';
+import { type AnimEntry, encodeSeed, decodeSeed, buildAnimList, randomAnimList } from '../lib/seed';
+import { getParam, setParam } from '../lib/url-params';
+import {
+  type BenchPhase,
+  type BenchmarkResult,
+  BENCH_WARMUP_MS,
+  BENCH_MEASURE_MS,
+  computeBenchResult,
+} from '../lib/benchmark';
+import { VersionSelector } from '../components/VersionSelector';
+import { BenchmarkModal } from '../components/BenchmarkModal';
+import { DragOverlay } from '../components/DragOverlay';
 
 export default function Home() {
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  const [contentSize, setContentSize] = useState({ width: 0, height: 0 });
-  const percent = (size.width - MIN_WIDTH) / RANGE * 100;
+  const router = useRouter();
 
-  let initialized = false;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const tvgRef = useRef<any>(null);
+  const tvgCanvasRef = useRef<any>(null);
+  const animsRef = useRef<{ anim: any; info: any; name: string; url: string }[]>([]);
+  const rafRef = useRef<number>(0);
+  const colsRef = useRef<number>(1);
+  const itemSizeRef = useRef<number>(150);
 
-  const [count, setCount] = useState(countOptions[1]);
-  const [player, setPlayer] = useState(playerOptions[0]);
-  const [playerId, setPlayerId] = useState(1);
-  const [text, setText] = useState('');
-  const [animationList, setAnimationList] = useState<any>([]);
+  const benchPhaseRef = useRef<'idle' | 'warmup' | 'measuring'>('idle');
+  const benchTimingsRef = useRef<number[]>([]);
+  const benchMemRef = useRef<number[]>([]);
+  const benchTimeoutA = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const benchTimeoutB = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const benchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [renderer, setRenderer] = useState<Renderer>('gl');
+  const [version, setVersion] = useState<ThorVGVersion>('local');
+  const [count, setCount] = useState(20);
+  const [size, setSize] = useState(150);
+  const [seedInput, setSeedInput] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingStatus, setLoadingStatus] = useState('');
+  const [animList, setAnimList] = useState<AnimEntry[]>([]);
+  const blobUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
-    if (initialized) {
-      return;
-    }
-    initialized = true;
-
-    // @ts-ignore
-    import("@thorvg/lottie-player");
-
-    let count: number = countOptions[1].name;
-    let size: number = isMobile ? 150 : MAX_WIDTH;
-    let seed: string = '';
-    let playerId = 1;
-
-    if (window.location.search) {
-      const params = new URLSearchParams(window.location.search);
-      const player = params.get('player');
-      count = parseInt(params.get('count') ?? '20');
-      size = parseInt(params.get('size') ?? size.toString());
-      seed = params.get('seed') ?? '';
-
-      if (count) {
-        const _count = countOptions.find((c) => c.name === count) || countOptions[1];
-        setCount(_count);
-      }
-
-      if (player) {
-        const _player = playerOptions.find((p) => p.name === player) || playerOptions[0];
-        playerId = _player.id;
-        setPlayer(_player);
-        setPlayerId(_player.id);
-      }
-    }
-
-    setSize({
-      width: size,
-      height: size
-    });
-
-    setTimeout(async () => {
-      initProfiler();
-
-      if (seed) {
-        loadSeed(seed);
-        return;
-      }
-
-      loadAnimationByCount(count);
-    }, 500);
+    return () => { blobUrlsRef.current.forEach((u) => URL.revokeObjectURL(u)); };
   }, []);
 
-  const checkCanvasSize = (playerRef?: HTMLElement) => {
-    const player = playerRef || document.querySelector('lottie-player');
-    const canvas = player?.querySelector('canvas');
-    if (!player || !canvas) {
-      return;
+  const [showBench, setShowBench] = useState(false);
+  const [benchPhase, setBenchPhase] = useState<BenchPhase>('idle');
+  const [benchProgress, setBenchProgress] = useState(0);
+  const [benchResult, setBenchResult] = useState<BenchmarkResult | null>(null);
+
+  // Init from URL params
+  useEffect(() => {
+    const r = getParam('renderer', 'gl') as Renderer;
+    const v = getParam('v', 'local') as ThorVGVersion;
+    const c = Math.max(1, parseInt(getParam('count', '20')));
+    const s = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parseInt(getParam('size', '150'))));
+    const seed = getParam('seed', '');
+
+    setRenderer(r);
+    setVersion(v);
+    setCount(c);
+    setSize(s);
+
+    let list: AnimEntry[];
+    if (seed) {
+      list = buildAnimList(decodeSeed(seed));
+      setCount(list.length);
+    } else {
+      list = randomAnimList(c);
+      setParam('seed', encodeSeed(list.map((a) => a.name)));
     }
 
-    setContentSize({
-      width: canvas.width,
-      height: canvas.height
+    setSeedInput(getParam('seed', ''));
+    setAnimList(list);
+    initProfiler();
+  }, []);
+
+  // TVG setup
+  useEffect(() => {
+    if (animList.length === 0 || !canvasRef.current || !containerRef.current) return;
+
+    let cancelled = false;
+
+    const setup = async () => {
+      cancelAnimationFrame(rafRef.current);
+
+      for (const { anim } of animsRef.current) {
+        try { anim.dispose(); } catch { /* */ }
+      }
+      animsRef.current = [];
+      if (tvgCanvasRef.current) { try { tvgCanvasRef.current.destroy(); } catch { /* */ } tvgCanvasRef.current = null; }
+      if (tvgRef.current) { try { tvgRef.current.term(); } catch { /* */ } tvgRef.current = null; }
+
+      setIsLoading(true);
+      setLoadingStatus('Loading…');
+
+      const containerW = containerRef.current!.clientWidth;
+      const tvgDpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
+      const itemSize = size;
+      const cellSize = itemSize / tvgDpr;
+      itemSizeRef.current = cellSize;
+      const cols = Math.max(1, Math.floor(containerW / cellSize));
+      const rows = Math.ceil(animList.length / cols);
+      const canvasW = cols * cellSize;
+      const canvasH = rows * cellSize;
+      colsRef.current = cols;
+
+      const canvasEl = canvasRef.current!;
+      canvasEl.width = canvasW;
+      canvasEl.height = canvasH;
+
+      try {
+        const v = getParam('v', 'local') as ThorVGVersion;
+        const ThorVGModule = await loadThorVGModule(v);
+        if (cancelled) return;
+
+        const TVG = await ThorVGModule.init({
+          renderer,
+          locateFile: () => getWasmUrl(v, wasmUrl),
+          onError: (error: Error) => {
+            // console.error('TVG initialization error:', error);
+          },
+        });
+        if (cancelled) return;
+        tvgRef.current = TVG;
+
+        const tvgCanvas = new TVG.Canvas('#tvg-main-canvas', {
+          width: canvasW,
+          height: canvasH,
+          enableDevicePixelRatio: true,
+        });
+        tvgCanvasRef.current = tvgCanvas;
+
+        setLoadingStatus('Loading…');
+        const fetchResults = await Promise.allSettled(
+          animList.map((a) => fetch(a.url).then((r) => r.text())),
+        );
+        if (cancelled) return;
+
+        const loaded: typeof animsRef.current = [];
+        for (let i = 0; i < fetchResults.length; i++) {
+          const result = fetchResults[i];
+          if (result.status === 'rejected') continue;
+
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          const anim = new TVG.Animation();
+          anim.load(result.value);
+          const info = anim.info();
+          const pic = anim.picture;
+          if (pic) {
+            let naturalW = cellSize;
+            let naturalH = cellSize;
+            try {
+              const json = JSON.parse(result.value);
+              if (json.w > 0 && json.h > 0) { naturalW = json.w; naturalH = json.h; }
+            } catch { /* */ }
+            const scale = Math.min(cellSize / naturalW, cellSize / naturalH);
+            const displayW = naturalW * scale;
+            const displayH = naturalH * scale;
+            pic.size(displayW, displayH).translate(
+              col * cellSize + (cellSize - displayW) / 2,
+              row * cellSize + (cellSize - displayH) / 2,
+            );
+            tvgCanvas.add(pic);
+          }
+          loaded.push({ anim, info, name: animList[i].name, url: animList[i].url });
+        }
+
+        if (cancelled) return;
+        animsRef.current = loaded;
+        setIsLoading(false);
+        setLoadingStatus('');
+
+        const startTime = performance.now();
+        const tick = (ts: number) => {
+          const elapsed = (ts - startTime) / 1000;
+          for (const { anim, info } of animsRef.current) {
+            if (info?.totalFrames > 0) anim.frame((elapsed * info.fps) % info.totalFrames);
+          }
+          const t0 = performance.now();
+          tvgCanvas.update().render();
+          const renderMs = performance.now() - t0;
+
+          if (benchPhaseRef.current === 'measuring') {
+            benchTimingsRef.current.push(renderMs);
+            const mem = (self as any).performance?.memory;
+            if (mem) benchMemRef.current.push(mem.usedJSHeapSize / 1048576);
+          }
+
+          rafRef.current = requestAnimationFrame(tick);
+        };
+        rafRef.current = requestAnimationFrame(tick);
+      } catch (err) {
+        console.error('TVG setup failed:', err);
+        setLoadingStatus(`Error: ${(err as Error).message}`);
+        setIsLoading(false);
+      }
+    };
+
+    setup();
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafRef.current);
+      for (const { anim } of animsRef.current) {
+        try { anim.dispose(); } catch { /* */ }
+      }
+      animsRef.current = [];
+      if (tvgCanvasRef.current) { try { tvgCanvasRef.current.destroy(); } catch { /* */ } tvgCanvasRef.current = null; }
+      if (tvgRef.current) { try { tvgRef.current.term(); } catch { /* */ } tvgRef.current = null; }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animList]);
+
+  const handleCanvasClick = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas || animsRef.current.length === 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const idx = Math.floor(y / itemSizeRef.current) * colsRef.current + Math.floor(x / itemSizeRef.current);
+      if (idx >= 0 && idx < animsRef.current.length) {
+        const { name, url } = animsRef.current[idx];
+        if (url.startsWith('blob:')) {
+          fetch(url).then((r) => r.text()).then((data) => {
+            sessionStorage.setItem('tvg-viewer-data', data);
+            router.push(`/viewer?${new URLSearchParams({ url: 'local', name, renderer, v: getParam('v', 'local') })}`);
+          });
+        } else {
+          router.push(`/viewer?${new URLSearchParams({ url, name, renderer, v: getParam('v', 'local') })}`);
+        }
+      }
+    },
+    [renderer, router],
+  );
+
+  const handleSet = () => {
+    window.location.href = `/?${new URLSearchParams({ renderer, count: count.toString(), size: size.toString() })}`;
+  };
+
+  const handleSeedApply = () => {
+    const trimmed = seedInput.trim();
+    if (!trimmed) return;
+    const params = new URLSearchParams(window.location.search);
+    params.set('seed', trimmed);
+    window.location.href = `/?${params}`;
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
+  }, []);
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (animList.length === 0) return;
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.name.endsWith('.json'));
+    if (files.length === 0) return;
+
+    blobUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+    blobUrlsRef.current = [];
+
+    const next = [...animList];
+    files.forEach((file) => {
+      const blobUrl = URL.createObjectURL(file);
+      blobUrlsRef.current.push(blobUrl);
+      const idx = Math.floor(Math.random() * next.length);
+      next[idx] = { name: file.name.replace('.json', ''), url: blobUrl };
     });
-  };
+    setAnimList(next);
+  }, [animList]);
 
-  const handleSliderChange = (value: number) => {
-    setSize({ width: value, height: value });
-    setQueryStringParameter('size', value);
-    requestAnimationFrame(() => checkCanvasSize());
-  };
+  // Benchmark
+  const cancelBenchmark = useCallback(() => {
+    if (benchTimeoutA.current) clearTimeout(benchTimeoutA.current);
+    if (benchTimeoutB.current) clearTimeout(benchTimeoutB.current);
+    if (benchIntervalRef.current) clearInterval(benchIntervalRef.current);
+    benchTimeoutA.current = benchTimeoutB.current = benchIntervalRef.current = null;
+    benchPhaseRef.current = 'idle';
+    setBenchPhase('idle');
+    setBenchProgress(0);
+  }, []);
 
+  const startBenchmark = useCallback(() => {
+    cancelBenchmark();
+    benchTimingsRef.current = [];
+    benchMemRef.current = [];
+    benchPhaseRef.current = 'warmup';
+    setBenchPhase('warmup');
+    setBenchProgress(0);
+    setBenchResult(null);
 
-  const loadAnimationByCount = async (_count = count.name) => {
-    const newAnimationList = [];
+    const runStart = performance.now();
+    benchIntervalRef.current = setInterval(() => {
+      const elapsed = performance.now() - runStart;
+      setBenchProgress(elapsed < BENCH_WARMUP_MS
+        ? (elapsed / BENCH_WARMUP_MS) * 50
+        : 50 + Math.min(50, ((elapsed - BENCH_WARMUP_MS) / BENCH_MEASURE_MS) * 50));
+    }, 100);
 
-    for (let i = 0; i < _count; i++) {
-      const _anim = animations[Math.floor(Math.random() * animations.length)];
+    benchTimeoutA.current = setTimeout(() => {
+      benchPhaseRef.current = 'measuring';
+      setBenchPhase('measuring');
+    }, BENCH_WARMUP_MS);
 
-      newAnimationList.push({
-        name: _anim.split('/').pop()?.split('.')[0] || 'Unknown',
-        lottieURL: `${urlPrefix}${_anim}`,
-      });
-    }
+    benchTimeoutB.current = setTimeout(() => {
+      if (benchIntervalRef.current) clearInterval(benchIntervalRef.current);
+      benchPhaseRef.current = 'idle';
+      setBenchProgress(100);
 
-    // @ts-ignore
-    await setAnimationList([]);
-    await setAnimationList(newAnimationList);
+      const timings = benchTimingsRef.current;
+      if (timings.length === 0) { setBenchPhase('idle'); return; }
 
-    saveCurrentSeed(newAnimationList);
-  };
+      setBenchResult(computeBenchResult(timings, benchMemRef.current, {
+        renderer, version: getParam('v', 'local'), count, size, seed: getParam('seed', ''),
+      }));
+      setBenchPhase('done');
+    }, BENCH_WARMUP_MS + BENCH_MEASURE_MS);
+  }, [cancelBenchmark, renderer, count, size]);
 
-  const saveCurrentSeed = (animationList: any[]) => {
-    const nameList = animationList.map((v: any) => v.name).join(',');
-    const seed = btoa(nameList);
-    setQueryStringParameter('seed', seed);
-  }
-
-  const loadSeed = (seed: string) => {
-    const nameList = atob(seed).split(',');
-    console.log(nameList);
-    const newAnimationList = nameList.map((name: string) => {
-      const _anim = animations.find((anim) => anim === `${name.trim()}.json`) || animations[0];
-
-      return {
-        name: name,
-        lottieURL: `${urlPrefix}${_anim}`,
-      };
-    });
-
-    setAnimationList(newAnimationList);
-  }
-
-  const spawnAnimation = () => {
-    if (!text.trimEnd().trimStart()) {
-      alert("Please enter a valid link");
-      return;
-    }
-
-    // random 0 to animationList.length
-    const randomIndex = Math.floor(Math.random() * animationList.length);
-    animationList[randomIndex].lottieURL = text;
-    animationList[randomIndex].name = text.split('/').pop()?.split('.')[0] || 'Unknown';
-    setAnimationList(animationList.slice());
-
-    setTimeout(() => {
-      document.querySelector(`.${animationList[randomIndex].name}-${randomIndex}`)?.scrollIntoView({ behavior: 'smooth' });
-    }, 150);
-  };
+  const sizePercent = ((size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE)) * 100;
 
   return (
-    <div className="bg-gray-900 pt-4 pb-24 sm:pb-32 sm:pt-8 pt-12">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:mx-0">
-          <div className="mt-6 flex w-full flex-wrap gap-x-4 gap-y-4 align-middle flex-row">
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="sticky top-0 z-20 bg-gray-900/95 backdrop-blur-sm border-b border-white/10">
+        <div className="max-w-screen-xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+          <span className="font-bold text-brand mr-1 text-sm tracking-wide hidden sm:block">ThorVG Perf</span>
 
-            <h1 className='text-justify text-center text-white leading-[52px] sm:block hidden'>Player: </h1>
-
-            <Listbox value={player} onChange={(v) => {
-              setPlayer(v);
-              setQueryStringParameter('player', v.name);
-            }}>
-      {({ open }) => (
-        <>
-          <div className="relative">
-            <Listbox.Button className="relative w-full cursor-default rounded-md bg-white/5 py-3.5 pl-3 pr-10 text-left text-white shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
-              <span className="block truncate">{player.name}</span>
-              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </span>
-            </Listbox.Button>
-
-            <Transition
-              show={open}
-              as={Fragment}
-              leave="transition ease-in duration-100"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <ListboxOptions className="absolute w-full z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                {playerOptions.map((player) => (
-                  <ListboxOption
-                    key={player.id}
-                    className={({ active }: any) =>
-                      classNames(
-                        active ? 'bg-indigo-600 text-white' : 'text-gray-900',
-                        'relative cursor-default select-none py-2 pl-3 pr-9'
-                      )
-                    }
-                    value={player}
-                  >
-                    {({ selected, active }) => (
-                      <>
-                        <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>
-                          {player.name}
-                        </span>
-
-                        {selected ? (
-                          <span
-                            className={classNames(
-                              active ? 'text-white' : 'text-indigo-600',
-                              'absolute inset-y-0 right-0 flex items-center pr-4'
-                            )}
-                          >
-                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                          </span>
-                        ) : null}
-                      </>
-                    )}
-                  </ListboxOption>
-                ))}
-              </ListboxOptions>
-            </Transition>
-          </div>
-        </>
-      )}
-    </Listbox>
-
-    <Listbox value={count} onChange={(v) => {
-      setCount(v);
-      setQueryStringParameter('count', v.name);
-    }}>
-      {({ open }) => (
-        <>
-          <div className="relative">
-            <Listbox.Button className="relative w-full cursor-default rounded-md bg-white/5 py-3.5 pl-3 pr-10 text-left text-white shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
-              <span className="block truncate">{count.name}</span>
-              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </span>
-            </Listbox.Button>
-
-            <Transition
-              show={open}
-              as={Fragment}
-              leave="transition ease-in duration-100"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <ListboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                {countOptions.map((option) => (
-                  <ListboxOption
-                    key={option.id}
-                    className={({ active }: any) =>
-                      classNames(
-                        active ? 'bg-indigo-600 text-white' : 'text-gray-900',
-                        'relative cursor-default select-none py-2 pl-3 pr-9'
-                      )
-                    }
-                    value={option}
-                  >
-                    {({ selected, active }) => (
-                      <>
-                        <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>
-                          {option.name}
-                        </span>
-
-                        {selected ? (
-                          <span
-                            className={classNames(
-                              active ? 'text-white' : 'text-indigo-600',
-                              'absolute inset-y-0 right-0 flex items-center pr-4'
-                            )}
-                          >
-                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                          </span>
-                        ) : null}
-                      </>
-                    )}
-                  </ListboxOption>
-                ))}
-              </ListboxOptions>
-            </Transition>
-          </div>
-        </>
-      )}
-    </Listbox>
-
+          <div className="flex bg-white/5 rounded-lg p-0.5">
+            {(['sw', 'gl', 'wg'] as Renderer[]).map((r) => (
               <button
-                type="submit"
-                className="flex-none rounded-md bg-[#00deb5] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                key={r}
                 onClick={() => {
-                  setQueryStringParameter('seed', '');
-                  window.location.reload();
+                  if (r === renderer) return;
+                  const params = new URLSearchParams(window.location.search);
+                  params.set('renderer', r);
+                  window.location.href = `/?${params}`;
                 }}
+                className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
+                  renderer === r ? 'bg-brand text-gray-900' : 'text-gray-300 hover:text-white'
+                }`}
               >
-                Set
+                {RENDERER_LABELS[r]}
               </button>
-              <div className="text-white w-full sm:flex-1 sm:min-w-[240px]">
-                <label className="block mb-2">
-                  Size: {contentSize.width}px
-                </label>
-                <input
-                  type="range"
-                  min={50}
-                  max={180}
-                  value={size.width}
-                  onChange={(e) => handleSliderChange(Number(e.target.value))}
-                  className="slider"
-                  style={{
-                    background: `linear-gradient(to right, #00deb5 0%, #00deb5 ${percent}%, #444 ${percent}%, #444 100%)`,
-                  }}
-                />
-              </div>
+            ))}
           </div>
 
-          <div className="mt-6 flex w-full gap-x-4">
-              <label htmlFor="animation-url" className="sr-only">
-                link address
-              </label>
-              <input
-                id="animation-url"
-                name="link"
-                type="link"
-                autoComplete="link"
-                required
-                className="min-w-0 flex-auto rounded-md border-0 bg-white/5 px-3.5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
-                placeholder="Enter Lottie link to randomly spawn given animation"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-              />
+          <select
+            value={count}
+            onChange={(e) => setCount(Number(e.target.value))}
+            className="bg-white/5 border border-white/10 rounded px-2 py-1.5 text-xs text-white appearance-none cursor-pointer"
+          >
+            {COUNT_OPTIONS.map((n) => (
+              <option key={n} value={n} className="bg-gray-800">{n} animations</option>
+            ))}
+          </select>
 
-              <button
-                type="submit"
-                className="flex-none rounded-md bg-[#00deb5] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                onClick={spawnAnimation}
-              >
-                Spawn
-              </button>
-            </div>
+          <div className="flex items-center gap-2 w-40 shrink-0">
+            <span className="text-xs text-gray-400 w-12 shrink-0">{size}px</span>
+            <input
+              type="range" min={MIN_SIZE} max={MAX_SIZE} value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+              className="slider flex-1"
+              style={{ background: `linear-gradient(to right, #00deb5 0%, #00deb5 ${sizePercent}%, #444 ${sizePercent}%, #444 100%)` }}
+            />
+          </div>
+
+          <button onClick={handleSet} className="px-4 py-1.5 bg-brand text-gray-900 rounded text-xs font-bold hover:opacity-90 transition-opacity">
+            Set
+          </button>
+
+          <button
+            onClick={() => { setBenchResult(null); setBenchPhase('idle'); setShowBench(true); }}
+            disabled={isLoading || animList.length === 0}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-gray-300 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="8" cy="8" r="6" /><path d="M8 5v3.5l2 1.5" />
+            </svg>
+            Benchmark
+          </button>
+
+          <div className="ml-auto">
+            <VersionSelector
+              current={version}
+              localVersion={process.env.NEXT_PUBLIC_WEBCANVAS_VERSION || ''}
+              onChange={(v) => {
+                const params = new URLSearchParams(window.location.search);
+                params.set('v', v);
+                window.location.href = `/?${params}`;
+              }}
+            />
+          </div>
+
+          <div className="flex gap-2 w-full sm:w-auto sm:flex-1 min-w-0">
+            <input
+              type="text"
+              placeholder="Paste a seed to restore a session…"
+              value={seedInput}
+              onChange={(e) => setSeedInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSeedApply()}
+              spellCheck={false}
+              className="min-w-0 flex-1 bg-white/5 border border-white/10 rounded px-3 py-1.5 text-xs text-white font-mono placeholder:text-gray-500 placeholder:font-sans focus:outline-none focus:ring-1 focus:ring-brand/50"
+            />
+            <button onClick={handleSeedApply} className="px-3 py-1.5 bg-white/10 rounded text-xs hover:bg-white/20 transition-colors shrink-0">
+              Apply
+            </button>
+          </div>
         </div>
-        <ul
-          role="list"
-          className="animation-list mx-auto mt-20 grid gap-x-8 gap-y-14 lg:mx-0 lg:max-w-none justify-items-center"
-          style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${size.width}px, 1fr))` }}
-        >
-          {animationList.map((anim: any, index: number) => (
-            <li key={`${anim.name}-${anim.lottieURL}-${playerId}-${index}`} className={`${anim.name}-${index}`} style={{ maxWidth: size.width }}>
-              {
-                playerId == 1 &&
-                (
-                  <lottie-player
-                    src={anim.lottieURL}
-                    background="transparent"
-                    className="aspect-[14/13] w-full rounded-2xl object-cover"
-                    style={{width: size.width, height: size.height}}
-                    loop
-                    autoplay
-                    wasmUrl={wasmUrl}
-                    renderConfig={JSON.stringify({enableDevicePixelRatio: true})}
-                    ref={(playerRef: HTMLElement) => {
-                      if (playerRef && index === 0) {
-                        requestAnimationFrame(() => checkCanvasSize(playerRef));
-                      }
-                    }}
-                  />
-                )
-              }
-              {
-                playerId == 2 &&
-                (
-                  <lottie-player
-                    src={anim.lottieURL}
-                    background="transparent"
-                    className="aspect-[14/13] w-full rounded-2xl object-cover"
-                    style={{width: size.width, height: size.height}}
-                    loop
-                    autoplay
-                    wasmUrl={wasmUrl}
-                    renderConfig={JSON.stringify({
-                      enableDevicePixelRatio: true,
-                      renderer: 'wg'
-                    })}
-                    ref={(playerRef: HTMLElement) => {
-                      if (playerRef && index === 0) {
-                        requestAnimationFrame(() => checkCanvasSize(playerRef));
-                      }
-                    }}
-                  />
-                )
-              }
-              <h3 className="mt-6 text-lg font-semibold leading-8 tracking-tight text-white overflow-hidden text-ellipsis whitespace-nowrap">{anim.name}</h3>
-            </li>
-          ))}
-        </ul>
+      </div>
+
+      {showBench && (
+        <BenchmarkModal
+          renderer={renderer} count={count} size={size}
+          phase={benchPhase} progress={benchProgress} result={benchResult}
+          onStart={startBenchmark} onCancel={cancelBenchmark}
+          onClose={() => { cancelBenchmark(); setShowBench(false); }}
+        />
+      )}
+
+      <div
+        ref={containerRef}
+        className={`max-w-screen-xl mx-auto px-4 py-6 relative transition-colors ${isDragging ? 'bg-brand/5' : ''}`}
+        onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
+      >
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-24 text-gray-400 gap-3">
+            <div className="w-8 h-8 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
+            <div className="text-sm">{loadingStatus || 'Loading…'}</div>
+            <div className="text-xs text-gray-500">{RENDERER_LABELS[renderer]} renderer</div>
+          </div>
+        )}
+
+        {isDragging && <DragOverlay />}
+
+        <canvas
+          ref={canvasRef}
+          id="tvg-main-canvas"
+          onClick={handleCanvasClick}
+          className={`cursor-pointer transition-opacity duration-300 block ${isLoading ? 'opacity-0 h-0' : 'opacity-100'}`}
+          title="Click any animation to open the detailed viewer"
+        />
       </div>
     </div>
-  )
+  );
 }
