@@ -2,7 +2,7 @@ import { swc } from "rollup-plugin-swc3";
 import { dts } from "rollup-plugin-dts";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
-import { terser } from "rollup-plugin-terser";
+import terser from "@rollup/plugin-terser";
 import replace from '@rollup/plugin-replace';
 import pkg from './package.json' assert { type: 'json' };
 
