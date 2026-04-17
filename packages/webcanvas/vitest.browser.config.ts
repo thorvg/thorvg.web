@@ -2,11 +2,12 @@ import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import path from 'path';
 
-const renderer = (process.env.TEST_RENDERER || 'wg') as 'wg' | 'gl';
+const renderer = (process.env.TEST_RENDERER || 'wg') as 'wg' | 'gl' | 'sw';
 
-const launchArgs = renderer === 'wg'
-  ? ['--enable-unsafe-webgpu', '--enable-features=Vulkan']
-  : ['--ignore-gpu-blocklist', '--use-gl=angle'];
+const launchArgs =
+  renderer === 'wg' ? ['--enable-unsafe-webgpu', '--enable-features=Vulkan'] :
+  renderer === 'gl' ? ['--ignore-gpu-blocklist', '--use-gl=angle'] :
+  []; // sw: no GPU flags required
 
 export default defineConfig({
   define: {
