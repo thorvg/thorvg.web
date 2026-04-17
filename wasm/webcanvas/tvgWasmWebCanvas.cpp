@@ -50,7 +50,7 @@ struct TvgEngineMethod
     }
 };
 
-#ifdef THORVG_SW_RASTER_SUPPORT
+#ifdef THORVG_CPU_ENGINE_SUPPORT
 
 struct TvgSwEngine : TvgEngineMethod
 {
@@ -87,7 +87,7 @@ struct TvgSwEngine : TvgEngineMethod
 
 #endif
 
-#ifdef THORVG_WG_RASTER_SUPPORT
+#ifdef THORVG_WG_ENGINE_SUPPORT
 
 #include <webgpu/webgpu.h>
 
@@ -224,7 +224,7 @@ struct TvgWgEngine : TvgEngineMethod
 
 #endif
 
-#ifdef THORVG_GL_RASTER_SUPPORT
+#ifdef THORVG_GL_ENGINE_SUPPORT
 
 #include <emscripten/html5_webgl.h>
 
@@ -279,7 +279,7 @@ struct TvgGlEngine : TvgEngineMethod
 
 // 0: success, 1: fail, 2: wait for async request
 int init() {
-#ifdef THORVG_WG_RASTER_SUPPORT
+#ifdef THORVG_WG_ENGINE_SUPPORT
     return TvgWgEngine::init();
 #else
     return 0;
@@ -287,7 +287,7 @@ int init() {
 }
 
 void term() {
-#ifdef THORVG_WG_RASTER_SUPPORT
+#ifdef THORVG_WG_ENGINE_SUPPORT
     TvgWgEngine::term();
 #endif
 }
@@ -302,13 +302,13 @@ public:
     explicit TvgCanvas(string engineType = "sw", string selector = "", uint32_t w = 0, uint32_t h = 0) {
         errorMsg = "None";
 
-#ifdef THORVG_SW_RASTER_SUPPORT
+#ifdef THORVG_CPU_ENGINE_SUPPORT
         if (engineType == "sw") engine = new TvgSwEngine;
 #endif
-#ifdef THORVG_GL_RASTER_SUPPORT
+#ifdef THORVG_GL_ENGINE_SUPPORT
         if (engineType == "gl") engine = new TvgGlEngine;
 #endif
-#ifdef THORVG_WG_RASTER_SUPPORT
+#ifdef THORVG_WG_ENGINE_SUPPORT
         if (engineType == "wg") engine = new TvgWgEngine;
 #endif
 
