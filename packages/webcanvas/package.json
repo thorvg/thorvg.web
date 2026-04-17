@@ -1,6 +1,6 @@
 {
   "name": "@thorvg/webcanvas",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A TypeScript WebCanvas API for ThorVG - High-performance vector graphics rendering",
   "main": "./dist/webcanvas.cjs.js",
   "module": "./dist/webcanvas.esm.js",
@@ -25,6 +25,7 @@
     "build:watch": "npm run clean && sh ./wasm_wcanvas_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:sw": "TEST_RENDERER=sw vitest run --config vitest.browser.config.ts",
     "test:gl": "TEST_RENDERER=gl vitest run --config vitest.browser.config.ts",
     "test:wg": "TEST_RENDERER=wg vitest run --config vitest.browser.config.ts",
@@ -62,6 +63,7 @@
     "@swc/core": "^1.3.99",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
     "@vitest/browser-playwright": "^4.0.18",
+    "@vitest/coverage-v8": "4.0.18",
     "eslint": "^8.0.1",
     "happy-dom": "^20.5.0",
     "playwright": "^1.58.2",
