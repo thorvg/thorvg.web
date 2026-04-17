@@ -3,7 +3,7 @@ import ThorVG from '../src/index';
 import type { ThorVGNamespace } from '../src/index';
 import wasmUrl from '../dist/thorvg.wasm?url';
 
-declare const __TEST_RENDERER: 'wg' | 'gl';
+declare const __TEST_RENDERER: 'wg' | 'gl' | 'sw';
 
 const renderer = typeof __TEST_RENDERER !== 'undefined' ? __TEST_RENDERER : 'wg';
 

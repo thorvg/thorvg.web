@@ -23,118 +23,267 @@ class IntersectionObserver {
   unobserve = (): void => {}
 }
 
-describe('Lottie Player', () => {
-  let lottiePlayer: LottiePlayer;
+function waitForLoadOrError(el: LottiePlayer): Promise<'load' | 'error'> {
+  return new Promise(resolve => {
+    el.addEventListener('load',  () => resolve('load'),  { once: true });
+    el.addEventListener('error', () => resolve('error'), { once: true });
+  });
+}
 
+function hasPixels(player: LottiePlayer): boolean {
+  const src = player.querySelector('.thorvg') as HTMLCanvasElement | null;
+  if (!src || src.width === 0 || src.height === 0) return false;
+
+  const ctx2d = src.getContext('2d');
+  if (ctx2d) {
+    const { data } = ctx2d.getImageData(0, 0, src.width, src.height);
+    return data.some(v => v > 0);
+  }
+
+  return true;
+}
+
+function makePNGDataURL(): string {
+  // Create a 10x10 blue square
+  const c = document.createElement('canvas');
+  c.width = 10;
+  c.height = 10;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = 'blue';
+  ctx.fillRect(0, 0, 10, 10);
+  return c.toDataURL('image/png');
+}
+
+const SVG_DATA_URL =
+  `data:image/svg+xml,${encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
+    '<rect width="100" height="100" fill="green"/></svg>',
+  )}`;
+
+async function createReadyPlayer(): Promise<LottiePlayer> {
+  const player = await fixture<LottiePlayer>(html`
+    <lottie-player
+      src="${ANIMATION}"
+      style="width: ${WIDTH}px; height: ${HEIGHT}px;"
+      wasmUrl="${WASM_URL}"
+    ></lottie-player>
+  `);
+
+  await new Promise<void>((resolve, reject) => {
+    player.addEventListener('load',  () => resolve(), { once: true });
+    player.addEventListener('error', () => reject(new Error('Initial animation failed to load')), { once: true });
+  });
+
+  return player;
+}
+
+describe('Lottie Player', () => {
   before(() => {
     // @ts-expect-error: disable IntersectionObserver
     window.IntersectionObserver = IntersectionObserver;
   });
 
-  it('should create the player', async () => {
-    let isReady = false;
-    lottiePlayer = await fixture(html`
-      <lottie-player
-        src="${ANIMATION}"
-        style="width: ${WIDTH}px; height: ${HEIGHT}px;"
-        wasmUrl="${WASM_URL}"
-      ></lottie-player>
-    `);
+  describe('Initialization', () => {
+    let player: LottiePlayer;
 
-    lottiePlayer.addEventListener('ready', () => {
-      isReady = true;
+    before(async () => {
+      player = await createReadyPlayer();
     });
 
-    await lottiePlayer.updateComplete;
-    while (!isReady) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
+    after(() => {
+      player.destroy();
+    });
 
-    expect(document.querySelector('lottie-player')).to.be.instanceOf(
-      LottiePlayer,
-    );
+    it('should be a LottiePlayer instance', () => {
+      expect(player).to.be.instanceOf(LottiePlayer);
+    });
+
+    it('should return correct version', () => {
+      const { THORVG_VERSION } = player.getVersion();
+      expect(THORVG_VERSION).to.equal(EXPECTED_THORVG_VERSION);
+    });
   });
 
-  it('should play the animation', async () => {
-    lottiePlayer.play();
-    await lottiePlayer.updateComplete;
-    expect(lottiePlayer.currentState).to.equal('playing');
+  describe('Playback controls', () => {
+    let player: LottiePlayer;
+
+    before(async () => {
+      player = await createReadyPlayer();
+    });
+
+    after(() => {
+      player.destroy();
+    });
+
+    it('play', async () => {
+      player.play();
+      await player.updateComplete;
+      expect(player.currentState).to.equal('playing');
+    });
+
+    it('pause', async () => {
+      player.pause();
+      await player.updateComplete;
+      expect(player.currentState).to.equal('paused');
+    });
+
+    it('stop resets to frame 0', async () => {
+      player.stop();
+      await player.updateComplete;
+      expect(player.currentState).to.equal('paused');
+      expect(player.currentFrame).to.equal(0);
+    });
+
+    it('freeze', async () => {
+      player.freeze();
+      await player.updateComplete;
+      expect(player.currentState).to.equal('frozen');
+    });
+
+    it('seek to frame 10', async () => {
+      await player.seek(10);
+      await player.updateComplete;
+      expect(player.currentFrame).to.equal(10);
+    });
+
+    it('resize immediately after load completes without error', async () => {
+      const resultPromise = waitForLoadOrError(player);
+      player.load(ANIMATION);
+      await resultPromise;
+      expect(() => player.resize(200, 200)).to.not.throw();
+      expect(player.currentState).to.not.equal('error');
+    });
   });
 
-  it('should pause the animation', async () => {
-    lottiePlayer.pause();
-    await lottiePlayer.updateComplete;
-    expect(lottiePlayer.currentState).to.equal('paused');
+  describe('Properties', () => {
+    let player: LottiePlayer;
+
+    before(async () => {
+      player = await createReadyPlayer();
+    });
+
+    after(() => {
+      player.destroy();
+    });
+
+    it('setLooping', () => {
+      player.setLooping(false);
+      expect(player.loop).to.equal(false);
+    });
+
+    it('setDirection', () => {
+      player.setDirection(-1);
+      expect(player.direction).to.equal(-1);
+    });
+
+    it('setSpeed', () => {
+      player.setSpeed(2.0);
+      expect(player.speed).to.equal(2.0);
+    });
+
+    it('setBgColor', () => {
+      expect(() => player.setBgColor('red')).to.not.throw();
+    });
+
+    it('setQuality', () => {
+      expect(() => player.setQuality(50)).to.not.throw();
+    });
   });
 
-  it('should stop the animation and reset frame', async () => {
-    lottiePlayer.stop();
-    await lottiePlayer.updateComplete;
-    expect(lottiePlayer.currentState).to.equal('paused');
-    expect(lottiePlayer.currentFrame).to.equal(0);
+  describe('Export', () => {
+    let player: LottiePlayer;
+
+    before(async () => {
+      player = await createReadyPlayer();
+    });
+
+    after(() => {
+      player.destroy();
+    });
+
+    it('save2png', () => {
+      expect(() => player.save2png()).to.not.throw();
+    });
+
+    it('save2gif', async () => {
+      return player.save2gif(ANIMATION);
+    });
   });
 
-  it('should freeze the animation', async () => {
-    lottiePlayer.freeze();
-    await lottiePlayer.updateComplete;
-    expect(lottiePlayer.currentState).to.equal('frozen');
+  describe('Error paths', () => {
+    let player: LottiePlayer;
+
+    before(async () => {
+      player = await createReadyPlayer();
+    });
+
+    after(() => {
+      player.destroy();
+    });
+
+    it('fires error event for an invalid source', async () => {
+      const resultPromise = waitForLoadOrError(player);
+      player.load('not-json-not-url');
+      expect(await resultPromise).to.equal('error');
+      expect(player.currentState).to.equal('error');
+    });
+
+    it('fires error event for malformed JSON', async () => {
+      const resultPromise = waitForLoadOrError(player);
+      player.load('{"not":"lottie"}');
+      expect(await resultPromise).to.equal('error');
+      expect(player.currentState).to.equal('error');
+    });
   });
 
-  it('should replay the animation', async () => {
-    lottiePlayer.play();
-    await lottiePlayer.updateComplete;
-    expect(lottiePlayer.currentState).to.equal('playing');
+  describe('Format verification', () => {
+    let player: LottiePlayer;
+
+    beforeEach(async () => {
+      player = await createReadyPlayer();
+    });
+
+    afterEach(() => {
+      player.destroy();
+    });
+
+    it('SVG loads and renders pixels', async () => {
+      const resultPromise = waitForLoadOrError(player);
+      await player.load(SVG_DATA_URL, 'svg' as any);
+      expect(await resultPromise).to.equal('load');
+      expect(hasPixels(player)).to.equal(true);
+    });
+
+    it('PNG loads and renders pixels', async () => {
+      const resultPromise = waitForLoadOrError(player);
+      player.load(makePNGDataURL(), 'png' as any);
+      expect(await resultPromise).to.equal('load');
+      expect(hasPixels(player)).to.equal(true);
+    });
+
+    it('Lottie JSON loads and renders pixels', async () => {
+      const resultPromise = waitForLoadOrError(player);
+      player.load(ANIMATION);
+      expect(await resultPromise).to.equal('load');
+      expect(hasPixels(player)).to.equal(true);
+    });
   });
 
-  it('should seek to specific frame', async () => {
-    await lottiePlayer.seek(10);
-    await lottiePlayer.updateComplete;
-    expect(lottiePlayer.currentFrame).to.equal(10);
-  });
+  describe('Lifecycle', () => {
+    let player: LottiePlayer;
 
-  it('should set loop property', () => {
-    lottiePlayer.setLooping(false);
-    expect(lottiePlayer.loop).to.equal(false);
-  });
+    before(async () => {
+      player = await createReadyPlayer();
+    });
 
-  it('should set direction property', () => {
-    lottiePlayer.setDirection(-1);
-    expect(lottiePlayer.direction).to.equal(-1);
-  });
+    it('should destroy the player and set state to destroyed', () => {
+      player.destroy();
+      expect(player.currentState).to.equal('destroyed');
+      expect(document.querySelector('lottie-player')).to.equal(null);
+    });
 
-  it('should set speed property', () => {
-    lottiePlayer.setSpeed(2.0);
-    expect(lottiePlayer.speed).to.equal(2.0);
-  });
-
-  it('should set background color', () => {
-    expect(() => lottiePlayer.setBgColor('red')).to.not.throw();
-  });
-
-  it('should set quality property', () => {
-    expect(() => lottiePlayer.setQuality(50)).to.not.throw();
-  });
-
-  it('should execute save2png without error', () => {
-    expect(() => lottiePlayer.save2png()).to.not.throw();
-  });
-
-  it('should execute save2gif without error', async () => {
-    return lottiePlayer.save2gif(ANIMATION);
-  });
-
-  it('should return version object', () => {
-    const { THORVG_VERSION } = lottiePlayer.getVersion();
-    expect(THORVG_VERSION).to.equal(EXPECTED_THORVG_VERSION);
-  });
-
-  it('should destroy the player and set state to destroyed', () => {
-    lottiePlayer.destroy();
-    expect(lottiePlayer.currentState).to.equal('destroyed');
-    expect(document.querySelector('lottie-player')).to.equal(null);
-  });
-
-  it('should terminate module without error', () => {
-    expect(() => lottiePlayer.term()).to.not.throw();
+    it('should terminate module without error', () => {
+      expect(() => player.term()).to.not.throw();
+    });
   });
 });

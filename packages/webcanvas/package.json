@@ -26,6 +26,7 @@
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:sw": "TEST_RENDERER=sw vitest run --config vitest.browser.config.ts",
     "test:gl": "TEST_RENDERER=gl vitest run --config vitest.browser.config.ts",
     "test:wg": "TEST_RENDERER=wg vitest run --config vitest.browser.config.ts",
     "lint": "eslint ./src --ext .ts",

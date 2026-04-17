@@ -7,6 +7,7 @@ export default defineConfig({
     globals: true,
     root: '.',
     include: ['test/*.test.ts'],
+    exclude: ['test/render.test.ts'],
     setupFiles: ['./test/setup.ts'],
     testTimeout: 30000,
     execArgv: ['--expose-gc'],

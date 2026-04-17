@@ -78,6 +78,9 @@ jobs:
           sudo apt-get install -y xvfb
           pnpm --filter @thorvg/webcanvas exec playwright install --with-deps chromium
 
+      - name: Run browser tests (SW renderer)
+        run: xvfb-run pnpm --filter @thorvg/webcanvas test:sw
+
       - name: Run browser tests (WebGL)
         run: xvfb-run pnpm --filter @thorvg/webcanvas test:gl
 
