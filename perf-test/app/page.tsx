@@ -317,6 +317,28 @@ export default function Home() {
     }, BENCH_WARMUP_MS + BENCH_MEASURE_MS);
   }, [cancelBenchmark, renderer, count, size]);
 
+  // Autorun benchmark (headless CI mode via ?autorun=1)
+  const autorunRef = useRef(false);
+  useEffect(() => {
+    if (autorunRef.current) return;
+    const autorun = new URLSearchParams(window.location.search).get('autorun');
+    if (autorun !== '1' && autorun !== 'true') return;
+    if (isLoading || animList.length === 0) return;
+    autorunRef.current = true;
+    setTimeout(() => {
+      setShowBench(true);
+      startBenchmark();
+    }, 500);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, animList, startBenchmark]);
+
+  // Expose benchmark result to window for headless extraction
+  useEffect(() => {
+    if (benchResult) {
+      (window as any).__BENCH_RESULT = benchResult;
+    }
+  }, [benchResult]);
+
   const sizePercent = ((size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE)) * 100;
 
   return (
