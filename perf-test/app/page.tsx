@@ -321,7 +321,11 @@ export default function Home() {
       setBenchProgress(100);
 
       const timings = benchTimingsRef.current;
-      if (timings.length === 0) { setBenchPhase('idle'); return; }
+      if (timings.length === 0) {
+        (window as any).__BENCH_ERROR = 'No frames rendered — check renderer/animation load errors';
+        setBenchPhase('idle');
+        return;
+      }
 
       setBenchResult(computeBenchResult(timings, benchMemRef.current, {
         renderer, version: getParam('v', 'local'), count, size, seed: getParam('seed', ''),
@@ -329,6 +333,28 @@ export default function Home() {
       setBenchPhase('done');
     }, BENCH_WARMUP_MS + BENCH_MEASURE_MS);
   }, [cancelBenchmark, renderer, count, size]);
+
+  // Autorun benchmark (headless CI mode via ?autorun=1)
+  const autorunRef = useRef(false);
+  useEffect(() => {
+    if (autorunRef.current) return;
+    const autorun = new URLSearchParams(window.location.search).get('autorun');
+    if (autorun !== '1' && autorun !== 'true') return;
+    if (isLoading || animList.length === 0) return;
+    autorunRef.current = true;
+    setTimeout(() => {
+      setShowBench(true);
+      startBenchmark();
+    }, 500);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, animList, startBenchmark]);
+
+  // Expose benchmark result to window for headless extraction
+  useEffect(() => {
+    if (benchResult) {
+      (window as any).__BENCH_RESULT = benchResult;
+    }
+  }, [benchResult]);
 
   const sizePercent = ((size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE)) * 100;
 
