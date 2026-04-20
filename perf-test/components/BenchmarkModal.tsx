@@ -1,7 +1,7 @@
 'use client';
 
 import { type Renderer, RENDERER_LABELS } from '../lib/constants';
-import { type BenchPhase, type BenchmarkResult, BENCH_WARMUP_MS, BENCH_MEASURE_MS, formatReport } from '../lib/benchmark';
+import { type BenchPhase, type BenchmarkResult, formatReport } from '../lib/benchmark';
 import { getParam } from '../lib/url-params';
 
 interface Props {
