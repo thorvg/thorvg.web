@@ -24,6 +24,8 @@ export function computeBenchResult(
   timings: number[],
   memSamples: number[],
   config: { renderer: Renderer; version: string; count: number; size: number; seed: string },
+  warmupMs = BENCH_WARMUP_MS,
+  measureMs = BENCH_MEASURE_MS,
 ): BenchmarkResult {
   const sorted = [...timings].sort((a, b) => a - b);
   const avg = timings.reduce((a, b) => a + b, 0) / timings.length;
@@ -31,10 +33,10 @@ export function computeBenchResult(
   return {
     timestamp: new Date().toLocaleString(),
     ...config,
-    warmupMs: BENCH_WARMUP_MS,
-    measureMs: BENCH_MEASURE_MS,
+    warmupMs,
+    measureMs,
     totalFrames: timings.length,
-    fps: Math.round(timings.length / (BENCH_MEASURE_MS / 1000)),
+    fps: Math.round(timings.length / (measureMs / 1000)),
     frameTime: { avg, min: sorted[0], max: sorted[sorted.length - 1], p95: sorted[Math.floor(sorted.length * 0.95)] },
     memory: memSamples.length > 0
       ? { avg: memSamples.reduce((a, b) => a + b, 0) / memSamples.length, peak: Math.max(...memSamples) }
