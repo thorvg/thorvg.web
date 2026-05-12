@@ -61,7 +61,7 @@ export interface ThorVGCAPI {
   // Paint functions
   _tvg_paint_translate(paint: number, x: number, y: number): number;
   _tvg_paint_rotate(paint: number, angle: number): number;
-  _tvg_paint_scale(paint: number, sx: number, sy: number): number;
+  _tvg_paint_scale(paint: number, factor: number): number;
   _tvg_paint_set_opacity(paint: number, opacity: number): number;
   _tvg_paint_get_opacity(paint: number): number;
   _tvg_paint_set_visible(paint: number, visible: number): number;

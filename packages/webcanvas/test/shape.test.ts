@@ -5,7 +5,7 @@ import { FillRule, BlendMethod, MaskMethod, StrokeCap, StrokeJoin } from '../src
 import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
 function getTVG(): ThorVGNamespace {
-  return (globalThis as any).__TVG;
+  return (globalThis as typeof globalThis & { __TVG: ThorVGNamespace }).__TVG;
 }
 
 describe('Shape', () => {
@@ -141,13 +141,6 @@ describe('Paint (via Shape)', () => {
     const TVG = getTVG();
     const shape = new TVG.Shape();
     const result = shape.scale(2);
-    expect(result).toBe(shape);
-  });
-
-  it('scale non-uniform returns this', () => {
-    const TVG = getTVG();
-    const shape = new TVG.Shape();
-    const result = shape.scale(2, 3);
     expect(result).toBe(shape);
   });
 

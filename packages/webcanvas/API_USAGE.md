@@ -1255,15 +1255,14 @@ paint.rotate(angle);
 
 #### paint.scale()
 
-Scales the object.
+Uniformly scales the object.
 
 ```typescript
-paint.scale(sx, sy?);
+paint.scale(factor);
 ```
 
 **Parameters:**
-- `sx: number` - X-axis scale
-- `sy?: number` - Y-axis scale (defaults to sx if omitted)
+- `factor: number` - Uniform scale factor
 
 **Returns:** `this`
 
