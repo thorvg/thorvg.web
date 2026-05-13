@@ -39,6 +39,7 @@
  */
 
 import type { ThorVGModule } from './types/emscripten';
+import { Paint } from './core/Paint';
 import { Canvas } from './core/Canvas';
 import { Shape } from './core/Shape';
 import { Scene } from './core/Scene';
@@ -69,6 +70,7 @@ export interface InitOptions {
 }
 
 export interface ThorVGNamespace {
+  Paint: typeof Paint;
   Canvas: typeof Canvas;
   Shape: typeof Shape;
   Scene: typeof Scene;
@@ -248,6 +250,7 @@ function term(): void {
  */
 function createNamespace(): ThorVGNamespace {
   return {
+    Paint,
     Canvas,
     Shape,
     Scene,
@@ -281,7 +284,7 @@ const ThorVG = {
 export default ThorVG;
 
 // Named exports for advanced usage
-export { init, Canvas, Shape, Scene, Picture, Text, Animation, LinearGradient, RadialGradient, Font, constants, ThorVGResultCode, ThorVGError };
+export { init, Paint, Canvas, Shape, Scene, Picture, Text, Animation, LinearGradient, RadialGradient, Font, constants, ThorVGResultCode, ThorVGError };
 
 // Re-export types
 export type { CanvasOptions } from './core/Canvas';
