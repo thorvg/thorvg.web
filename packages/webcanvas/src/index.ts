@@ -216,7 +216,7 @@ async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
   }) as unknown as ThorVGModule;
 
   // Make Module globally available for class constructors
-  (globalThis as any).__ThorVGModule = Module;
+  globalThis.__ThorVGModule = Module;
   initialized = true;
 
   // Automatically initialize the engine with specified renderer
@@ -239,9 +239,7 @@ function term(): void {
   Module.term();
 
   // Clear global reference
-  if ((globalThis as any).__ThorVGModule) {
-    delete (globalThis as any).__ThorVGModule;
-  }
+  globalThis.__ThorVGModule = undefined;
 
   // Reset state
   Module = null;

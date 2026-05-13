@@ -3,10 +3,10 @@ import type { ThorVGNamespace } from '../src/index';
 import { Canvas } from '../src/core/Canvas';
 
 function getTVG(): ThorVGNamespace {
-  return (globalThis as any).__TVG;
+  return globalThis.__TVG!;
 }
 
-const isHappyDom = () => (globalThis as any).__TEST_ENV === 'happy-dom';
+const isHappyDom = () => globalThis.__TEST_ENV === 'happy-dom';
 
 describe('Canvas', () => {
   let canvas: Canvas;
@@ -25,7 +25,7 @@ describe('Canvas', () => {
   });
 
   it('renderer matches configured renderer', () => {
-    const expected = (globalThis as any).__RENDERER;
+    const expected = globalThis.__RENDERER;
     expect(canvas.renderer).toBe(expected);
   });
 
