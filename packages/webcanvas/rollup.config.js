@@ -46,6 +46,7 @@ const createWebCanvasConfig = () => {
         preventAssignment: true,
         values: {
           '__THORVG_VERSION__': process.env.THORVG_VERSION,
+          '__PACKAGE_VERSION__': pkg.version,
         },
       }),
       commonjs({
