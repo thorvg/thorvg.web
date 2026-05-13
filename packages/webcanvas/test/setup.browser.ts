@@ -7,8 +7,8 @@ declare const __TEST_RENDERER: 'wg' | 'gl' | 'sw';
 
 const renderer = typeof __TEST_RENDERER !== 'undefined' ? __TEST_RENDERER : 'wg';
 
-(globalThis as any).__TEST_ENV = 'browser';
-(globalThis as any).__RENDERER = renderer;
+globalThis.__TEST_ENV = 'browser';
+globalThis.__RENDERER = renderer;
 
 let TVG: ThorVGNamespace;
 
@@ -24,7 +24,7 @@ beforeAll(async () => {
   canvas.height = 600;
   document.body.appendChild(canvas);
 
-  (globalThis as any).__TVG = TVG;
+  globalThis.__TVG = TVG;
 });
 
 afterAll(() => {

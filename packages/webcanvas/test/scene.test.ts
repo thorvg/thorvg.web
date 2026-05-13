@@ -4,7 +4,7 @@ import { Scene } from '../src/core/Scene';
 import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
 function getTVG(): ThorVGNamespace {
-  return (globalThis as any).__TVG;
+  return globalThis.__TVG!;
 }
 
 describe('Scene', () => {

@@ -9,7 +9,7 @@ import type { ThorVGModule } from '../types/emscripten';
  * @throws Error if module is not initialized
  */
 export function getModule(): ThorVGModule {
-  const Module = (globalThis as any).__ThorVGModule as ThorVGModule | undefined;
+  const Module = globalThis.__ThorVGModule;
 
   if (!Module) {
     throw new Error('ThorVG module not initialized. Call ThorVG.init() first.');
@@ -22,7 +22,7 @@ export function getModule(): ThorVGModule {
  * Checks if the ThorVG WASM module is initialized
  */
 export function hasModule(): boolean {
-  return !!(globalThis as any).__ThorVGModule;
+  return !!globalThis.__ThorVGModule;
 }
 
 /**

@@ -3,8 +3,8 @@ import path from 'path';
 import ThorVG from '../src/index';
 import type { ThorVGNamespace } from '../src/index';
 
-(globalThis as any).__TEST_ENV = 'happy-dom';
-(globalThis as any).__RENDERER = 'sw';
+globalThis.__TEST_ENV = 'happy-dom';
+globalThis.__RENDERER = 'sw';
 
 const distDir = path.resolve(__dirname, '../dist');
 
@@ -28,7 +28,7 @@ beforeAll(async () => {
     configurable: true,
   });
 
-  (globalThis as any).__TVG = TVG;
+  globalThis.__TVG = TVG;
 });
 
 afterAll(() => {

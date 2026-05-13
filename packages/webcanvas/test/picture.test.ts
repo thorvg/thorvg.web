@@ -4,7 +4,7 @@ import { Picture } from '../src/core/Picture';
 import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
 function getTVG(): ThorVGNamespace {
-  return (globalThis as any).__TVG;
+  return globalThis.__TVG!;
 }
 
 const TEST_SVG = '<svg width="100" height="100"><rect width="100" height="100" fill="red"/></svg>';

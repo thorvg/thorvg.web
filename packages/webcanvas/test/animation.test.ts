@@ -4,7 +4,7 @@ import { Animation } from '../src/core/Animation';
 import { Picture } from '../src/core/Picture';
 
 function getTVG(): ThorVGNamespace {
-  return (globalThis as any).__TVG;
+  return globalThis.__TVG!;
 }
 
 const MINIMAL_LOTTIE = JSON.stringify({

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { ThorVGNamespace } from '../src/index';
 
 function getTVG(): ThorVGNamespace {
-  return (globalThis as any).__TVG;
+  return globalThis.__TVG!;
 }
 
 describe('Accessor', () => {

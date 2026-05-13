@@ -4,12 +4,12 @@ import type { Canvas } from '../src/core/Canvas';
 import type { Animation } from '../src/core/Animation';
 
 function getTVG(): ThorVGNamespace {
-  return (globalThis as any).__TVG;
+  return globalThis.__TVG!;
 }
 
-const isHappyDom = () => (globalThis as any).__TEST_ENV === 'happy-dom';
+const isHappyDom = () => globalThis.__TEST_ENV === 'happy-dom';
 const canRender = () => !isHappyDom();
-const canCheckPixels = () => !isHappyDom() && (globalThis as any).__RENDERER === 'sw';
+const canCheckPixels = () => !isHappyDom() && globalThis.__RENDERER === 'sw';
 
 function hasPixels(el: HTMLCanvasElement): boolean {
   const ctx = el.getContext('2d');

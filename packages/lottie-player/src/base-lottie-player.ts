@@ -20,12 +20,12 @@
  * SOFTWARE.
  */
 
-import { html, PropertyValueMap, LitElement, type TemplateResult } from 'lit';
+import { html, LitElement, type TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
 
 import Module, { type MainModule, type TvgLottieAnimation } from '../dist/thorvg';
 
-type LottieJson = Map<PropertyKey, any>;
+type LottieJson = Record<string, unknown>;
 
 const THORVG_VERSION = '__THORVG_VERSION__';
 const DEFAULT_RENDERER = '__RENDERER__';
@@ -139,14 +139,15 @@ export const parseSrc = async (src: string | object | ArrayBuffer, fileType: Fil
   let data = src;
 
   switch (typeof data) {
-    case 'object':
+    case 'object': {
       if (data instanceof ArrayBuffer) {
         return new Uint8Array(data);
       }
 
       data = JSON.stringify(data);
       return encoder.encode(data);
-    case 'string':
+    }
+    case 'string': {
       if (fileType === FileType.JSON || fileType === FileType.LOT) {
         data = await _parseJSON(data);
         return encoder.encode(data);
@@ -154,6 +155,7 @@ export const parseSrc = async (src: string | object | ArrayBuffer, fileType: Fil
 
       const buffer = await _parseImageFromURL(data);
       return new Uint8Array(buffer);
+    }
     default:
       throw new Error('Invalid src type');
   }
@@ -418,7 +420,7 @@ export class BaseLottiePlayer extends LitElement {
     }
   }
 
-  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+  protected firstUpdated(): void {
     this.canvas = this.querySelector('.thorvg') as HTMLCanvasElement;
     
     this.canvas.id = `thorvg-${_generateUID()}`;
