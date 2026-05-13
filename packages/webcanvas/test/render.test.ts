@@ -1,11 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import type { ThorVGNamespace } from '../src/index';
+import { getTVG } from './helpers';
 import type { Canvas } from '../src/core/Canvas';
 import type { Animation } from '../src/core/Animation';
 
-function getTVG(): ThorVGNamespace {
-  return globalThis.__TVG!;
-}
 
 const isHappyDom = () => globalThis.__TEST_ENV === 'happy-dom';
 const canRender = () => !isHappyDom();

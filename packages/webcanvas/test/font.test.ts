@@ -1,10 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import type { ThorVGNamespace } from '../src/index';
+import { getTVG } from './helpers';
 import { ThorVGError } from '../src/common/errors';
 
-function getTVG(): ThorVGNamespace {
-  return globalThis.__TVG!;
-}
 
 describe('Font', () => {
   it('load with empty data throws', () => {

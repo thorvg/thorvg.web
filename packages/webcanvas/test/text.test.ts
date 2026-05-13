@@ -1,13 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import type { ThorVGNamespace } from '../src/index';
 import { Text } from '../src/core/Text';
 import { ThorVGError } from '../src/common/errors';
 import { TextWrapMode } from '../src/common/constants';
-import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
+import { getTVG, assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
-function getTVG(): ThorVGNamespace {
-  return globalThis.__TVG!;
-}
 
 describe('Text', () => {
   it('constructor creates text', () => {

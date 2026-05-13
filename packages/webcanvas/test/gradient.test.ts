@@ -1,13 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import type { ThorVGNamespace } from '../src/index';
 import { LinearGradient } from '../src/core/LinearGradient';
 import { RadialGradient } from '../src/core/RadialGradient';
 import { GradientSpread } from '../src/common/constants';
-import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
+import { getTVG, assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
-function getTVG(): ThorVGNamespace {
-  return globalThis.__TVG!;
-}
 
 describe('LinearGradient', () => {
   it('constructor creates gradient', () => {
