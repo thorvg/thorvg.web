@@ -3,7 +3,7 @@ import type { ThorVGNamespace } from '../src/index';
 import { ThorVGError } from '../src/common/errors';
 
 function getTVG(): ThorVGNamespace {
-  return (globalThis as any).__TVG;
+  return globalThis.__TVG!;
 }
 
 describe('Font', () => {
