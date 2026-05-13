@@ -54,7 +54,7 @@ import type { RendererType } from './common/constants';
 import ThorVGModuleFactory from '../dist/thorvg';
 
 const THORVG_VERSION = '__THORVG_VERSION__';
-const THORVG_WASM_URL = 'https://unpkg.com/@thorvg/webcanvas@latest/dist/thorvg.wasm';
+const THORVG_WASM_URL = 'https://unpkg.com/@thorvg/webcanvas@__PACKAGE_VERSION__/dist/thorvg.wasm';
 
 /**
  * @category Initialization
