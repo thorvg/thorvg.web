@@ -1,9 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import type { ThorVGNamespace } from '../src/index';
+import { getTVG } from './helpers';
 
-function getTVG(): ThorVGNamespace {
-  return globalThis.__TVG!;
-}
 
 describe('Accessor', () => {
   it('id returns a consistent hash for the same name', () => {

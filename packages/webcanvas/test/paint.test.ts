@@ -1,9 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import type { ThorVGNamespace } from '../src/index';
+import { getTVG } from './helpers';
 
-function getTVG(): ThorVGNamespace {
-  return globalThis.__TVG!;
-}
 
 describe('Paint', () => {
   it('id returns 0 by default', () => {

@@ -1,11 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import type { ThorVGNamespace } from '../src/index';
 import { Scene } from '../src/core/Scene';
-import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
+import { getTVG, assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
-function getTVG(): ThorVGNamespace {
-  return globalThis.__TVG!;
-}
 
 describe('Scene', () => {
   it('constructor creates a scene', () => {

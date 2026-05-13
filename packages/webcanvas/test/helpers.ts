@@ -1,6 +1,11 @@
 import { expect, vi } from 'vitest';
+import type { ThorVGNamespace } from '../src/index';
 import type { WasmObject } from '../src/interop/WasmObject';
 import { getModule } from '../src/interop/module';
+
+export function getTVG(): ThorVGNamespace {
+  return globalThis.__TVG!;
+}
 
 export const canForceGC = typeof globalThis.gc === 'function';
 

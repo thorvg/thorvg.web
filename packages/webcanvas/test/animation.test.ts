@@ -1,11 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import type { ThorVGNamespace } from '../src/index';
+import { getTVG } from './helpers';
 import { Animation } from '../src/core/Animation';
 import { Picture } from '../src/core/Picture';
 
-function getTVG(): ThorVGNamespace {
-  return globalThis.__TVG!;
-}
 
 const MINIMAL_LOTTIE = JSON.stringify({
   v: '5.0.0', fr: 30, ip: 0, op: 30, w: 100, h: 100, layers: [],

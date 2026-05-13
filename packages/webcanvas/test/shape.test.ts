@@ -1,12 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import type { ThorVGNamespace } from '../src/index';
 import { Shape } from '../src/core/Shape';
 import { FillRule, BlendMethod, MaskMethod, StrokeCap, StrokeJoin } from '../src/common/constants';
-import { assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
-
-function getTVG(): ThorVGNamespace {
-  return globalThis.__TVG!;
-}
+import { getTVG, assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
 describe('Shape', () => {
   it('constructor creates a shape', () => {
