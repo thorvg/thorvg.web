@@ -145,6 +145,7 @@ const createLottieConfig = (preset) => {
           '/dist': presetMap[preset].path,
           '__THORVG_VERSION__': process.env.THORVG_VERSION,
           '__RENDERER__': presetMap[preset].renderer,
+          '__PACKAGE_VERSION__': pkg.version,
         },
       }),
       nodePolyfills(),
