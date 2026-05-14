@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Lottie Audio — Two Players</title>
+  <script src="../packages/lottie-player/dist/lottie-player.js"></script>
+</head>
+<body style="background:#1e1e23">
+  <h2 style="color:#ccc">Lottie Audio — Two Players</h2>
+  <button id="btn" disabled onclick="start()">Play</button>
+  <div id="wrap" style="display:flex;gap:20px;"></div>
+
+  <script>
+    const audioCtx = new AudioContext();
+    const buffers = new Map();
+    const sources = new Map();
+
+    function makeHandler(label) {
+      return async function onAudio(info) {
+        const key = label + ':' + info.id;
+        if (info.active) {
+          if (!buffers.has(key)) {
+            const ab = info.data ? info.data.slice().buffer : await fetch(info.path).then(r => r.arrayBuffer());
+            buffers.set(key, await audioCtx.decodeAudioData(ab));
+          } else {
+            await Promise.resolve();
+          }
+          if (sources.has(key)) try { sources.get(key).stop(); } catch(_) {}
+          const gain = audioCtx.createGain();
+          gain.gain.value = info.volume;
+          gain.connect(audioCtx.destination);
+          const src = audioCtx.createBufferSource();
+          src.buffer = buffers.get(key);
+          src.connect(gain);
+          src.start(0, info.offset);
+          sources.set(key, src);
+          console.log(`[${label}] ▶`, { path: info.path, offset: info.offset });
+        } else {
+          if (sources.has(key)) { try { sources.get(key).stop(); } catch(_) {} sources.delete(key); }
+          console.log(`[${label}] ■`);
+        }
+      };
+    }
+
+    let loadedCount = 0;
+    const players = [];
+
+    function onLoaded() {
+      if (++loadedCount === 2) document.getElementById('btn').disabled = false;
+    }
+
+    function start() {
+      document.getElementById('btn').disabled = true;
+      audioCtx.resume().then(() => {
+        players[0].play();
+        setTimeout(() => players[1].play(), 950);
+      });
+    }
+
+    function makePlayer(label) {
+      const div = document.createElement('div');
+      div.innerHTML = `<div style="color:#ccc;margin-bottom:4px">${label}</div>`;
+      const p = document.createElement('lottie-player');
+      p.loop = true;
+      p.style.width = '300px';
+      p.style.height = '300px';
+      p.wasmUrl = '../packages/lottie-player/dist/thorvg.wasm';
+      p.addEventListener('load', () => {
+        p.setAudioCallback(makeHandler(label));
+        onLoaded();
+        console.log(`[${label}] loaded`);
+      });
+      div.appendChild(p);
+      document.getElementById('wrap').appendChild(div);
+      p.load(new URL('./resources/bell-audio-path.json', location.href).href);
+      players.push(p);
+    }
+
+    makePlayer('A');
+    makePlayer('B');
+  </script>
+</body>
+</html>

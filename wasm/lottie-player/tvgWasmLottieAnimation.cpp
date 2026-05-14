@@ -520,6 +520,36 @@ public:
         return true;
     }
 
+    bool setAudioCallback(val callback)
+    {
+        errorMsg = NoError;
+
+        if (!canvas || !animation) return false;
+
+        if (callback.isUndefined() || callback.isNull()) {
+            animation->audioCallback(nullptr);
+            return true;
+        }
+
+        auto result = animation->audioCallback([callback](const tvg::AudioInfo& info) {
+            val jsInfo = val::object();
+            jsInfo.set("id", (unsigned int)info.id);
+            jsInfo.set("active", info.active);
+            jsInfo.set("offset", info.offset);
+            jsInfo.set("volume", info.volume);
+            jsInfo.set("mimeType", info.mimeType ? std::string(info.mimeType) : std::string(""));
+            if (info.size > 0 && info.data) {
+                jsInfo.set("data", val(typed_memory_view(info.size, reinterpret_cast<const uint8_t*>(info.data))));
+            } else {
+                jsInfo.set("data", val::null());
+            }
+            jsInfo.set("path", info.path ? std::string(info.path) : std::string(""));
+            callback(jsInfo);
+        });
+
+        return result == tvg::Result::Success;
+    }
+
     bool setAssetResolver(AssetResolverCallback callback, val data)
     {
         errorMsg = NoError;
@@ -615,5 +645,6 @@ EMSCRIPTEN_BINDINGS(thorvg_bindings)
         .function("resize", &TvgLottieAnimation ::resize)
         .function("save", &TvgLottieAnimation ::save)
         .function("quality", &TvgLottieAnimation ::quality)
-        .function("setAssetResolver", &TvgLottieAnimation ::setAssetResolver);
+        .function("setAssetResolver", &TvgLottieAnimation ::setAssetResolver)
+        .function("setAudioCallback", &TvgLottieAnimation ::setAudioCallback);
 }

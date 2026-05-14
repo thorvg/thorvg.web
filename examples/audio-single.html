@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Lottie Audio — Single</title>
+  <script src="../packages/lottie-player/dist/lottie-player.js"></script>
+</head>
+<body style="background:#1e1e23">
+  <h2 style="color:#ccc">Lottie Audio — Single</h2>
+  <button id="btn" disabled onclick="start()">Play</button>
+  <div id="player-wrap"></div>
+
+  <script>
+    const audioCtx = new AudioContext();
+    const buffers = new Map();
+    const sources = new Map();
+
+    async function onAudio(info) {
+      if (info.active) {
+        if (!buffers.has(info.id)) {
+          const ab = info.data ? info.data.slice().buffer : await fetch(info.path).then(r => r.arrayBuffer());
+          buffers.set(info.id, await audioCtx.decodeAudioData(ab));
+        } else {
+          await Promise.resolve();
+        }
+        if (sources.has(info.id)) { try { sources.get(info.id).stop(); } catch(_) {} }
+        const gain = audioCtx.createGain();
+        gain.gain.value = info.volume;
+        gain.connect(audioCtx.destination);
+        const src = audioCtx.createBufferSource();
+        src.buffer = buffers.get(info.id);
+        src.loop = true;
+        src.connect(gain);
+        src.start(0, info.offset);
+        sources.set(info.id, src);
+      } else {
+        if (sources.has(info.id)) { try { sources.get(info.id).stop(); } catch(_) {} sources.delete(info.id); }
+      }
+    }
+
+    function start() {
+      document.getElementById('btn').disabled = true;
+      audioCtx.resume().then(() => player.play());
+    }
+
+    const player = document.createElement('lottie-player');
+    player.loop = true;
+    player.style.width = '400px';
+    player.style.height = '400px';
+    player.wasmUrl = '../packages/lottie-player/dist/thorvg.wasm';
+    player.addEventListener('load', () => {
+      player.setAudioCallback(onAudio);
+      document.getElementById('btn').disabled = false;
+    });
+    document.getElementById('player-wrap').appendChild(player);
+    player.load(new URL('./resources/emoji_audio.json', location.href).href);
+  </script>
+</body>
+</html>

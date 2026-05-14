@@ -38,6 +38,17 @@ export interface LibraryVersion {
   THORVG_VERSION: string
 }
 
+// Audio layer callback info
+export interface AudioInfo {
+  id: number;          // stable identifier per audio layer
+  active: boolean;     // true while inside the layer's playback range
+  offset: number;      // position in the audio file (seconds)
+  volume: number;      // 0.0~1.0
+  mimeType: string;
+  data: Uint8Array | null;
+  path: string;
+}
+
 // Define renderer type
 export enum Renderer {
   SW = 'sw',
@@ -787,6 +798,17 @@ export class BaseLottiePlayer extends LitElement {
     if (this.TVG.quality(value) && this.currentState !== PlayerState.Playing) {
       this._render();
     }
+  }
+
+  /**
+   * Register a callback for Lottie audio layer events.
+   * Fires on the animation-update thread only on state changes (active↔inactive, volume change).
+   * Pass null to unregister.
+   * @beta
+   */
+  public setAudioCallback(callback: ((info: AudioInfo) => void) | null): boolean {
+    if (!this.TVG) return false;
+    return this.TVG.setAudioCallback(callback);
   }
 
   public setAssetResolver(callback: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string }, data: unknown | null): void {
