@@ -37,8 +37,6 @@ export default function Home() {
   const benchTimeoutA = useRef<ReturnType<typeof setTimeout> | null>(null);
   const benchTimeoutB = useRef<ReturnType<typeof setTimeout> | null>(null);
   const benchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const benchWarmupMsRef = useRef(BENCH_WARMUP_MS);
-  const benchMeasureMsRef = useRef(BENCH_MEASURE_MS);
 
   const [renderer, setRenderer] = useState<Renderer>('gl');
   const [version, setVersion] = useState<ThorVGVersion>('local');
@@ -67,10 +65,6 @@ export default function Home() {
     const c = Math.max(1, parseInt(getParam('count', '20')));
     const s = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parseInt(getParam('size', '150'))));
     const seed = getParam('seed', '');
-    const warmupParam = getParam('warmup', '');
-    const measureParam = getParam('measure', '');
-    if (warmupParam) benchWarmupMsRef.current = Math.max(0, parseInt(warmupParam));
-    if (measureParam) benchMeasureMsRef.current = Math.max(1000, parseInt(measureParam));
 
     setRenderer(r);
     setVersion(v);
@@ -308,21 +302,18 @@ export default function Home() {
     setBenchProgress(0);
     setBenchResult(null);
 
-    const warmupMs = benchWarmupMsRef.current;
-    const measureMs = benchMeasureMsRef.current;
-
     const runStart = performance.now();
     benchIntervalRef.current = setInterval(() => {
       const elapsed = performance.now() - runStart;
-      setBenchProgress(elapsed < warmupMs
-        ? (elapsed / warmupMs) * 50
-        : 50 + Math.min(50, ((elapsed - warmupMs) / measureMs) * 50));
+      setBenchProgress(elapsed < BENCH_WARMUP_MS
+        ? (elapsed / BENCH_WARMUP_MS) * 50
+        : 50 + Math.min(50, ((elapsed - BENCH_WARMUP_MS) / BENCH_MEASURE_MS) * 50));
     }, 100);
 
     benchTimeoutA.current = setTimeout(() => {
       benchPhaseRef.current = 'measuring';
       setBenchPhase('measuring');
-    }, warmupMs);
+    }, BENCH_WARMUP_MS);
 
     benchTimeoutB.current = setTimeout(() => {
       if (benchIntervalRef.current) clearInterval(benchIntervalRef.current);
@@ -330,40 +321,14 @@ export default function Home() {
       setBenchProgress(100);
 
       const timings = benchTimingsRef.current;
-      if (timings.length === 0) {
-        (window as any).__BENCH_ERROR = 'No frames rendered — check renderer/animation load errors';
-        setBenchPhase('idle');
-        return;
-      }
+      if (timings.length === 0) { setBenchPhase('idle'); return; }
 
       setBenchResult(computeBenchResult(timings, benchMemRef.current, {
         renderer, version: getParam('v', 'local'), count, size, seed: getParam('seed', ''),
-      }, warmupMs, measureMs));
+      }));
       setBenchPhase('done');
-    }, warmupMs + measureMs);
+    }, BENCH_WARMUP_MS + BENCH_MEASURE_MS);
   }, [cancelBenchmark, renderer, count, size]);
-
-  // Autorun benchmark (headless CI mode via ?autorun=1)
-  const autorunRef = useRef(false);
-  useEffect(() => {
-    if (autorunRef.current) return;
-    const autorun = new URLSearchParams(window.location.search).get('autorun');
-    if (autorun !== '1' && autorun !== 'true') return;
-    if (isLoading || animList.length === 0) return;
-    autorunRef.current = true;
-    setTimeout(() => {
-      setShowBench(true);
-      startBenchmark();
-    }, 500);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, animList, startBenchmark]);
-
-  // Expose benchmark result to window for headless extraction
-  useEffect(() => {
-    if (benchResult) {
-      (window as any).__BENCH_RESULT = benchResult;
-    }
-  }, [benchResult]);
 
   const sizePercent = ((size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE)) * 100;
 

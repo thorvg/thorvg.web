@@ -14,8 +14,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "bench": "node scripts/bench.mjs"
+    "lint": "next lint"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
@@ -34,7 +33,6 @@
     "eslint": "^8",
     "eslint-config-next": "^15.3.0",
     "file-loader": "^6.2.0",
-    "playwright": "^1.59.1",
     "tailwindcss": "^4.0.0",
     "typescript": "^5"
   }
