@@ -25,6 +25,13 @@ import { property } from 'lit/decorators.js';
 
 import Module, { type MainModule, type TvgLottieAnimation } from '../dist/thorvg';
 
+// Global declaration for Web APIs
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
 type LottieJson = Record<string, unknown>;
 
 const THORVG_VERSION = '__THORVG_VERSION__';
@@ -36,6 +43,24 @@ let _moduleRequested: boolean = false;
 // Define library version
 export interface LibraryVersion {
   THORVG_VERSION: string
+}
+
+// Audio resolver event payload
+export interface AudioInfo {
+  id: number;
+  active: boolean;
+  offset: number;
+  volume: number;
+  path: string | null;
+  data: Uint8Array | null;
+  mimeType: string | null;
+}
+
+interface AudioVoice {
+  info: AudioInfo;
+  source?: AudioBufferSourceNode;
+  baseFrame: number;
+  baseOffset: number;
 }
 
 // Define renderer type
@@ -330,6 +355,15 @@ export class BaseLottiePlayer extends LitElement {
   private _rafId?: number;
   private _assetResolverCallback?: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string };
   private _assetResolverData?: unknown;
+  //Audio
+  private _audioResolverCallback?: (info: AudioInfo, data: unknown) => void;
+  private _audioResolverData?: unknown;
+  private _audioCtx?: AudioContext;
+  private _audioMasterGain?: GainNode;
+  private _volume: number = 1;
+  private _muted: boolean = false;
+  private _audioBuffers = new Map<number, AudioBuffer>();
+  private _audioVoices = new Map<number, AudioVoice>();
 
   private async _init(): Promise<void> {
     // Ensure module is loaded only once
@@ -478,12 +512,103 @@ export class BaseLottiePlayer extends LitElement {
       throw new Error(`Unable to load an image. Error: ${this.TVG.error()}`);
     }
 
+    for (const id of [...this._audioVoices.keys()]) {
+      this._stopVoice(id);
+    }
+    const audioFn = this._audioResolverCallback ?? this._audioResolver.bind(this);
+    this.TVG.setAudioResolver(audioFn, this._audioResolverCallback ? this._audioResolverData : null);
+
     this._render();
     this.dispatchEvent(new CustomEvent(PlayerEvent.Load));
-    
+
     if (this.autoPlay) {
       this.play();
     }
+  }
+
+  private _stopVoice(id: number, keep = false): void {
+    const voice = this._audioVoices.get(id);
+    if (!voice) return;
+    voice.source?.stop();
+    voice.source = undefined;
+    if (!keep) this._audioVoices.delete(id);
+  }
+
+  private _resumeAudio(): void {
+    for (const voice of this._audioVoices.values()) {
+      this._audioResolver({ ...voice.info, active: true, offset: 0 });
+    }
+  }
+
+  private _fps(): number {
+    if (!this.TVG) return 0;
+    const duration = this.TVG.duration();
+    return duration > 0 ? this.TVG.totalFrame() / duration : 0;
+  }
+
+  private _syncAudioToFrame(): void {
+    const fps = this._fps();
+    if (fps <= 0) return;
+
+    for (const voice of this._audioVoices.values()) {
+      if (!voice.source) continue;
+      const offset = voice.baseOffset + (this.currentFrame - voice.baseFrame) / fps;
+      this._audioResolver({ ...voice.info, active: true, offset });
+    }
+  }
+
+  private async _audioResolver(info: AudioInfo): Promise<void> {
+    if (!this._audioCtx) {
+      this._audioCtx = new (window.AudioContext || window.webkitAudioContext!)();
+    }
+
+    if (!this._audioMasterGain) {
+      this._audioMasterGain = this._audioCtx.createGain();
+      this._audioMasterGain.connect(this._audioCtx.destination);
+      this._applyVolume();
+    }
+
+    if (!info.active) {
+      this._stopVoice(info.id);
+      return;
+    }
+
+    let buffer = this._audioBuffers.get(info.id);
+    if (!buffer) {
+      try {
+        const data = info.data
+          ? info.data.slice().buffer
+          : await fetch(info.path!).then(r => r.arrayBuffer());
+        buffer = await this._audioCtx.decodeAudioData(data);
+        this._audioBuffers.set(info.id, buffer);
+      } catch (err) {
+        this.currentState = PlayerState.Error;
+        this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
+        return;
+      }
+    }
+
+    this._stopVoice(info.id, true);
+
+    const gain = this._audioCtx.createGain();
+    gain.gain.value = info.volume;
+    gain.connect(this._audioMasterGain);
+
+    const source = this._audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.connect(gain);
+    const startOffset = buffer.duration > 0
+      ? ((info.offset % buffer.duration) + buffer.duration) % buffer.duration
+      : 0;
+    source.start(0, startOffset);
+
+    this._audioVoices.set(info.id, {
+      info,
+      source,
+      baseFrame: this.currentFrame,
+      baseOffset: info.offset,
+    });
   }
 
   private _flush(): void {
@@ -551,8 +676,8 @@ export class BaseLottiePlayer extends LitElement {
       if (this.loop || (totalCount && this._counter < totalCount)) {
         if (this.mode === PlayMode.Bounce) {
           this.direction = this.direction === 1 ? -1 : 1;
-          this.currentFrame = this.direction === 1 ? 0 : this.totalFrame;
         }
+        this.currentFrame = this.direction === 1 ? 0 : this.totalFrame;
 
         if (this.count) {
           this._counter += 1;
@@ -560,6 +685,7 @@ export class BaseLottiePlayer extends LitElement {
 
         await _wait(this.intermission);
         this.play();
+        this._syncAudioToFrame();
         return true;
       }
 
@@ -624,9 +750,23 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
+    //resume the AudioContext if suspended earlier
+    if (this._audioCtx?.state === 'suspended') this._audioCtx.resume();
+
     this._beginTime = Date.now() / 1000;
+    if (this.currentState === PlayerState.Paused) {
+      const duration = this.TVG.duration();
+      this._beginTime -= this.currentFrame * duration / (this.totalFrame * this.speed);
+    }
+
     if (this.currentState === PlayerState.Playing) {
       return;
+    }
+
+    if (this.currentState === PlayerState.Stopped) {
+      const audioFn = this._audioResolverCallback ?? this._audioResolver.bind(this);
+      this.TVG.setAudioResolver(audioFn, this._audioResolverCallback ? this._audioResolverData : null);
+      this._resumeAudio();
     }
 
     if (this._observable) {
@@ -645,6 +785,7 @@ export class BaseLottiePlayer extends LitElement {
   public pause(): void {
     this.currentState = PlayerState.Paused;
     this.dispatchEvent(new CustomEvent(PlayerEvent.Pause));
+    if (this._audioCtx?.state === 'running') this._audioCtx.suspend();
   }
 
   /**
@@ -652,10 +793,16 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   public stop(): void {
+    for (const id of this._audioVoices.keys()) {
+      this._stopVoice(id, true);
+    }
+
+    this.TVG?.setAudioResolver(null as unknown as (info: AudioInfo, data: unknown) => void, null);
     this.seek(0);
-    this._counter = 1;
-    this.currentFrame = 0;
+
     this.currentState = PlayerState.Stopped;
+    this.currentFrame = 0;
+    this._counter = 1;
 
     this.dispatchEvent(new CustomEvent(PlayerEvent.Stop));
   }
@@ -678,6 +825,7 @@ export class BaseLottiePlayer extends LitElement {
     this._frame(frame);
     await this._update();
     this._render();
+    this._syncAudioToFrame();
   }
 
   /**
@@ -703,6 +851,12 @@ export class BaseLottiePlayer extends LitElement {
     if (!this.TVG) {
       return;
     }
+
+    for (const id of [...this._audioVoices.keys()]) this._stopVoice(id);
+    this._audioBuffers.clear();
+    this._audioCtx?.close();
+    this._audioCtx = undefined;
+    this._audioMasterGain = undefined;
 
     this.TVG.delete();
     this.TVG = null;
@@ -804,6 +958,58 @@ export class BaseLottiePlayer extends LitElement {
     if (this.TVG) {
       this.TVG.setAssetResolver(callback, data);
     }
+  }
+
+  public setAudioResolver(callback: ((info: AudioInfo, data: unknown) => void) | null, data: unknown | null): void {
+    this._audioResolverCallback = callback ?? undefined;
+    this._audioResolverData = data;
+
+    if (this.TVG) {
+      const fn = callback ?? this._audioResolver.bind(this);
+      this.TVG.setAudioResolver(fn, callback ? data : null);
+    }
+  }
+
+  private _applyVolume(): void {
+    if (this._audioMasterGain) {
+      this._audioMasterGain.gain.value = this._muted ? 0 : this._volume;
+    }
+  }
+
+  /**
+   * Set the master playback volume for the built-in audio backend.
+   * @param volume A multiplier applied on top of each layer's own volume. 0 mutes, 1 is the original level.
+   * @beta
+   */
+  public setVolume(volume: number): void {
+    this._volume = Math.max(0, volume);
+    this._applyVolume();
+  }
+
+  /**
+   * Return the master playback volume for the built-in audio backend.
+   * @beta
+   */
+  public get volume(): number {
+    return this._volume;
+  }
+
+  /**
+   * Mute or unmute the built-in audio backend without losing the current volume.
+   * @param muted Pass true to silence audio, false to restore the previous volume.
+   * @beta
+   */
+  public setMute(muted: boolean): void {
+    this._muted = muted;
+    this._applyVolume();
+  }
+
+  /**
+   * Return whether the built-in audio backend is currently muted.
+   * @beta
+   */
+  public get muted(): boolean {
+    return this._muted;
   }
 
   /**
