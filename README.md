@@ -9,7 +9,7 @@
 # ThorVG for Web
 
 <p align="center">
-  <img width="800" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png">
+  <img width="550" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/logo/animated_brand.svg">
 </p>
 
 **ThorVG.Web** is a WebAssembly (WASM)-based extension of the ThorVG vector graphics engine, designed to run seamlessly in modern web environments. It enables efficient and high-performance rendering of **vector graphics** and **Lottie animations** directly in the browser, leveraging both **WebGL** and **WebGPU** for hardware-accelerated rendering. Fully compatible with ThorVG's core rendering logic, ThorVG.Web ensures consistent output across desktop, mobile, and web platforms, allowing developers to reuse the same vector assets and rendering code across multiple targets with minimal changes.
