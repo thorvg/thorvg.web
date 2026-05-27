@@ -216,7 +216,7 @@ export class Canvas {
 
     // Apply DPR scale transform if enabled
     if (enableDevicePixelRatio) {
-      this.#mainScene.scale(dpr, dpr);
+      this.#mainScene.scale(dpr);
     }
 
     // Add main Scene to canvas
