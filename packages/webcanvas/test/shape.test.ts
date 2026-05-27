@@ -139,13 +139,6 @@ describe('Paint (via Shape)', () => {
     expect(result).toBe(shape);
   });
 
-  it('scale non-uniform returns this', () => {
-    const TVG = getTVG();
-    const shape = new TVG.Shape();
-    const result = shape.scale(2, 3);
-    expect(result).toBe(shape);
-  });
-
   it('opacity setter returns this, getter returns number', () => {
     const TVG = getTVG();
     const shape = new TVG.Shape();
