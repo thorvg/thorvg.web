@@ -124,11 +124,11 @@ export abstract class Paint extends WasmObject {
   }
 
   /**
-   * Scale the paint by (sx, sy). If sy is not provided, use sx for both
+   * Scale the paint by factor
    */
-  public scale(sx: number, sy: number = sx): this {
+  public scale(factor: number): this {
     const Module = getModule();
-    Module._tvg_paint_scale(this.ptr, sx, sy);
+    Module._tvg_paint_scale(this.ptr, factor);
     return this;
   }
 
