@@ -54,6 +54,7 @@ import { FontsourceProvider } from './providers/FontsourceProvider';
 import { ThorVGResultCode, ThorVGError, setGlobalErrorHandler, handleError, type ErrorHandler } from './common/errors';
 import * as constants from './common/constants';
 import type { RendererType } from './common/constants';
+import { setThreadCount } from './interop/module';
 import ThorVGModuleFactory from '../dist/thorvg';
 
 const THORVG_VERSION = '__THORVG_VERSION__';
@@ -69,6 +70,8 @@ export interface InitOptions {
   renderer?: RendererType;
   /** Global error handler for all ThorVG operations. If provided, errors will be passed to this handler instead of being thrown. */
   onError?: ErrorHandler;
+  /** Number of worker threads count. Ignored in default preset. Default: 0. */
+  threads?: number;
 }
 
 export interface ThorVGNamespace {
@@ -204,13 +207,19 @@ async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
     return createNamespace();
   }
 
-  const { locateFile, renderer = 'gl', onError } = options;
+  const { locateFile, renderer = 'gl', onError, threads = 0 } = options;
 
   // Store the renderer for use by Canvas instances
   globalRenderer = renderer;
 
   // Set the global error handler for checkResult
   setGlobalErrorHandler(onError);
+
+  setThreadCount(threads);
+
+  // Expose the thread count globally before the WASM module loads, so the thread
+  // preset can read it in its PTHREAD_POOL_SIZE expression at module init.
+  globalThis.__THORVG_THREAD_COUNT = threads;
 
   // Load WASM module
   Module = await ThorVGModuleFactory({
@@ -240,12 +249,14 @@ function term(): void {
   // Terminate ThorVG engine
   Module.term();
 
-  // Clear global reference
+  // Clear global references
   globalThis.__ThorVGModule = undefined;
+  globalThis.__THORVG_THREAD_COUNT = undefined;
 
   // Reset state
   Module = null;
   initialized = false;
+  setThreadCount(0);
 }
 
 /**

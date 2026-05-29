@@ -36,3 +36,14 @@ export function allocString(Module: ThorVGModule, str: string): number {
   Module.HEAPU8[ptr + bytes.length] = 0;
   return ptr;
 }
+
+// Module-level worker thread count.
+let threadCount = 0;
+
+export function setThreadCount(threads: number): void {
+  threadCount = threads;
+}
+
+export function getThreadCount(): number {
+  return threadCount;
+}

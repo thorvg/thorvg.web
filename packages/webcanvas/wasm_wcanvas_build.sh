@@ -2,11 +2,21 @@
 
 # WebCanvas WASM Build Script
 # Builds ThorVG library + WebCanvas bindings
+#
+# Usage:
+#   ./wasm_wcanvas_build.sh <EMSDK_PATH>           # default build (all engines, single-threaded)
+#   ./wasm_wcanvas_build.sh pthread <EMSDK_PATH>   # pthread build (all engines, multi-thread support)
+
+MODE="default"
+if [ "$1" = "pthread" ]; then
+  MODE="pthread"
+  shift
+fi
 
 EMSDK="$1"
 
 if [ -z "$EMSDK" ]; then
-  echo "Usage: $0 <EMSDK_PATH>"
+  echo "Usage: $0 [pthread] <EMSDK_PATH>"
   exit 1
 fi
 
@@ -28,12 +38,24 @@ rm -rf build_wasm_wcanvas
 # 2. Remove -fno-exceptions from cpp_args
 # 3. Remove --closure=1 and -sEXPORTED_RUNTIME_METHODS=FS from cpp_link_args
 # 4. Add WebCanvas specific flags: EXPORTED_FUNCTIONS, EXPORTED_RUNTIME_METHODS, exception handling, and TypeScript definitions
-sed "s|EMSDK:|$EMSDK/|g" ../wasm/wasm32.txt | \
-  sed "s|, '-fno-exceptions'||g" | \
-  sed "s|'-fno-exceptions', ||g" | \
-  sed "s|, '--closure=1'||g" | \
-  sed "s|, '-sEXPORTED_RUNTIME_METHODS=FS'||g" | \
-  sed "s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sDISABLE_EXCEPTION_CATCHING=0', '-sDISABLE_EXCEPTION_THROWING=0', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
+# 5. For pthread builds: also add -pthread to cpp_args/cpp_link_args plus SharedArrayBuffer memory
+#    settings, and a dynamic worker pool size via PTHREAD_POOL_SIZE.
+if [ "$MODE" = "pthread" ]; then
+  sed "s|EMSDK:|$EMSDK/|g" ../wasm/wasm32.txt | \
+    sed "s|, '-fno-exceptions'||g" | \
+    sed "s|'-fno-exceptions', ||g" | \
+    sed "s|, '--closure=1'||g" | \
+    sed "s|, '-sEXPORTED_RUNTIME_METHODS=FS'||g" | \
+    sed "s|cpp_args = \[|cpp_args = ['-pthread', |g" | \
+    sed "s|'--bind'|'--bind', '-pthread', '--emit-tsd=thorvg.d.ts', '-sPTHREAD_POOL_SIZE=(typeof globalThis.__THORVG_THREAD_COUNT !== \"undefined\" ? globalThis.__THORVG_THREAD_COUNT : (typeof navigator !== \"undefined\" \&\& navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4))', '-sPTHREAD_POOL_SIZE_STRICT=0', '-sINITIAL_MEMORY=134217728', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sDISABLE_EXCEPTION_CATCHING=0', '-sDISABLE_EXCEPTION_THROWING=0', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
+else
+  sed "s|EMSDK:|$EMSDK/|g" ../wasm/wasm32.txt | \
+    sed "s|, '-fno-exceptions'||g" | \
+    sed "s|'-fno-exceptions', ||g" | \
+    sed "s|, '--closure=1'||g" | \
+    sed "s|, '-sEXPORTED_RUNTIME_METHODS=FS'||g" | \
+    sed "s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sDISABLE_EXCEPTION_CATCHING=0', '-sDISABLE_EXCEPTION_THROWING=0', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
+fi
 
 meson setup \
   -Db_lto=true \
@@ -41,7 +63,7 @@ meson setup \
   -Dstatic=true \
   -Dloaders="all" \
   -Dsavers="all" \
-  -Dthreads=false \
+  -Dthreads="$([ "$MODE" = "pthread" ] && echo true || echo false)" \
   -Dfile="false" \
   -Dbindings="capi" \
   -Dpartial=true \
@@ -84,5 +106,5 @@ fi
 
 rm ../../wasm/webcanvas/config.h
 
-echo "Build completed successfully!"
+echo "Build completed successfully! (mode: ${MODE})"
 ls -lrt build_wasm_wcanvas/*.js build_wasm_wcanvas/*.wasm
