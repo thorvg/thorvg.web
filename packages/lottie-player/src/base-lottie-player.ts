@@ -327,6 +327,7 @@ export class BaseLottiePlayer extends LitElement {
   private _timer?: ReturnType<typeof setInterval>;
   private _observer?: IntersectionObserver;
   private _observable: boolean = false;
+  private _rafId?: number;
   private _assetResolverCallback?: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string };
   private _assetResolverData?: unknown;
 
@@ -445,6 +446,13 @@ export class BaseLottiePlayer extends LitElement {
     return this;
   }
 
+  private _startLoop(): void {
+    if (this._rafId) {
+      window.cancelAnimationFrame(this._rafId);
+    }
+    this._rafId = window.requestAnimationFrame(this._animLoop.bind(this));
+  }
+
   private async _animLoop(){
     if (!this.TVG) {
       return;
@@ -452,7 +460,7 @@ export class BaseLottiePlayer extends LitElement {
 
     if (await this._update()) {
       this._render();
-      window.requestAnimationFrame(this._animLoop.bind(this));
+      this._rafId = window.requestAnimationFrame(this._animLoop.bind(this));
     }
   }
 
@@ -623,7 +631,7 @@ export class BaseLottiePlayer extends LitElement {
 
     if (this._observable) {
       this.currentState = PlayerState.Playing;
-      window.requestAnimationFrame(this._animLoop.bind(this));
+      this._startLoop();
       return;
     }
 
