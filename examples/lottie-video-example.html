@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ThorVG WebCanvas - Lottie Video Asset Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        canvas { border: 1px solid #333; background: #fff; }
+        .controls { margin: 10px 0; }
+        #status { color: #666; margin-left: 8px; }
+        .layout { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+        .source { flex: 1; min-width: 380px; }
+        .source h2 { font-size: 14px; margin: 0 0 6px; }
+        textarea#source {
+            display: block; width: 100%; height: 600px; box-sizing: border-box; resize: vertical;
+            background: #1e1e1e; color: #d4d4d4; border: 1px solid #333; border-radius: 4px;
+            padding: 12px; font: 12px/1.5 Menlo, Consolas, monospace; tab-size: 2;
+        }
+    </style>
+</head>
+<body>
+    <h1>ThorVG WebCanvas - Lottie Video Asset Example</h1>
+    <div class="controls">
+        <label>Backend:
+            <select id="backend" onchange="restart()">
+                <option value="sw">Software</option>
+                <option value="gl" selected>WebGL</option>
+                <option value="wg">WebGPU</option>
+            </select>
+        </label>
+        <button id="apply">Apply (Ctrl/Cmd + Enter)</button>
+        <label>Replace video: <input type="file" id="file" accept="video/*"></label>
+        <span id="status"></span>
+    </div>
+
+    <div class="layout">
+        <canvas id="canvas" width="800" height="600"></canvas>
+
+        <div class="source">
+            <h2>resources/lottie_video_embedded.json</h2>
+            <textarea id="source" spellcheck="false">Loading...</textarea>
+        </div>
+    </div>
+
+    <script type="module">
+        import ThorVG from '../packages/webcanvas/dist/webcanvas.esm.js';
+
+        const $ = (id) => document.getElementById(id);
+        const status = (text) => { $('status').textContent = text; };
+
+        window.restart = function() {
+            location.search = '?renderer=' + $('backend').value;
+        };
+
+        // long strings (the embedded mp4) are shown truncated, and swapped back on apply
+        const originals = new Map();
+
+        function toEditable(json) {
+            originals.clear();
+            return JSON.stringify(json, (key, value) => {
+                if (typeof value !== 'string' || value.length <= 96) return value;
+                const short = value.slice(0, 64) + '… (' + value.length + ' chars)';
+                originals.set(short, value);
+                return short;
+            }, 2);
+        }
+
+        function expand(value) {
+            if (typeof value === 'string') return originals.get(value) ?? value;
+            if (Array.isArray(value)) return value.map(expand);
+            if (value && typeof value === 'object') {
+                return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, expand(v)]));
+            }
+            return value;
+        }
+
+        const canvasSize = { width: 800, height: 600 };
+        let canvas = null;
+        let current = null;   // { animation, totalFrames, fps, started, lastFrame }
+
+        function load(json) {
+            if (current) {
+                canvas.remove(current.animation.picture);
+                current.animation.dispose();
+                current = null;
+            }
+
+            const animation = new TVG.Animation();
+            animation.load(JSON.stringify(json));
+            animation.picture.size(canvasSize.width, canvasSize.height);
+            canvas.add(animation.picture);
+
+            const { totalFrames, fps } = animation.info();
+            // the loader already sits on frame 0, so setting it again would fail
+            current = { animation, totalFrames, fps, started: performance.now(), lastFrame: 0 };
+        }
+
+        // parse whatever is in the editor and render it
+        function apply() {
+            let json;
+            try {
+                json = expand(JSON.parse($('source').value));
+            } catch (e) {
+                console.error('Invalid JSON:', e);
+                return null;
+            }
+
+            try {
+                load(json);
+                status('Playing');
+                return json;
+            } catch (e) {
+                console.error('Load failed:', e);
+                return null;
+            }
+        }
+
+        // put a new mp4 into the first video asset, keeping the rest of the edits
+        async function replaceVideo(file) {
+            let json;
+            try {
+                json = expand(JSON.parse($('source').value));
+            } catch (e) {
+                console.error('Invalid JSON:', e);
+                return;
+            }
+
+            const asset = (json.assets ?? []).find((a) => typeof a.p === 'string' && a.p.startsWith('data:image/'));
+            if (!asset) {
+                console.error('No image asset (data:image/…) found in assets');
+                return;
+            }
+
+            status('Reading ' + file.name + '...');
+            const dataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsDataURL(file);
+            });
+            asset.p = dataUrl.replace(/^data:video\//, 'data:image/');
+            asset.e = 1;
+
+            $('source').value = toEditable(json);
+            apply();
+        }
+
+        let TVG = null;
+
+        async function main() {
+            const backend = new URLSearchParams(location.search).get('renderer') || 'gl';
+            $('backend').value = backend;
+
+            status('Initializing (' + backend + ')...');
+            TVG = await ThorVG.init({
+                locateFile: (path) => '../packages/webcanvas/dist/' + path.split('/').pop(),
+                onError: (error) => console.error(error),
+                renderer: backend,
+            });
+
+            canvas = new TVG.Canvas('#canvas', canvasSize);
+
+            // A Lottie whose image asset is an embedded mp4 (data:image/mp4 URL)
+            const data = await (await fetch('resources/lottie_video_embedded.json')).text();
+            $('source').value = toEditable(JSON.parse(data));
+
+            apply();
+
+            $('apply').addEventListener('click', () => apply());
+            $('source').addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                    event.preventDefault();
+                    apply();
+                }
+            });
+            $('file').addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) replaceVideo(file);
+            });
+
+            // Drive the Lottie timeline as usual; the video plays inside the scene
+            (function tick() {
+                if (current) {
+                    const elapsed = (performance.now() - current.started) / 1000;
+                    const frame = Math.floor((elapsed * current.fps) % current.totalFrames);
+                    if (frame !== current.lastFrame) {
+                        current.animation.frame(frame);
+                        current.lastFrame = frame;
+                    }
+                    canvas.update().render();
+                }
+                requestAnimationFrame(tick);
+            })();
+        }
+
+        main().catch((e) => console.error(e));
+    </script>
+</body>
+</html>
