@@ -5,6 +5,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import terser from "@rollup/plugin-terser";
 import replace from '@rollup/plugin-replace';
 import alias from '@rollup/plugin-alias';
+import webWorkerLoader from 'rollup-plugin-web-worker-loader';
 import pkg from './package.json' assert { type: 'json' };
 import path from 'path';
 
@@ -18,6 +19,11 @@ const commonOutput = {
 
 const sharedPlugins = (aliasEntries = []) => [
   ...(aliasEntries.length ? [alias({ entries: aliasEntries })] : []),
+  webWorkerLoader({
+    targetPlatform: 'browser',
+    inline: true,
+    extensions: ['.js', '.ts'],
+  }),
   replace({
     include: ['src/**/*.ts'],
     preventAssignment: true,

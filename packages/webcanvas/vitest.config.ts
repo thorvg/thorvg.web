@@ -1,7 +1,9 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
+import { webWorkerStub } from './test/worker-stub';
 
 export default defineConfig({
+  plugins: [webWorkerStub()],
   test: {
     environment: 'happy-dom',
     globals: true,

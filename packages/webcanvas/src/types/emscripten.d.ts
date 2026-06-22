@@ -185,8 +185,8 @@ export interface ThorVGCAPI {
     picture: number,
     data: number,
     size: number,
-    mimetype: string,
-    rpath: string,
+    mimetype: string | number,
+    rpath: string | number,
     copy: number
   ): number;
   _tvg_picture_load(picture: number, path: string): number;
@@ -207,6 +207,26 @@ export interface ThorVGCAPI {
   _tvg_picture_set_asset_resolver(picture: number, resolver: number, data: number): number;
   _tvg_picture_get_paint(picture: number, id: number): number;
   _tvg_paint_rel(paint: number): number;
+
+  // Video functions
+  _tvg_video_new(): number;
+  _tvg_video_del(video: number): number;
+  _tvg_video_get_picture(video: number): number;
+  _tvg_video_play(video: number): number;
+  _tvg_video_pause(video: number): number;
+  _tvg_video_stop(video: number): number;
+  _tvg_video_seek(video: number, seconds: number): number;
+  _tvg_video_set_loop(video: number, on: number): number;
+  _tvg_video_get_loop(video: number): number;
+  _tvg_video_set_volume(video: number, volume: number): number;
+  _tvg_video_set_mute(video: number, on: number): number;
+  _tvg_video_get_time(video: number): number;
+  _tvg_video_get_duration(video: number): number;
+  _tvg_video_get_volume(video: number): number;
+  _tvg_video_get_muted(video: number): number;
+
+  // WebMediaLoader interfaces
+  createMediaPlayer?: (loader: number, bytes: Uint8Array) => WebMediaPlayer | null;
 
   // Text functions
   _tvg_text_new(): number;
@@ -278,6 +298,29 @@ export interface ThorVGCAPI {
   _tvg_accessor_set(accessor: number, paint: number, func: number, data: number): number;
   _tvg_accessor_generate_id(name: number): number;
   _tvg_accessor_get_name(accessor: number, id: number): number;
+}
+
+// Playback state pulled by the core web media loader on every render sync.
+// null until metadata is known; data/time carry a newly due frame.
+export interface WebMediaState {
+  width: number;
+  height: number;
+  duration: number;
+  data?: Uint8Array;
+  time?: number;
+}
+
+// Contract expected by the core web media loader (WebPlayer)
+export interface WebMediaPlayer {
+  sync(): WebMediaState | null;
+  play(): void;
+  pause(): void;
+  stop(): void;
+  seek(seconds: number): void;
+  loop(on: boolean): void;
+  volume(volume: number): void;
+  mute(on: boolean): void;
+  dispose(): void;
 }
 
 // Combined module interface

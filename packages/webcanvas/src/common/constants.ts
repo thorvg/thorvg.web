@@ -247,7 +247,7 @@ export enum FilterMethod {
  * Supported image and vector file formats for Picture class.
  * @category Picture
  */
-export type MimeType = 'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' | 'lottie+json';
+export type MimeType = 'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' | 'lottie+json' | 'mp4';
 
 /**
  * Rendering backend type for Canvas.
