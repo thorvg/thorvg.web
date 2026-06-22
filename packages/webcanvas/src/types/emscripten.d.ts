@@ -177,6 +177,25 @@ export interface ThorVGCAPI {
   _tvg_picture_get_paint(picture: number, id: number): number;
   _tvg_paint_rel(paint: number): number;
 
+  // Video functions
+  _tvg_video_new(): number;
+  _tvg_video_del(video: number): number;
+  _tvg_video_get_picture(video: number): number;
+  _tvg_video_load_metadata(video: number, w: number, h: number, duration: number): number;
+  _tvg_video_update_frame(video: number, frame: number, time: number): number;
+  _tvg_video_play(video: number): number;
+  _tvg_video_pause(video: number): number;
+  _tvg_video_stop(video: number): number;
+  _tvg_video_seek(video: number, seconds: number): number;
+  _tvg_video_loop(video: number, on: number): number;
+  _tvg_video_get_loop(video: number): number;
+  _tvg_video_set_volume(video: number, volume: number): number;
+  _tvg_video_mute(video: number, on: number): number;
+  _tvg_video_get_time(video: number): number;
+  _tvg_video_get_duration(video: number): number;
+  _tvg_video_get_volume(video: number): number;
+  _tvg_video_get_muted(video: number): number;
+
   // Text functions
   _tvg_text_new(): number;
   _tvg_text_set_font(text: number, name: number): number;

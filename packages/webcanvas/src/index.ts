@@ -46,6 +46,7 @@ import { Scene } from './core/Scene';
 import { Picture } from './core/Picture';
 import { Text } from './core/Text';
 import { Animation } from './core/Animation';
+import { Video } from './core/Video';
 import { LinearGradient } from './core/LinearGradient';
 import { RadialGradient } from './core/RadialGradient';
 import { Font } from './core/Font';
@@ -79,6 +80,7 @@ export interface ThorVGNamespace {
   Picture: typeof Picture;
   Text: typeof Text;
   Animation: typeof Animation;
+  Video: typeof Video;
   LinearGradient: typeof LinearGradient;
   RadialGradient: typeof RadialGradient;
   Font: typeof Font;
@@ -260,6 +262,7 @@ function createNamespace(): ThorVGNamespace {
     Picture,
     Text,
     Animation,
+    Video,
     LinearGradient,
     RadialGradient,
     Font,
@@ -288,7 +291,7 @@ const ThorVG = {
 export default ThorVG;
 
 // Named exports for advanced usage
-export { init, Paint, Canvas, Shape, Scene, Picture, Text, Animation, LinearGradient, RadialGradient, Font, FontsourceProvider, Accessor, constants, ThorVGResultCode, ThorVGError };
+export { init, Paint, Canvas, Shape, Scene, Picture, Text, Animation, Video, LinearGradient, RadialGradient, Font, FontsourceProvider, Accessor, constants, ThorVGResultCode, ThorVGError };
 
 // Re-export types
 export type { CanvasOptions } from './core/Canvas';

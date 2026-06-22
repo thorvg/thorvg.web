@@ -110,6 +110,9 @@ importers:
       happy-dom:
         specifier: ^20.9.0
         version: 20.9.0
+      mediabunny:
+        specifier: ^1.49.0
+        version: 1.49.0
       playwright:
         specifier: ^1.58.2
         version: 1.59.1
@@ -122,6 +125,9 @@ importers:
       rollup-plugin-swc3:
         specifier: ^0.10.4
         version: 0.10.4(@swc/core@1.15.26)(rollup@4.60.1)
+      rollup-plugin-web-worker-loader:
+        specifier: ^1.7.0
+        version: 1.7.0(rollup@4.60.1)
       typedoc:
         specifier: ^0.28.19
         version: 0.28.19(typescript@5.9.3)
@@ -965,6 +971,12 @@ packages:
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
+
+  '@types/dom-mediacapture-transform@0.1.11':
+    resolution: {integrity: sha512-Y2p+nGf1bF2XMttBnsVPHUWzRRZzqUoJAKmiP10b5umnO6DDrWI0BrGDJy1pOHoOULVmGSfFNkQrAlC5dcj6nQ==}
+
+  '@types/dom-webcodecs@0.1.13':
+    resolution: {integrity: sha512-O5hkiFIcjjszPIYyUSyvScyvrBoV3NOEEZx/pMlsu44TKzWNkLVBBxnxJz42in5n3QIolYOcBYFCPZZ0h8SkwQ==}
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
@@ -2502,6 +2514,9 @@ packages:
     resolution: {integrity: sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==}
     engines: {node: '>= 0.6'}
 
+  mediabunny@1.49.0:
+    resolution: {integrity: sha512-hDMtS/q22GFjyB3Yum+a6NHhDtVnye6hgaYTjx3DPUfnckRjzxFmXmCc3UQXdvo7d6PUCl7KM6Y9MRWzlvnAJQ==}
+
   merge-stream@2.0.0:
     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
 
@@ -2856,6 +2871,11 @@ packages:
     peerDependencies:
       '@swc/core': '>=1.2.165'
       rollup: ^2.0.0 || ^3.0.0 || ^4.0.0
+
+  rollup-plugin-web-worker-loader@1.7.0:
+    resolution: {integrity: sha512-msfN4FpdoTtfSCbeTZ8yPYmfi2/66Q53gQGmvOrEz/UfqZgCkSkGjaxsZt7TQ1V0s0tLJAe6HL+EdA7IBaUF6w==}
+    peerDependencies:
+      rollup: ^1.9.2 || ^2.0.0 || ^3.0.0 || ^4.0.0
 
   rollup-swc-preserve-directives@0.6.0:
     resolution: {integrity: sha512-MkKETpYF2ml5p15IxqbvLdFxWV6b99ALT6qL/okXYhaaiK8Mqu95nyk90+m58Ye+jMOpnhQsdK3JGMIPUV7i5g==}
@@ -4064,6 +4084,12 @@ snapshots:
   '@types/debounce@1.2.4': {}
 
   '@types/deep-eql@4.0.2': {}
+
+  '@types/dom-mediacapture-transform@0.1.11':
+    dependencies:
+      '@types/dom-webcodecs': 0.1.13
+
+  '@types/dom-webcodecs@0.1.13': {}
 
   '@types/estree@1.0.8': {}
 
@@ -5956,6 +5982,11 @@ snapshots:
 
   media-typer@0.3.0: {}
 
+  mediabunny@1.49.0:
+    dependencies:
+      '@types/dom-mediacapture-transform': 0.1.11
+      '@types/dom-webcodecs': 0.1.13
+
   merge-stream@2.0.0: {}
 
   merge2@1.4.1: {}
@@ -6347,6 +6378,10 @@ snapshots:
       get-tsconfig: 4.14.0
       rollup: 4.60.1
       rollup-swc-preserve-directives: 0.6.0(@swc/core@1.15.26)(rollup@4.60.1)
+
+  rollup-plugin-web-worker-loader@1.7.0(rollup@4.60.1):
+    dependencies:
+      rollup: 4.60.1
 
   rollup-swc-preserve-directives@0.6.0(@swc/core@1.15.26)(rollup@4.60.1):
     dependencies:
