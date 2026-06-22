@@ -16,18 +16,24 @@ thorvg_inc = include_directories(
     '../../thorvg/inc',
     '../../thorvg/src/common',
     '../../thorvg/src/bindings/capi',
+    '../../thorvg/src/renderer',
+    '../../thorvg/src/loaders',
+    '../../thorvg/src/loaders/media',
     '../../thorvg/build_wasm_wcanvas',
     '../common'
 )
 
-# WASM binding sources
-source_files = [
-    'tvgWasmWebCanvas.cpp',
-]
+# Media bypass glue subclasses the core loader; built without RTTI to match the core
+media_lib = static_library('thorvg-wasm-media',
+    'tvgWasmMedia.cpp',
+    include_directories : thorvg_inc,
+    cpp_args : ['-fno-rtti'],
+)
 
 # Build WASM executable
 executable('thorvg',
-    source_files,
+    'tvgWasmWebCanvas.cpp',
     include_directories : thorvg_inc,
+    link_whole : media_lib,
     link_args : [thorvg_lib_path],
 )
