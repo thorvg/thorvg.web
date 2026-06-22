@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ThorVG WebCanvas - Video Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        #canvas { border: 1px solid #333; background: #000; margin: 20px 0; }
+        .controls { margin: 10px 0; }
+        button { padding: 8px 16px; margin: 4px; cursor: pointer; }
+        button:disabled { opacity: 0.5; cursor: default; }
+        #progress { position: relative; width: 800px; height: 8px; background: #ccc; border-radius: 4px; cursor: pointer; touch-action: none; }
+        #progress.disabled { opacity: 0.5; pointer-events: none; }
+        #played { position: absolute; left: 0; top: 0; height: 100%; width: 0; background: #4a90d9; border-radius: 4px; }
+        #handle { position: absolute; top: 50%; left: 0; width: 16px; height: 16px; margin-left: -8px; transform: translateY(-50%); background: #4a90d9; border-radius: 50%; }
+    </style>
+</head>
+<body>
+    <h1>ThorVG WebCanvas - Video Example</h1>
+
+    <div class="controls">
+        <label>Backend:
+            <select id="backend">
+                <option value="sw">Software</option>
+                <option value="gl" selected>WebGL</option>
+                <option value="wg">WebGPU</option>
+            </select>
+        </label>
+        <button onclick="init()">Initialize</button>
+        <label>MP4: <input type="file" id="file" accept="video/mp4" onchange="openVideo(event)" disabled></label>
+        <button id="playBtn" onclick="playVideo()" disabled>Play</button>
+        <button id="pauseBtn" onclick="pauseVideo()" disabled>Pause</button>
+        <button id="stopBtn" onclick="stopVideo()" disabled>Stop</button>
+        <label><input type="checkbox" id="loopChk" checked onchange="setLoop(this.checked)"> Loop</label>
+    </div>
+
+    <canvas id="canvas" width="800" height="600"></canvas>
+
+    <div id="progress" class="disabled">
+        <div id="played"></div>
+        <div id="handle"></div>
+    </div>
+
+    <script type="module">
+        import ThorVG from '../packages/webcanvas/dist/webcanvas.esm.js';
+
+        let TVG;
+        let canvas;
+        let video;
+
+        window.init = async function() {
+            const renderer = document.getElementById('backend').value;
+            TVG = await ThorVG.init({
+                renderer,
+                locateFile: (path) => '../packages/webcanvas/dist/' + path.split('/').pop(),
+            });
+            canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });
+            document.getElementById('file').disabled = false;
+        };
+
+        window.openVideo = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const bytes = new Uint8Array(await file.arrayBuffer());
+
+            if (video) {
+                canvas.remove(video);
+                video.dispose();
+            }
+            video = new TVG.Video();
+            canvas.add(video);
+
+            await video.load(bytes);
+            video.picture.size(800, 600);
+            video.loop(document.getElementById('loopChk').checked).play();
+
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = false;
+            progress.classList.remove('disabled');
+        };
+
+        window.playVideo = () => video.play();
+        window.pauseVideo = () => video.pause();
+        window.stopVideo = () => { video.stop(); renderBar(0); };
+        window.setLoop = (on) => video.loop(on);
+
+        // Draggable scrubber: click or drag to seek, and follow playback when idle.
+        const progress = document.getElementById('progress');
+        const played = document.getElementById('played');
+        const handle = document.getElementById('handle');
+        let dragging = false;
+
+        function renderBar(fraction) {
+            const percent = (fraction * 100) + '%';
+            played.style.width = percent;
+            handle.style.left = percent;
+        }
+
+        function scrub(event) {
+            const duration = video.duration();
+            if (!duration) return;
+            const rect = progress.getBoundingClientRect();
+            const fraction = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+            renderBar(fraction);
+            video.seek(fraction * duration);
+        }
+
+        progress.addEventListener('pointerdown', (event) => {
+            if (!video) return;
+            dragging = true;
+            progress.setPointerCapture(event.pointerId);
+            scrub(event);
+        });
+        progress.addEventListener('pointermove', (event) => { if (dragging) scrub(event); });
+        progress.addEventListener('pointerup', (event) => {
+            dragging = false;
+            progress.releasePointerCapture(event.pointerId);
+        });
+
+        (function follow() {
+            if (video && !dragging) {
+                const duration = video.duration();
+                if (duration) renderBar(video.time() / duration);
+            }
+            requestAnimationFrame(follow);
+        })();
+    </script>
+</body>
+</html>
