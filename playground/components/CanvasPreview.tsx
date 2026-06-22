@@ -1,15 +1,49 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { Canvas as TVGCanvas, ThorVGNamespace } from '@thorvg/webcanvas';
 import wasmUrl from "../node_modules/@thorvg/webcanvas/dist/thorvg.wasm";
 
 interface CanvasPreviewProps {
   code: string;
   autoRun?: boolean;
   useDarkCanvas?: boolean;
+  requiresUserGesture?: boolean;
 }
 
-export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = false }: CanvasPreviewProps) {
+interface CachedResponse {
+  data: ArrayBuffer;
+  headers: Headers;
+  status: number;
+  statusText: string;
+}
+
+type PlaygroundWindow = Window &
+  typeof globalThis & {
+    webkitAudioContext?: typeof AudioContext;
+    __playgroundFetchCache?: Map<string, CachedResponse>;
+  };
+
+const canStartAudio = (): boolean => {
+  const AudioCtx = window.AudioContext || (window as PlaygroundWindow).webkitAudioContext;
+  if (!AudioCtx) return true;
+
+  try {
+    const ctx = new AudioCtx();
+    const running = ctx.state === 'running';
+    void ctx.close();
+    return running;
+  } catch {
+    return true;
+  }
+};
+
+export default function CanvasPreview({
+  code,
+  autoRun = true,
+  useDarkCanvas = false,
+  requiresUserGesture = false,
+}: CanvasPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<{ message: string; type: 'info' | 'success' | 'error' }>({
@@ -20,10 +54,11 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
   const [zoom, setZoom] = useState(100);
   const [showGrid, setShowGrid] = useState(false);
   const [darkCanvas, setDarkCanvas] = useState(useDarkCanvas);
-  const [TVG, setTVG] = useState<any>(null);
-  const [canvas, setCanvas] = useState<any>(null);
+  const [TVG, setTVG] = useState<ThorVGNamespace | null>(null);
+  const [canvas, setCanvas] = useState<TVGCanvas | null>(null);
   const [currentRenderer, setCurrentRenderer] = useState<'sw' | 'gl' | 'wg'>('gl');
   const [isZoomDragging, setIsZoomDragging] = useState(false);
+  const [awaitingGesture, setAwaitingGesture] = useState(false);
   const animationIdRef = useRef<number | null>(null);
   const originalDPRRef = useRef<number | null>(null);
 
@@ -39,7 +74,7 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
       const { init, ThorVGError, ThorVGResultCode } = await import('@thorvg/webcanvas');
       const TVGInstance = await init({
         renderer,
-        locateFile: (path: string) => wasmUrl,
+        locateFile: () => wasmUrl,
         onError: (error, context) => {
           console.log(error.message);
           console.log('Error operation:', context.operation);
@@ -120,13 +155,22 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
 
   // Auto-run when code changes and ThorVG is ready
   useEffect(() => {
-    if (autoRun && code && TVG && canvas) {
-      runCode();
+    if (!autoRun || !code || !TVG || !canvas) return;
+
+    // The example needs audio, which is blocked until the page gets a gesture
+    // (a plain refresh has none). Wait for a click instead of stalling.
+    if (requiresUserGesture && !canStartAudio()) {
+      setAwaitingGesture(true);
+      setStatus({ message: 'Click the canvas to start playback', type: 'info' });
+      return;
     }
+
+    runCode();
   }, [code, autoRun, TVG, canvas]);
 
   // Re-run code when zoom changes to apply new DPR (only when not dragging)
   useEffect(() => {
+    if (awaitingGesture) return;
     if (originalDPRRef.current !== null && TVG && canvas && code && !isZoomDragging) {
       // Re-run code to apply new DPR (DPR is set in runCode)
       if (autoRun) {
@@ -140,6 +184,8 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
       setStatus({ message: 'ThorVG not initialized yet', type: 'error' });
       return;
     }
+
+    setAwaitingGesture(false);
 
     // Detect renderer from code
     const { extractInitConfig } = await import('@/lib/code-transformer');
@@ -200,14 +246,15 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
       };
 
       // Initialize global fetch cache if not exists
-      if (!(window as any).__playgroundFetchCache) {
-        (window as any).__playgroundFetchCache = new Map<string, { data: ArrayBuffer; headers: Headers; status: number; statusText: string }>();
+      const playgroundWindow = window as PlaygroundWindow;
+      if (!playgroundWindow.__playgroundFetchCache) {
+        playgroundWindow.__playgroundFetchCache = new Map<string, CachedResponse>();
       }
 
       // Create cached fetch wrapper
       const cachedFetch = async (url: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
         const urlString = url.toString();
-        const cache = (window as any).__playgroundFetchCache;
+        const cache = playgroundWindow.__playgroundFetchCache!;
 
         // Only cache GET requests (default method)
         const method = init?.method?.toUpperCase() || 'GET';
@@ -216,8 +263,8 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
         }
 
         // Check cache
-        if (cache.has(urlString)) {
-          const cached = cache.get(urlString);
+        const cached = cache.get(urlString);
+        if (cached) {
           return new Response(cached.data, {
             status: cached.status,
             statusText: cached.statusText + ' (cached)',
@@ -313,6 +360,21 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
               darkCanvas ? 'bg-[#2d2d30]' : 'bg-white'
             }`}
           />
+
+          {awaitingGesture && (
+            <button
+              type="button"
+              onClick={runCode}
+              className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 text-white transition-colors hover:bg-black/50"
+            >
+              <span className="w-16 h-16 rounded-full bg-white/15 border border-white/40 flex items-center justify-center">
+                <svg className="w-7 h-7 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </span>
+              <span className="text-sm font-medium">Click to play</span>
+            </button>
+          )}
         </div>
       </div>
 

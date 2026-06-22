@@ -176,7 +176,12 @@ export default function ShowcasePageClient({ id }: { id: string }) {
             <h2 className="text-sm font-semibold text-gray-300">Canvas Preview</h2>
           </div>
           <div className="h-[calc(100%-40px)]">
-            <CanvasPreview code={code} autoRun={autoRun} useDarkCanvas={example.useDarkCanvas} />
+            <CanvasPreview
+              code={code}
+              autoRun={autoRun}
+              useDarkCanvas={example.useDarkCanvas}
+              requiresUserGesture={example.requiresUserGesture}
+            />
           </div>
         </div>
 

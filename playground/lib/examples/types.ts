@@ -6,4 +6,5 @@ export interface ShowcaseExample {
   category: 'basic' | 'advanced' | 'text' | 'media';
   thumbnail?: string;
   useDarkCanvas?: boolean; // Default: false
+  requiresUserGesture?: boolean; // Default: false
 }
