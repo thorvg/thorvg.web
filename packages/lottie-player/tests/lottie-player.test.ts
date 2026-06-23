@@ -18,7 +18,7 @@ class IntersectionObserver {
       } as unknown as IntersectionObserverEntry,
     ]);
   }
-  observe = (_: HTMLElement): void => {}
+  observe = (): void => {}
   disconnect = (): void => {}
   unobserve = (): void => {}
 }
@@ -249,14 +249,14 @@ describe('Lottie Player', () => {
 
     it('SVG loads and renders pixels', async () => {
       const resultPromise = waitForLoadOrError(player);
-      await player.load(SVG_DATA_URL, 'svg' as any);
+      await player.load(SVG_DATA_URL, 'svg');
       expect(await resultPromise).to.equal('load');
       expect(hasPixels(player)).to.equal(true);
     });
 
     it('PNG loads and renders pixels', async () => {
       const resultPromise = waitForLoadOrError(player);
-      player.load(makePNGDataURL(), 'png' as any);
+      player.load(makePNGDataURL(), 'png');
       expect(await resultPromise).to.equal('load');
       expect(hasPixels(player)).to.equal(true);
     });
