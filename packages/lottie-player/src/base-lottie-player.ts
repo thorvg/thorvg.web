@@ -652,10 +652,10 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   public stop(): void {
-    this.currentState = PlayerState.Stopped;
-    this.currentFrame = 0;
-    this._counter = 1;
     this.seek(0);
+    this._counter = 1;
+    this.currentFrame = 0;
+    this.currentState = PlayerState.Stopped;
 
     this.dispatchEvent(new CustomEvent(PlayerEvent.Stop));
   }

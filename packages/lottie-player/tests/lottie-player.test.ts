@@ -130,7 +130,7 @@ describe('Lottie Player', () => {
     it('stop resets to frame 0', async () => {
       player.stop();
       await player.updateComplete;
-      expect(player.currentState).to.equal('paused');
+      expect(player.currentState).to.equal('stopped');
       expect(player.currentFrame).to.equal(0);
     });
 
