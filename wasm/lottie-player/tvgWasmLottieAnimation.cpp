@@ -134,7 +134,7 @@ struct TvgWgEngine : TvgEngineMethod
 
     void resize(Canvas* canvas, uint32_t w, uint32_t h) override
     {
-        if (canvas) static_cast<WgCanvas*>(canvas)->target(device, instance, surface, w, h, ColorSpace::ABGR8888S);
+        if (canvas) static_cast<WgCanvas*>(canvas)->target({instance, adapter, device}, surface, w, h, ColorSpace::ABGR8888);
     }
 
     static int init()
