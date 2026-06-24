@@ -134,9 +134,7 @@ struct TvgWgEngine : TvgEngineMethod
     {
         if (!canvas) return;
 
-        static_cast<WgCanvas*>(canvas)->target(
-            device, instance, surface, w, h, ColorSpace::ABGR8888S
-        );
+        static_cast<WgCanvas*>(canvas)->target({instance, adapter, device}, surface, w, h, ColorSpace::ABGR8888);
     }
 
     static int init()
