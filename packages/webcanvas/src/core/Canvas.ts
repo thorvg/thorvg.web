@@ -41,7 +41,7 @@
  * ```
  */
 
-import { getModule } from '../interop/module';
+import { getModule, getThreadCount } from '../interop/module';
 import { Paint } from './Paint';
 import { Scene } from './Scene';
 import type { RendererType } from '../common/constants';
@@ -179,8 +179,9 @@ export class Canvas {
     const physicalWidth = width * dpr;
     const physicalHeight = height * dpr;
 
-    // Create TvgCanvas with physical dimensions
-    this.#engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight);
+    // Create TvgCanvas with physical dimensions and the configured thread count.
+    const threadCount = getThreadCount();
+    this.#engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight, threadCount);
 
     // Check for errors
     const error = this.#engine.error();
