@@ -16,6 +16,10 @@ thorvg_inc = include_directories(
     '../../thorvg/inc',
     '../../thorvg/src/common',
     '../../thorvg/src/bindings/capi',
+    '../../thorvg/src/renderer',
+    '../../thorvg/src/loaders',
+    '../../thorvg/src/loaders/media',
+    '../../thorvg/src/loaders/media/web',
     '../../thorvg/build_wasm_wcanvas',
     '../common'
 )
@@ -23,6 +27,7 @@ thorvg_inc = include_directories(
 # WASM binding sources
 source_files = [
     'tvgWasmWebCanvas.cpp',
+    'tvgWasmWebVideo.cpp',
 ]
 
 # Build WASM executable

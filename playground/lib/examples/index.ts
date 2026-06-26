@@ -47,6 +47,8 @@ import { effectDropShadowExample } from './effect-drop-shadow';
 import { sceneEffectsExample } from './scene-effects';
 import { errorHandlingExample } from './error-handling';
 import { accessorExample } from './accessor';
+import { videoExample } from './video';
+import { videoPlayerExample } from './video-player';
 
 export * from './types';
 
@@ -102,6 +104,8 @@ export const showcaseExamples: ShowcaseExample[] = [
   picturePngExample,
   pictureRawExample,
   pictureSvgExample,
+  videoExample,
+  videoPlayerExample,
   pictureWebpExample
 ];
 

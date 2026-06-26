@@ -4,6 +4,7 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import terser from "@rollup/plugin-terser";
 import replace from '@rollup/plugin-replace';
+import webWorkerLoader from 'rollup-plugin-web-worker-loader';
 import pkg from './package.json' assert { type: 'json' };
 
 const name = 'ThorVG';
@@ -41,6 +42,11 @@ const createWebCanvasConfig = () => {
       },
     ],
     plugins: [
+      webWorkerLoader({
+        targetPlatform: 'browser',
+        inline: true,
+        extensions: ['.js', '.ts'],
+      }),
       replace({
         include: ['src/**/*.ts'],
         preventAssignment: true,

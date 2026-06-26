@@ -44,6 +44,7 @@
 import { getModule } from '../interop/module';
 import { Paint } from './Paint';
 import { Scene } from './Scene';
+import { Video } from './Video';
 import type { RendererType } from '../common/constants';
 import { checkResult, handleError } from '../common/errors';
 import type { TvgCanvasInstance } from '../types/emscripten';
@@ -250,14 +251,20 @@ export class Canvas {
    *       .render();
    * ```
    */
-  public add(paint: Paint): this {
+  public add(paint: Paint | Video): this {
     if (!this.#mainScene) {
       handleError('Main scene not initialized', 'add');
       return this;
     }
 
-    // Add paint to main Scene instead of directly to canvas
-    this.#mainScene.add(paint);
+    if (paint instanceof Video) {
+      // Associate the video with this canvas for playback
+      paint.canvas = this;
+      if (paint.picture) this.#mainScene.add(paint.picture);
+    } else {
+      // Add paint to main Scene instead of directly to canvas
+      this.#mainScene.add(paint);
+    }
     this.#needsUpdate = true;
     return this;
   }
@@ -280,13 +287,16 @@ export class Canvas {
    * canvas.remove();
    * ```
    */
-  public remove(paint?: Paint): this {
+  public remove(paint?: Paint | Video): this {
     if (!this.#mainScene) {
       handleError('Main scene not initialized', 'remove');
       return this;
     }
 
-    if (paint) {
+    if (paint instanceof Video) {
+      paint.canvas = null;
+      if (paint.picture) this.#mainScene.remove(paint.picture);
+    } else if (paint) {
       this.#mainScene.remove(paint);
     } else {
       this.#mainScene.remove();
