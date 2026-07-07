@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thor Janitor — WebCanvas</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      height: 100%;
+      overflow: hidden;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: monospace;
+    }
+    #canvas {
+      display: block;
+      background: #000;
+    }
+    #hud {
+      position: fixed;
+      bottom: 8px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: rgba(170, 255, 80, 0.5);
+      font-size: 12px;
+      user-select: none;
+    }
+    #settings-btn {
+      background: transparent;
+      border: 1px solid rgba(170, 255, 80, 0.35);
+      border-radius: 4px;
+      color: rgba(170, 255, 80, 0.7);
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1;
+      padding: 5px 8px;
+      cursor: pointer;
+    }
+    #settings-btn:hover {
+      background: rgba(170, 255, 80, 0.12);
+      color: rgba(170, 255, 80, 1);
+    }
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    #modal-overlay[hidden] {
+      display: none;
+    }
+    #modal {
+      width: min(440px, calc(100vw - 48px));
+      background: #0a0a12;
+      border: 1px solid rgba(170, 255, 80, 0.4);
+      border-radius: 8px;
+      box-shadow: 0 0 40px rgba(170, 255, 80, 0.15);
+      color: #cfe;
+      padding: 20px 22px;
+    }
+    #modal h2 {
+      margin: 0 0 16px;
+      font-size: 15px;
+      color: #aaff50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #modal-close {
+      background: transparent;
+      border: 0;
+      color: rgba(170, 255, 80, 0.6);
+      font-family: monospace;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 2px 6px;
+    }
+    #modal-close:hover { color: #aaff50; }
+    #modal section {
+      margin-bottom: 16px;
+    }
+    #modal section:last-child { margin-bottom: 0; }
+    #modal h3 {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: normal;
+      color: rgba(170, 255, 80, 0.65);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    #renderer-options {
+      display: flex;
+      gap: 8px;
+    }
+    #renderer-options label {
+      flex: 1;
+      display: block;
+      text-align: center;
+      border: 1px solid rgba(170, 255, 80, 0.3);
+      border-radius: 5px;
+      padding: 7px 0;
+      font-size: 12px;
+      color: rgba(200, 255, 220, 0.8);
+      cursor: pointer;
+    }
+    #renderer-options input { display: none; }
+    #renderer-options label:hover { background: rgba(170, 255, 80, 0.08); }
+    #renderer-options label.active {
+      border-color: #aaff50;
+      color: #aaff50;
+      background: rgba(170, 255, 80, 0.12);
+    }
+    .version-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 3px 0;
+      color: rgba(200, 255, 220, 0.8);
+    }
+    .version-row b {
+      color: #aaff50;
+      font-weight: normal;
+    }
+    #embed-snippet {
+      width: 100%;
+      box-sizing: border-box;
+      background: #000;
+      border: 1px solid rgba(170, 255, 80, 0.25);
+      border-radius: 5px;
+      color: rgba(200, 255, 220, 0.85);
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      padding: 8px;
+      resize: none;
+    }
+    #embed-copy {
+      margin-top: 6px;
+      background: transparent;
+      border: 1px solid rgba(170, 255, 80, 0.35);
+      border-radius: 4px;
+      color: rgba(170, 255, 80, 0.8);
+      font-family: monospace;
+      font-size: 11px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    #embed-copy:hover {
+      background: rgba(170, 255, 80, 0.12);
+      color: #aaff50;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div id="hud">
+    <span>ARROW KEYS: move &nbsp;|&nbsp; A: shoot</span>
+    <button id="settings-btn" aria-label="Settings">&#9881;</button>
+  </div>
+
+  <div id="modal-overlay" hidden>
+    <div id="modal" role="dialog" aria-modal="true" aria-label="Settings">
+      <h2>Settings <button id="modal-close" aria-label="Close">&#10005;</button></h2>
+
+      <section>
+        <h3>Renderer</h3>
+        <div id="renderer-options"></div>
+      </section>
+
+      <section>
+        <h3>Version</h3>
+        <div class="version-row"><span>@thorvg/webcanvas</span><b id="ver-pkg">-</b></div>
+        <div class="version-row"><span>ThorVG engine</span><b id="ver-engine">-</b></div>
+      </section>
+
+      <section>
+        <h3>Embed</h3>
+        <textarea id="embed-snippet" rows="5" readonly spellcheck="false"></textarea>
+        <button id="embed-copy">Copy snippet</button>
+      </section>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
