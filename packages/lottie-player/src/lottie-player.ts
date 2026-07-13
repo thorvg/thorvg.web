@@ -87,7 +87,7 @@ export class LottiePlayer extends BaseLottiePlayer {
       throw new Error(`Unable to save. Error: ${error}`);
     }
 
-    const data = wasmModule.FS.readFile('output.gif');
+    const data = wasmModule.FS_readFile('output.gif');
     if (data.length < 6) {
       saver.delete();
       throw new Error(
