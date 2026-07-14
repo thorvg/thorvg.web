@@ -1453,23 +1453,6 @@ enum GradientSpread {
 
 ---
 
-### CompositeMethod
-
-Composite methods (future support).
-
-```typescript
-enum CompositeMethod {
-  None = 0,
-  ClipPath = 1,
-  AlphaMask = 2,
-  InvAlphaMask = 3,
-  LumaMask = 4,
-  InvLumaMask = 5,
-}
-```
-
----
-
 ### TextWrapMode
 
 Text wrapping modes.

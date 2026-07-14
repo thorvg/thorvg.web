@@ -109,27 +109,6 @@ export enum GradientSpread {
 }
 
 /**
- * Composite method for combining paint objects.
- *
- * Defines methods for compositing operations such as clipping and masking.
- * @category Constants
- */
-export enum CompositeMethod {
-  /** No compositing is applied */
-  None = 0,
-  /** Use the paint as a clipping path */
-  ClipPath = 1,
-  /** Alpha masking using the mask's alpha values */
-  AlphaMask = 2,
-  /** Inverse alpha masking using the complement of the mask's alpha values */
-  InvAlphaMask = 3,
-  /** Luma masking using the grayscale of the mask */
-  LumaMask = 4,
-  /** Inverse luma masking using the complement of the mask's grayscale */
-  InvLumaMask = 5,
-}
-
-/**
  * Mask method for masking operations.
  *
  * Defines various methods for applying masks to paint objects.
