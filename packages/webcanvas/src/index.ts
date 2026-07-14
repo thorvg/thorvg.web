@@ -92,7 +92,6 @@ export interface ThorVGNamespace {
   StrokeJoin: typeof constants.StrokeJoin;
   FillRule: typeof constants.FillRule;
   GradientSpread: typeof constants.GradientSpread;
-  CompositeMethod: typeof constants.CompositeMethod;
   MaskMethod: typeof constants.MaskMethod;
   SceneEffect: typeof constants.SceneEffect;
   TextWrapMode: typeof constants.TextWrapMode;
@@ -281,7 +280,6 @@ function createNamespace(): ThorVGNamespace {
     StrokeJoin: constants.StrokeJoin,
     FillRule: constants.FillRule,
     GradientSpread: constants.GradientSpread,
-    CompositeMethod: constants.CompositeMethod,
     MaskMethod: constants.MaskMethod,
     SceneEffect: constants.SceneEffect,
     TextWrapMode: constants.TextWrapMode,
