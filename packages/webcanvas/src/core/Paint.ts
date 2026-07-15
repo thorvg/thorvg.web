@@ -79,16 +79,12 @@ export abstract class Paint extends WasmObject {
    * The ID of this paint object.
    * IDs are used to identify paint objects within a picture's scene tree.
    * Assign a string to generate a hash ID from the name, or a number to set directly.
-   * @beta
    */
   public get id(): number {
     const Module = getModule();
     return Module._tvg_paint_get_id(this.ptr);
   }
 
-  /**
-   * @beta
-   */
   public set id(value: number | string) {
     const Module = getModule();
 

@@ -42,6 +42,11 @@ export const textRegistry = createRegistry();
  */
 export const gradientRegistry = createRegistry();
 
+/**
+ * Registry for Accessor objects
+ */
+export const accessorRegistry = createRegistry();
+
 // Automatic cleanup on page unload (browser only)
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {

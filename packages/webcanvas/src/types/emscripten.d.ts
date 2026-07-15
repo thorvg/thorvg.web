@@ -183,6 +183,7 @@ export interface ThorVGCAPI {
   _tvg_picture_set_origin(picture: number, x: number, y: number): number;
   _tvg_picture_get_origin(picture: number, x: number, y: number): number;
   _tvg_picture_set_filter(picture: number, method: number): number;
+  _tvg_picture_set_accessible(picture: number, accessible: number): number;
   _tvg_picture_get_paint(picture: number, id: number): number;
   _tvg_paint_rel(paint: number): number;
 
@@ -239,6 +240,7 @@ export interface ThorVGCAPI {
   _tvg_accessor_del(accessor: number): number;
   _tvg_accessor_set(accessor: number, paint: number, func: number, data: number): number;
   _tvg_accessor_generate_id(name: number): number;
+  _tvg_accessor_get_name(accessor: number, id: number): number;
 }
 
 // Combined module interface
