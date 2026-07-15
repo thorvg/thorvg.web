@@ -7,7 +7,7 @@ import { Paint } from './Paint';
 import { getModule, allocString } from '../interop/module';
 import { pictureRegistry } from '../interop/registry';
 import { checkResult, handleError } from '../common/errors';
-import { ColorSpace } from '../common/constants';
+import { ColorSpace, FilterMethod } from '../common/constants';
 import type { MimeType } from '../common/constants';
 
 /**
@@ -208,6 +208,24 @@ export class Picture extends Paint {
     return Paint.fromPtr(ptr);
   }
 
+  /**
+   * Set the image filtering method used when this picture is scaled or transformed.
+   *
+   * @param method - The filtering method to apply (default: FilterMethod.Bilinear)
+   *
+   * @example
+   * ```typescript
+   * // Keep hard pixel edges when upscaling pixel art
+   * picture.filter(TVG.FilterMethod.Nearest);
+   * picture.size(256, 256);
+   * ```
+   */
+  public filter(method: FilterMethod = FilterMethod.Bilinear): this {
+    const Module = getModule();
+    const result = Module._tvg_picture_set_filter(this.ptr, method);
+    checkResult(result, 'filter');
+    return this;
+  }
 }
 
 // Tvg_Type = 3 (TVG_TYPE_PICTURE)

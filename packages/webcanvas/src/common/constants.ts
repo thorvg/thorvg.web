@@ -200,6 +200,17 @@ export enum ColorSpace {
 }
 
 /**
+ * Image filtering method used when a picture is scaled or transformed.
+ * @category Picture
+ */
+export enum FilterMethod {
+  /** Smooth interpolation using surrounding pixels for higher quality (default) */
+  Bilinear = 0,
+  /** Fast filtering using nearest-neighbor sampling */
+  Nearest = 1,
+}
+
+/**
  * MIME type or format hint for loading picture data.
  *
  * Supported image and vector file formats for Picture class.

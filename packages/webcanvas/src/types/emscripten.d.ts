@@ -77,7 +77,14 @@ export interface ThorVGCAPI {
   _tvg_paint_get_clip(paint: number): number;
   _tvg_paint_set_blend_method(paint: number, method: number): number;
   _tvg_paint_set_mask_method(paint: number, target: number, method: number): number;
-  _tvg_paint_intersects(paint: number, x: number, y: number, w: number, h: number): number;
+  _tvg_paint_intersects_region(
+    paint: number,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    visibleOnly: number
+  ): number;
   _tvg_paint_get_id(paint: number): number;
   _tvg_paint_set_id(paint: number, id: number): number;
   _tvg_paint_get_type(paint: number, typePtr: number): number;
@@ -175,6 +182,7 @@ export interface ThorVGCAPI {
   _tvg_picture_get_size(picture: number, w: number, h: number): number;
   _tvg_picture_set_origin(picture: number, x: number, y: number): number;
   _tvg_picture_get_origin(picture: number, x: number, y: number): number;
+  _tvg_picture_set_filter(picture: number, method: number): number;
   _tvg_picture_get_paint(picture: number, id: number): number;
   _tvg_paint_rel(paint: number): number;
 
@@ -187,6 +195,7 @@ export interface ThorVGCAPI {
   _tvg_text_align(text: number, halign: number, valign: number): number;
   _tvg_text_layout(text: number, width: number, height: number): number;
   _tvg_text_wrap_mode(text: number, mode: number): number;
+  _tvg_text_line_count(text: number): number;
   _tvg_text_spacing(text: number, letter: number, line: number): number;
   _tvg_text_set_italic(text: number, shear: number): number;
   _tvg_text_set_outline(text: number, width: number, r: number, g: number, b: number): number;
