@@ -645,6 +645,29 @@ const { width, height } = picture.size();
 
 ---
 
+### picture.filter()
+
+Sets the image filtering method used when the Picture is scaled or transformed.
+
+```typescript
+picture.filter(method);
+```
+
+**Parameters:**
+- `method: FilterMethod` - `FilterMethod.Bilinear` (default) or `FilterMethod.Nearest`
+
+**Returns:** `this`
+
+**Example:**
+```typescript
+// Keep hard pixel edges when upscaling pixel art
+picture.load(pngData, { type: 'png' })
+  .filter(TVG.FilterMethod.Nearest)
+  .size(256, 256);
+```
+
+---
+
 ## Text
 
 Renders text with custom fonts and styling.
@@ -772,6 +795,29 @@ text.wrap(mode);
 - `mode: 'none' | 'character' | 'word' | 'smart' | 'ellipsis'` - Wrapping mode
 
 **Returns:** `this`
+
+---
+
+### text.lines()
+
+Returns the number of text lines produced by the current layout and wrap configuration.
+Explicit line feed characters (`\n`) are counted as well.
+
+```typescript
+const count = text.lines();
+```
+
+**Returns:** `number` - The total number of lines (0 if no font is loaded)
+
+**Example:**
+```typescript
+text.font('poppins')
+  .text('one two three four five')
+  .layout(120)
+  .wrap(TVG.TextWrapMode.Word);
+
+console.log(text.lines()); // number of lines after wrapping
+```
 
 ---
 
@@ -1351,6 +1397,42 @@ shape2.translate(60, 0).fill(0, 255, 0);
 
 ---
 
+#### paint.intersects()
+
+Checks whether a rectangular region intersects the filled area of the Paint. Useful for hit-testing.
+
+The paint must have been updated by a Canvas beforehand — typically after the canvas has been
+drawn and synchronized.
+
+```typescript
+const hit = paint.intersects(x, y, width, height, visibleOnly?);
+```
+
+**Parameters:**
+- `x: number` - X coordinate of the region's top-left corner
+- `y: number` - Y coordinate of the region's top-left corner
+- `width: number` - Width of the region (must be > 0; use 1 to test a single point)
+- `height: number` - Height of the region (must be > 0; use 1 to test a single point)
+- `visibleOnly?: boolean` - If `true`, hidden paints are excluded from the test (default: `false`)
+
+**Returns:** `boolean` - `true` if any part of the region intersects the filled area
+
+**Example:**
+```typescript
+canvas.add(shape).update().render();
+
+// Hit-test a click, ignoring hidden paints
+canvasEl.addEventListener('click', (e) => {
+  if (shape.intersects(e.offsetX, e.offsetY, 1, 1, true)) {
+    console.log('Clicked a visible part of the shape');
+  }
+});
+```
+
+> **Note:** This test does not account for the results of blending or masking.
+
+---
+
 ### Transform Chaining Example
 
 ```typescript
@@ -1468,6 +1550,19 @@ enum TextWrapMode {
 ```
 
 **Type:** `'none' | 'character' | 'word' | 'smart' | 'ellipsis'`
+
+---
+
+### FilterMethod
+
+Image filtering methods applied when a Picture is scaled or transformed.
+
+```typescript
+enum FilterMethod {
+  Bilinear = 0,  // Smooth interpolation (default)
+  Nearest = 1,   // Nearest-neighbor sampling
+}
+```
 
 ---
 

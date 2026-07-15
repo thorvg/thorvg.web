@@ -429,28 +429,52 @@ export abstract class Paint extends WasmObject {
   }
 
   /**
-   * Checks if the paint intersects with the given rectangular region.
+   * Checks whether the given rectangular region intersects the filled area of the paint.
+   *
+   * Useful for hit-testing, such as detecting whether a click or touch landed on a painted region.
+   * The paint must have been updated by a Canvas beforehand — typically after the canvas has been
+   * drawn and synchronized.
    *
    * @param x - The x-coordinate of the region's top-left corner
    * @param y - The y-coordinate of the region's top-left corner
-   * @param width - The width of the region
-   * @param height - The height of the region
-   * @returns true if the paint intersects with the region, false otherwise
+   * @param width - The width of the region. Must be greater than 0
+   * @param height - The height of the region. Must be greater than 0
+   * @param visibleOnly - If true, hidden paints are excluded from the test (default: false)
+   * @returns true if any part of the region intersects the filled area, false otherwise
+   *
+   * @note To test a single point, set width and height to 1.
+   * @note This test does not account for the results of blending or masking.
+   *
+   * @see {@link visible}
    *
    * @example
    * ```typescript
    * const shape = new TVG.Shape();
    * shape.appendRect(100, 100, 200, 200);
+   * canvas.add(shape).render();
    *
    * // Check if shape intersects with a region
    * if (shape.intersects(150, 150, 100, 100)) {
    *   console.log('Shape intersects with region');
    * }
+   *
+   * // Hit-test a single point, ignoring hidden paints
+   * if (shape.intersects(event.offsetX, event.offsetY, 1, 1, true)) {
+   *   console.log('Clicked a visible part of the shape');
+   * }
    * ```
    */
-  public intersects(x: number, y: number, width: number, height: number): boolean {
+  public intersects(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    visibleOnly: boolean = false
+  ): boolean {
     const Module = getModule();
-    return Boolean(Module._tvg_paint_intersects(this.ptr, x, y, width, height));
+    return Boolean(
+      Module._tvg_paint_intersects_region(this.ptr, x, y, width, height, visibleOnly ? 1 : 0)
+    );
   }
 
   /**

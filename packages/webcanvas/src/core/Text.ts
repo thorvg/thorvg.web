@@ -200,6 +200,27 @@ export class Text extends Paint {
   }
 
   /**
+   * Get the number of text lines.
+   *
+   * Reflects the layout produced by the current wrap configuration, and also counts
+   * explicit line feed characters ('\n') contained in the text.
+   *
+   * @returns The total number of lines
+   *
+   * @see {@link wrap}
+   *
+   * @example
+   * ```typescript
+   * text.text('Hello wrapped world').layout(100).wrap(TVG.TextWrapMode.Word);
+   * console.log(text.lines()); // number of lines after wrapping
+   * ```
+   */
+  public lines(): number {
+    const Module = getModule();
+    return Module._tvg_text_line_count(this.ptr);
+  }
+
+  /**
    * Set text spacing (letter and line spacing)
    * @param letter - Letter spacing scale factor (1.0 = default, >1.0 = wider, <1.0 = narrower)
    * @param line - Line spacing scale factor (1.0 = default, >1.0 = wider, <1.0 = narrower)
