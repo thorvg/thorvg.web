@@ -82,6 +82,43 @@ export class Picture extends Paint {
     return new Picture(ptr);
   }
 
+  private _accessible = false;
+
+  /**
+   * Whether accessible mode is enabled.
+   *
+   * In accessible mode the picture retains an internal map of ID-accessible asset nodes
+   * (such as named SVG nodes), which makes {@link paint} lookups more efficient and is
+   * required for `Accessor.name()` to resolve names.
+   *
+   * @remarks
+   * Must be set **before** {@link load} — the flag is consumed while the asset is parsed,
+   * so enabling it afterwards has no effect on already-loaded content.
+   *
+   * @example
+   * ```typescript
+   * const picture = new TVG.Picture();
+   * picture.accessible = true;
+   * picture.load(svgData, { type: 'svg' });
+   *
+   * const accessor = new TVG.Accessor();
+   * accessor.set(picture, (paint) => {
+   *   console.log(accessor.name(paint.id));
+   *   return true;
+   * });
+   * ```
+   */
+  public get accessible(): boolean {
+    return this._accessible;
+  }
+
+  public set accessible(value: boolean) {
+    const Module = getModule();
+    const result = Module._tvg_picture_set_accessible(this.ptr, value ? 1 : 0);
+    checkResult(result, 'accessible');
+    this._accessible = value;
+  }
+
   /**
    * Load picture from raw data (Uint8Array or string for SVG)
    * @param data - Raw image data as Uint8Array or SVG string

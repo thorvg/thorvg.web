@@ -37,6 +37,20 @@ export function allocString(Module: ThorVGModule, str: string): number {
   return ptr;
 }
 
+/**
+ * Read a null-terminated UTF-8 string from WASM memory.
+ * @returns The decoded string, or null for a null pointer.
+ */
+export function readString(Module: ThorVGModule, ptr: number): string | null {
+  if (!ptr) return null;
+
+  const heap = Module.HEAPU8;
+  let end = ptr;
+  while (heap[end] !== 0) end++;
+
+  return new TextDecoder().decode(heap.subarray(ptr, end));
+}
+
 // Module-level worker thread count.
 let threadCount = 0;
 
