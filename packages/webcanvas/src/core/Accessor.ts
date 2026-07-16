@@ -54,7 +54,7 @@ export class Accessor {
 
     // Create a C-callable function pointer from the JS callback.
     // Signature: bool func(Tvg_Paint paint, void* data) → 'iii' (i32 return, i32 paint, i32 data)
-    const funcPtr = Module.addFunction((paintPtr: number, _data: number): number => {
+    const funcPtr = Module.addFunction((paintPtr: number): number => {
       const paint = Paint.fromPtr(paintPtr);
       return callback(paint) ? 1 : 0;
     }, 'iii');
