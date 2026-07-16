@@ -1,14 +1,13 @@
-/**
- * Utility class for traversing and inspecting paint trees
- * @category Accessor
- */
-
 import { WasmObject } from '../interop/WasmObject';
 import { Paint } from './Paint';
 import { getModule, allocString, readString } from '../interop/module';
 import { accessorRegistry } from '../interop/registry';
 import { checkResult } from '../common/errors';
 
+/**
+ * Utility class for traversing and inspecting paint trees
+ * @category Accessor
+ */
 export class Accessor extends WasmObject {
   constructor() {
     const Module = getModule();

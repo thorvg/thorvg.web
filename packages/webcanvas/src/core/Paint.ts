@@ -1,8 +1,3 @@
-/**
- * Base class for all drawable objects
- * @category Paint
- */
-
 import { WasmObject } from '../interop/WasmObject';
 import { getModule, allocString } from '../interop/module';
 import { checkResult } from '../common/errors';
@@ -60,6 +55,10 @@ export interface Matrix {
 type PaintFactory = (ptr: number) => Paint;
 const paintFactories = new Map<number, PaintFactory>();
 
+/**
+ * Base class for all drawable objects
+ * @category Paint
+ */
 export abstract class Paint extends WasmObject {
   /**
    * Register a subclass factory for a given Tvg_Type value.
