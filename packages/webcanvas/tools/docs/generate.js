@@ -11,6 +11,18 @@ if (!fs.existsSync(apiJsonPath)) {
 
 const apiData = JSON.parse(fs.readFileSync(apiJsonPath, 'utf8'));
 
+// Serialize JSON for embedding inside an inline <script>. JSON.stringify does not
+// escape '/', so a literal "</script>" in the data (e.g. README code samples) would
+// terminate the script tag early. Escaping '<'/'>' keeps the HTML parser from
+// breaking out while remaining valid JS that parses back to the original string.
+function safeJson(obj, space) {
+  return JSON.stringify(obj, null, space)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
 // Read README.md
 const readmePath = path.join(__dirname, '../../README.md');
 const readmeContent = fs.existsSync(readmePath)
@@ -91,6 +103,27 @@ function getExamples(comment) {
     .map(tag => tag.content.map(c => c.text || '').join(''));
 }
 
+// Map a raw @category tag (lowercased) to an internal category key.
+// Order matters: 'lottie' must precede 'animation' since 'lottieanimation'
+// contains 'animation' as a substring.
+function matchCategory(category) {
+  if (category.includes('initialization')) return 'initialization';
+  if (category.includes('canvas')) return 'canvas';
+  if (category.includes('lottie')) return 'lottieAnimation';
+  if (category.includes('paint')) return 'paint';
+  if (category.includes('shape')) return 'shapes';
+  if (category.includes('scene')) return 'scene';
+  if (category.includes('picture')) return 'picture';
+  if (category.includes('text')) return 'text';
+  if (category.includes('accessor')) return 'accessor';
+  if (category.includes('animation')) return 'animation';
+  if (category.includes('gradient')) return 'gradients';
+  if (category.includes('font')) return 'font';
+  if (category.includes('constant')) return 'constants';
+  if (category.includes('error')) return 'errorHandling';
+  return 'other';
+}
+
 // Helper to get category
 function getCategory(comment, item) {
   // For functions, check signatures first
@@ -100,17 +133,9 @@ function getCategory(comment, item) {
       const categoryTag = sigComment.blockTags.find(tag => tag.tag === '@category');
       if (categoryTag) {
         const category = categoryTag.content.map(c => c.text || '').join('').trim().toLowerCase();
-        if (category.includes('initialization')) return 'initialization';
-        if (category.includes('canvas')) return 'canvas';
-        if (category.includes('shape')) return 'shapes';
-        if (category.includes('scene')) return 'scene';
-        if (category.includes('picture')) return 'picture';
-        if (category.includes('text')) return 'text';
-        if (category.includes('animation')) return 'animation';
-        if (category.includes('gradient')) return 'gradients';
-        if (category.includes('font')) return 'font';
-        if (category.includes('constant')) return 'constants';
-        if (category.includes('error')) return 'errorHandling';
+        const matched = matchCategory(category);
+        // Fall through to the comment-based lookup below if unrecognized.
+        if (matched !== 'other') return matched;
       }
     }
   }
@@ -122,32 +147,23 @@ function getCategory(comment, item) {
 
   const category = categoryTag.content.map(c => c.text || '').join('').trim().toLowerCase();
 
-  if (category.includes('initialization')) return 'initialization';
-  if (category.includes('canvas')) return 'canvas';
-  if (category.includes('shape')) return 'shapes';
-  if (category.includes('scene')) return 'scene';
-  if (category.includes('picture')) return 'picture';
-  if (category.includes('text')) return 'text';
-  if (category.includes('animation')) return 'animation';
-  if (category.includes('gradient')) return 'gradients';
-  if (category.includes('font')) return 'font';
-  if (category.includes('constant')) return 'constants';
-  if (category.includes('error')) return 'errorHandling';
-
-  return 'other';
+  return matchCategory(category);
 }
 
 // Build API index
 const apis = {
   initialization: [],
   canvas: [],
+  paint: [],
   shapes: [],
   scene: [],
   picture: [],
   text: [],
   animation: [],
+  lottieAnimation: [],
   gradients: [],
   font: [],
+  accessor: [],
   constants: [],
   errorHandling: [],
   other: []
@@ -346,6 +362,8 @@ function generateSidebar() {
       let title;
       if (category === 'errorHandling') {
         title = 'Error Handling';
+      } else if (category === 'lottieAnimation') {
+        title = 'Lottie Animation';
       } else {
         title = category.charAt(0).toUpperCase() + category.slice(1);
       }
@@ -500,8 +518,8 @@ const html = `<!DOCTYPE html>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        const apiData = ${JSON.stringify(apis, null, 2)};
-        const readmeMarkdown = ${JSON.stringify(readmeContent)};
+        const apiData = ${safeJson(apis, 2)};
+        const readmeMarkdown = ${safeJson(readmeContent)};
         const searchInput = document.getElementById('search');
         const apiItems = document.querySelectorAll('.api-item');
         const content = document.getElementById('content');
@@ -550,13 +568,16 @@ fs.copyFileSync(path.join(__dirname, 'style.css'), path.join(__dirname, '../../d
 const categoryTitles = {
   initialization: 'Initialization',
   canvas: 'Canvas',
+  paint: 'Paint',
   shapes: 'Shapes',
   scene: 'Scene',
   picture: 'Picture',
   text: 'Text',
   animation: 'Animation',
+  lottieAnimation: 'Lottie Animation',
   gradients: 'Gradients',
   font: 'Font',
+  accessor: 'Accessor',
   constants: 'Constants',
   errorHandling: 'Error Handling',
   other: 'Other',

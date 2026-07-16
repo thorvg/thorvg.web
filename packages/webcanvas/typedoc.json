@@ -19,13 +19,16 @@
   "categoryOrder": [
     "Initialization",
     "Canvas",
+    "Paint",
     "Shapes",
     "Scene",
     "Picture",
     "Text",
     "Animation",
+    "LottieAnimation",
     "Gradients",
     "Font",
+    "Accessor",
     "Constants",
     "Error Handling",
     "*"

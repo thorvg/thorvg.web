@@ -1,6 +1,6 @@
 /**
  * Control advanced Lottie features on top of Animation
- * @category Animation
+ * @category LottieAnimation
  */
 
 import { getModule } from '../interop/module';
@@ -10,7 +10,7 @@ import { checkResult, handleError, ThorVGResultCode } from '../common/errors';
 /**
  * Lottie slot data, keyed by the `sid` the Lottie exposes.
  *
- * @category Animation
+ * @category LottieAnimation
  * @see {@link LottieAnimation.gen}
  *
  * @example
@@ -24,7 +24,7 @@ export type LottieSlotData = Record<string, unknown>;
 
 /**
  * A named frame range embedded in the Lottie file at design time.
- * @category Animation
+ * @category LottieAnimation
  * @see {@link LottieAnimation.marker}
  */
 export interface LottieMarker {
@@ -41,7 +41,7 @@ export interface LottieMarker {
  *
  * Extends {@link Animation}, so loading and playback work identically.
  *
- * @category Animation
+ * @category LottieAnimation
  *
  * @example
  * ```typescript

@@ -281,6 +281,6 @@ export type MimeType = 'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' |
  * const TVG = await ThorVG.init({ renderer: 'sw' });
  * ```
  *
- * @category Canvas
+ * @category Other
  */
 export type RendererType = 'sw' | 'gl' | 'wg';
