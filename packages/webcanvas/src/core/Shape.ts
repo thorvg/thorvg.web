@@ -57,7 +57,7 @@ import { Paint } from './Paint';
 import { Fill } from './Fill';
 import { getModule } from '../interop/module';
 import { shapeRegistry } from '../interop/registry';
-import { StrokeCap, StrokeJoin, FillRule } from '../common/constants';
+import { StrokeCap, StrokeJoin, FillRule, PathCommand } from '../common/constants';
 import { checkResult } from '../common/errors';
 
 /**
@@ -346,6 +346,138 @@ export class Shape extends Paint {
     const result = Module._tvg_shape_append_circle(this.ptr, cx, cy, rx, ry, clockwise ? 1 : 0);
     checkResult(result, 'appendCircle');
     return this;
+  }
+
+  /**
+   * Appends a pre-built path to the shape from raw command and point arrays.
+   *
+   * This is the low-level counterpart to {@link moveTo}, {@link lineTo}, {@link cubicTo}
+   * and {@link close}. It lets you feed an entire path in a single call, which is useful
+   * when the path data already exists in command/point form (e.g. imported from another
+   * source or produced by {@link path}).
+   *
+   * Each command consumes points from `points` in order:
+   * - {@link PathCommand.MoveTo} / {@link PathCommand.LineTo}: 1 point
+   * - {@link PathCommand.CubicTo}: 3 points (control1, control2, end)
+   * - {@link PathCommand.Close}: 0 points
+   *
+   * The total number of points consumed by `commands` must equal `points.length`.
+   *
+   * @param commands - Path commands describing the outline
+   * @param points - Points as `[x, y]` pairs, consumed in order by the commands
+   * @returns The Shape instance for method chaining
+   *
+   * @example
+   * ```typescript
+   * // Build a triangle in one call
+   * shape.appendPath(
+   *   [PathCommand.MoveTo, PathCommand.LineTo, PathCommand.LineTo, PathCommand.Close],
+   *   [[100, 50], [150, 150], [50, 150]]
+   * ).fill(255, 0, 0, 255);
+   * ```
+   */
+  public appendPath(
+    commands: readonly PathCommand[],
+    points: ReadonlyArray<readonly number[]>
+  ): this {
+    const Module = getModule();
+
+    if (commands.length === 0) return this;
+
+    const cmdsPtr = Module._malloc(commands.length);
+    const ptsPtr = points.length > 0 ? Module._malloc(points.length * 8) : 0;
+
+    try {
+      Module.HEAPU8.set(commands, cmdsPtr);
+
+      for (let i = 0; i < points.length; i++) {
+        const point = points[i]!;
+        Module.HEAPF32[(ptsPtr / 4) + (i * 2)] = point[0]!;
+        Module.HEAPF32[(ptsPtr / 4) + (i * 2) + 1] = point[1]!;
+      }
+
+      const result = Module._tvg_shape_append_path(
+        this.ptr,
+        cmdsPtr,
+        commands.length,
+        ptsPtr,
+        points.length
+      );
+      checkResult(result, 'appendPath');
+    } finally {
+      Module._free(cmdsPtr);
+      if (ptsPtr) Module._free(ptsPtr);
+    }
+    return this;
+  }
+
+  /**
+   * Retrieves the shape's current path as command and point arrays.
+   *
+   * Returns a snapshot of the path data accumulated by the path-building methods
+   * (or {@link appendPath}). The returned arrays are copies and can be safely
+   * modified and fed back into {@link appendPath}.
+   *
+   * Mirrors the native `Shape::path()` getter.
+   *
+   * @returns An object with `commands` (path commands) and `points` ([x, y] tuples)
+   *
+   * @example
+   * ```typescript
+   * const { commands, points } = shape.path();
+   * // Re-append the same outline to another shape
+   * other.appendPath(commands, points);
+   * ```
+   */
+  public path(): { commands: PathCommand[]; points: Array<[number, number]> } {
+    const Module = getModule();
+
+    const cmdsPtrPtr = Module._malloc(4); // Tvg_Path_Command**
+    const cmdsCntPtr = Module._malloc(4); // uint32_t*
+    const ptsPtrPtr = Module._malloc(4); // Tvg_Point**
+    const ptsCntPtr = Module._malloc(4); // uint32_t*
+
+    try {
+      const result = Module._tvg_shape_get_path(
+        this.ptr,
+        cmdsPtrPtr,
+        cmdsCntPtr,
+        ptsPtrPtr,
+        ptsCntPtr
+      );
+      checkResult(result, 'path');
+
+      const commands: PathCommand[] = [];
+      const points: Array<[number, number]> = [];
+
+      const view = new DataView(Module.HEAPU8.buffer);
+
+      const cmdCnt = view.getUint32(cmdsCntPtr, true);
+      if (cmdCnt > 0) {
+        const cmdArrPtr = view.getUint32(cmdsPtrPtr, true);
+        for (let i = 0; i < cmdCnt; i++) {
+          commands.push(Module.HEAPU8[cmdArrPtr + i]! as PathCommand);
+        }
+      }
+
+      const ptsCnt = view.getUint32(ptsCntPtr, true);
+      if (ptsCnt > 0) {
+        const ptArrPtr = view.getUint32(ptsPtrPtr, true);
+        for (let i = 0; i < ptsCnt; i++) {
+          points.push([
+            view.getFloat32(ptArrPtr + (i * 8), true),
+            view.getFloat32(ptArrPtr + (i * 8) + 4, true),
+          ]);
+        }
+      }
+
+      return { commands, points };
+    } finally {
+      Module._free(cmdsPtrPtr);
+      Module._free(cmdsCntPtr);
+      Module._free(ptsPtrPtr);
+      Module._free(ptsCntPtr);
+    }
   }
 
   /**
@@ -657,6 +789,31 @@ export class Shape extends Paint {
         }
       }
     }
+    return this;
+  }
+
+  /**
+   * Sets the rendering order of the shape's stroke and fill.
+   *
+   * By default the fill is rendered first and the stroke on top of it. Passing `true`
+   * reverses this so the stroke is drawn first and the fill on top — useful when you want
+   * the fill to cover the inner half of a thick stroke.
+   *
+   * @param strokeFirst - `true` renders the stroke before the fill; `false` (default) renders the stroke on top
+   * @returns The Shape instance for method chaining
+   *
+   * @example
+   * ```typescript
+   * shape.appendCircle(150, 150, 50)
+   *      .fill(255, 255, 255, 255)
+   *      .stroke({ width: 20, color: [0, 0, 0, 255] })
+   *      .order(true); // stroke under the fill
+   * ```
+   */
+  public order(strokeFirst: boolean): this {
+    const Module = getModule();
+    const result = Module._tvg_shape_set_paint_order(this.ptr, strokeFirst ? 1 : 0);
+    checkResult(result, 'order');
     return this;
   }
 
