@@ -11,6 +11,10 @@ export interface EmscriptenModule {
   addFunction(func: Function, sig: string): number;
   removeFunction(ptr: number): void;
 
+  // String marshalling
+  UTF8ToString(ptr: number): string;
+  stringToNewUTF8(str: string): number;
+
   // Memory heaps
   HEAPU8: Uint8Array;
   HEAP8: Int8Array;
@@ -199,6 +203,7 @@ export interface ThorVGCAPI {
   _tvg_picture_get_origin(picture: number, x: number, y: number): number;
   _tvg_picture_set_filter(picture: number, method: number): number;
   _tvg_picture_set_accessible(picture: number, accessible: number): number;
+  _tvg_picture_set_asset_resolver(picture: number, resolver: number, data: number): number;
   _tvg_picture_get_paint(picture: number, id: number): number;
   _tvg_paint_rel(paint: number): number;
 
@@ -232,6 +237,22 @@ export interface ThorVGCAPI {
   _tvg_animation_get_total_frame(animation: number, framePtr: number): number;
   _tvg_animation_get_duration(animation: number, durationPtr: number): number;
   _tvg_animation_set_segment(animation: number, segment: number): number;
+
+  // LottieAnimation functions
+  _tvg_lottie_animation_new(): number;
+  _tvg_lottie_animation_set_marker(animation: number, markerPtr: number): number;
+  _tvg_lottie_animation_get_markers_cnt(animation: number, cntPtr: number): number;
+  _tvg_lottie_animation_get_marker_info(
+    animation: number,
+    idx: number,
+    namePtr: number,
+    beginPtr: number,
+    endPtr: number
+  ): number;
+  _tvg_lottie_animation_gen_slot(animation: number, slotPtr: number): number;
+  _tvg_lottie_animation_apply_slot(animation: number, id: number): number;
+  _tvg_lottie_animation_del_slot(animation: number, id: number): number;
+  _tvg_lottie_animation_set_quality(animation: number, value: number): number;
 
   // Gradient functions
   _tvg_linear_gradient_new(): number;

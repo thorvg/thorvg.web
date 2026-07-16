@@ -12,6 +12,7 @@ TypeScript/WebAssembly API for high-performance vector graphics rendering
 - [Picture](#picture)
 - [Text](#text)
 - [Animation](#animation)
+- [LottieAnimation](#lottieanimation)
 - [Gradients](#gradients)
 - [Font](#font)
 - [Paint (Base Class)](#paint-base-class)
@@ -732,6 +733,64 @@ picture.load(pngData, { type: 'png' })
 
 ---
 
+### picture.resolver()
+
+Sets a resolver for external assets (images, fonts) referenced by the Picture(Animation).
+
+```typescript
+picture.resolver(callback);
+picture.resolver(null); // unset
+```
+
+**Parameters:**
+- `callback: AssetResolver | null` - The resolver, or `null` to remove it.
+
+```typescript
+type AssetResolver = (paint: Paint, src: string) => boolean;
+```
+
+The callback receives the paint needing the asset.
+Return `true` if you resolved it, or `false` to let the engine fall back to its own resolution.
+
+**Returns:** `this`
+
+**Important:**
+- Set the resolver **before** `load()`.
+- The callback is **synchronous**.
+
+**Example (image):**
+```typescript
+const logo = new Uint8Array(await (await fetch('/logo.png')).arrayBuffer());
+
+const animation = new TVG.LottieAnimation();
+animation.picture.resolver((paint, src) => {
+  if (paint instanceof TVG.Picture) {
+    paint.load(logo, { type: 'png' });
+    return true;
+  }
+  return false;
+});
+animation.load(lottieData);
+canvas.add(animation.picture);
+canvas.update().render();
+```
+
+**Example (font):**
+```typescript
+const bytes = new Uint8Array(await (await fetch('/MyFont.ttf')).arrayBuffer());
+TVG.Font.load('MyFont', bytes);
+
+animation.picture.resolver((paint, src) => {
+  if (paint instanceof TVG.Text) {
+    paint.font('MyFont');
+    return true;
+  }
+  return false;
+});
+```
+
+---
+
 ## Text
 
 Renders text with custom fonts and styling.
@@ -1191,6 +1250,175 @@ animation.play((frame) => {
 // Pause after 3 seconds
 setTimeout(() => animation.pause(), 3000);
 ```
+
+---
+
+## LottieAnimation
+
+Extends [Animation](#animation) with the Lottie-specific features.
+
+### Constructor
+
+```typescript
+const animation = new TVG.LottieAnimation();
+```
+
+---
+
+### animation.segment()
+
+Sets the playback segment, by marker name or by segment index.
+
+```typescript
+// By marker name
+animation.segment('walk-cycle');
+
+// Reset to the full timeline
+animation.segment(null);
+
+// By segment index (inherited from Animation)
+animation.segment(0);
+```
+
+**Parameters:**
+- `marker: string | null` - Marker name, or `null` to reset the segment
+- `segment: number` - Segment index (0-based)
+
+**Returns:** `this`
+
+**Note:** Setting a marker discards any previously set segment. An unknown marker name throws.
+
+---
+
+### animation.markersCnt()
+
+Returns the number of markers in the loaded animation.
+
+```typescript
+const count = animation.markersCnt();
+```
+
+**Returns:** `number` - 0 if the animation has no markers
+
+---
+
+### animation.marker()
+
+Returns the name and frame range of a marker by index.
+
+```typescript
+const marker = animation.marker(0);
+```
+
+**Parameters:**
+- `idx: number` - Zero-based marker index
+
+**Returns:**
+```typescript
+{
+  name: string;   // Marker name, as authored in the Lottie file
+  begin: number;  // Starting frame
+  end: number;    // Ending frame
+} | null
+```
+
+**Example:**
+```typescript
+for (let i = 0; i < animation.markersCnt(); i++) {
+  const { name, begin, end } = animation.marker(i)!;
+  console.log(`${name}: ${begin} - ${end}`);
+}
+```
+
+**Note:** An out-of-range index throws.
+
+---
+
+### animation.gen()
+
+Generates a slot from Lottie slot data, for overriding animation properties.
+
+```typescript
+const id = animation.gen(slot);
+```
+
+**Parameters:**
+- `slot: LottieSlotData | string` - The slot overrides. An object is serialized for
+  you; a raw JSON string is handed through untouched.
+
+**Returns:** `number` - A non-zero slot ID on success
+
+**Example:**
+```typescript
+// The Lottie file must expose the property with a "sid", e.g.
+//   "c": { "a": 0, "k": [1, 0, 0, 1], "sid": "ball_col" }
+const id = animation.gen({
+  ball_col: { p: { a: 0, k: [0, 1, 0, 1] } },
+});
+animation.apply(id);
+canvas.update().render();
+```
+
+**Example:**
+```typescript
+// Slot data can also be provided as a string.
+const id = animation.gen(await res.text());
+```
+
+**Type:**
+```typescript
+type LottieSlotData = Record<string, unknown>;
+```
+
+**Note:** Throws if the animation exposes no slots.
+
+**Note:** Each entry must wrap its value in `p`. Without it the entry parses to an
+empty property, so `gen()` still returns a valid ID but the override does nothing.
+
+---
+
+### animation.apply()
+
+Applies a previously generated slot.
+
+```typescript
+animation.apply(id);
+```
+
+**Parameters:**
+- `id: number` - Slot ID from `gen()`, or `0` to reset all applied slots
+
+**Returns:** `this`
+
+---
+
+### animation.del()
+
+Deletes a previously generated slot.
+
+```typescript
+animation.del(id);
+```
+
+**Parameters:**
+- `id: number` - Slot ID from `gen()`
+
+**Returns:** `this`
+
+---
+
+### animation.quality()
+
+Sets the quality level for Lottie effects such as blur and shadows.
+
+```typescript
+animation.quality(80);
+```
+
+**Parameters:**
+- `value: number` - Quality from 0 (fastest) to 100 (best), default 50. Values outside the range are clamped.
+
+**Returns:** `this`
 
 ---
 
