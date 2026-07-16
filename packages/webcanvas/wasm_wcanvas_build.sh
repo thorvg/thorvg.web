@@ -36,7 +36,7 @@ rm -rf build_wasm_wcanvas
 # Generate temporary cross file from wasm32.txt with WebCanvas specific modifications
 # 1. Replace EMSDK: placeholder with actual path (preserving the path structure)
 # 2. Remove -fno-exceptions from cpp_args
-# 3. Remove --closure=1 and -sEXPORTED_RUNTIME_METHODS=FS from cpp_link_args
+# 3. Remove --closure=1 and -sEXPORTED_RUNTIME_METHODS from cpp_link_args
 # 4. Add WebCanvas specific flags: EXPORTED_FUNCTIONS, EXPORTED_RUNTIME_METHODS, exception handling, and TypeScript definitions
 # 5. For pthread builds: also add -pthread to cpp_args/cpp_link_args plus SharedArrayBuffer memory
 #    settings, and a dynamic worker pool size via PTHREAD_POOL_SIZE.
@@ -45,7 +45,7 @@ if [ "$MODE" = "pthread" ]; then
     sed "s|, '-fno-exceptions'||g" | \
     sed "s|'-fno-exceptions', ||g" | \
     sed "s|, '--closure=1'||g" | \
-    sed "s|, '-sEXPORTED_RUNTIME_METHODS=FS'||g" | \
+    sed "s|, '-sEXPORTED_RUNTIME_METHODS=[^']*'||g" | \
     sed "s|cpp_args = \[|cpp_args = ['-pthread', |g" | \
     sed "s|'--bind'|'--bind', '-pthread', '--emit-tsd=thorvg.d.ts', '-sPTHREAD_POOL_SIZE=(typeof globalThis.__THORVG_THREAD_COUNT !== \"undefined\" ? globalThis.__THORVG_THREAD_COUNT : (typeof navigator !== \"undefined\" \&\& navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4))', '-sPTHREAD_POOL_SIZE_STRICT=0', '-sINITIAL_MEMORY=134217728', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sDISABLE_EXCEPTION_CATCHING=0', '-sDISABLE_EXCEPTION_THROWING=0', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
 else
@@ -53,7 +53,7 @@ else
     sed "s|, '-fno-exceptions'||g" | \
     sed "s|'-fno-exceptions', ||g" | \
     sed "s|, '--closure=1'||g" | \
-    sed "s|, '-sEXPORTED_RUNTIME_METHODS=FS'||g" | \
+    sed "s|, '-sEXPORTED_RUNTIME_METHODS=[^']*'||g" | \
     sed "s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sDISABLE_EXCEPTION_CATCHING=0', '-sDISABLE_EXCEPTION_THROWING=0', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
 fi
 
