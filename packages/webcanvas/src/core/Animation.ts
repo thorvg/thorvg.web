@@ -84,6 +84,8 @@ export interface AnimationSegment {
  *
  * animation.play();
  * ```
+ *
+ * @see {@link LottieAnimation} for Lottie advanced features
  */
 export class Animation {
   #ptr: number;
@@ -96,9 +98,13 @@ export class Animation {
   #onFrame?: (frame: number) => void;
   #loop = true;
 
-  constructor() {
+  /**
+   * @param ptr - An existing native animation pointer, for subclasses that
+   *              allocate a derived type. Omit to create a plain Animation.
+   */
+  constructor(ptr?: number) {
     const Module = getModule();
-    this.#ptr = Module._tvg_animation_new();
+    this.#ptr = ptr ?? Module._tvg_animation_new();
 
     if (!this.#ptr) {
       handleError('Failed to create animation', 'Animation constructor');
@@ -286,6 +292,8 @@ export class Animation {
    */
   public dispose(): void {
     this.pause();
+
+    this.#picture?.resolver(null);
 
     if (this.#ptr) {
       const Module = getModule();
