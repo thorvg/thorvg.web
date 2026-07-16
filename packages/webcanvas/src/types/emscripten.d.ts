@@ -143,6 +143,21 @@ export interface ThorVGCAPI {
   _tvg_shape_set_stroke_miterlimit(shape: number, miterlimit: number): number;
   _tvg_shape_set_stroke_dash(shape: number, dashPattern: number, cnt: number, offset: number): number;
   _tvg_shape_get_stroke_dash(shape: number, dashPatternPtr: number, cntPtr: number, offsetPtr: number): number;
+  _tvg_shape_append_path(
+    shape: number,
+    cmds: number,
+    cmdCnt: number,
+    pts: number,
+    ptsCnt: number
+  ): number;
+  _tvg_shape_get_path(
+    shape: number,
+    cmdsPtr: number,
+    cmdsCntPtr: number,
+    ptsPtr: number,
+    ptsCntPtr: number
+  ): number;
+  _tvg_shape_set_paint_order(shape: number, strokeFirst: number): number;
   _tvg_shape_set_fill_rule(shape: number, rule: number): number;
   _tvg_shape_get_fill_rule(shape: number, rulePtr: number): number;
   _tvg_shape_set_trimpath(shape: number, begin: number, end: number, simultaneous: number): number;

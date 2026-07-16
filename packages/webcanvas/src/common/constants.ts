@@ -94,6 +94,23 @@ export enum FillRule {
 }
 
 /**
+ * Path command for building shapes.
+ *
+ * Each command consumes a number of points from the accompanying points array.
+ * @category Shape
+ */
+export enum PathCommand {
+  /** Ends the current sub-path and connects it with its initial point. This command doesn't expect any points. */
+  Close = 0,
+  /** Sets a new initial point of the sub-path and a new current point. This command expects 1 point: the starting position. */
+  MoveTo = 1,
+  /** Draws a line from the current point to the given point and sets a new value of the current point. This command expects 1 point: the end-position of the line. */
+  LineTo = 2,
+  /** Draws a cubic Bezier curve from the current point to the given point using two given control points and sets a new value of the current point. This command expects 3 points: the 1st control-point, the 2nd control-point, the end-point of the curve. */
+  CubicTo = 3,
+}
+
+/**
  * Gradient spread method for areas outside the gradient bounds.
  *
  * Determines how the gradient behaves in regions outside the defined gradient vector.

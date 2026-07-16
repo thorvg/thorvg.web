@@ -410,6 +410,47 @@ shape.appendCircle(150, 150, 80, 40).fill(100, 200, 100);
 
 ---
 
+#### shape.appendPath()
+
+Appends a pre-built path from raw command and point arrays. This is the batch counterpart to `moveTo`/`lineTo`/`cubicTo`/`close`.
+
+```typescript
+shape.appendPath(commands, points);
+```
+
+**Parameters:**
+- `commands: PathCommand[]` - Path commands (`PathCommand.MoveTo`, `LineTo`, `CubicTo`, `Close`)
+- `points: [number, number][]` - Points as `[x, y]` tuples, consumed in order by the commands
+
+Each command consumes points from `points`: `MoveTo`/`LineTo` use 1 point, `CubicTo` uses 3 (control1, control2, end), `Close` uses none. The total consumed must equal `points.length`.
+
+**Returns:** `this`
+
+**Example (Triangle in one call):**
+```typescript
+import { constants } from '@thorvg/webcanvas';
+const { PathCommand } = constants;
+
+shape.appendPath(
+  [PathCommand.MoveTo, PathCommand.LineTo, PathCommand.LineTo, PathCommand.Close],
+  [[100, 50], [150, 150], [50, 150]]
+).fill(255, 0, 0);
+```
+
+---
+
+#### shape.path()
+
+Returns a copy of the shape's current path as command and point arrays. The result can be fed back into `appendPath`. Mirrors the native `Shape::path()` getter.
+
+```typescript
+const { commands, points } = shape.path();
+```
+
+**Returns:** `{ commands: PathCommand[]; points: [number, number][] }`
+
+---
+
 ### Styling
 
 #### shape.fill()
@@ -485,6 +526,29 @@ shape.stroke({
   cap: 'round',
   join: 'round'
 });
+```
+
+---
+
+#### shape.order()
+
+Sets the rendering order of the shape's stroke and fill. By default the fill is drawn first and the stroke on top; pass `true` to draw the stroke first so the fill covers the inner half of a thick stroke.
+
+```typescript
+shape.order(strokeFirst);
+```
+
+**Parameters:**
+- `strokeFirst: boolean` - `true` renders the stroke before the fill; `false` (default) renders the stroke on top
+
+**Returns:** `this`
+
+**Example:**
+```typescript
+shape.appendCircle(150, 150, 50)
+  .fill(255, 255, 255)
+  .stroke({ width: 20, color: [0, 0, 0, 255] })
+  .order(true); // stroke under the fill
 ```
 
 ---
