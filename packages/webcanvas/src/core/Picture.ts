@@ -5,7 +5,7 @@
 
 import { Paint } from './Paint';
 import { getModule, allocString } from '../interop/module';
-import { pictureRegistry } from '../interop/registry';
+import { pictureRegistry, callbackRegistry } from '../interop/registry';
 import { checkResult, handleError, ThorVGResultCode } from '../common/errors';
 import { ColorSpace, FilterMethod } from '../common/constants';
 import type { MimeType } from '../common/constants';
@@ -86,6 +86,7 @@ export interface PictureSize {
  */
 export class Picture extends Paint {
   #resolverPtr: number | null = null;
+  public _owner: object | null = null;
 
   constructor(ptr?: number, skipRegistry: boolean = false) {
     const Module = getModule();
@@ -173,6 +174,7 @@ export class Picture extends Paint {
     // Unregister previous resolver.
     if (this.#resolverPtr) {
       Module.removeFunction(this.#resolverPtr);
+      callbackRegistry.unregister(this);
       this.#resolverPtr = null;
     }
 
@@ -196,6 +198,7 @@ export class Picture extends Paint {
     }, 'iiii');
 
     this.#resolverPtr = funcPtr;
+    callbackRegistry.register(this, funcPtr, this);
     checkResult(Module._tvg_picture_set_asset_resolver(this.ptr, funcPtr, 0), 'resolver');
     return this;
   }
@@ -203,8 +206,10 @@ export class Picture extends Paint {
   public override dispose(): void {
     if (this.#resolverPtr) {
       getModule().removeFunction(this.#resolverPtr);
+      callbackRegistry.unregister(this);
       this.#resolverPtr = null;
     }
+    this._owner = null;
     super.dispose();
   }
 

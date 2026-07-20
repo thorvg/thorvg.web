@@ -34,6 +34,9 @@ export abstract class WasmObject {
 
   public set ptr(ptr: number) {
     this.#ptr = ptr;
+    if (this.#registryToken) {
+      this.#registryToken.ptr = ptr;
+    }
   }
 
   /**
@@ -44,8 +47,12 @@ export abstract class WasmObject {
       return;
     }
 
-    this._cleanup(this.#ptr);
+    if (this.#ptr) {
+      this._cleanup(this.#ptr);
+    }
+    this.#ptr = 0;
     this.#disposed = true;
+
     if (this.#registryToken) {
       this.#registryToken.ptr = 0;
     }
