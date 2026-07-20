@@ -99,10 +99,9 @@ export class Animation extends WasmObject {
   #onFrame?: (frame: number) => void;
   #loop = true;
 
-  /**
-   * @param ptr - An existing native animation pointer, for subclasses that
-   *              allocate a derived type. Omit to create a plain Animation.
-   */
+  constructor();
+  /** @internal */
+  constructor(ptr?: number);
   constructor(ptr?: number) {
     super(ptr ?? getModule()._tvg_animation_new(), animationRegistry);
 

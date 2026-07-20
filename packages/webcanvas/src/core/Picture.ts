@@ -89,6 +89,9 @@ export class Picture extends Paint {
   public _owner: object | null = null;
   #resolverPtr: number | null = null;
 
+  constructor();
+  /** @internal */
+  constructor(ptr?: number, skipRegistry?: boolean);
   constructor(ptr?: number, skipRegistry: boolean = false) {
     const Module = getModule();
     if (!ptr) {

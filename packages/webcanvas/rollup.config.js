@@ -123,7 +123,7 @@ export default [
       }
     ],
     plugins: [
-      dts(),
+      dts({ compilerOptions: { stripInternal: true } }),
     ],
   }
 ];

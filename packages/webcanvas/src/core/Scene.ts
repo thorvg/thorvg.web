@@ -46,6 +46,9 @@ import { checkResult } from '../common/errors';
  * ```
  */
 export class Scene extends Paint {
+  constructor();
+  /** @internal */
+  constructor(ptr?: number, skipRegistry?: boolean);
   constructor(ptr?: number, skipRegistry: boolean = false) {
     const Module = getModule();
     if (!ptr) {

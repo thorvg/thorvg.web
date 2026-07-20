@@ -22,10 +22,11 @@ export abstract class Fill extends WasmObject {
   protected _filled = false;
   protected _stops: ColorStopEntry[] = [];
 
-  constructor(ptr: number) {
+  protected constructor(ptr: number) {
     super(ptr, gradientRegistry);
   }
 
+  /** @internal */
   _markFilled(): void {
     this._filled = true;
     gradientRegistry.unregister(this); // When filled, the Shape takes ownership
