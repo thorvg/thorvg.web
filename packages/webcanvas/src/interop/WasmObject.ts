@@ -32,13 +32,6 @@ export abstract class WasmObject {
     return this.#ptr;
   }
 
-  public set ptr(ptr: number) {
-    this.#ptr = ptr;
-    if (this.#registryToken) {
-      this.#registryToken.ptr = ptr;
-    }
-  }
-
   /**
    * Manually dispose of this object and free its WASM memory
    */
