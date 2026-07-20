@@ -113,7 +113,8 @@ export class Animation {
   }
 
   /**
-   * Get the pointer (internal use)
+   * Get the pointer
+   * @internal
    */
   public get ptr(): number {
     return this.#ptr;
@@ -306,7 +307,9 @@ export class Animation {
 
   /**
    * Internal animation loop
-   * Note: User must call canvas.update() and canvas.render() in the frame callback
+   *
+   * @remarks
+   * User must call canvas.update() and canvas.render() in the frame callback
    */
   #animate = (time: number): void => {
     if (!this.#isPlaying || !this.#info) {

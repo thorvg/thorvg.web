@@ -309,7 +309,8 @@ export class Picture extends Paint {
    * @param id - A numeric hash ID or a string name (which will be hashed via Accessor.id)
    * @returns The matching Paint object, or null if not found
    *
-   * @note The returned Paint is owned by this Picture — do not dispose it manually.
+   * @remarks
+   * The returned Paint is owned by this Picture — do not dispose it manually.
    */
   public paint(id: number): Paint | null;
   public paint(name: string): Paint | null;
