@@ -24,7 +24,6 @@ export interface FontProviderResult {
  * CDN, a local server, or any custom storage.
  *
  * @category Font
- * @beta
  *
  * @example
  * ```typescript

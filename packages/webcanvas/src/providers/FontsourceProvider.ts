@@ -35,7 +35,6 @@ export interface FontsourceOptions {
  * This is the default provider used by {@link Font.load} when no raw data is supplied.
  *
  * @category Font
- * @beta
  *
  * @example
  * ```typescript
