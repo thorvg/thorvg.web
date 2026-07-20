@@ -72,7 +72,6 @@ export class Font {
    * Replace it to load fonts from your own CDN or any other source.
    *
    * @param provider - A {@link FontProvider} implementation
-   * @beta
    *
    * @example
    * ```typescript
