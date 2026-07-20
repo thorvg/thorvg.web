@@ -75,6 +75,26 @@ body {
     display: none;
 }
 
+.badge-beta {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #7b5200;
+    background: #fff3cd;
+    border: 1px solid #ffe08a;
+    vertical-align: middle;
+}
+
+.content h1 .badge-beta {
+    font-size: 12px;
+    padding: 2px 8px;
+}
+
 .content {
     flex: 1;
     overflow-y: auto;

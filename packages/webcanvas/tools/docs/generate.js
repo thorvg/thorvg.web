@@ -94,6 +94,16 @@ function getCommentText(comment) {
   return text;
 }
 
+// @beta modifier helper
+function hasBetaTag(item) {
+  const tagged = comment => (comment?.modifierTags || []).includes('@beta');
+  if (tagged(item.comment)) return true;
+  if (item.signatures && item.signatures.some(sig => tagged(sig.comment))) return true;
+  if (tagged(item.getSignature?.comment)) return true;
+  if (tagged(item.setSignature?.comment)) return true;
+  return false;
+}
+
 // Helper to get examples
 function getExamples(comment) {
   if (!comment || !comment.blockTags) return [];
@@ -181,7 +191,7 @@ function findItemById(data, targetId) {
   return null;
 }
 
-function processItem(item, parentName = '', parentCategory = null) {
+function processItem(item, parentName = '', parentCategory = null, parentBeta = false) {
   // Handle references - follow the target to get actual definition
   if (item.variant === 'reference' && item.target) {
     const targetItem = findItemById(apiData, item.target);
@@ -206,6 +216,7 @@ function processItem(item, parentName = '', parentCategory = null) {
   }
 
   const fullName = parentName ? `${parentName}.${item.name}` : item.name;
+  const beta = parentBeta || hasBetaTag(item);
   const itemCategory = getCategory(item.comment, item);
   // Use parent's category if this item doesn't have one explicitly set
   const category = itemCategory !== 'other' ? itemCategory : (parentCategory || 'other');
@@ -336,7 +347,8 @@ function processItem(item, parentName = '', parentCategory = null) {
     constructor: constructorInfo,
     destroy: destroyInfo,
     properties: propertiesInfo,
-    parent: parentName
+    parent: parentName,
+    beta: beta
   };
 
   apis[category].push(apiItem);
@@ -344,7 +356,7 @@ function processItem(item, parentName = '', parentCategory = null) {
   // Process children (methods, properties, etc.)
   if (item.children) {
     item.children.forEach(child => {
-      processItem(child, fullName, category);
+      processItem(child, fullName, category, beta);
     });
   }
 }
@@ -378,7 +390,7 @@ function generateSidebar() {
       });
 
       const itemsHtml = sortedItems
-        .map(item => `<li class="api-item" data-id="${item.id}">${item.name}</li>`)
+        .map(item => `<li class="api-item" data-id="${item.id}">${item.name}${item.beta ? ' <span class="badge-beta">Beta</span>' : ''}</li>`)
         .join('\n                ');
 
       return `
@@ -469,7 +481,8 @@ function generateDisplayFunction() {
             if (readmeDiv) readmeDiv.innerHTML = '';
 
             const isClassLike = api.kind === 'Class' || api.kind === 'Interface';
-            let html = \`<h1>\${escapeHtml(api.name)}</h1>\`;
+            const betaBadge = api.beta ? ' <span class="badge-beta">Beta</span>' : '';
+            let html = \`<h1>\${escapeHtml(api.name)}\${betaBadge}</h1>\`;
             html += \`<p class="meta"><strong>Kind:</strong> \${escapeHtml(api.kind)}</p>\`;
 
             if (api.returnType && api.returnType !== 'any' && api.returnType !== 'void') {
@@ -596,7 +609,8 @@ function generateLlmsTxt() {
     for (const item of topLevel) {
       const desc = item.comment ? item.comment.split('\n')[0].trim() : '';
       const anchor = item.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
-      out += `- [${item.name}](./llms-full.txt#${anchor})${desc ? ': ' + desc : ''}\n`;
+      const betaMark = item.beta ? ' *(beta)*' : '';
+      out += `- [${item.name}](./llms-full.txt#${anchor})${betaMark}${desc ? ': ' + desc : ''}\n`;
     }
     out += '\n';
   }
@@ -662,7 +676,7 @@ function renderLlmsProperties(properties) {
 }
 
 function renderLlmsMethod(parentName, method) {
-  let out = `\n#### ${parentName}.${method.shortName}\n\n`;
+  let out = `\n#### ${parentName}.${method.shortName}${method.beta ? ' *(beta)*' : ''}\n\n`;
   if (method.returnType && method.returnType !== 'void' && method.returnType !== 'any') {
     out += `**Returns:** \`${method.returnType}\`\n\n`;
   }
@@ -673,7 +687,7 @@ function renderLlmsMethod(parentName, method) {
 }
 
 function renderLlmsItem(item, children) {
-  let out = `### ${item.name}\n\n**Kind:** ${item.kind}\n\n`;
+  let out = `### ${item.name}${item.beta ? ' *(beta)*' : ''}\n\n**Kind:** ${item.kind}\n\n`;
   if (item.comment) out += `${item.comment}\n\n`;
   if (item.constructor) {
     out += `**Constructor:**\n`;
