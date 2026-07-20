@@ -17,6 +17,15 @@ function createRegistry(): FinalizationRegistry<RegistryToken> {
   });
 }
 
+// Used for emscripten function-table entries (addFunction)
+function createFunctionRegistry(): FinalizationRegistry<number> {
+  return new FinalizationRegistry<number>((funcPtr) => {
+    if (hasModule()) {
+      getModule().removeFunction(funcPtr);
+    }
+  });
+}
+
 /**
  * Registry for Shape objects
  */
@@ -46,6 +55,16 @@ export const gradientRegistry = createRegistry();
  * Registry for Accessor objects
  */
 export const accessorRegistry = createRegistry();
+
+/**
+ * Registry for Animation objects
+ */
+export const animationRegistry = createRegistry();
+
+/**
+ * Registry for callback functions
+ */
+export const callbackRegistry = createFunctionRegistry();
 
 // Automatic cleanup on page unload (browser only)
 if (typeof window !== 'undefined') {

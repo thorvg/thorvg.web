@@ -22,6 +22,7 @@ export async function assertGCCleanup(create: () => WasmObject): Promise<void> {
 
   const spy1 = vi.spyOn(Module, '_tvg_paint_unref').mockImplementation(noop);
   const spy2 = vi.spyOn(Module, '_tvg_gradient_del').mockImplementation(noop);
+  const spy3 = vi.spyOn(Module, '_tvg_animation_del').mockImplementation(noop);
 
   // Drain pending finalizations from previous tests
   await forceFinalization();
@@ -38,6 +39,7 @@ export async function assertGCCleanup(create: () => WasmObject): Promise<void> {
   expect(freedPtrs).toContain(ptr!);
   spy1.mockRestore();
   spy2.mockRestore();
+  spy3.mockRestore();
 }
 
 export function assertNoDoubleFree(create: () => WasmObject): void {

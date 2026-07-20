@@ -4,6 +4,8 @@
  */
 
 import { getModule } from '../interop/module';
+import { WasmObject } from '../interop/WasmObject';
+import { animationRegistry } from '../interop/registry';
 import { Picture } from './Picture';
 import { checkResult, handleError } from '../common/errors';
 
@@ -87,8 +89,7 @@ export interface AnimationSegment {
  *
  * @see {@link LottieAnimation} for Lottie advanced features
  */
-export class Animation {
-  #ptr: number;
+export class Animation extends WasmObject {
   #picture: Picture | null = null;
   #info: AnimationInfo | null = null;
   #isPlaying = false;
@@ -103,21 +104,16 @@ export class Animation {
    *              allocate a derived type. Omit to create a plain Animation.
    */
   constructor(ptr?: number) {
-    const Module = getModule();
-    this.#ptr = ptr ?? Module._tvg_animation_new();
+    super(ptr ?? getModule()._tvg_animation_new(), animationRegistry);
 
-    if (!this.#ptr) {
+    if (!this.ptr) {
       handleError('Failed to create animation', 'Animation constructor');
-      this.#ptr = 0;
     }
   }
 
-  /**
-   * Get the pointer
-   * @internal
-   */
-  public get ptr(): number {
-    return this.#ptr;
+  protected _cleanup(ptr: number): void {
+    const Module = getModule();
+    Module._tvg_animation_del(ptr);
   }
 
   /**
@@ -125,14 +121,13 @@ export class Animation {
    * The Picture is owned by the Animation and should not be manually disposed
    */
   public get picture(): Picture | null {
-    if (!this.#picture && this.#ptr) {
+    if (!this.#picture && this.ptr) {
       const Module = getModule();
-      const picturePtr = Module._tvg_animation_get_picture(this.#ptr);
+      const picturePtr = Module._tvg_animation_get_picture(this.ptr);
 
       if (picturePtr) {
-        // Create Picture instance from existing pointer
-        // skipRegistry = true because Animation owns this picture
-        this.#picture = new Picture(picturePtr, true);
+        this.#picture = new Picture(picturePtr, true); // skip registry (Animation owns this picture)
+        this.#picture._owner = this;
       }
     }
     return this.#picture;
@@ -178,7 +173,7 @@ export class Animation {
     if (frameNumber !== undefined) {
       // Setter
       this.#currentFrame = frameNumber;
-      const result = Module._tvg_animation_set_frame(this.#ptr, frameNumber);
+      const result = Module._tvg_animation_set_frame(this.ptr, frameNumber);
       checkResult(result, 'frame (set)');
       return this;
     }
@@ -193,7 +188,7 @@ export class Animation {
    */
   public segment(segment: number): this {
     const Module = getModule();
-    const result = Module._tvg_animation_set_segment(this.#ptr, segment);
+    const result = Module._tvg_animation_set_segment(this.ptr, segment);
     checkResult(result, 'segment');
     return this;
   }
@@ -289,20 +284,23 @@ export class Animation {
   }
 
   /**
-   * Dispose of the animation and free resources
+   * Manually dispose of this animation and free its WASM memory
    */
-  public dispose(): void {
-    this.pause();
-
-    this.#picture?.resolver(null);
-
-    if (this.#ptr) {
-      const Module = getModule();
-      Module._tvg_animation_del(this.#ptr);
-      this.#ptr = 0;
-      this.#picture = null;
-      this.#info = null;
+  public override dispose(): void {
+    if (this.isDisposed) {
+      return;
     }
+
+    this.pause();
+    this.#info = null;
+
+    if (this.#picture) {
+      this.#picture.resolver(null);
+      this.#picture._owner = null;
+      this.#picture = null;
+    }
+
+    super.dispose();
   }
 
   /**
@@ -340,7 +338,7 @@ export class Animation {
 
     // Update animation frame
     const Module = getModule();
-    Module._tvg_animation_set_frame(this.#ptr, this.#currentFrame);
+    Module._tvg_animation_set_frame(this.ptr, this.#currentFrame);
 
     // Call frame callback (user should call canvas.update() and canvas.render() here)
     if (this.#onFrame) {
@@ -361,8 +359,8 @@ export class Animation {
     const durationPtr = Module._malloc(4);
 
     try {
-      Module._tvg_animation_get_total_frame(this.#ptr, totalFramePtr);
-      Module._tvg_animation_get_duration(this.#ptr, durationPtr);
+      Module._tvg_animation_get_total_frame(this.ptr, totalFramePtr);
+      Module._tvg_animation_get_duration(this.ptr, durationPtr);
 
       const totalFrames = new Float32Array(Module.HEAPF32.buffer, totalFramePtr, 1)[0]!;
       const duration = new Float32Array(Module.HEAPF32.buffer, durationPtr, 1)[0]!;
