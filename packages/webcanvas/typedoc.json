@@ -67,7 +67,7 @@
 
   "excludePrivate": true,
   "excludeProtected": false,
-  "excludeInternal": false,
+  "excludeInternal": true,
 
   "validation": {
     "notExported": true,
