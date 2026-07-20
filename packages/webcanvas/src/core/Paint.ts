@@ -437,8 +437,9 @@ export abstract class Paint extends WasmObject {
    * @param visibleOnly - If true, hidden paints are excluded from the test (default: false)
    * @returns true if any part of the region intersects the filled area, false otherwise
    *
-   * @note To test a single point, set width and height to 1.
-   * @note This test does not account for the results of blending or masking.
+   * @remarks
+   * To test a single point, set width and height to 1.
+   * This test does not account for the results of blending or masking.
    *
    * @see {@link visible}
    *

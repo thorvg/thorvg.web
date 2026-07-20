@@ -43,7 +43,8 @@ export class Accessor extends WasmObject {
    * @param paint - The root paint node to traverse, typically a Picture or Scene
    * @param callback - Called for the root and each descendant paint. Return false to stop.
    *
-   * @note A bitmap-based Picture might not have a scene tree.
+   * @remarks
+   * A bitmap-based Picture might not have a scene tree.
    *
    * @example
    * ```typescript

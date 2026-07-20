@@ -14,17 +14,17 @@ const FONTSOURCE_CDN = 'https://cdn.jsdelivr.net/fontsource/fonts';
 export interface FontsourceOptions {
   /**
    * Font weight to load.
-   * @default 400
+   * @defaultValue 400
    */
   weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
   /**
    * Font style to load.
-   * @default 'normal'
+   * @defaultValue 'normal'
    */
   style?: 'normal' | 'italic';
   /**
    * Unicode subset to load.
-   * @default 'latin'
+   * @defaultValue 'latin'
    */
   subset?: string;
 }
