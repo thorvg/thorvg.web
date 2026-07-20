@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { getTVG } from './helpers';
+import { describe, expect, it } from 'vitest';
 import { Animation } from '../src/core/Animation';
 import { Picture } from '../src/core/Picture';
+import { assertGCCleanup, assertNoDoubleFree, canForceGC, getTVG } from './helpers';
 
 
 const MINIMAL_LOTTIE = JSON.stringify({
@@ -134,5 +134,15 @@ describe('Animation', () => {
     const TVG = getTVG();
     const anim = new TVG.Animation();
     expect(() => anim.dispose()).not.toThrow();
+  });
+
+  it('dispose + GC should not double-free', () => {
+    const TVG = getTVG();
+    assertNoDoubleFree(() => new TVG.Animation());
+  });
+
+  it.skipIf(!canForceGC)('unreferenced animation is cleaned up by GC', async () => {
+    const TVG = getTVG();
+    await assertGCCleanup(() => new TVG.Animation());
   });
 });
