@@ -8,6 +8,7 @@ import { loadThorVGModule, getWasmUrl, type ThorVGVersion } from '../../lib/thor
 import { type Renderer, RENDERER_LABELS, JANK_MS, SEVERE_JANK_MS, jankColor } from '../../lib/constants';
 import { VersionSelector } from '../../components/VersionSelector';
 import { DragOverlay } from '../../components/DragOverlay';
+import { useInternalMode } from '../../lib/internal-mode';
 
 interface FrameSample { frame: number; duration: number }
 interface PerfStats { fps: number; avg: number; min: number; max: number; total: number }
@@ -33,6 +34,7 @@ const ChartTooltip = ({ active, payload, label }: any) => {
 function ViewerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const internalMode = useInternalMode();
 
   const animUrl = searchParams.get('url') || '';
   const animName = searchParams.get('name') || 'Animation';
@@ -293,9 +295,9 @@ function ViewerContent() {
   const sizeSliderPct = ((sizeSliderVal - 64) / (2048 - 64)) * 100;
   const effectiveAnimUrl = isLocal ? '' : animUrl;
   const displayName = animName;
-  // const thorvgViewerUrl = effectiveAnimUrl.startsWith('http')
-  //   ? `https://thorvg.github.io/thorvg.viewer/?s=${encodeURIComponent(effectiveAnimUrl)}`
-  //   : null;
+  const thorvgViewerUrl = effectiveAnimUrl.startsWith('http')
+    ? `https://thorvg.github.io/thorvg.viewer/?s=${encodeURIComponent(effectiveAnimUrl)}`
+    : null;
 
   const jankCounts = chartData.length > 0
     ? { janks: chartData.filter((d) => d.duration > JANK_MS && d.duration <= SEVERE_JANK_MS).length,
@@ -315,11 +317,13 @@ function ViewerContent() {
         <h1 className="font-semibold text-sm text-white truncate max-w-xs">{displayName}</h1>
         <span className="px-2 py-0.5 bg-white/10 rounded text-xs text-gray-300 shrink-0">{RENDERER_LABELS[rendererParam]}</span>
         <div className="ml-auto flex items-center gap-3">
-          <VersionSelector
-            current={versionParam}
-            localVersion={process.env.NEXT_PUBLIC_WEBCANVAS_VERSION || ''}
-            onChange={(v) => { const p = new URLSearchParams(window.location.search); p.set('v', v); window.location.href = `/viewer?${p}`; }}
-          />
+          {internalMode && (
+            <VersionSelector
+              current={versionParam}
+              localVersion={process.env.NEXT_PUBLIC_WEBCANVAS_VERSION || ''}
+              onChange={(v) => { const p = new URLSearchParams(window.location.search); p.set('v', v); window.location.href = `/viewer?${p}`; }}
+            />
+          )}
           {animUrl && (
             <button onClick={handleDownload} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-gray-300 hover:text-white transition-colors shrink-0" title="Download JSON">
               <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -328,7 +332,7 @@ function ViewerContent() {
               Download
             </button>
           )}
-          {/* {effectiveAnimUrl.startsWith('http') && (
+          {internalMode && effectiveAnimUrl.startsWith('http') && (
             <a href={`https://thorvg-test-automation.vercel.app?files=${encodeURIComponent(effectiveAnimUrl)}&autoPdf=on`} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-gray-300 hover:text-white transition-colors shrink-0">
               <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -336,8 +340,8 @@ function ViewerContent() {
               </svg>
               Compatibility Check
             </a>
-          )} */}
-          {/* {thorvgViewerUrl && (
+          )}
+          {internalMode && thorvgViewerUrl && (
             <a href={thorvgViewerUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-gray-300 hover:text-white transition-colors shrink-0">
               <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -346,7 +350,7 @@ function ViewerContent() {
               </svg>
               ThorVG Viewer
             </a>
-          )} */}
+          )}
         </div>
       </div>
 
