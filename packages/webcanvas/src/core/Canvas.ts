@@ -44,6 +44,7 @@
 import { getModule, getThreadCount } from '../interop/module';
 import { Paint } from './Paint';
 import { Scene } from './Scene';
+import { EngineOption } from '../common/constants';
 import type { RendererType } from '../common/constants';
 import { checkResult, handleError } from '../common/errors';
 import type { TvgCanvasInstance } from '../types/emscripten';
@@ -61,6 +62,8 @@ export interface CanvasOptions {
   height?: number;
   /** Enable device pixel ratio for high-DPI displays. Default: true */
   enableDevicePixelRatio?: boolean;
+  /** Rendering engine behavior option. Default: EngineOption.SmartRender */
+  engineOption?: EngineOption;
 }
 
 /**
@@ -156,9 +159,18 @@ export class Canvas {
    *   enableDevicePixelRatio: false
    * });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Disable smart rendering for full-redraw scenes (SW renderer)
+   * const TVG = await ThorVG.init({ renderer: 'sw' });
+   * const canvas = new TVG.Canvas('#canvas', {
+   *   engineOption: TVG.EngineOption.None
+   * });
+   * ```
    */
   constructor(selector: string, options: CanvasOptions = {}) {
-    const { width = 800, height = 600, enableDevicePixelRatio = true } = options;
+    const { width = 800, height = 600, enableDevicePixelRatio = true, engineOption = EngineOption.SmartRender } = options;
 
     // Store logical dimensions
     this.#logicalWidth = width;
@@ -181,7 +193,7 @@ export class Canvas {
 
     // Create TvgCanvas with physical dimensions and the configured thread count.
     const threadCount = getThreadCount();
-    this.#engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight, threadCount);
+    this.#engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight, threadCount, engineOption);
 
     // Check for errors
     const error = this.#engine.error();

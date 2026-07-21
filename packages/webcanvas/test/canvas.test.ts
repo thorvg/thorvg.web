@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getTVG } from './helpers';
 import { Canvas } from '../src/core/Canvas';
+import { EngineOption } from '../src/common/constants';
 
 
 const isHappyDom = () => globalThis.__TEST_ENV === 'happy-dom';
@@ -72,5 +73,29 @@ describe('Canvas', () => {
   it.skipIf(isHappyDom())('clear returns this', () => {
     const result = canvas.clear();
     expect(result).toBe(canvas);
+  });
+});
+
+describe('Canvas engineOption', () => {
+  function createCanvasWith(engineOption: EngineOption): Canvas {
+    const TVG = getTVG();
+    const id = `tvg-engine-option-${engineOption}`;
+    const el = document.createElement('canvas');
+    el.id = id;
+    document.body.appendChild(el);
+    const tvg = new TVG.Canvas(`#${id}`, { width: 100, height: 100, engineOption });
+    return tvg;
+  }
+
+  it('constructor accepts EngineOption.SmartRender', () => {
+    const tvg = createCanvasWith(EngineOption.SmartRender);
+    expect(tvg).toBeInstanceOf(Canvas);
+    tvg.destroy();
+  });
+
+  it('constructor accepts EngineOption.None', () => {
+    const tvg = createCanvasWith(EngineOption.None);
+    expect(tvg).toBeInstanceOf(Canvas);
+    tvg.destroy();
   });
 });

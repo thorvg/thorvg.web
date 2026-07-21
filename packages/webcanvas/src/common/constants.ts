@@ -157,6 +157,20 @@ export enum MaskMethod {
 }
 
 /**
+ * Enumeration to specify rendering engine behavior.
+ *
+ * The availability or behavior of SmartRender may vary depending on backend support.
+ * Currently only the 'sw' renderer supports it.
+ * @category Canvas
+ */
+export enum EngineOption {
+  /** No engine options are enabled. This may be used to explicitly disable all optional behaviors */
+  None = 0,
+  /** Enables automatic partial (smart) rendering optimizations */
+  SmartRender = 1 << 1,
+}
+
+/**
  * Scene effect for post-processing effects.
  *
  * Defines various visual effects that can be applied to a Scene to modify its final appearance.
