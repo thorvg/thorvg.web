@@ -25,6 +25,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
+          allow-unsafe-pr-checkout: true # required reviewers (environment: external)
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
