@@ -59,6 +59,7 @@ const shape = new TVG.Shape();
 **Parameters:**
 - `options.locateFile?: (path: string) => string` - WASM file path resolver (optional)
 - `options.renderer?: RendererType` - Rendering backend type (optional, default: 'gl')
+- `options.threads?: number` - Worker thread count, only enabled in `@thorvg/webcanvas/thread`. (optional, default: 0)
 
 **Returns:** `Promise<ThorVGNamespace>` - Namespace containing all classes and utilities
 
@@ -74,7 +75,7 @@ const TVG = await ThorVG.init({
 });
 
 // Software rendering
-const TVG = await ThorVG.init({ renderer: 'gl' });
+const TVG = await ThorVG.init({ renderer: 'sw' });
 
 // Use classes via namespace
 const canvas = new TVG.Canvas('#canvas');
@@ -259,7 +260,7 @@ canvas.destroy();
 Returns the currently used renderer.
 
 ```typescript
-const renderer = canvas.renderer; // 'gl', or 'wg'
+const renderer = canvas.renderer; // 'sw', 'gl', or 'wg'
 ```
 
 **Returns:** `string`

@@ -3,8 +3,8 @@
  *
  * @packageDocumentation
  *
- * A high-performance TypeScript Canvas API for ThorVG, providing an object-oriented
- * interface with fluent API pattern for vector graphics rendering using WebAssembly.
+ * A high-performance TypeScript Canvas API for ThorVG, with fluent and
+ * object-oriented vector graphics rendering via WebAssembly.
  *
  * ## Features
  *
@@ -167,6 +167,8 @@ async function initEngine(engineType: RendererType = 'gl'): Promise<void> {
  * @param options.renderer - Renderer type: 'sw' (Software), 'gl' (WebGL), or 'wg' (WebGPU).
  *                           Default: 'gl'. WebGPU provides best performance but requires
  *                           Chrome 113+ or Edge 113+.
+ * @param options.threads - Number of worker threads. Only effective with the thread preset.
+ *                          Ignored in the default preset. Default: 0 (single-threaded).
  *
  * @returns Promise that resolves to ThorVG namespace containing all classes and utilities
  *
@@ -200,6 +202,17 @@ async function initEngine(engineType: RendererType = 'gl'): Promise<void> {
  * // Initialize with Software renderer for maximum compatibility
  * const TVG = await ThorVG.init({
  *   renderer: 'sw'
+ * });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Initialize with thread-enabled preset
+ * import ThorVG from '@thorvg/webcanvas/thread';
+ *
+ * const TVG = await ThorVG.init({
+ *   locateFile: (path) => `/wasm/thread/${path}`,
+ *   threads: 4
  * });
  * ```
  *
