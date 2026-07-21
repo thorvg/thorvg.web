@@ -16,7 +16,8 @@ import { duplicateExample } from './duplicate';
 import { boundingBoxExample } from './bounding-box';
 import { transformStaticExample } from './transform-static';
 import { transformAnimationExample } from './transform-animation';
-import { textStaticExample } from './text-static';
+import { textTtfExample } from './text-ttf';
+import { textOtfExample } from './text-otf';
 import { fontProviderExample } from './font-provider';
 import { textAnimationExample } from './text-animation';
 import { textLayoutExample } from './text-layout';
@@ -28,6 +29,9 @@ import { pictureWebpExample } from './picture-webp';
 import { pictureRawExample } from './picture-raw';
 import { lottieAnimationExample } from './lottie-animation';
 import { lottieExpressionsExample } from './lottie-expressions';
+import { lottieSlotsExample } from './lottie-slots';
+import { lottieInteractionExample } from './lottie-interaction';
+import { lottieAssetResolverExample } from './lottie-asset-resolver';
 import { trimPathExample } from './trim-path';
 import { imageRotationExample } from './image-rotation';
 import { imageScalingExample } from './image-scaling';
@@ -94,11 +98,15 @@ export const showcaseExamples: ShowcaseExample[] = [
   textAnimationExample,
   textLayoutExample,
   textLineWrapExample,
-  textStaticExample,
+  textOtfExample,
+  textTtfExample,
   // Media (alphabetically sorted by title)
   pictureJpgExample,
   lottieAnimationExample,
   lottieExpressionsExample,
+  lottieSlotsExample,
+  lottieInteractionExample,
+  lottieAssetResolverExample,
   picturePngExample,
   pictureRawExample,
   pictureSvgExample,
