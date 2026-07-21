@@ -2,14 +2,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const { Application, ReflectionKind } = require('typedoc');
 
-const apiJsonPath = path.join(__dirname, '../../docs/api.json');
-if (!fs.existsSync(apiJsonPath)) {
-  console.error('Error: docs/api.json not found. Run typedoc first.');
-  process.exit(1);
-}
-
-const apiData = JSON.parse(fs.readFileSync(apiJsonPath, 'utf8'));
+const packageRoot = path.join(__dirname, '../..');
+const docsDir = path.join(packageRoot, 'docs');
 
 // Serialize JSON for embedding inside an inline <script>. JSON.stringify does not
 // escape '/', so a literal "</script>" in the data (e.g. README code samples) would
@@ -23,94 +19,82 @@ function safeJson(obj, space) {
     .replace(/\u2029/g, '\\u2029');
 }
 
-// Read README.md
-const readmePath = path.join(__dirname, '../../README.md');
-const readmeContent = fs.existsSync(readmePath)
-  ? fs.readFileSync(readmePath, 'utf8')
-  : '';
-
-// Map TypeDoc kind numbers to readable strings
-const kindMap = {
-  1: 'Project',
-  2: 'Module',
-  4: 'Enum',
-  8: 'Enum Member',
-  16: 'Variable',
-  32: 'Function',
-  64: 'Class',
-  128: 'Interface',
-  256: 'Interface',
-  512: 'Constructor',
-  1024: 'Property',
-  2048: 'Method',
-  4096: 'Call Signature',
-  8192: 'Index Signature',
-  16384: 'Constructor Signature',
-  32768: 'Parameter',
-  65536: 'Type Literal',
-  131072: 'Type Parameter',
-  262144: 'Accessor',
-  524288: 'Get Signature',
-  1048576: 'Set Signature',
-  2097152: 'Object Literal',
-  4194304: 'Type Alias',
-  8388608: 'Reference'
-};
-
-function getKindString(item) {
-  if (item.kindString) return item.kindString;
-  return kindMap[item.kind] || 'Unknown';
+function getKindString(reflection) {
+  const raw = ReflectionKind[reflection.kind];
+  if (!raw || typeof raw !== 'string') return 'Unknown';
+  return raw.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
-// Helper to get type string
 function getTypeString(type) {
   if (!type) return 'any';
-  if (type.type === 'intrinsic') return type.name;
-  if (type.type === 'reference') return type.name;
-  if (type.type === 'array') return getTypeString(type.elementType) + '[]';
-  if (type.type === 'literal') return typeof type.value === 'string' ? `'${type.value}'` : String(type.value);
-  if (type.type === 'union') return type.types.map(t => getTypeString(t)).join(' | ');
-  if (type.type === 'reflection' && type.declaration) {
-    if (type.declaration.signatures) {
-      const sig = type.declaration.signatures[0];
-      const params = sig.parameters ? sig.parameters.map(p =>
-        `${p.name}: ${getTypeString(p.type)}`
-      ).join(', ') : '';
-      return `(${params}) => ${getTypeString(sig.type)}`;
-    }
-  }
-  return type.name || 'unknown';
+  return type.toString();
 }
 
-// Helper to get comment text
+function slugify(name) {
+  return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function commentPartsText(parts) {
+  if (!parts || parts.length === 0) return '';
+  return parts.map(part => {
+    switch (part.kind) {
+      case 'text':
+      case 'code':
+        return part.text || '';
+      case 'inline-tag': {
+        const label = (part.text || '').trim();
+        const tag = (part.tag || '').replace(/^@/, '');
+        if (tag === 'link' || tag === 'linkcode' || tag === 'linkplain') {
+          if (!label) return '';
+          const pipe = label.indexOf('|');
+          if (pipe !== -1) {
+            const href = label.slice(0, pipe).trim();
+            const text = label.slice(pipe + 1).trim() || href;
+            return `[${text}](#${slugify(href)})`;
+          }
+          const space = label.search(/\s/);
+          if (space !== -1) {
+            const href = label.slice(0, space).trim();
+            const text = label.slice(space + 1).trim() || href;
+            return `[${text}](#${slugify(href)})`;
+          }
+          return `[${label}](#${slugify(label)})`;
+        }
+        return label;
+      }
+      default:
+        return part.text || '';
+    }
+  }).join('');
+}
+
 function getCommentText(comment) {
   if (!comment) return '';
-
-  let text = '';
-  if (comment.summary) {
-    text = comment.summary.map(s => s.text || '').join('');
-  }
-
-  return text;
+  return commentPartsText(comment.summary);
 }
 
-// @beta modifier helper
-function hasBetaTag(item) {
-  const tagged = comment => (comment?.modifierTags || []).includes('@beta');
-  if (tagged(item.comment)) return true;
-  if (item.signatures && item.signatures.some(sig => tagged(sig.comment))) return true;
-  if (tagged(item.getSignature?.comment)) return true;
-  if (tagged(item.setSignature?.comment)) return true;
+function commentHasModifier(comment, tag) {
+  return !!comment?.hasModifier?.(tag);
+}
+
+function hasBetaTag(reflection) {
+  if (commentHasModifier(reflection.comment, '@beta')) return true;
+  if (reflection.signatures?.some(sig => commentHasModifier(sig.comment, '@beta'))) return true;
+  if (commentHasModifier(reflection.getSignature?.comment, '@beta')) return true;
+  if (commentHasModifier(reflection.setSignature?.comment, '@beta')) return true;
   return false;
 }
 
-// Helper to get examples
 function getExamples(comment) {
-  if (!comment || !comment.blockTags) return [];
+  if (!comment?.getTags) return [];
+  return comment.getTags('@example').map(tag => commentPartsText(tag.content));
+}
 
-  return comment.blockTags
-    .filter(tag => tag.tag === '@example')
-    .map(tag => tag.content.map(c => c.text || '').join(''));
+function getReturnsText(comment) {
+  if (!comment?.getTag) return '';
+  const tag = comment.getTag('@returns') || comment.getTag('@return');
+  if (!tag) return '';
+  return commentPartsText(tag.content).trim();
 }
 
 // Map a raw @category tag (lowercased) to an internal category key.
@@ -134,240 +118,221 @@ function matchCategory(category) {
   return 'other';
 }
 
-// Helper to get category
-function getCategory(comment, item) {
-  // For functions, check signatures first
-  if (item && item.signatures && item.signatures.length > 0) {
-    const sigComment = item.signatures[0].comment;
-    if (sigComment && sigComment.blockTags) {
-      const categoryTag = sigComment.blockTags.find(tag => tag.tag === '@category');
-      if (categoryTag) {
-        const category = categoryTag.content.map(c => c.text || '').join('').trim().toLowerCase();
-        const matched = matchCategory(category);
-        // Fall through to the comment-based lookup below if unrecognized.
-        if (matched !== 'other') return matched;
-      }
-    }
-  }
-
-  if (!comment || !comment.blockTags) return 'other';
-
-  const categoryTag = comment.blockTags.find(tag => tag.tag === '@category');
+function getCategoryFromComment(comment) {
+  if (!comment?.getTag) return 'other';
+  const categoryTag = comment.getTag('@category');
   if (!categoryTag) return 'other';
-
-  const category = categoryTag.content.map(c => c.text || '').join('').trim().toLowerCase();
-
-  return matchCategory(category);
+  return matchCategory(commentPartsText(categoryTag.content).trim().toLowerCase());
 }
 
-// Build API index
-const apis = {
-  initialization: [],
-  canvas: [],
-  paint: [],
-  shapes: [],
-  scene: [],
-  picture: [],
-  text: [],
-  animation: [],
-  lottieAnimation: [],
-  gradients: [],
-  font: [],
-  accessor: [],
-  constants: [],
-  errorHandling: [],
-  other: []
-};
-
-// Helper to find item by ID in the entire API data tree
-function findItemById(data, targetId) {
-  if (data.id === targetId) return data;
-  if (data.children) {
-    for (const child of data.children) {
-      const found = findItemById(child, targetId);
-      if (found) return found;
+function getCategory(reflection) {
+  if (reflection.signatures?.length > 0) {
+    for (const sig of reflection.signatures) {
+      const matched = getCategoryFromComment(sig.comment);
+      if (matched !== 'other') return matched;
     }
   }
-  return null;
+  if (reflection.getSignature) {
+    const matched = getCategoryFromComment(reflection.getSignature.comment);
+    if (matched !== 'other') return matched;
+  }
+  return getCategoryFromComment(reflection.comment);
 }
 
-function processItem(item, parentName = '', parentCategory = null, parentBeta = false) {
-  // Handle references - follow the target to get actual definition
-  if (item.variant === 'reference' && item.target) {
-    const targetItem = findItemById(apiData, item.target);
-    if (targetItem) {
-      // Use target's comment and properties, but keep the reference's name
-      item = {
-        ...targetItem,
-        name: item.name,
-        id: item.id // Keep original ID for linking
-      };
-    }
-  }
-
-  // Skip internal items
-  if (item.name === '<internal>' || item.flags?.isPrivate || item.name.startsWith('_')) {
-    return;
-  }
-
-  // Skip infrastructure items that users don't need to see
-  if (item.name === 'constants' || item.name === 'ThorVGNamespace' || item.name === 'default') {
-    return;
-  }
-
-  const fullName = parentName ? `${parentName}.${item.name}` : item.name;
-  const beta = parentBeta || hasBetaTag(item);
-  const itemCategory = getCategory(item.comment, item);
-  // Use parent's category if this item doesn't have one explicitly set
-  const category = itemCategory !== 'other' ? itemCategory : (parentCategory || 'other');
-  const kindString = getKindString(item);
-
-  // Skip if not a relevant kind
-  if (kindString === 'Type Literal' || kindString === 'Type Parameter') {
-    return;
-  }
-
-  // Skip internal properties, constructors, destroy, and memory management methods
-  if (item.name === 'ptr' || item.name === 'constructor' || item.name === 'destroy' ||
-      item.name === 'dispose' || item.name === 'isDisposed') {
-    return;
-  }
-
-  // Skip interface/type properties (they'll be shown in the parent interface documentation)
-  // But allow class accessors (getters/setters) to be shown
-  if (parentName && (kindString === 'Property' || kindString === 'Accessor')) {
-    // Allow Accessors for Classes (like Canvas.dpr, Canvas.renderer)
-    // Skip Properties and Accessors only for Interfaces and Types
-    if (kindString === 'Accessor') {
-      // Allow all accessors - they're public getters/setters
-    } else {
-      // Skip properties (they're shown in parent interface documentation)
-      return;
-    }
-  }
-
-  const type = getTypeString(item.type);
-  const comment = getCommentText(item.comment);
-  const examples = getExamples(item.comment);
-
-  // Simplify parameters for embedding
-  const parameters = item.parameters ? item.parameters.map(p => ({
+function mapParameters(parameters) {
+  if (!parameters) return [];
+  return parameters.map(p => ({
     name: p.name,
     type: getTypeString(p.type),
     comment: getCommentText(p.comment),
-    optional: p.flags?.isOptional || false
-  })) : [];
+    optional: p.flags.isOptional,
+    rest: p.flags.isRest,
+    defaultValue: p.defaultValue != null ? String(p.defaultValue) : undefined
+  }));
+}
 
-  // Process signatures if present (methods, functions)
-  let signatureInfo = null;
-  if (item.signatures && item.signatures.length > 0) {
-    const sig = item.signatures[0];
-    signatureInfo = {
-      comment: getCommentText(sig.comment),
-      examples: getExamples(sig.comment),
-      parameters: sig.parameters ? sig.parameters.map(p => ({
-        name: p.name,
-        type: getTypeString(p.type),
-        comment: getCommentText(p.comment),
-        optional: p.flags?.isOptional || false
-      })) : [],
-      returnType: getTypeString(sig.type)
-    };
+function mapSignature(sig) {
+  return {
+    comment: getCommentText(sig.comment),
+    examples: getExamples(sig.comment),
+    parameters: mapParameters(sig.parameters),
+    returnType: getTypeString(sig.type),
+    returns: getReturnsText(sig.comment)
+  };
+}
+
+function pickPrimarySignature(signatures) {
+  if (!signatures || signatures.length === 0) return null;
+  if (signatures.length === 1) return signatures[0];
+  return [...signatures].sort((a, b) => {
+    const paramDelta = (b.parameters?.length || 0) - (a.parameters?.length || 0);
+    if (paramDelta !== 0) return paramDelta;
+    return (b.returns?.length || 0) - (a.returns?.length || 0);
+  })[0];
+}
+
+function createEmptyApis() {
+  return {
+    initialization: [],
+    canvas: [],
+    paint: [],
+    shapes: [],
+    scene: [],
+    picture: [],
+    text: [],
+    animation: [],
+    lottieAnimation: [],
+    gradients: [],
+    font: [],
+    accessor: [],
+    constants: [],
+    errorHandling: [],
+    other: []
+  };
+}
+
+const SKIP_TOP_LEVEL_NAMES = new Set(['constants', 'ThorVGNamespace', 'default', '<internal>']);
+
+const HOISTED_MEMBER_NAMES = new Set(['constructor', 'destroy']);
+
+const HIDDEN_MEMBER_NAMES = new Set(['ptr', 'dispose', 'isDisposed']);
+
+function shouldSkipReflection(reflection, name) {
+  if (SKIP_TOP_LEVEL_NAMES.has(name)) return true;
+  if (HIDDEN_MEMBER_NAMES.has(name)) return true;
+  if (reflection.flags.isPrivate || reflection.flags.isProtected) return true;
+  if (commentHasModifier(reflection.comment, '@internal')) return true;
+  if (
+    reflection.signatures?.length > 0 &&
+    reflection.signatures.every(sig => commentHasModifier(sig.comment, '@internal'))
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function processItem(apis, reflection, parentName = '', parentCategory = null, parentBeta = false, overrides = null) {
+  if (reflection.kind === ReflectionKind.Reference) {
+    const target = reflection.tryGetTargetReflectionDeep();
+    if (!target) return;
+    processItem(apis, target, parentName, parentCategory, parentBeta, {
+      name: reflection.name,
+      id: reflection.id
+    });
+    return;
   }
 
-  // Process getSignature for accessors (getters)
-  if (item.getSignature && !signatureInfo) {
-    const sig = item.getSignature;
-    signatureInfo = {
-      comment: getCommentText(sig.comment),
-      examples: getExamples(sig.comment),
-      parameters: [],
-      returnType: getTypeString(sig.type)
-    };
+  const name = overrides?.name ?? reflection.name;
+  const id = overrides?.id ?? reflection.id;
+
+  if (shouldSkipReflection(reflection, name)) return;
+  if (parentName && HOISTED_MEMBER_NAMES.has(name)) return;
+
+  const fullName = parentName ? `${parentName}.${name}` : name;
+  const beta = parentBeta || hasBetaTag(reflection);
+  const itemCategory = getCategory(reflection);
+  const category = itemCategory !== 'other' ? itemCategory : (parentCategory || 'other');
+  const kindString = getKindString(reflection);
+
+  if (
+    reflection.kind === ReflectionKind.TypeLiteral ||
+    reflection.kind === ReflectionKind.TypeParameter
+  ) {
+    return;
   }
 
-  // Check if this is a class/interface and extract constructor and destroy info
+  if (parentName && reflection.kind === ReflectionKind.Property) {
+    return;
+  }
+
+  const type = getTypeString(reflection.type);
+  const comment = getCommentText(reflection.comment);
+  const examples = getExamples(reflection.comment);
+  const returns = getReturnsText(reflection.comment);
+
+  let primary = null;
+  if (reflection.kind === ReflectionKind.Accessor) {
+    const getter = reflection.getSignature && !commentHasModifier(reflection.getSignature.comment, '@internal')
+      ? mapSignature(reflection.getSignature)
+      : null;
+    const setter = reflection.setSignature && !commentHasModifier(reflection.setSignature.comment, '@internal')
+      ? mapSignature(reflection.setSignature)
+      : null;
+    primary = setter || getter;
+  } else if (reflection.signatures?.length > 0) {
+    const publicSigs = reflection.signatures
+      .filter(sig => !commentHasModifier(sig.comment, '@internal'))
+      .map(mapSignature);
+    primary = pickPrimarySignature(publicSigs);
+  }
+
   let constructorInfo = null;
   let destroyInfo = null;
   let propertiesInfo = [];
-  if ((item.kind === 64 || item.kind === 128 || item.kind === 256) && item.children) {
-    const constructor = item.children.find(child => child.name === 'constructor');
-    if (constructor && constructor.signatures && constructor.signatures.length > 0) {
-      const conSig = constructor.signatures[0];
-      constructorInfo = {
-        comment: getCommentText(conSig.comment),
-        parameters: conSig.parameters ? conSig.parameters.map(p => ({
-          name: p.name,
-          type: getTypeString(p.type),
-          comment: getCommentText(p.comment),
-          optional: p.flags?.isOptional || false
-        })) : []
-      };
+  const isClassOrInterface =
+    reflection.kind === ReflectionKind.Class ||
+    reflection.kind === ReflectionKind.Interface;
+
+  if (isClassOrInterface && reflection.children) {
+    const constructor = reflection.children.find(child => child.name === 'constructor');
+    if (constructor?.signatures?.length > 0 && !constructor.inheritedFrom) {
+      const ctorSignatures = constructor.signatures
+        .filter(sig => !commentHasModifier(sig.comment, '@internal'))
+        .map(mapSignature)
+        .filter(sig => sig.comment || sig.parameters.length > 0);
+      constructorInfo = pickPrimarySignature(ctorSignatures);
     }
 
-    const destroy = item.children.find(child => child.name === 'destroy');
-    if (destroy && destroy.signatures && destroy.signatures.length > 0) {
-      const desSig = destroy.signatures[0];
-      destroyInfo = {
-        comment: getCommentText(desSig.comment),
-        parameters: desSig.parameters ? desSig.parameters.map(p => ({
-          name: p.name,
-          type: getTypeString(p.type),
-          comment: getCommentText(p.comment),
-          optional: p.flags?.isOptional || false
-        })) : [],
-        returnType: getTypeString(desSig.type)
-      };
+    const destroy = reflection.children.find(child => child.name === 'destroy');
+    if (destroy?.signatures?.length > 0 && !commentHasModifier(destroy.comment, '@internal')) {
+      const desSig = mapSignature(destroy.signatures[0]);
+      if (desSig.comment || desSig.parameters.length > 0) {
+        destroyInfo = desSig;
+      }
     }
 
-    // Extract properties for interfaces/types
-    propertiesInfo = item.children
+    propertiesInfo = reflection.children
       .filter(child => {
-        const childKind = getKindString(child);
-        return childKind === 'Property' || childKind === 'Accessor';
+        if (shouldSkipReflection(child, child.name)) return false;
+        return (
+          child.kind === ReflectionKind.Property ||
+          child.kind === ReflectionKind.Accessor
+        );
       })
       .map(prop => ({
         name: prop.name,
-        type: getTypeString(prop.type),
-        comment: getCommentText(prop.comment),
-        optional: prop.flags?.isOptional || false
+        type: getTypeString(prop.getSignature?.type ?? prop.type),
+        comment: getCommentText(prop.getSignature?.comment ?? prop.comment),
+        optional: prop.flags.isOptional
       }));
   }
 
-  const apiItem = {
-    id: item.id,
+  apis[category].push({
+    id,
     name: fullName,
-    shortName: item.name,
+    shortName: name,
     kind: kindString,
-    type: type,
-    comment: comment || (signatureInfo ? signatureInfo.comment : ''),
-    examples: examples.length > 0 ? examples : (signatureInfo ? signatureInfo.examples : []),
-    parameters: parameters.length > 0 ? parameters : (signatureInfo ? signatureInfo.parameters : []),
-    returnType: signatureInfo ? signatureInfo.returnType : type,
+    type,
+    comment: comment || (primary ? primary.comment : ''),
+    examples: examples.length > 0 ? examples : (primary ? primary.examples : []),
+    parameters: primary ? primary.parameters : [],
+    returnType: primary ? primary.returnType : type,
+    returns: (primary && primary.returns) || returns || '',
     constructor: constructorInfo,
     destroy: destroyInfo,
     properties: propertiesInfo,
     parent: parentName,
-    beta: beta
-  };
+    beta
+  });
 
-  apis[category].push(apiItem);
-
-  // Process children (methods, properties, etc.)
-  if (item.children) {
-    item.children.forEach(child => {
-      processItem(child, fullName, category, beta);
+  if (reflection.children) {
+    reflection.children.forEach(child => {
+      processItem(apis, child, fullName, category, beta);
     });
   }
 }
 
-// Process all top-level items
-if (apiData.children) {
-  apiData.children.forEach(item => processItem(item));
-}
-
-// Generate sidebar HTML
-function generateSidebar() {
+function generateSidebar(apis) {
   return Object.entries(apis)
     .filter(([_, items]) => items.length > 0)
     .map(([category, items]) => {
@@ -380,7 +345,6 @@ function generateSidebar() {
         title = category.charAt(0).toUpperCase() + category.slice(1);
       }
 
-      // Sort items: for initialization, put 'init' first, then alphabetically
       const sortedItems = [...items].sort((a, b) => {
         if (category === 'initialization') {
           if (a.shortName === 'init') return -1;
@@ -403,7 +367,6 @@ function generateSidebar() {
     }).join('\n        ');
 }
 
-// Generate content display function
 function generateDisplayFunction() {
   return `
         function escapeHtml(text) {
@@ -419,48 +382,90 @@ function generateDisplayFunction() {
                 : escapeHtml(text).replace(/\\n/g, '<br>');
         }
 
+        function renderInlineMarkdown(text) {
+            if (!text) return '';
+            if (typeof marked !== 'undefined') {
+                if (typeof marked.parseInline === 'function') {
+                    return marked.parseInline(text);
+                }
+                let html = String(marked.parse(text)).trim();
+                if (html.startsWith('<p>') && html.endsWith('</p>')) {
+                    html = html.slice(3, -4);
+                }
+                return html;
+            }
+            return escapeHtml(text);
+        }
+
+        function formatParamName(param) {
+            const rest = param.rest ? '...' : '';
+            const optional = param.optional && !param.defaultValue ? '?' : '';
+            return rest + param.name + optional;
+        }
+
         function renderParamsList(params) {
             if (!params || params.length === 0) return '';
             let html = '<h3>Parameters</h3><ul class="params">';
             params.forEach(param => {
-                const optional = param.optional ? '?' : '';
-                html += \`<li><code>\${escapeHtml(param.name)}\${optional}</code>: <code>\${escapeHtml(param.type)}</code>\`;
-                if (param.comment) html += \` - \${escapeHtml(param.comment)}\`;
+                html += \`<li><code>\${escapeHtml(formatParamName(param))}</code>: <code>\${escapeHtml(param.type)}</code>\`;
+                if (param.defaultValue) html += \` <span class="meta">(default: <code>\${escapeHtml(param.defaultValue)}</code>)</span>\`;
+                if (param.comment) html += \` - \${renderInlineMarkdown(param.comment)}\`;
                 html += '</li>';
             });
             return html + '</ul>';
         }
 
+        function renderReturns(sig) {
+            if (!sig) return '';
+            const type = sig.returnType;
+            const desc = sig.returns || '';
+            if ((!type || type === 'void' || type === 'any') && !desc) return '';
+            let html = '<p class="meta"><strong>Returns:</strong> ';
+            if (type && type !== 'void' && type !== 'any') html += \`<code>\${escapeHtml(type)}</code>\`;
+            if (desc) html += (type && type !== 'void' && type !== 'any' ? ' — ' : '') + renderInlineMarkdown(desc);
+            html += '</p>';
+            return html;
+        }
+
+        function stripFence(example) {
+            return example
+                .replace(/^\\\`\\\`\\\`(?:typescript|ts|javascript|js)?\\n?/gm, '')
+                .replace(/\\\`\\\`\\\`$/gm, '')
+                .trim();
+        }
+
+        function renderExamples(examples, withHeading) {
+            if (withHeading === undefined) withHeading = true;
+            if (!examples || examples.length === 0) return '';
+            let html = withHeading ? '<h2>Examples</h2>' : '';
+            examples.forEach(example => {
+                html += \`<pre><code class="language-typescript">\${escapeHtml(stripFence(example))}</code></pre>\`;
+            });
+            return html;
+        }
+
         function renderSection(section, title) {
             if (!section) return '';
+            const hasComment = !!section.comment;
+            const hasParams = section.parameters && section.parameters.length > 0;
+            const hasReturns = !!(section.returns || (section.returnType && section.returnType !== 'void' && section.returnType !== 'any'));
+            if (!hasComment && !hasParams && !hasReturns) return '';
             let html = \`<h2>\${title}</h2>\`;
-            if (section.comment) html += \`<div class="description">\${renderMarkdown(section.comment)}</div>\`;
+            if (hasComment) html += \`<div class="description">\${renderMarkdown(section.comment)}</div>\`;
             html += renderParamsList(section.parameters);
-            if (section.returnType && section.returnType !== 'void') {
-                html += \`<p class="meta"><strong>Returns:</strong> <code>\${escapeHtml(section.returnType)}</code></p>\`;
-            }
+            html += renderReturns(section);
             return html;
         }
 
         function renderProperties(api) {
             if (!api.properties || api.properties.length === 0) return '';
-            if (api.kind !== 'Interface' && api.kind !== 'Type alias') return '';
+            if (api.kind !== 'Interface' && api.kind !== 'Type Alias') return '';
             let html = '';
             api.properties.forEach(prop => {
                 const optional = prop.optional ? '?' : '';
                 html += \`<h2>\${escapeHtml(prop.name)}\${optional}</h2>\`;
                 html += \`<p class="meta"><strong>Type:</strong> <code>\${escapeHtml(prop.type)}</code></p>\`;
                 if (prop.comment) html += \`<div class="description">\${renderMarkdown(prop.comment)}</div>\`;
-            });
-            return html;
-        }
-
-        function renderExamples(examples) {
-            if (!examples || examples.length === 0) return '';
-            let html = '<h2>Examples</h2>';
-            examples.forEach(example => {
-                let code = example.replace(/^\`\`\`(?:typescript|ts|javascript|js)?\\n?/gm, '').replace(/\`\`\`$/gm, '').trim();
-                html += \`<pre><code class="language-typescript">\${escapeHtml(code)}</code></pre>\`;
             });
             return html;
         }
@@ -474,7 +479,7 @@ function generateDisplayFunction() {
 
             if (!api) {
                 content.innerHTML = '<h1>Not Found</h1>';
-                return;
+                return null;
             }
 
             const readmeDiv = document.getElementById('readme-content');
@@ -486,7 +491,11 @@ function generateDisplayFunction() {
             html += \`<p class="meta"><strong>Kind:</strong> \${escapeHtml(api.kind)}</p>\`;
 
             if (api.returnType && api.returnType !== 'any' && api.returnType !== 'void') {
-                html += \`<p class="meta"><strong>Returns:</strong> <code>\${escapeHtml(api.returnType)}</code></p>\`;
+                html += \`<p class="meta"><strong>Returns:</strong> <code>\${escapeHtml(api.returnType)}</code>\`;
+                if (api.returns) html += \` — \${renderInlineMarkdown(api.returns)}\`;
+                html += '</p>';
+            } else if (api.returns) {
+                html += \`<p class="meta"><strong>Returns:</strong> \${renderInlineMarkdown(api.returns)}</p>\`;
             } else if (api.type && api.type !== 'any') {
                 html += \`<p class="meta"><strong>Type:</strong> <code>\${escapeHtml(api.type)}</code></p>\`;
             }
@@ -505,79 +514,60 @@ function generateDisplayFunction() {
                     window.Prism.highlightElement(block);
                 });
             }
+            return api;
+        }
+
+        function clientSlugify(name) {
+            return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        }
+
+        function allApis() {
+            return Object.values(apiData).flat();
+        }
+
+        function findApiByHash(hash) {
+            const slug = decodeURIComponent(String(hash || '').replace(/^#/, '')).toLowerCase();
+            if (!slug) return null;
+            const items = allApis();
+            return items.find(a => clientSlugify(a.name) === slug)
+                || items.find(a => !a.parent && clientSlugify(a.shortName) === slug)
+                || items.find(a => clientSlugify(a.shortName) === slug)
+                || null;
+        }
+
+        function apiHash(api) {
+            return '#' + clientSlugify(api.parent ? api.name : api.shortName);
+        }
+
+        let syncingHash = false;
+        function selectAPI(id, updateHash) {
+            if (updateHash === undefined) updateHash = true;
+            apiItems.forEach(i => i.classList.remove('active'));
+            const item = document.querySelector('.api-item[data-id="' + id + '"]');
+            if (item) {
+                item.classList.add('active');
+                item.scrollIntoView({ block: 'nearest' });
+            }
+            const api = displayAPI(id);
+            if (api && updateHash) {
+                const next = apiHash(api);
+                if (location.hash !== next) {
+                    syncingHash = true;
+                    location.hash = next;
+                    syncingHash = false;
+                }
+            }
+            return api;
+        }
+
+        function applyHash() {
+            if (syncingHash) return;
+            const api = findApiByHash(location.hash);
+            if (api) selectAPI(api.id, false);
         }
   `;
 }
 
-const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ThorVG WebCanvas API Documentation</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="sidebar">
-        <h1>ThorVG WebCanvas</h1>
-        <input type="text" id="search" placeholder="Search APIs...">
-        ${generateSidebar()}
-    </div>
-
-    <div class="content" id="content">
-        <div id="readme-content"></div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        const apiData = ${safeJson(apis, 2)};
-        const readmeMarkdown = ${safeJson(readmeContent)};
-        const searchInput = document.getElementById('search');
-        const apiItems = document.querySelectorAll('.api-item');
-        const content = document.getElementById('content');
-
-        // Display README on initial load
-        const readmeDiv = document.getElementById('readme-content');
-        if (readmeDiv && readmeMarkdown && typeof marked !== 'undefined') {
-            readmeDiv.innerHTML = marked.parse(readmeMarkdown);
-            // Highlight code blocks in README
-            if (window.Prism) {
-                readmeDiv.querySelectorAll('pre code').forEach(block => {
-                    window.Prism.highlightElement(block);
-                });
-            }
-        }
-
-        ${generateDisplayFunction()}
-
-        apiItems.forEach(item => {
-            item.addEventListener('click', () => {
-                apiItems.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                const id = parseInt(item.getAttribute('data-id'));
-                displayAPI(id);
-            });
-        });
-
-        searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            apiItems.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.classList.toggle('hidden', !text.includes(searchTerm));
-            });
-        });
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
-</body>
-</html>
-`;
-
-fs.writeFileSync(path.join(__dirname, '../../docs/index.html'), html);
-fs.copyFileSync(path.join(__dirname, 'style.css'), path.join(__dirname, '../../docs/style.css'));
-
-// llms.txt
 const categoryTitles = {
   initialization: 'Initialization',
   canvas: 'Canvas',
@@ -596,7 +586,7 @@ const categoryTitles = {
   other: 'Other',
 };
 
-function generateLlmsTxt() {
+function generateLlmsTxt(apis) {
   let out = `# @thorvg/webcanvas\n\n`;
   out += `> A TypeScript WebCanvas API for ThorVG — high-performance vector graphics rendering\n`;
   out += `> via WebGL, WebGPU, and Software backends using WebAssembly.\n`;
@@ -608,7 +598,7 @@ function generateLlmsTxt() {
     out += `## ${categoryTitles[cat] || cat}\n\n`;
     for (const item of topLevel) {
       const desc = item.comment ? item.comment.split('\n')[0].trim() : '';
-      const anchor = item.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const anchor = slugify(item.name);
       const betaMark = item.beta ? ' *(beta)*' : '';
       out += `- [${item.name}](./llms-full.txt#${anchor})${betaMark}${desc ? ': ' + desc : ''}\n`;
     }
@@ -622,18 +612,30 @@ function generateLlmsTxt() {
   return out;
 }
 
-fs.writeFileSync(path.join(__dirname, '../../docs/llms.txt'), generateLlmsTxt());
-fs.copyFileSync(path.join(__dirname, '../../docs/llms.txt'), path.join(__dirname, '../../llms.txt'));
+function formatParamName(p) {
+  const rest = p.rest ? '...' : '';
+  const optional = p.optional && !p.defaultValue ? '?' : '';
+  return `${rest}${p.name}${optional}`;
+}
 
-// llms-full.txt
 function renderParams(params) {
   if (!params || params.length === 0) return '';
   let out = '\n**Parameters:**\n';
   for (const p of params) {
-    const opt = p.optional ? '?' : '';
-    out += `- \`${p.name}${opt}\` \`${p.type}\`${p.comment ? ' — ' + p.comment : ''}\n`;
+    const def = p.defaultValue ? ` (default: \`${p.defaultValue}\`)` : '';
+    out += `- \`${formatParamName(p)}\` \`${p.type}\`${def}${p.comment ? ' — ' + p.comment : ''}\n`;
   }
   return out;
+}
+
+function renderReturnsLlms(item) {
+  const type = item.returnType;
+  const desc = item.returns || '';
+  if ((!type || type === 'void' || type === 'any') && !desc) return '';
+  let out = '\n**Returns:**';
+  if (type && type !== 'void' && type !== 'any') out += ` \`${type}\``;
+  if (desc) out += `${type && type !== 'void' && type !== 'any' ? ' — ' : ' '}${desc}`;
+  return out + '\n';
 }
 
 function renderExamples(examples) {
@@ -651,7 +653,7 @@ function renderLlmsHeader() {
     `# @thorvg/webcanvas — Full API Reference\n`,
     `> Install: \`npm install @thorvg/webcanvas\`\n`,
     `## Quick Start\n`,
-    "```typescript",
+    '```typescript',
     `import ThorVG from '@thorvg/webcanvas';`,
     `import wasmUrl from '@thorvg/webcanvas/dist/thorvg.wasm?url'; // Vite/webpack`,
     ``,
@@ -660,7 +662,7 @@ function renderLlmsHeader() {
     ``,
     `const shape = new TVG.Shape();`,
     `shape.appendRect(100, 100, 200, 150).fill(255, 0, 0, 255);`,
-    "canvas.add(shape).render();\n```\n",
+    'canvas.add(shape).render();\n```\n',
     `---\n`,
   ].join('\n');
 }
@@ -677,11 +679,9 @@ function renderLlmsProperties(properties) {
 
 function renderLlmsMethod(parentName, method) {
   let out = `\n#### ${parentName}.${method.shortName}${method.beta ? ' *(beta)*' : ''}\n\n`;
-  if (method.returnType && method.returnType !== 'void' && method.returnType !== 'any') {
-    out += `**Returns:** \`${method.returnType}\`\n\n`;
-  }
-  if (method.comment) out += `${method.comment}\n\n`;
+  if (method.comment) out += `${method.comment}\n`;
   out += renderParams(method.parameters);
+  out += renderReturnsLlms(method);
   out += renderExamples(method.examples);
   return out;
 }
@@ -702,7 +702,7 @@ function renderLlmsItem(item, children) {
   return out + '\n---\n\n';
 }
 
-function generateLlmsFullTxt() {
+function generateLlmsFullTxt(apis) {
   let out = renderLlmsHeader();
   for (const [cat, items] of Object.entries(apis)) {
     if (items.length === 0) continue;
@@ -715,8 +715,182 @@ function generateLlmsFullTxt() {
   return out;
 }
 
-// Place at the root
-fs.writeFileSync(path.join(__dirname, '../../docs/llms-full.txt'), generateLlmsFullTxt());
-fs.copyFileSync(path.join(__dirname, '../../docs/llms-full.txt'), path.join(__dirname, '../../llms-full.txt'));
+async function loadProject() {
+  let options = {
+    entryPoints: [path.join(packageRoot, 'src/index.ts')],
+    tsconfig: path.join(packageRoot, 'tsconfig.json'),
+    excludePrivate: true,
+    excludeInternal: true,
+    excludeProtected: false,
+    plugin: ['typedoc-plugin-missing-exports'],
+  };
 
-console.log('✓ Documentation generated: docs/index.html');
+  const typedocJsonPath = path.join(packageRoot, 'typedoc.json');
+  try {
+    const typedocJson = JSON.parse(fs.readFileSync(typedocJsonPath, 'utf8'));
+    const {
+      $schema: _schema,
+      out: _out,
+      json: _json,
+      readme: _readme,
+      githubPages: _githubPages,
+      hideGenerator: _hideGenerator,
+      categorizeByGroup: _categorizeByGroup,
+      defaultCategory: _defaultCategory,
+      categoryOrder: _categoryOrder,
+      navigation: _navigation,
+      searchInComments: _searchInComments,
+      searchInDocuments: _searchInDocuments,
+      sort: _sort,
+      kindSortOrder: _kindSortOrder,
+      visibilityFilters: _visibilityFilters,
+      lightHighlightTheme: _lightHighlightTheme,
+      darkHighlightTheme: _darkHighlightTheme,
+      titleLink: _titleLink,
+      includeVersion: _includeVersion,
+      name: _name,
+      ...rest
+    } = typedocJson;
+    options = {
+      ...options,
+      ...rest,
+      entryPoints: (rest.entryPoints || options.entryPoints).map(ep =>
+        path.isAbsolute(ep) ? ep : path.join(packageRoot, ep)
+      ),
+      tsconfig: rest.tsconfig
+        ? (path.isAbsolute(rest.tsconfig) ? rest.tsconfig : path.join(packageRoot, rest.tsconfig))
+        : options.tsconfig,
+    };
+  } catch (err) {
+    console.warn(`Warning: could not read typedoc.json (${err.message}); using defaults.`);
+  }
+
+  const app = await Application.bootstrapWithPlugins(options);
+  const project = await app.convert();
+  if (!project) {
+    throw new Error('TypeDoc convert() failed');
+  }
+  return project;
+}
+
+async function main() {
+  const readmePath = path.join(packageRoot, 'README.md');
+  const readmeContent = (fs.existsSync(readmePath)
+  ? fs.readFileSync(readmePath, 'utf8')
+  : '').replace(/<p align="center">\s*<img[^>]*>\s*<\/p>\s*/g, '');
+
+  const project = await loadProject();
+  const apis = createEmptyApis();
+
+  if (project.children) {
+    project.children.forEach(item => processItem(apis, item));
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThorVG WebCanvas API Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <h1>ThorVG WebCanvas</h1>
+        <input type="text" id="search" placeholder="Search APIs...">
+        ${generateSidebar(apis)}
+    </div>
+
+    <div class="content" id="content">
+        <div id="readme-content"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const apiData = ${safeJson(apis, 2)};
+        const readmeMarkdown = ${safeJson(readmeContent)};
+        const searchInput = document.getElementById('search');
+        const apiItems = document.querySelectorAll('.api-item');
+        const content = document.getElementById('content');
+
+        const readmeDiv = document.getElementById('readme-content');
+        if (readmeDiv && readmeMarkdown && typeof marked !== 'undefined') {
+            readmeDiv.innerHTML = marked.parse(readmeMarkdown);
+            if (window.Prism) {
+                readmeDiv.querySelectorAll('pre code').forEach(block => {
+                    window.Prism.highlightElement(block);
+                });
+            }
+        }
+
+        ${generateDisplayFunction()}
+
+        apiItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const id = parseInt(item.getAttribute('data-id'));
+                selectAPI(id);
+            });
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            apiItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.classList.toggle('hidden', !text.includes(searchTerm));
+            });
+        });
+
+        window.addEventListener('hashchange', applyHash);
+        if (location.hash) {
+            applyHash();
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+</body>
+</html>
+`;
+
+  fs.mkdirSync(docsDir, { recursive: true });
+  fs.writeFileSync(path.join(docsDir, 'index.html'), html);
+  fs.copyFileSync(path.join(__dirname, 'style.css'), path.join(docsDir, 'style.css'));
+
+  const llmsTxt = generateLlmsTxt(apis);
+  fs.writeFileSync(path.join(docsDir, 'llms.txt'), llmsTxt);
+  fs.copyFileSync(path.join(docsDir, 'llms.txt'), path.join(packageRoot, 'llms.txt'));
+
+  const llmsFullTxt = generateLlmsFullTxt(apis);
+  fs.writeFileSync(path.join(docsDir, 'llms-full.txt'), llmsFullTxt);
+  fs.copyFileSync(path.join(docsDir, 'llms-full.txt'), path.join(packageRoot, 'llms-full.txt'));
+
+  const items = Object.values(apis).flat();
+  const colorStop = items.find(item => item.shortName === 'ColorStop' && !item.parent);
+  const font = items.find(item => item.shortName === 'Font' && !item.parent);
+  const fontLoad = items.find(item => item.name === 'Font.load');
+  const canvasAdd = items.find(item => item.name === 'Canvas.add');
+  const setStops = items.find(item => item.name === 'LinearGradient.setStops');
+  const canvasCtor = items.find(item => item.shortName === 'Canvas' && !item.parent);
+
+  if (colorStop) console.log(`✓ ColorStop type: ${colorStop.type}`);
+  if (font) console.log(`✓ Font {@link}: ${/\[Text\]/.test(font.comment) ? 'ok' : font.comment.slice(0, 80)}`);
+  if (fontLoad) {
+    console.log(`✓ Font.load params: ${(fontLoad.parameters || []).map(p => p.name).join(', ') || '(none)'}`);
+  }
+  if (canvasAdd) console.log(`✓ Canvas.add @returns: ${canvasAdd.returns || '(missing)'}`);
+  if (setStops) {
+    const rest = setStops.parameters?.find(p => p.rest);
+    console.log(`✓ setStops rest: ${rest ? '...' + rest.name : '(missing)'}`);
+  }
+  if (canvasCtor?.constructor?.parameters) {
+    const opt = canvasCtor.constructor.parameters.find(p => p.name === 'options');
+    console.log(`✓ Canvas ctor default: ${opt?.defaultValue ?? '(missing)'}`);
+  }
+
+  console.log('✓ Documentation generated: docs/index.html');
+}
+
+main().catch(err => {
+  console.error(err);
+  process.exit(1);
+});

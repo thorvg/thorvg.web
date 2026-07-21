@@ -123,6 +123,28 @@ body {
     margin: 1rem 0;
 }
 
+.description a {
+    color: #1976d2;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.description a:hover {
+    color: #0d47a1;
+}
+
+.meta a,
+.params a {
+    color: #1976d2;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.meta a:hover,
+.params a:hover {
+    color: #0d47a1;
+}
+
 .params {
     list-style: none;
     padding-left: 1rem;
