@@ -1523,7 +1523,7 @@ TVG.Font.load(name, data, options?);
 **Parameters:**
 - `name: string` - Unique font name
 - `data: Uint8Array` - Font data
-- `options.type?: 'ttf'` - Font type (default: 'ttf')
+- `options.type?: 'ttf' | 'otf'` - Font type (default: 'ttf')
 
 **Returns:** `void`
 

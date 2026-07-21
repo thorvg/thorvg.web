@@ -9,6 +9,11 @@ describe('Font', () => {
     expect(() => TVG.Font.load('test-font', new Uint8Array(0))).toThrow();
   });
 
+  it('load with invalid otf data throws', () => {
+    const TVG = getTVG();
+    expect(() => TVG.Font.load('test-otf', new Uint8Array([1, 2, 3]), { type: 'otf' })).toThrow();
+  });
+
   it('unload non-existent font throws ThorVGError', () => {
     const TVG = getTVG();
     expect(() => TVG.Font.unload('nonexistent')).toThrow(ThorVGError);
