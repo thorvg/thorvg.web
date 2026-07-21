@@ -11,15 +11,16 @@ import { FontsourceProvider } from '../providers/FontsourceProvider';
 /**
  * Supported font file types.
  * - `'ttf'`: TrueType Font
+ * - `'otf'`: OpenType Font
  * @category Font
  */
-export type FontType = 'ttf';
+export type FontType = 'ttf' | 'otf';
 
 /**
  * @category Font
  */
 export interface LoadFontOptions {
-  /** Font type ('ttf') */
+  /** Font type ('ttf' | 'otf') */
   type?: FontType;
 }
 
