@@ -7,7 +7,7 @@
 
 # @thorvg/webcanvas
 
-A high-performance TypeScript Canvas API for [ThorVG](https://github.com/thorvg/thorvg), providing an object-oriented interface with fluent API pattern for vector graphics rendering using WebAssembly.
+A high-performance TypeScript Canvas API for [ThorVG](https://github.com/thorvg/thorvg), with fluent and object-oriented vector graphics rendering via WebAssembly.
 
 ## Installation
 
@@ -132,21 +132,46 @@ TVG.term();
 
 ## Render Backends
 
-ThorVG WebCanvas supports both WebGL and the next-generation WebGPU, optimized for modern browsers and high-performance rendering pipelines. Designed to empower developers with cutting-edge graphics capabilities.
+ThorVG WebCanvas supports Software (CPU) rendering, WebGL, and the next-generation WebGPU, optimized for modern browsers and high-performance rendering pipelines. Designed to empower developers with cutting-edge graphics capabilities.
 
 | Backend | Browser Support |
 |---------|-----------------|
+| **Software (sw)** | All modern browsers |
 | **WebGL (gl)** | Chrome/Firefox/Safari 90+ |
 | **WebGPU (wg)** | Chrome/Edge 113+/Firefox 141+/Safari 26+ |
 
 ### Backend-Specific Initialization
 
 ```typescript
+// Software renderer (maximum compatibility)
+const TVG = await ThorVG.init({ renderer: 'sw' });
+
 // WebGL renderer
 const TVG = await ThorVG.init({ renderer: 'gl' });
 
 // WebGPU renderer (requires async init)
 const TVG = await ThorVG.init({ renderer: 'wg' });
+```
+
+## Multi-threading
+
+A thread-enabled build is available via the `/thread` entry (ESM). It runs the engine with a worker thread pool:
+
+```typescript
+import ThorVG from '@thorvg/webcanvas/thread';
+
+const TVG = await ThorVG.init({
+  locateFile: (path) => `/wasm/thread/${path}`,
+  threads: 4  // worker thread count (default: 0, ignored in default build)
+});
+```
+
+With the thread build, the page must be [cross-origin isolated](https://developer.mozilla.org/en-US/docs/Web/API/Window/crossOriginIsolated).
+
+```shell
+# Serve your page with:
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
 ```
 
 [Back to contents](#contents)
