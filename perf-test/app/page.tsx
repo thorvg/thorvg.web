@@ -8,6 +8,7 @@ import { loadThorVGModule, getWasmUrl, type ThorVGVersion } from '../lib/thorvg-
 import { type Renderer, RENDERER_LABELS, COUNT_OPTIONS, MIN_SIZE, MAX_SIZE } from '../lib/constants';
 import { type AnimEntry, encodeSeed, decodeSeed, buildAnimList, randomAnimList } from '../lib/seed';
 import { getParam, setParam } from '../lib/url-params';
+import { useInternalMode } from '../lib/internal-mode';
 import {
   type BenchPhase,
   type BenchmarkResult,
@@ -21,6 +22,7 @@ import { DragOverlay } from '../components/DragOverlay';
 
 export default function Home() {
   const router = useRouter();
+  const internalMode = useInternalMode();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -469,28 +471,32 @@ export default function Home() {
             Set
           </button>
 
-          {/* <button
-            onClick={() => { setBenchResult(null); setBenchPhase('idle'); setShowBench(true); }}
-            disabled={isLoading || animList.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-gray-300 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="8" cy="8" r="6" /><path d="M8 5v3.5l2 1.5" />
-            </svg>
-            Benchmark
-          </button>
+          {internalMode && (
+            <>
+              <button
+                onClick={() => { setBenchResult(null); setBenchPhase('idle'); setShowBench(true); }}
+                disabled={isLoading || animList.length === 0}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-gray-300 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="8" cy="8" r="6" /><path d="M8 5v3.5l2 1.5" />
+                </svg>
+                Benchmark
+              </button>
 
-          <div className="ml-auto">
-            <VersionSelector
-              current={version}
-              localVersion={process.env.NEXT_PUBLIC_WEBCANVAS_VERSION || ''}
-              onChange={(v) => {
-                const params = new URLSearchParams(window.location.search);
-                params.set('v', v);
-                window.location.href = `/?${params}`;
-              }}
-            />
-          </div> */}
+              <div className="ml-auto">
+                <VersionSelector
+                  current={version}
+                  localVersion={process.env.NEXT_PUBLIC_WEBCANVAS_VERSION || ''}
+                  onChange={(v) => {
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('v', v);
+                    window.location.href = `/?${params}`;
+                  }}
+                />
+              </div>
+            </>
+          )}
 
           <div className="flex gap-2 w-full sm:w-auto sm:flex-1 min-w-0">
             <input
