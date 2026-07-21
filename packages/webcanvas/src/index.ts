@@ -100,6 +100,7 @@ export interface ThorVGNamespace {
   TextWrapMode: typeof constants.TextWrapMode;
   ColorSpace: typeof constants.ColorSpace;
   FilterMethod: typeof constants.FilterMethod;
+  EngineOption: typeof constants.EngineOption;
   /** ThorVG engine version string */
   version: string;
   term(): void;
@@ -291,6 +292,7 @@ function createNamespace(): ThorVGNamespace {
     TextWrapMode: constants.TextWrapMode,
     ColorSpace: constants.ColorSpace,
     FilterMethod: constants.FilterMethod,
+    EngineOption: constants.EngineOption,
     version: THORVG_VERSION,
     term,
   };
