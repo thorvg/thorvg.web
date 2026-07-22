@@ -62,7 +62,7 @@ export interface CanvasOptions {
   height?: number;
   /** Enable device pixel ratio for high-DPI displays. Default: true */
   enableDevicePixelRatio?: boolean;
-  /** Rendering engine behavior option. Default: EngineOption.SmartRender */
+  /** Rendering engine behavior option. Default: EngineOption.Default */
   engineOption?: EngineOption;
 }
 
@@ -162,15 +162,15 @@ export class Canvas {
    *
    * @example
    * ```typescript
-   * // Disable smart rendering for full-redraw scenes (SW renderer)
+   * // Enable smart (partial) rendering (SW renderer)
    * const TVG = await ThorVG.init({ renderer: 'sw' });
    * const canvas = new TVG.Canvas('#canvas', {
-   *   engineOption: TVG.EngineOption.None
+   *   engineOption: TVG.EngineOption.SmartRender
    * });
    * ```
    */
   constructor(selector: string, options: CanvasOptions = {}) {
-    const { width = 800, height = 600, enableDevicePixelRatio = true, engineOption = EngineOption.SmartRender } = options;
+    const { width = 800, height = 600, enableDevicePixelRatio = true, engineOption = EngineOption.Default } = options;
 
     // Store logical dimensions
     this.#logicalWidth = width;
