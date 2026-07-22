@@ -159,6 +159,7 @@ export default function Home() {
           width: canvasW,
           height: canvasH,
           enableDevicePixelRatio: true,
+          engineOption: TVG.EngineOption?.None ?? 0,
         });
         tvgCanvasRef.current = tvgCanvas;
 
