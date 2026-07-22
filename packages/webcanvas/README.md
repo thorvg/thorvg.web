@@ -24,6 +24,7 @@ npm install @thorvg/webcanvas
 ## Contents
 - [Quick Start](#quick-start)
 - [Render Backends](#render-backends)
+- [Multi-threading](#multi-threading)
 - [Memory Management](#memory-management)
 - [Documentation](#documentation)
 - [Examples](#examples)
