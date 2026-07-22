@@ -61,7 +61,7 @@
 
     <div class="controls">
         <label>Renderer:
-            <select id="backend">
+            <select id="renderer">
                 <option value="gl">WebGL</option>
                 <option value="sw">Software</option>
                 <option value="wg">WebGPU</option>
@@ -117,7 +117,7 @@
         }
 
         window.init = async function() {
-            const renderer = document.getElementById('backend').value;
+            const renderer = document.getElementById('renderer').value;
             log(`Initializing ThorVG with ${renderer} renderer...`);
 
             try {

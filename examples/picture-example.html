@@ -49,8 +49,8 @@
     </div>
 
     <div class="controls">
-        <label>Backend:
-            <select id="backend">
+        <label>Renderer:
+            <select id="renderer">
                 <option value="sw">Software</option>
                 <option value="gl">WebGL</option>
                 <option value="wg">WebGPU</option>
@@ -85,11 +85,11 @@
         }
 
         window.init = async function() {
-            const renderer = document.getElementById('backend').value;
-            log(`Initializing ThorVG with ${renderer} backend...`);
+            const renderer = document.getElementById('renderer').value;
+            log(`Initializing ThorVG with ${renderer} renderer...`);
 
             try {
-                // Initialize ThorVG with backend
+                // Initialize ThorVG with renderer
                 TVG = await ThorVG.init({
                     renderer: renderer,
                     locateFile: (path) => '../packages/webcanvas/dist/' + path.split('/').pop()
