@@ -160,8 +160,7 @@ A thread-enabled build is available via the /thread entry (ESM). It runs the Tho
 ```typescript
 import ThorVG from '@thorvg/webcanvas/thread';
 
-const TVG = await ThorVG.init({
-  locateFile: (path) => `/wasm/thread/${path}`,
+const TVG = await ThorVG.init({  
   threads: 4  // worker thread count (default: 0, ignored in default build)
 });
 ```
