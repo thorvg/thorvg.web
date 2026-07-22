@@ -37,13 +37,12 @@
         <h3>Usage Pattern:</h3>
         <pre><code>// 1. Import and initialize ThorVG
 const ThorVG = await import('../packages/webcanvas/dist/webcanvas.esm.js');
-const TVG = await ThorVG.init({ renderer: 'sw' }); // or 'gl', 'wg'
+const TVG = await ThorVG.init({ renderer: 'gl' }); // or 'sw', 'wg'
 
 // 2. Create canvas and start drawing
 const canvas = new TVG.Canvas('#canvas', {
   width: 800,
   height: 600,
-  renderer: 'sw'
 });</code></pre>
     </div>
 
@@ -51,7 +50,7 @@ const canvas = new TVG.Canvas('#canvas', {
         <label>Backend:
             <select id="backend">
                 <option value="sw">Software</option>
-                <option value="gl">WebGL</option>
+                <option value="gl" selected>WebGL</option>
                 <option value="wg">WebGPU</option>
             </select>
         </label>

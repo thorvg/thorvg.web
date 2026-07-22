@@ -54,14 +54,14 @@ Next you can draw multiple shapes on the canvas:
 
 ```typescript
 const rect = new TVG.Shape();                              // generate a shape
-rect.appendRect(50, 50, 200, 200, { rx: 20, ry: 20 });    // define it as a rounded rectangle (x, y, w, h, rx, ry)
+rect.appendRect(50, 50, 200, 200, { rx: 20, ry: 20 });     // define it as a rounded rectangle (x, y, w, h, rx, ry)
 rect.fill(100, 100, 100);                                  // set its color (r, g, b)
 canvas.add(rect);                                          // add the rectangle to the canvas
 
 const circle = new TVG.Shape();                            // generate a shape
 circle.appendCircle(400, 400, 100, 100);                   // define it as a circle (cx, cy, rx, ry)
 
-const fill = new TVG.RadialGradient(400, 400, 150);       // generate a radial gradient (cx, cy, radius)
+const fill = new TVG.RadialGradient(400, 400, 150);        // generate a radial gradient (cx, cy, radius)
 
 fill.setStops(                                             // set the gradient colors info
   [0.0, [255, 255, 255, 255]],                             // 1st color values (offset, [r, g, b, a])
@@ -143,19 +143,19 @@ ThorVG WebCanvas supports Software (CPU) rendering, WebGL, and the next-generati
 ### Backend-Specific Initialization
 
 ```typescript
-// Software renderer (maximum compatibility)
+// Software renderer
 const TVG = await ThorVG.init({ renderer: 'sw' });
 
 // WebGL renderer
 const TVG = await ThorVG.init({ renderer: 'gl' });
 
-// WebGPU renderer (requires async init)
+// WebGPU renderer
 const TVG = await ThorVG.init({ renderer: 'wg' });
 ```
 
 ## Multi-threading
 
-A thread-enabled build is available via the `/thread` entry (ESM). It runs the engine with a worker thread pool:
+A thread-enabled build is available via the /thread entry (ESM). It runs the ThorVG runtime with a worker thread pool, enabling ThorVG's native multi-threaded rasterization pipeline. Please note that multi-threading is currently effective only for the Software renderer. Support for the WebGL and WebGPU rendering backends is planned for future releases.
 
 ```typescript
 import ThorVG from '@thorvg/webcanvas/thread';
