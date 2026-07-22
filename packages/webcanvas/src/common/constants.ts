@@ -160,13 +160,15 @@ export enum MaskMethod {
  * Enumeration to specify rendering engine behavior.
  *
  * The availability or behavior of SmartRender may vary depending on backend support.
- * Currently only the 'sw' renderer supports it.
+ * Currently only the 'sw' renderer supports SmartRender.
  * @category Canvas
  */
 export enum EngineOption {
-  /** No engine options are enabled. This may be used to explicitly disable all optional behaviors */
+  /** No engine options are enabled. This may be used to explicitly disable all optional behaviors. */
   None = 0,
-  /** Enables automatic partial (smart) rendering optimizations */
+  /** Uses the default rendering mode. */
+  Default = 1 << 0,
+  /** Enables automatic partial (smart) rendering optimizations. */
   SmartRender = 1 << 1,
 }
 
