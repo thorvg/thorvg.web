@@ -47,8 +47,8 @@ const canvas = new TVG.Canvas('#canvas', {
     </div>
 
     <div class="controls">
-        <label>Backend:
-            <select id="backend">
+        <label>Renderer:
+            <select id="renderer">
                 <option value="sw">Software</option>
                 <option value="gl" selected>WebGL</option>
                 <option value="wg">WebGPU</option>
@@ -77,7 +77,7 @@ const canvas = new TVG.Canvas('#canvas', {
 
         window.initAndDraw = async function() {
             try {
-                const renderer = document.getElementById('backend').value;
+                const renderer = document.getElementById('renderer').value;
                 log(`\n=== Initializing with ${renderer} renderer ===`);
 
                 // Step 1: Initialize ThorVG with renderer
@@ -149,11 +149,11 @@ const canvas = new TVG.Canvas('#canvas', {
         const params = new URLSearchParams(window.location.search);
         const renderer = params.get('renderer');
         if (renderer && ['sw', 'gl', 'wg'].includes(renderer)) {
-            document.getElementById('backend').value = renderer;
+            document.getElementById('renderer').value = renderer;
         }
 
-        // Handle backend change
-        document.getElementById('backend').addEventListener('change', (e) => {
+        // Handle renderer change
+        document.getElementById('renderer').addEventListener('change', (e) => {
             const url = new URL(window.location.href);
             url.searchParams.set('renderer', e.target.value);
             window.location.href = url.toString();
