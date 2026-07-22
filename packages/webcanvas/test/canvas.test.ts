@@ -87,6 +87,12 @@ describe('Canvas engineOption', () => {
     return tvg;
   }
 
+  it('constructor accepts EngineOption.Default', () => {
+    const tvg = createCanvasWith(EngineOption.Default);
+    expect(tvg).toBeInstanceOf(Canvas);
+    tvg.destroy();
+  });
+
   it('constructor accepts EngineOption.SmartRender', () => {
     const tvg = createCanvasWith(EngineOption.SmartRender);
     expect(tvg).toBeInstanceOf(Canvas);
