@@ -1,6 +1,6 @@
 # ThorVG for Web
 <p align="center">
-  <img width="800" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png">
+  <img width="800" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/logo/512/thorvg-banner.png">
 </p>
 
 [![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player)
