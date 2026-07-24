@@ -1,6 +1,6 @@
 # ThorVG for Web
 <p align="center">
-  <img width="800" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png">
+  <img width="800" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/logo/512/thorvg-banner.png">
 </p>
 
 [![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas)
@@ -76,7 +76,7 @@ canvas.add(circle);                                        // add the circle to 
 This code generates the following result:
 
 <p align="center">
-  <img width="416" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/example_shapes.png">
+  <img width="416" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/example_shapes.png">
 </p>
 
 You can also draw your own shapes and use dashed stroking:
@@ -111,7 +111,7 @@ canvas.add(path);                                          // add the path to th
 The code generates the following result:
 
 <p align="center">
-  <img width="300" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/example_path.png">
+  <img width="300" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/example_path.png">
 </p>
 
 Now begin rendering & finish it at a particular time:
