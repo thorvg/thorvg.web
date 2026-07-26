@@ -12,6 +12,7 @@ on:
       - 'pnpm-lock.yaml'
       - '.github/workflows/playground.yml'
       - '!**/*.md'
+      - '!packages/webcanvas/test/**'
 
 jobs:
   preview-playground:

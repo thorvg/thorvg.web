@@ -12,6 +12,7 @@ on:
       - 'pnpm-lock.yaml'
       - '.github/workflows/perf-test.yml'
       - '!**/*.md'
+      - '!packages/lottie-player/tests/**'
 
 jobs:
   preview-perf-test:
