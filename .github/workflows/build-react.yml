@@ -10,6 +10,7 @@ on:
       - 'pnpm-lock.yaml'
       - '.github/workflows/build-react.yml'
       - '!**/*.md'
+      - '!packages/*/test*/**'
   pull_request:
     branches:
       - main
@@ -19,6 +20,7 @@ on:
       - 'pnpm-lock.yaml'
       - '.github/workflows/build-react.yml'
       - '!**/*.md'
+      - '!packages/*/test*/**'
 
 jobs:
   build-react-example:
