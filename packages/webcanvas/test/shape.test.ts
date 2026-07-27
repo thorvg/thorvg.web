@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Shape } from '../src/core/Shape';
-import { FillRule, BlendMethod, MaskMethod, StrokeCap, StrokeJoin } from '../src/common/constants';
+import { FillRule, BlendMethod, MaskMethod, StrokeCap, StrokeJoin, PathCommand } from '../src/common/constants';
+import { ThorVGError } from '../src/common/errors';
 import { getTVG, assertNoDoubleFree, assertGCCleanup, canForceGC } from './helpers';
 
 describe('Shape', () => {
@@ -24,6 +25,12 @@ describe('Shape', () => {
     expect(() => shape.appendRect(0, 0, 100, 100, { rx: 10, ry: 10 })).not.toThrow();
   });
 
+  it('appendRect with counter-clockwise winding', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    expect(() => shape.appendRect(0, 0, 100, 100, { clockwise: false })).not.toThrow();
+  });
+
   it('appendCircle returns this', () => {
     const TVG = getTVG();
     const shape = new TVG.Shape();
@@ -37,6 +44,61 @@ describe('Shape', () => {
     expect(() => shape.appendCircle(50, 50, 80, 40)).not.toThrow();
   });
 
+  it('appendPath returns this', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    const result = shape.appendPath([PathCommand.MoveTo, PathCommand.LineTo], [[0, 0], [100, 100]]);
+    expect(result).toBe(shape);
+  });
+
+  it('appendPath builds the given outline', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    shape.appendPath(
+      [PathCommand.MoveTo, PathCommand.LineTo, PathCommand.LineTo, PathCommand.Close],
+      [[100, 50], [150, 150], [50, 150]]
+    );
+    expect(shape.bounds()).toEqual({ x: 50, y: 50, width: 100, height: 100 });
+  });
+
+  it('appendPath feeds CubicTo three points as a curve, not a polyline', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    shape.appendPath(
+      [PathCommand.MoveTo, PathCommand.CubicTo],
+      [[0, 0], [10, 40], [90, 40], [100, 0]]
+    );
+
+    expect(shape.bounds()).toEqual({ x: 0, y: 0, width: 100, height: 30 });
+  });
+
+  it('appendPath with empty commands is a no-op', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    const result = shape.appendPath([], []);
+    expect(result).toBe(shape);
+    expect(shape.path()).toEqual({ commands: [], points: [] });
+  });
+
+  it('appendPath rejects commands with no points', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    expect(() => shape.appendPath([PathCommand.MoveTo], [])).toThrow(ThorVGError);
+  });
+
+  it('appendPath round-trips commands and points through the engine', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    shape.appendPath(
+      [PathCommand.MoveTo, PathCommand.CubicTo],
+      [[0, 0], [10, 40], [90, 40], [100, 0]]
+    );
+    expect(shape.path()).toEqual({
+      commands: [PathCommand.MoveTo, PathCommand.CubicTo],
+      points: [[0, 0], [10, 40], [90, 40], [100, 0]],
+    });
+  });
+  
   it('path commands chain correctly', () => {
     const TVG = getTVG();
     const shape = new TVG.Shape();
@@ -77,11 +139,15 @@ describe('Shape', () => {
     const TVG = getTVG();
     const shape = new TVG.Shape();
     shape.appendRect(0, 0, 100, 100);
+    const gradient = new TVG.LinearGradient(0, 0, 100, 0);
+    gradient.addStop(0, [255, 0, 0, 255]).addStop(1, [0, 0, 255, 255]);
     const result = shape.stroke({
       width: 5,
       color: [0, 0, 255, 255],
+      gradient,
       cap: StrokeCap.Round,
-      join: StrokeJoin.Round,
+      join: StrokeJoin.Miter,
+      miterLimit: 10,
     });
     expect(result).toBe(shape);
   });
@@ -91,6 +157,36 @@ describe('Shape', () => {
     const shape = new TVG.Shape();
     shape.appendRect(0, 0, 100, 100);
     expect(() => shape.stroke({ width: 2, dash: [10, 5] })).not.toThrow();
+  });
+
+  it('stroke with dashOffset after a pattern is set', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    shape.appendRect(0, 0, 100, 100);
+    shape.stroke({ width: 2, dash: [10, 5] });
+    expect(() => shape.stroke({ dashOffset: 3 })).not.toThrow();
+  });
+
+  it('stroke with dashOffset before any pattern is set', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    shape.appendRect(0, 0, 100, 100);
+    expect(() => shape.stroke({ dashOffset: 3 })).not.toThrow();
+  });
+
+  it('stroke with empty dash resets to a solid line', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    shape.appendRect(0, 0, 100, 100);
+    shape.stroke({ width: 2, dash: [10, 5] });
+    expect(() => shape.stroke({ dash: [] })).not.toThrow();
+  });
+
+  it('order returns this for both directions', () => {
+    const TVG = getTVG();
+    const shape = new TVG.Shape();
+    expect(shape.order(true)).toBe(shape);
+    expect(shape.order(false)).toBe(shape);
   });
 
   it('fillRule returns this', () => {
