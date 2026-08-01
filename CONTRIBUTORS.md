@@ -17,3 +17,4 @@
 - Yujin Lee @Ujaa
 - Yukyung Lee @nunomi0
 - Soongeon Noh @Nor-s
+- JaeHyun Hwang @hd1534
