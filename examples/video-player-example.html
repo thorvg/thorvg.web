@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ThorVG WebCanvas - Video Player Example</title>
+    <style>
+        html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+        body { font-family: Arial, sans-serif; }
+        #canvas { position: absolute; inset: 0; }
+        #loading {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            color: #ccc; font-size: 18px; z-index: 2; pointer-events: none;
+        }
+        #ui {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 1;
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; background: rgba(16, 18, 24, 0.85); color: #eee;
+        }
+        #ui button {
+            min-width: 44px; padding: 6px 10px; cursor: pointer;
+            background: #30323c; color: #f0f0f5; border: none; border-radius: 6px;
+        }
+        #ui button:disabled { opacity: 0.4; cursor: default; }
+        #seek { flex: 1; }
+        #vol { width: 90px; }
+        #time { font-size: 13px; min-width: 96px; text-align: center; font-variant-numeric: tabular-nums; }
+        select { padding: 5px; border-radius: 6px; }
+        label { font-size: 13px; display: flex; align-items: center; gap: 4px; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="loading">Loading…</div>
+
+    <div id="ui">
+        <select id="backend">
+            <option value="sw">SW</option>
+            <option value="gl" selected>GL</option>
+            <option value="wg">WG</option>
+        </select>
+        <label title="Requires cross-origin isolation (COOP/COEP)"><input type="checkbox" id="threads"> Threads</label>
+        <button id="back" disabled>-10s</button>
+        <button id="play" disabled>▶</button>
+        <button id="fwd" disabled>+10s</button>
+        <button id="stopBtn" disabled>⏹</button>
+        <input id="seek" type="range" min="0" max="1000" value="0" disabled>
+        <span id="time">0:00 / 0:00</span>
+        <label><input type="checkbox" id="mute" disabled> Mute</label>
+        <input id="vol" type="range" min="0" max="1" step="0.05" value="1" disabled>
+        <label><input type="checkbox" id="stats"> Stats</label>
+        <button id="fs" title="Fullscreen (F)">⛶</button>
+    </div>
+
+    <script type="module">
+        const $ = (id) => document.getElementById(id);
+        const loading = $('loading');
+
+        // Renderer/threads come from the query string, switching the controls reloads the page
+        const params = new URLSearchParams(location.search);
+        const VIDEO_URL = params.get('src') || './bbb.mp4';
+        const renderer = ['sw', 'gl', 'wg'].includes(params.get('renderer')) ? params.get('renderer') : 'gl';
+        let useThreads = params.get('threads') === '4';
+        $('backend').value = renderer;
+        $('backend').onchange = () => {
+            const url = new URL(location.href);
+            url.searchParams.set('renderer', $('backend').value);
+            location.href = url;
+        };
+        $('threads').onchange = () => {
+            const url = new URL(location.href);
+            if ($('threads').checked) url.searchParams.set('threads', '4');
+            else url.searchParams.delete('threads');
+            location.href = url;
+        };
+
+        // The thread preset needs SharedArrayBuffer, i.e. COOP/COEP headers (see examples/serve.py)
+        if (!crossOriginIsolated) {
+            $('threads').disabled = true;
+            useThreads = false;
+        }
+        $('threads').checked = useThreads;
+
+        const dist = useThreads ? '../packages/webcanvas/dist/thread/' : '../packages/webcanvas/dist/';
+        const ThorVG = (await import(dist + 'webcanvas.esm.js')).default;
+        const TVG = await ThorVG.init({
+            renderer,
+            threads: useThreads ? 4 : 0,
+            locateFile: (path) => dist + path.split('/').pop(),
+        });
+
+        let W = window.innerWidth;
+        let H = window.innerHeight;
+        const canvas = new TVG.Canvas('#canvas', { width: W, height: H });
+
+        const video = new TVG.Video();
+        canvas.add(video);
+
+        let natural = null;
+        let duration = 0;
+
+        // Fit the video to the window (contain), centered
+        function fit() {
+            if (!natural) return;
+            const scale = Math.min(W / natural.width, H / natural.height);
+            video.picture
+                .size(natural.width * scale, natural.height * scale)
+                .origin(0.5, 0.5)
+                .translate(W / 2, H / 2);
+        }
+
+        window.addEventListener('resize', () => {
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.resize(W, H);
+            fit();
+            canvas.update().render();
+        });
+
+        // ----- controls -----
+        let playing = false;
+        let seeking = false;
+        let lastTime = 0;
+
+        const playBtn = $('play');
+        const seekBar = $('seek');
+
+        function fmt(seconds) {
+            seconds = Math.max(0, seconds);
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return m + ':' + String(s).padStart(2, '0');
+        }
+
+        function updateBar(time) {
+            lastTime = time;
+            if (!seeking) seekBar.value = duration ? Math.round(time / duration * 1000) : 0;
+            $('time').textContent = fmt(time) + ' / ' + fmt(duration);
+        }
+
+        const onFrame = (time) => updateBar(time);
+
+        function setPlaying(on) {
+            playing = on;
+            if (on) video.play(onFrame);
+            else video.pause();
+            playBtn.textContent = on ? '⏸' : '▶';
+        }
+
+        function seekTo(seconds) {
+            seconds = Math.max(0, Math.min(duration, seconds));
+            video.seek(seconds);
+            updateBar(seconds);
+        }
+
+        playBtn.onclick = () => setPlaying(!playing);
+        $('stopBtn').onclick = () => {
+            video.stop();
+            playing = false;
+            playBtn.textContent = '▶';
+            updateBar(0);
+        };
+        $('back').onclick = () => seekTo(lastTime - 10);
+        $('fwd').onclick = () => seekTo(lastTime + 10);
+        $('vol').oninput = (e) => video.volume(Number(e.target.value));
+        $('mute').onchange = (e) => video.mute(e.target.checked);
+
+        // ----- stats.js (FPS / MS / MB panels, same setup as benchmark.html) -----
+        let stats = null;
+
+        function loadStatsScript() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://mrdoob.github.io/stats.js/build/stats.min.js';
+                script.crossOrigin = 'anonymous'; // COEP-safe
+                script.onload = resolve;
+                script.onerror = () => reject(new Error('failed to load stats.js'));
+                document.head.appendChild(script);
+            });
+        }
+
+        function createStats() {
+            const panels = [];
+            const add = (panel, left) => {
+                const s = new Stats();
+                s.showPanel(panel); // 0: fps, 1: ms, 2: mb
+                s.dom.style.cssText = `position:fixed;top:0;left:${left}px;cursor:pointer;opacity:0.9;z-index:10000`;
+                document.body.appendChild(s.dom);
+                panels.push(s);
+            };
+            add(0, 0);
+            add(1, 80);
+            if (self.performance && self.performance.memory) add(2, 160);
+            return { panels, rafId: 0 };
+        }
+
+        async function toggleStats(on) {
+            const url = new URL(location.href);
+            if (on) url.searchParams.set('stats', '1');
+            else url.searchParams.delete('stats');
+            history.replaceState(null, '', url); // survives renderer/threads reloads
+
+            if (on) {
+                try {
+                    if (!window.Stats) await loadStatsScript();
+                } catch {
+                    $('stats').checked = false;
+                    return;
+                }
+                if (!stats) stats = createStats();
+                for (const s of stats.panels) s.dom.style.display = 'block';
+                const loop = () => {
+                    for (const s of stats.panels) { s.begin(); s.end(); }
+                    stats.rafId = requestAnimationFrame(loop);
+                };
+                stats.rafId = requestAnimationFrame(loop);
+            } else if (stats) {
+                cancelAnimationFrame(stats.rafId);
+                for (const s of stats.panels) s.dom.style.display = 'none';
+            }
+        }
+
+        $('stats').onchange = (e) => toggleStats(e.target.checked);
+        if (params.get('stats') === '1') {
+            $('stats').checked = true;
+            toggleStats(true);
+        }
+
+        function toggleFullscreen() {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else document.documentElement.requestFullscreen();
+        }
+        $('fs').onclick = toggleFullscreen;
+        document.addEventListener('fullscreenchange', () => {
+            $('fs').textContent = document.fullscreenElement ? '🗗' : '⛶';
+        });
+
+        // While dragging only preview the position; seek on release
+        seekBar.addEventListener('input', () => {
+            seeking = true;
+            $('time').textContent = fmt(seekBar.value / 1000 * duration) + ' / ' + fmt(duration);
+        });
+        seekBar.addEventListener('change', () => {
+            seeking = false;
+            seekTo(seekBar.value / 1000 * duration);
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+            else if (e.code === 'ArrowLeft') $('back').click();
+            else if (e.code === 'ArrowRight') $('fwd').click();
+            else if (e.code === 'KeyM') $('mute').click();
+            else if (e.code === 'KeyF') toggleFullscreen();
+        });
+
+        // ----- source loading (initial URL + drag & drop) -----
+        async function loadSource(bytes) {
+            loading.style.display = 'flex';
+            loading.textContent = 'Preparing decoder…';
+            await video.load(bytes);
+            natural = { ...video.picture.size() };
+            duration = video.duration();
+            video.loop(true).volume(Number($('vol').value)).mute($('mute').checked);
+            fit();
+            canvas.update().render();
+            playing = false;
+            playBtn.textContent = '▶';
+            updateBar(0);
+            for (const el of document.querySelectorAll('#ui button, #ui input')) {
+                if (el.id !== 'threads') el.disabled = false;
+            }
+            loading.style.display = 'none';
+        }
+
+        async function loadFromUrl(url) {
+            try {
+                loading.style.display = 'flex';
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
+                const total = Number(res.headers.get('Content-Length')) || 0;
+                const reader = res.body.getReader();
+                const chunks = [];
+                let received = 0;
+                for (;;) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                    received += value.length;
+                    loading.textContent = total
+                        ? `Downloading video… ${(received / total * 100).toFixed(0)}%`
+                        : `Downloading video… ${(received / 1048576).toFixed(0)} MB`;
+                }
+                const bytes = new Uint8Array(received);
+                let offset = 0;
+                for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+                await loadSource(bytes);
+            } catch (e) {
+                loading.style.display = 'flex';
+                loading.textContent = String(e?.message ?? e);
+            }
+        }
+
+        window.addEventListener('dragover', (e) => e.preventDefault());
+        window.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files?.[0];
+            if (!file) return;
+            try {
+                loading.style.display = 'flex';
+                loading.textContent = `Loading ${file.name}…`;
+                await loadSource(new Uint8Array(await file.arrayBuffer()));
+                setPlaying(true); // a drop is a user gesture, start right away
+            } catch (err) {
+                loading.style.display = 'flex';
+                loading.textContent = `Failed to load ${file.name}: ${err?.message ?? err}`;
+            }
+        });
+
+        loadFromUrl(VIDEO_URL);
+
+        // debugging convenience
+        window.__demo = { TVG, canvas, video };
+    </script>
+</body>
+</html>
