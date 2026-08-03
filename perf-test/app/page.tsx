@@ -33,12 +33,15 @@ export default function Home() {
   const animsRef = useRef<{
     anim: any; info: any; name: string; url: string;
     picture: any; visible: boolean;
-    posX: number; gridY: number; yOff: number;
+    posX: number; gridY: number; xOff: number; yOff: number;
   }[]>([]);
   const rafRef = useRef<number>(0);
   const colsRef = useRef<number>(1);
   const itemSizeRef = useRef<number>(150);
   const scrollOffsetRef = useRef<number>(0);
+  const pendingLayoutRef = useRef(false);
+  const canvasWRef = useRef<number>(0);
+  const canvasHRef = useRef<number>(0);
   const [gridHeight, setGridHeight] = useState(0);
   const [canvasCssHeight, setCanvasCssHeight] = useState(0);
 
@@ -102,6 +105,40 @@ export default function Home() {
     initProfiler();
   }, []);
 
+  // Grid layout
+  const applyLayout = useCallback((total: number) => {
+    const cellSize = itemSizeRef.current;
+    const cols = Math.max(1, Math.floor(containerRef.current!.clientWidth / cellSize));
+    const canvasW = cols * cellSize;
+    const gridH = Math.ceil(total / cols) * cellSize;
+    const headerH = headerRef.current?.offsetHeight ?? 0;
+    const canvasH = Math.min(gridH, Math.max(0, window.innerHeight - headerH));
+
+    colsRef.current = cols;
+    setGridHeight(gridH);
+    setCanvasCssHeight(canvasH);
+
+    const list = animsRef.current;
+    for (let i = 0; i < list.length; i++) {
+      const entry = list[i];
+      entry.posX = (i % cols) * cellSize + entry.xOff;
+      entry.gridY = Math.floor(i / cols) * cellSize;
+    }
+
+    if (canvasW !== canvasWRef.current || canvasH !== canvasHRef.current) {
+      canvasWRef.current = canvasW;
+      canvasHRef.current = canvasH;
+      tvgCanvasRef.current?.resize(canvasW, canvasH);
+    }
+    return { cellSize, canvasW, canvasH };
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => { pendingLayoutRef.current = true; };
+    window.addEventListener('resize', onResize);
+    return () => { window.removeEventListener('resize', onResize); };
+  }, []);
+
   // TVG setup
   useEffect(() => {
     if (animList.length === 0 || !canvasRef.current || !containerRef.current) return;
@@ -121,20 +158,9 @@ export default function Home() {
       setIsLoading(true);
       setLoadingStatus('Loading…');
 
-      const containerW = containerRef.current!.clientWidth;
       const tvgDpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
-      const itemSize = size;
-      const cellSize = itemSize / tvgDpr;
-      itemSizeRef.current = cellSize;
-      const cols = Math.max(1, Math.floor(containerW / cellSize));
-      const rows = Math.ceil(animList.length / cols);
-      const canvasW = cols * cellSize;
-      const gridH = rows * cellSize;
-      const headerH = headerRef.current?.offsetHeight ?? 0;
-      const canvasH = Math.min(gridH, Math.max(0, window.innerHeight - headerH));
-      colsRef.current = cols;
-      setGridHeight(gridH);
-      setCanvasCssHeight(canvasH);
+      itemSizeRef.current = size / tvgDpr;
+      const { cellSize, canvasW, canvasH } = applyLayout(animList.length);
 
       const canvasEl = canvasRef.current!;
       canvasEl.width = canvasW;
@@ -174,13 +200,11 @@ export default function Home() {
           const result = fetchResults[i];
           if (result.status === 'rejected') continue;
 
-          const col = i % cols;
-          const row = Math.floor(i / cols);
           const anim = new TVG.Animation();
           anim.load(result.value);
           const info = anim.info();
           const pic = anim.picture;
-          let posX = 0, gridY = 0, yOff = 0;
+          let xOff = 0, yOff = 0;
           if (pic) {
             let naturalW = cellSize;
             let naturalH = cellSize;
@@ -191,17 +215,17 @@ export default function Home() {
             const scale = Math.min(cellSize / naturalW, cellSize / naturalH);
             const displayW = naturalW * scale;
             const displayH = naturalH * scale;
-            posX = col * cellSize + (cellSize - displayW) / 2;
-            gridY = row * cellSize;
+            xOff = (cellSize - displayW) / 2;
             yOff = (cellSize - displayH) / 2;
             pic.size(displayW, displayH);
             // not added to canvas yet — tick will add when visible
           }
-          loaded.push({ anim, info, name: animList[i].name, url: animList[i].url, picture: pic, visible: false, posX, gridY, yOff });
+          loaded.push({ anim, info, name: animList[i].name, url: animList[i].url, picture: pic, visible: false, posX: 0, gridY: 0, xOff, yOff });
         }
 
         if (cancelled) return;
         animsRef.current = loaded;
+        applyLayout(loaded.length);
         setIsLoading(false);
         setLoadingStatus('');
 
@@ -211,6 +235,11 @@ export default function Home() {
           const elapsed = (ts - startTime) / 1000;
           const dt = lastTs > 0 ? ts - lastTs : 0;
           lastTs = ts;
+
+          if (pendingLayoutRef.current) {
+            pendingLayoutRef.current = false;
+            if (animsRef.current.length) applyLayout(animsRef.current.length);
+          }
 
           const cellSize = itemSizeRef.current;
           const cols = colsRef.current;
