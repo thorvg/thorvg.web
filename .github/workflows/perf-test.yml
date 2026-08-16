@@ -7,12 +7,12 @@ on:
     branches:
       - main
     paths:
-      - 'packages/lottie-player/**'
+      - 'packages/webcanvas/**'
       - 'perf-test/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/perf-test.yml'
       - '!**/*.md'
-      - '!packages/lottie-player/tests/**'
+      - '!packages/webcanvas/test/**'
 
 jobs:
   preview-perf-test:
@@ -62,8 +62,8 @@ jobs:
       - name: Install pnpm dependencies (workspace packages)
         run: pnpm install --frozen-lockfile
 
-      - name: Build Lottie Player (WASM + TypeScript)
-        run: pnpm --filter @thorvg/lottie-player build
+      - name: Build WebCanvas (WASM + TypeScript)
+        run: pnpm --filter @thorvg/webcanvas build
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
@@ -72,7 +72,7 @@ jobs:
         working-directory: ./perf-test
         run: |
           yarn install --frozen-lockfile
-          yarn add ../packages/lottie-player
+          yarn add ../packages/webcanvas
 
       - name: Pull Vercel Environment Information
         working-directory: ./perf-test
