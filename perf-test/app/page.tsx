@@ -456,7 +456,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-900 text-white">
       <div ref={headerRef} className="sticky top-0 z-20 bg-gray-900/95 backdrop-blur-sm border-b border-white/10">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
-          <span className="font-bold text-brand mr-1 text-sm tracking-wide hidden sm:block">ThorVG Perf</span>
+          <span className="font-bold text-brand mr-1 text-sm tracking-wide hidden sm:block">ThorVG</span>
 
           <div className="flex bg-white/5 rounded-lg p-0.5">
             {(['sw', 'gl', 'wg'] as Renderer[]).map((r) => (
