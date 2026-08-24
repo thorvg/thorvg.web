@@ -14,9 +14,17 @@
   <img width="550" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/logo/animated_brand.svg">
 </p>
 
-**ThorVG.Web** is a WebAssembly (WASM)-based extension of the ThorVG vector graphics engine, designed to run seamlessly in modern web environments. It enables efficient and high-performance rendering of **vector graphics** and **Lottie animations** directly in the browser, leveraging both **WebGL** and **WebGPU** for hardware-accelerated rendering. Fully compatible with ThorVG's core rendering logic, ThorVG.Web ensures consistent output across desktop, mobile, and web platforms, allowing developers to reuse the same vector assets and rendering code across multiple targets with minimal changes.
-
-Whether you're building a high-performance Lottie animation, a graphics editing tool, or a scalable UI framework for the browser, ThorVG.Web provides the speed and flexibility needed to **deliver modern vector graphics experiences on the web**.
+**ThorVG.Web** is a WebAssembly (WASM)-based extension of the ThorVG vector graphics engine, bringing ThorVG’s rendering capabilities to modern web environments. It enables high-performance rendering of vector graphics and Lottie animations directly in the browser, with hardware acceleration through WebGL and WebGPU.</br>
+</br>
+At the core of ThorVG.Web is WebCanvas, a JavaScript/TypeScript API that provides programmatic access to ThorVG’s drawing primitives, scene graph, animation, effects, and vector rendering pipeline. Developers can create, manipulate, and render dynamic graphics using the same ThorVG rendering architecture available on native platforms.</br>
+</br>
+By sharing ThorVG’s core rendering logic across native and web environments, ThorVG.Web provides consistent rendering behavior while enabling applications to reuse assets and graphics workflows across platforms.</br>
+</br>
+From interactive Lottie animations and creative tools to dynamic user interfaces and browser-based graphics applications, ThorVG.Web provides a lightweight and flexible foundation for modern vector graphics on the web.
+</br>
+<p align="center">
+  <img width="800" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/example_webcanvas.png">
+</p>
 <br />
 
 ## Contents
