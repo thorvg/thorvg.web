@@ -14,10 +14,19 @@
   <img width="550" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/logo/animated_brand.svg">
 </p>
 
-**ThorVG.Web** is a WebAssembly (WASM)-based extension of the ThorVG vector graphics engine, designed to run seamlessly in modern web environments. It enables efficient and high-performance rendering of **vector graphics** and **Lottie animations** directly in the browser, leveraging both **WebGL** and **WebGPU** for hardware-accelerated rendering. Fully compatible with ThorVG's core rendering logic, ThorVG.Web ensures consistent output across desktop, mobile, and web platforms, allowing developers to reuse the same vector assets and rendering code across multiple targets with minimal changes.
+**ThorVG.Web** is a **WebAssembly (WASM)-based extension** of the ThorVG vector graphics engine, bringing ThorVG’s rendering capabilities to modern web environments. It provides a lightweight and flexible foundation for rendering vector graphics and Lottie animations directly in the browser, with hardware acceleration through **WebGL** and **WebGPU**.</br>
 
-Whether you're building a high-performance Lottie animation, a graphics editing tool, or a scalable UI framework for the browser, ThorVG.Web provides the speed and flexibility needed to **deliver modern vector graphics experiences on the web**.
-<br />
+At the core of ThorVG.Web is **WebCanvas**, a **JavaScript/TypeScript API** that provides programmatic access to ThorVG’s drawing primitives, scene graph, animation, effects, and vector rendering pipeline. Developers can create, manipulate, and render dynamic graphics while sharing ThorVG’s core rendering architecture, assets, and graphics workflows across native and web platforms.</br>
+
+The following diagram illustrates the architecture of ThorVG.Web, from the web application layer to the underlying rendering backends and web platform.</br>
+
+The **WebCanvas API** is built on top of lower-level **WebAssembly bindings** generated using **Emscripten**, bridging the JavaScript environment with the native ThorVG engine. The engine handles scene composition and rendering through multiple backends, including the **CPU software renderer**, **WebGL**, and **WebGPU**.</br>
+
+On the web platform, the rendered output is presented through an **HTML `<canvas>` element**, providing consistent rendering behavior while leveraging the appropriate rendering backend for the target environment. <br/>
+
+<p align="center">
+  <img width="600" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/example_webcanvas.png">
+</p>
 
 ## Contents
 - [Packages](#-packages)
