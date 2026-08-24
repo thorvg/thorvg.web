@@ -125,15 +125,27 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
     }
   }, [code, autoRun, TVG, canvas]);
 
-  // Re-run code when zoom changes to apply new DPR (only when not dragging)
+  // Apply zoom-dependent DPR without re-executing user code.
   useEffect(() => {
-    if (originalDPRRef.current !== null && TVG && canvas && code && !isZoomDragging) {
-      // Re-run code to apply new DPR (DPR is set in runCode)
-      if (autoRun) {
-        runCode();
-      }
+    if (!canvas || isZoomDragging || originalDPRRef.current === null) {
+      return;
     }
-  }, [zoom, isZoomDragging]);
+
+    const zoomDPR = originalDPRRef.current * (zoom / 100);
+
+    try {
+      Object.defineProperty(window, 'devicePixelRatio', {
+        get: () => zoomDPR,
+        configurable: true,
+      });
+
+      // render() detects the DPR change, resizes the backing surface,
+      // updates the scene scale, and redraws the existing scene.
+      canvas.render();
+    } catch (e) {
+      console.warn('Failed to apply zoom DPR:', e);
+    }
+  }, [zoom, isZoomDragging, canvas]);
 
   const runCode = async () => {
     if (!canvas || !TVG) {
