@@ -23,3 +23,4 @@ For definitions and responsibilities of each project role, see [Roles & Responsi
 - Soongeon Noh @Nor-s
 - JaeHyun Hwang @hd1534
 - DaHee Chae @chae-dahee
+- Juyon Lee  @juyonLee00
