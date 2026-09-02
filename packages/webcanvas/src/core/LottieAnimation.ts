@@ -4,7 +4,9 @@
  */
 
 import { getModule } from '../interop/module';
+import { callbackRegistry } from '../interop/registry';
 import { Animation } from './Animation';
+import { LottieAudio } from './media/Audio';
 import { checkResult, handleError, ThorVGResultCode } from '../common/errors';
 
 /**
@@ -35,6 +37,40 @@ export interface LottieMarker {
   /** Ending frame of the marker */
   end: number;
 }
+
+/**
+ * Describes the current state of a Lottie audio layer.
+ *
+ * This structure is provided to the audio resolver callback and contains
+ * the information required to synchronize audio playback with the animation
+ * timeline.
+ *
+ * @category LottieAnimation
+ * @see {@link AudioResolver}
+ * @beta
+ */
+export interface AudioInfo {
+  /** Audio source: a file path/URL, or the embedded raw bytes. */
+  src: string | Uint8Array;
+  /** MIME type string; valid when the source is embedded; may be `null`. */
+  mimeType: string | null;
+  /** Position within the audio file in seconds; valid when `active`. */
+  offset: number;
+  /** Volume [0, 1]; valid when `active`. */
+  volume: number;
+  /** `true` while the layer is within its playback range. */
+  active: boolean;
+}
+
+/**
+ * Audio resolver callback
+ *
+ * @param info - Current state of the audio layer.
+ *
+ * @category LottieAnimation
+ * @beta
+ */
+export type AudioResolver = (info: AudioInfo) => void;
 
 /**
  * Animation controller with the Lottie extensions: markers, slots, etc.
@@ -68,9 +104,57 @@ export interface LottieMarker {
  * ```
  */
 export class LottieAnimation extends Animation {
+  #audio: LottieAudio | null = null;
+  #resolver: AudioResolver | null = null;
+  #resolverPtr: number | null = null;
+  #audioData = new Map<number, Uint8Array>();
+
   constructor() {
     const Module = getModule();
     super(Module._tvg_lottie_animation_new());
+  }
+
+  /**
+   * Load Lottie animation from raw data
+   * @param data - Lottie JSON data as Uint8Array or string
+   */
+  public override load(data: Uint8Array | string): this {
+    super.load(data);
+    this.#attachAudio();
+    return this;
+  }
+
+  /**
+   * Get or set the current frame
+   */
+  public override frame(): number;
+  public override frame(frameNumber: number): this;
+  public override frame(frameNumber?: number): number | this {
+    if (frameNumber === undefined) return super.frame();
+
+    super.frame(frameNumber);
+    this.#syncAudio(frameNumber);
+    return this;
+  }
+
+  /**
+   * Play the animation
+   * @param onFrame - Optional callback called on each frame update
+   */
+  public override play(onFrame?: (frame: number) => void): this {
+    return super.play((frame) => {
+      this.#syncAudio(frame);
+      onFrame?.(frame);
+    });
+  }
+
+  /**
+   * Pause the animation
+   */
+  public override pause(): this {
+    super.pause();
+    this.#audio?.hold();
+    return this;
   }
 
   /**
@@ -252,5 +336,167 @@ export class LottieAnimation extends Animation {
     const result = Module._tvg_lottie_animation_set_quality(this.ptr, clamped);
     checkResult(result, 'quality');
     return this;
+  }
+
+  /**
+   * Get or set the audio volume level in the range [0.0, 1.0].
+   * @beta
+   */
+  public volume(): number;
+  public volume(value: number): this;
+  public volume(value?: number): number | this {
+    if (value === undefined) return this.#audio?.volume() ?? 1;
+    this.#audio?.volume(value);
+    return this;
+  }
+
+  /**
+   * Mute or unmute the audio layers.
+   * @beta
+   */
+  public mute(on: boolean): this {
+    this.#audio?.mute(on);
+    return this;
+  }
+
+  /**
+   * Whether the audio layers are currently muted.
+   * @beta
+   */
+  public muted(): boolean {
+    return this.#audio?.muted() ?? false;
+  }
+
+  /**
+   * Sets the audio resolver callback for the Lottie audio layers.
+   *
+   * The built-in backend stops while a resolver is set, so the resolver takes
+   * on every audio layer of the animation.
+   *
+   * @param callback - The resolver, or `null` to hand the layers back to the
+   *                   built-in backend.
+   *
+   * @example
+   * ```typescript
+   * animation.resolver((info) => {
+   *   if (info.active) {
+   *     //Start or seek playback of info.src.
+   *   } else {
+   *     //Stop playback of info.src.
+   *   }
+   * });
+   * ```
+   *
+   * @see {@link AudioResolver}
+   * @beta
+   */
+  public resolver(callback: AudioResolver | null): this {
+    this.#resolver = callback;
+
+    if (callback) {
+      this.#audio?.dispose();
+      this.#audio = null;
+    } else if (!this.#audio && this.#resolverPtr) {
+      this.#audio = new LottieAudio();
+    }
+
+    return this;
+  }
+
+  public override dispose(): void {
+    if (this.isDisposed) {
+      return;
+    }
+
+    this.#audio?.dispose();
+    this.#audio = null;
+    this.#audioData.clear();
+
+    if (this.#resolverPtr) {
+      const Module = getModule();
+      Module._tvg_lottie_animation_set_audio_resolver(this.ptr, 0, 0);
+      Module.removeFunction(this.#resolverPtr);
+      callbackRegistry.unregister(this);
+      this.#resolverPtr = null;
+    }
+
+    super.dispose();
+  }
+
+  #syncAudio(frame: number): void {
+    const audio = this.#audio;
+    if (!audio) return;
+
+    const info = this.info();
+    audio.tick(frame, info?.fps ?? 0, info?.totalFrames ?? 0);
+  }
+
+  #readAudio(ptr: number): AudioInfo | null {
+    const Module = getModule();
+
+    //Tvg_Audio_Info
+    const srcPtr = Module.HEAPU32[ptr >> 2]!; // const char*, a path or the embedded bytes
+    const mime = Module.HEAPU32[(ptr + 4) >> 2]!; // const char*
+    const size = Module.HEAPU32[(ptr + 8) >> 2]!; // uint32_t
+    const offset = Module.HEAPF32[(ptr + 12) >> 2]!; // float, seconds into the audio
+    const volume = Module.HEAPF32[(ptr + 16) >> 2]!; // float, 0 to 100
+    const active = Module.HEAPU8[ptr + 20] !== 0; // bool
+    const embedded = Module.HEAPU8[ptr + 21] !== 0; // bool
+
+    if (!srcPtr || (embedded && size === 0)) return null;
+
+    const path = embedded ? null : Module.UTF8ToString(srcPtr);
+    if (path !== null && !path) return null;
+
+    let src: string | Uint8Array;
+    if (path !== null) {
+      src = path;
+    } else {
+      let data = this.#audioData.get(srcPtr);
+      if (!data) {
+        data = Module.HEAPU8.slice(srcPtr, srcPtr + size);
+        this.#audioData.set(srcPtr, data);
+      }
+      src = data;
+    }
+
+    return {
+      active,
+      offset,
+      volume: volume / 100,
+      src,
+      mimeType: embedded && mime ? Module.UTF8ToString(mime) : null,
+    };
+  }
+
+  #attachAudio(): void {
+    const Module = getModule();
+
+    this.#audio?.dispose();
+    this.#audio = this.#resolver ? null : new LottieAudio();
+    this.#audioData.clear();
+
+    if (!this.#resolverPtr) {
+      const self = new WeakRef(this);
+
+      const funcPtr = Module.addFunction((infoPtr: number): void => {
+        const anim = self.deref();
+        if (!anim) return;
+
+        const info = anim.#readAudio(infoPtr);
+        if (!info) return;
+
+        if (anim.#resolver) anim.#resolver(info);
+        else anim.#audio?.resolve(info, anim.frame());
+      }, 'vii');
+
+      this.#resolverPtr = funcPtr;
+      callbackRegistry.register(this, funcPtr, this);
+    }
+
+    const result = Module._tvg_lottie_animation_set_audio_resolver(this.ptr, this.#resolverPtr, 0);
+    if (result !== ThorVGResultCode.Success && result !== ThorVGResultCode.InsufficientCondition) {
+      checkResult(result, 'audio resolver');
+    }
   }
 }
