@@ -17,7 +17,7 @@ const commonOutput = {
   sourcemap: true,
 };
 
-const sharedPlugins = (aliasEntries = []) => [
+const sharedPlugins = (aliasEntries, wasmPath) => [
   ...(aliasEntries.length ? [alias({ entries: aliasEntries })] : []),
   webWorkerLoader({
     targetPlatform: 'browser',
@@ -30,6 +30,7 @@ const sharedPlugins = (aliasEntries = []) => [
     values: {
       '__THORVG_VERSION__': process.env.THORVG_VERSION,
       '__PACKAGE_VERSION__': pkg.version,
+      '__WASM_PATH__': wasmPath,
     },
   }),
   commonjs({
@@ -91,7 +92,7 @@ const createWebCanvasConfig = () => {
         ...commonOutput,
       },
     ],
-    plugins: sharedPlugins(),
+    plugins: sharedPlugins([], 'dist/thorvg.wasm'),
   };
 }
 
@@ -112,7 +113,7 @@ const createThreadConfig = () => {
     ],
     plugins: sharedPlugins([
       { find: '../dist/thorvg.js', replacement: path.resolve('./dist/thread/thorvg.js') },
-    ]),
+    ], 'dist/thread/thorvg.wasm'),
   };
 }
 
