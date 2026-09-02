@@ -1,0 +1,140 @@
+name: Bundle Size
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - 'wasm/**'
+      - 'thorvg'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/bundle_size.yml'
+      - '.github/scripts/bundle-size.mjs'
+      - '!**/*.md'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - 'wasm/**'
+      - 'thorvg'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/bundle_size.yml'
+      - '.github/scripts/bundle-size.mjs'
+      - '!**/*.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bundle-size-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: ${{ matrix.package }} (${{ matrix.ref }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [lottie-player, webcanvas]
+        # On push to main only the "main" side is built, to warm the cache
+        # that pull requests read their baseline from.
+        ref: ${{ github.event_name == 'pull_request' && fromJSON('["main", "pr"]') || fromJSON('["main"]') }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      # Baseline is resolved from latest origin/main, like thorvg core's
+      # Binary Size workflow. The measure script is copied aside so the
+      # baseline build works even when the base commit does not have it yet.
+      - name: Resolve revision
+        id: resolve
+        env:
+          MATRIX_REF: ${{ matrix.ref }}
+        run: |
+          if [ "$MATRIX_REF" = "main" ] && [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            sha=$(git merge-base HEAD origin/main)
+          else
+            sha=$(git rev-parse HEAD)
+          fi
+          echo "PR:   $(git rev-parse HEAD)"
+          echo "REV:  $sha ($MATRIX_REF)"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+          tool_hash=$(cat .github/workflows/bundle_size.yml .github/scripts/bundle-size.mjs | sha256sum | cut -c1-16)
+          echo "tool-hash=$tool_hash" >> "$GITHUB_OUTPUT"
+
+          cp .github/scripts/bundle-size.mjs "$RUNNER_TEMP/bundle-size.mjs"
+
+      # Baseline sizes only depend on the base commit and the toolchain pinned
+      # in this workflow, so reuse them across pushes to the same PR.
+      - name: Restore baseline sizes
+        id: cache
+        if: matrix.ref == 'main'
+        uses: actions/cache@v4
+        with:
+          path: ci-report
+          key: bundle-size-${{ matrix.package }}-${{ steps.resolve.outputs.sha }}-${{ steps.resolve.outputs.tool-hash }}
+
+      - name: Checkout revision
+        if: steps.cache.outputs.cache-hit != 'true'
+        env:
+          SHA: ${{ steps.resolve.outputs.sha }}
+        run: |
+          git checkout "$SHA"
+          git submodule update --init --recursive
+
+      - name: Setup pnpm
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Setup Emscripten
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 6.0.0
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Install build tools
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build python3-pip
+          pip install meson==1.10.0
+
+      - name: Install pnpm dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and measure
+        if: steps.cache.outputs.cache-hit != 'true'
+        env:
+          PACKAGE: ${{ matrix.package }}
+          REF: ${{ matrix.ref }}
+        run: |
+          pnpm --filter "@thorvg/$PACKAGE" build
+          node "$RUNNER_TEMP/bundle-size.mjs" measure "$PACKAGE" "$REF" ci-report
+
+      - name: Upload sizes
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: size-${{ matrix.package }}-${{ matrix.ref }}
+          path: ci-report/
+          if-no-files-found: ignore
