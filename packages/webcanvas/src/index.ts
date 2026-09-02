@@ -336,7 +336,7 @@ export type { RectOptions, StrokeOptions } from './core/Shape';
 export type { LoadDataOptions, PictureSize, AssetResolver } from './core/Picture';
 export type { TextLayout, TextOutline } from './core/Text';
 export type { AnimationInfo, AnimationSegment } from './core/Animation';
-export type { LottieMarker, LottieSlotData } from './core/LottieAnimation';
+export type { LottieMarker, LottieSlotData, AudioInfo, AudioResolver } from './core/LottieAnimation';
 export type { LoadFontOptions, FontType } from './core/Font';
 export type { FontsourceOptions } from './providers/FontsourceProvider';
 export type { FontProvider, FontProviderResult } from './core/FontProvider';
