@@ -48,6 +48,8 @@ export interface VideoResource {
  * video.picture?.size(800, 600);
  * video.loop(true).play();
  * ```
+ *
+ * @beta
  */
 export class Video {
   #picture: Picture | null = null;
