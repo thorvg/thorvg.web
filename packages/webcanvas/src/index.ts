@@ -61,7 +61,7 @@ import { setThreadCount } from './interop/module';
 import ThorVGModuleFactory from '../dist/thorvg';
 
 const THORVG_VERSION = '__THORVG_VERSION__';
-const THORVG_WASM_URL = 'https://unpkg.com/@thorvg/webcanvas@__PACKAGE_VERSION__/dist/thorvg.wasm';
+const THORVG_WASM_URL = 'https://unpkg.com/@thorvg/webcanvas@__PACKAGE_VERSION__/__WASM_PATH__';
 
 /**
  * @category Initialization
