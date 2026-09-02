@@ -28,6 +28,7 @@ import { picturePngExample } from './picture-png';
 import { pictureWebpExample } from './picture-webp';
 import { pictureRawExample } from './picture-raw';
 import { lottieAnimationExample } from './lottie-animation';
+import { lottieAudioExample } from './lottie-audio';
 import { lottieExpressionsExample } from './lottie-expressions';
 import { lottieSlotsExample } from './lottie-slots';
 import { lottieInteractionExample } from './lottie-interaction';
@@ -104,6 +105,7 @@ export const showcaseExamples: ShowcaseExample[] = [
   // Media (alphabetically sorted by title)
   pictureJpgExample,
   lottieAnimationExample,
+  lottieAudioExample,
   lottieExpressionsExample,
   lottieSlotsExample,
   lottieInteractionExample,
