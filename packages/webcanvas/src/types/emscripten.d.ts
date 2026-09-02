@@ -247,7 +247,6 @@ export interface ThorVGCAPI {
   // Font functions
   _tvg_font_load_data(name: number, data: number, size: number, mimetype: number, copy: number): number;
   _tvg_font_load(name: number, path: string): number;
-  _tvg_font_unload(name: number): number;
 
   // Animation functions
   _tvg_animation_new(): number;
