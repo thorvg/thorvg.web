@@ -816,6 +816,20 @@ export class BaseLottiePlayer extends LitElement {
     };
   }
 
+  /**
+   * Returns a human readable summary of the current playback state.
+   * Test-only helper to exercise the bundle size report; not for release.
+   */
+  public describeState(): string {
+    const parts = [
+      `frame=${Math.round(this.currentFrame)}/${Math.round(this.totalFrame)}`,
+      `speed=${this.speed}`,
+      `loop=${this.loop ? 'on' : 'off'}`,
+      `direction=${this.direction > 0 ? 'forward' : 'reverse'}`,
+    ];
+    return parts.join(' ');
+  }
+
   public render(): TemplateResult {
     return html`
       <canvas class="thorvg" style="width: 100%; height: 100%;" />
