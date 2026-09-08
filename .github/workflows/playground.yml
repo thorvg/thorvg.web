@@ -8,7 +8,7 @@ on:
       - main
     paths:
       - 'packages/webcanvas/**'
-      - 'playground/**'
+      - 'apps/playground/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/playground.yml'
       - '!**/*.md'
@@ -68,25 +68,19 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Install Playground dependencies
-        working-directory: ./playground
-        run: |
-          yarn install --frozen-lockfile
-          yarn add ../packages/webcanvas
-
       - name: Pull Vercel Environment Information
-        working-directory: ./playground
+        working-directory: ./apps/playground
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Playground
-        working-directory: ./playground
+        working-directory: ./apps/playground
         run: |
-          yarn build
+          pnpm build
           vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Playground Preview
         id: deploy-preview
-        working-directory: ./playground
+        working-directory: ./apps/playground
         run: echo "preview_url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_OUTPUT
 
       - name: Comment PR with preview URL

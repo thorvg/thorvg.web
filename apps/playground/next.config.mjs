@@ -21,6 +21,12 @@ const nextConfig = {
       type: 'asset/source',
     });
 
+    // Keep the workspace symlink path so the raw webcanvas.d.ts import in CodeEditor is not transpiled
+    config.module.rules.push({
+      test: /components\/CodeEditor\.tsx$/,
+      resolve: { symlinks: false },
+    });
+
     // Add fallbacks for node modules not available in browser
     config.resolve.fallback = {
       ...config.resolve.fallback,

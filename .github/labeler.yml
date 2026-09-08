@@ -9,10 +9,10 @@
   - wasm/common/**/*
 
 "perf-test":
-  - perf-test/**/*
+  - apps/perf-test/**/*
 
 "playground":
-  - playground/**/*
+  - apps/playground/**/*
 
 "examples":
   - examples/**/*

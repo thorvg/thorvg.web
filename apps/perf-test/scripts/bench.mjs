@@ -4,11 +4,11 @@
  * Headless benchmark runner for ThorVG perf-test.
  *
  * Usage:
- *   yarn bench                          # defaults: sw renderer, 20 anims, 150px
- *   yarn bench --renderer gl --count 50 --size 200
- *   yarn bench --renderer sw --count 100 --json   # JSON output only
- *   yarn bench --seed <base64>                     # reproducible set
- *   yarn bench --url http://localhost:3000         # skip server start
+ *   pnpm bench                          # defaults: sw renderer, 20 anims, 150px
+ *   pnpm bench --renderer gl --count 50 --size 200
+ *   pnpm bench --renderer sw --count 100 --json   # JSON output only
+ *   pnpm bench --seed <base64>                     # reproducible set
+ *   pnpm bench --url http://localhost:3000         # skip server start
  *
  * Requires: playwright (npx playwright install chromium)
  */
@@ -44,7 +44,7 @@ function parseArgs() {
     else if (a === '--timeout') opts.timeout = Number(args[++i]);
     else if (a === '--help' || a === '-h') {
       console.log(`
-Usage: yarn bench [options]
+Usage: pnpm bench [options]
 
 Options:
   --renderer, -r <sw|gl|wg>  Renderer (default: sw)
@@ -86,13 +86,13 @@ function waitForServer(url, timeoutMs = 60_000) {
 async function startServer() {
   // Build first
   console.error('[bench] Building Next.js app…');
-  execSync('yarn build', { stdio: 'inherit', cwd: process.cwd() });
+  execSync('pnpm build', { stdio: 'inherit', cwd: process.cwd() });
 
   // Kill any leftover server from a previous run
   try { execSync('lsof -ti tcp:3456 | xargs kill -9', { stdio: 'ignore' }); } catch { /* port was free */ }
 
   console.error('[bench] Starting server on port 3456…');
-  const server = spawn('yarn', ['start', '-p', '3456'], {
+  const server = spawn('pnpm', ['start', '-p', '3456'], {
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: true,   // create new process group so we can kill all children
     cwd: process.cwd(),
@@ -219,7 +219,7 @@ async function main() {
   } finally {
     if (serverProc) {
       try {
-        // Kill the entire process group (yarn + next + its children)
+        // Kill the entire process group (pnpm + next + its children)
         process.kill(-serverProc.pid, 'SIGTERM');
       } catch {
         serverProc.kill('SIGTERM');
