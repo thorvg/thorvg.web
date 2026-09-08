@@ -16,40 +16,21 @@ Interactive playground for exploring ThorVG WebCanvas examples with real-time co
 ### Prerequisites
 
 - Node.js 20+
-- Yarn package manager
-- ThorVG WebCanvas (`../packages/webcanvas`)
+- pnpm 10+
+- A built ThorVG WebCanvas (`pnpm --filter @thorvg/webcanvas build`)
 
 ### Launch Playground
 
 ```bash
-yarn install
-yarn build
-yarn start
-```
-
-### Using Local Version
-
-To develop with a local build of `@thorvg/webcanvas`:
-
-1. **Build the webcanvas package:**
-
-```bash
-cd ../packages/webcanvas
 pnpm install
 pnpm build
-cd ../../playground
+pnpm start
 ```
 
-2. **Link to local package:**
+### Development
 
 ```bash
-yarn add ../packages/webcanvas
-```
-
-3. **Start the development server:**
-
-```bash
-yarn dev
+pnpm dev
 # open http://localhost:3001
 ```
 
