@@ -7,7 +7,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/thorvg/thorvg.web.git",
-    "directory": "playground"
+    "directory": "apps/playground"
   },
   "license": "MIT",
   "scripts": {
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
-    "@thorvg/webcanvas": "latest",
+    "@thorvg/webcanvas": "workspace:*",
     "monaco-editor": "^0.56.0",
     "next": "^15.5.25",
     "prism-react-renderer": "^2.4.1",

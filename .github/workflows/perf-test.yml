@@ -8,7 +8,7 @@ on:
       - main
     paths:
       - 'packages/webcanvas/**'
-      - 'perf-test/**'
+      - 'apps/perf-test/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/perf-test.yml'
       - '!**/*.md'
@@ -68,25 +68,19 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Install Perf Test dependencies
-        working-directory: ./perf-test
-        run: |
-          yarn install --frozen-lockfile
-          yarn add ../packages/webcanvas
-
       - name: Pull Vercel Environment Information
-        working-directory: ./perf-test
+        working-directory: ./apps/perf-test
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Perf Test
-        working-directory: ./perf-test
+        working-directory: ./apps/perf-test
         run: |
-          yarn build
+          pnpm build
           vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Perf Test Preview
         id: deploy-preview
-        working-directory: ./perf-test
+        working-directory: ./apps/perf-test
         run: echo "preview_url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_OUTPUT
 
       - name: Comment PR with preview URL
