@@ -69,6 +69,7 @@ export default function Home({ searchParams }: {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingStatus, setLoadingStatus] = useState('');
   const [animList, setAnimList] = useState<AnimEntry[]>([]);
+  const [displayVersion, setDisplayVersion] = useState('');
   const blobUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
@@ -172,6 +173,7 @@ export default function Home({ searchParams }: {
 
       setIsLoading(true);
       setLoadingStatus('Loading…');
+      setDisplayVersion('');
 
       const tvgDpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
       itemSizeRef.current = size / tvgDpr;
@@ -195,6 +197,10 @@ export default function Home({ searchParams }: {
         });
         if (cancelled) return;
         tvgRef.current = TVG;
+        setDisplayVersion(version === 'local'
+          ? (process.env.NEXT_PUBLIC_WEBCANVAS_VERSION || '')
+          : version
+        );
 
         const tvgCanvas = new TVG.Canvas('#tvg-main-canvas', {
           width: canvasW,
@@ -307,8 +313,10 @@ export default function Home({ searchParams }: {
         rafRef.current = requestAnimationFrame(tick);
       } catch (err) {
         console.error('TVG setup failed:', err);
+        if (cancelled) return;
         setLoadingStatus(`Error: ${(err as Error).message}`);
         setIsLoading(false);
+        setDisplayVersion('');
       }
     };
 
@@ -602,6 +610,12 @@ export default function Home({ searchParams }: {
           />
         </div>
       </div>
+
+      {displayVersion && (
+        <div className='fixed right-5 bottom-0 z-40 flex rounded-t bg-brand/5 text-xs px-3 py-1 text-white whitespace-nowrap'>
+          <span>ThorVG v{displayVersion}</span>
+        </div>
+      )}
     </div>
   );
 }
