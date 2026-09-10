@@ -1,8 +1,9 @@
 'use client';
 
 import { useRef } from 'react';
-import Editor, { Monaco } from '@monaco-editor/react';
-// @ts-ignore
+import Editor, { type Monaco } from '@monaco-editor/react';
+import type { editor } from 'monaco-editor';
+// @ts-expect-error: can't resolve the bundler-only raw file imports
 import webcanvasTypes from "../node_modules/@thorvg/webcanvas/dist/webcanvas.d.ts?raw";
 
 interface CodeEditorProps {
@@ -12,7 +13,7 @@ interface CodeEditorProps {
 }
 
 export default function CodeEditor({ code, onChange, readOnly = false }: CodeEditorProps) {
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
 
   function handleEditorWillMount(monaco: Monaco) {
@@ -77,8 +78,8 @@ declare const canvas: import('@thorvg/webcanvas').Canvas;
     );
   }
 
-  function handleEditorDidMount(editor: any, monaco: Monaco) {
-    editorRef.current = editor;
+  function handleEditorDidMount(editorInstance: editor.IStandaloneCodeEditor) {
+    editorRef.current = editorInstance;
   }
 
   function handleEditorChange(value: string | undefined) {
