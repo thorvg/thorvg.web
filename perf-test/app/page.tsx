@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { use, useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import wasmUrl from '../node_modules/@thorvg/webcanvas/dist/thorvg.wasm';
 import { initProfiler } from '../lib/profiler';
 import { loadThorVGModule, getWasmUrl, type ThorVGVersion } from '../lib/thorvg-loader';
 import { type Renderer, RENDERER_LABELS, COUNT_OPTIONS, MIN_SIZE, MAX_SIZE } from '../lib/constants';
 import { type AnimEntry, encodeSeed, decodeSeed, buildAnimList, randomAnimList } from '../lib/seed';
-import { getParam, setParam } from '../lib/url-params';
+import { getParam, setParams } from '../lib/url-params';
 import { useInternalMode } from '../lib/internal-mode';
 import {
   type BenchPhase,
@@ -20,7 +20,10 @@ import { VersionSelector } from '../components/VersionSelector';
 import { BenchmarkModal } from '../components/BenchmarkModal';
 import { DragOverlay } from '../components/DragOverlay';
 
-export default function Home() {
+export default function Home({ searchParams }: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const params = use(searchParams);
   const router = useRouter();
   const internalMode = useInternalMode();
 
@@ -54,11 +57,14 @@ export default function Home() {
   const benchWarmupMsRef = useRef(BENCH_WARMUP_MS);
   const benchMeasureMsRef = useRef(BENCH_MEASURE_MS);
 
-  const [renderer, setRenderer] = useState<Renderer>('gl');
-  const [version, setVersion] = useState<ThorVGVersion>('local');
-  const [count, setCount] = useState(20);
-  const [size, setSize] = useState(150);
-  const [seedInput, setSeedInput] = useState('');
+  const seed = params.seed ?? '';
+  const renderer = (params.renderer as Renderer) ?? 'gl';
+  const version = (params.v as ThorVGVersion) ?? 'local';
+  const initialCount = seed ? decodeSeed(seed).length : Math.max(1, parseInt(params.count ?? '20'));
+  const initialSize = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parseInt(params.size ?? '150')));
+  const [count, setCount] = useState(initialCount);
+  const [size, setSize] = useState(initialSize);
+  const [seedInput, setSeedInput] = useState(seed);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingStatus, setLoadingStatus] = useState('');
@@ -76,31 +82,28 @@ export default function Home() {
 
   // Init from URL params
   useEffect(() => {
-    const r = getParam('renderer', 'gl') as Renderer;
-    const v = getParam('v', 'local') as ThorVGVersion;
-    const c = Math.max(1, parseInt(getParam('count', '20')));
-    const s = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parseInt(getParam('size', '150'))));
-    const seed = getParam('seed', '');
     const warmupParam = getParam('warmup', '');
     const measureParam = getParam('measure', '');
     if (warmupParam) benchWarmupMsRef.current = Math.max(0, parseInt(warmupParam));
     if (measureParam) benchMeasureMsRef.current = Math.max(1000, parseInt(measureParam));
 
-    setRenderer(r);
-    setVersion(v);
-    setCount(c);
-    setSize(s);
-
     let list: AnimEntry[];
+    let seedStr = seed;
     if (seed) {
       list = buildAnimList(decodeSeed(seed));
-      setCount(list.length);
     } else {
-      list = randomAnimList(c);
-      setParam('seed', encodeSeed(list.map((a) => a.name)));
+      list = randomAnimList(count);
+      seedStr = encodeSeed(list.map((a) => a.name));
+      setSeedInput(seedStr);
     }
 
-    setSeedInput(getParam('seed', ''));
+    setParams({
+      renderer,
+      count: String(list.length),
+      size: String(size),
+      seed: seedStr,
+    });
+
     setAnimList(list);
     initProfiler();
   }, []);
@@ -137,6 +140,18 @@ export default function Home() {
     const onResize = () => { pendingLayoutRef.current = true; };
     window.addEventListener('resize', onResize);
     return () => { window.removeEventListener('resize', onResize); };
+  }, []);
+
+  // Stop the render loop before leaving the page
+  const navigateTo = useCallback((url: string) => {
+    cancelAnimationFrame(rafRef.current);
+    window.location.href = url;
+  }, []);
+
+  useEffect(() => {
+    const stopLoop = () => cancelAnimationFrame(rafRef.current);
+    window.addEventListener('pagehide', stopLoop);
+    return () => { window.removeEventListener('pagehide', stopLoop); };
   }, []);
 
   // TVG setup
@@ -337,7 +352,7 @@ export default function Home() {
   );
 
   const handleSet = () => {
-    window.location.href = `/?${new URLSearchParams({ renderer, count: count.toString(), size: size.toString() })}`;
+    navigateTo(`/?${new URLSearchParams({ renderer, count: count.toString(), size: size.toString() })}`);
   };
 
   const handleSeedApply = () => {
@@ -345,7 +360,7 @@ export default function Home() {
     if (!trimmed) return;
     const params = new URLSearchParams(window.location.search);
     params.set('seed', trimmed);
-    window.location.href = `/?${params}`;
+    navigateTo(`/?${params}`);
   };
 
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
@@ -466,7 +481,7 @@ export default function Home() {
                   if (r === renderer) return;
                   const params = new URLSearchParams(window.location.search);
                   params.set('renderer', r);
-                  window.location.href = `/?${params}`;
+                  navigateTo(`/?${params}`);
                 }}
                 className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
                   renderer === r ? 'bg-brand text-gray-900' : 'text-gray-300 hover:text-white'
@@ -521,7 +536,7 @@ export default function Home() {
                   onChange={(v) => {
                     const params = new URLSearchParams(window.location.search);
                     params.set('v', v);
-                    window.location.href = `/?${params}`;
+                    navigateTo(`/?${params}`);
                   }}
                 />
               </div>
