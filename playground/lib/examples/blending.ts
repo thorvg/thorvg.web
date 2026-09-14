@@ -5,7 +5,6 @@ export const blendingExample: ShowcaseExample = {
   title: 'Blending',
   description: 'Demonstrate all blend modes with various paint types',
   category: 'advanced',
-  useDarkCanvas: true,
   thumbnail: '/assets/blending-thumbnail.png',
   code: `// Native example: Blending.cpp
 

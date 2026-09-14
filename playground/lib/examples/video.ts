@@ -6,7 +6,6 @@ export const videoExample: ShowcaseExample = {
   description: 'Load and play a video with keyboard playback controls',
   category: 'media',
   thumbnail: '/assets/video-thumbnail.png',
-  useDarkCanvas: true,
   requiresUserGesture: true,
   code: `// Native example: Video.cpp
 

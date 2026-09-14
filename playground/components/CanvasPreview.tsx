@@ -6,8 +6,6 @@ import wasmUrl from "../node_modules/@thorvg/webcanvas/dist/thorvg.wasm";
 
 interface CanvasPreviewProps {
   code: string;
-  autoRun?: boolean;
-  useDarkCanvas?: boolean;
   requiresUserGesture?: boolean;
 }
 
@@ -40,8 +38,6 @@ const canStartAudio = (): boolean => {
 
 export default function CanvasPreview({
   code,
-  autoRun = true,
-  useDarkCanvas = false,
   requiresUserGesture = false,
 }: CanvasPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,7 +49,6 @@ export default function CanvasPreview({
   const [isRunning, setIsRunning] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [showGrid, setShowGrid] = useState(false);
-  const [darkCanvas, setDarkCanvas] = useState(useDarkCanvas);
   const [TVG, setTVG] = useState<ThorVGNamespace | null>(null);
   const [canvas, setCanvas] = useState<TVGCanvas | null>(null);
   const [currentRenderer, setCurrentRenderer] = useState<'sw' | 'gl' | 'wg'>('gl');
@@ -155,7 +150,7 @@ export default function CanvasPreview({
 
   // Auto-run when code changes and ThorVG is ready
   useEffect(() => {
-    if (!autoRun || !code || !TVG || !canvas) return;
+    if (!code || !TVG || !canvas) return;
 
     // The example needs audio, which is blocked until the page gets a gesture
     // (a plain refresh has none). Wait for a click instead of stalling.
@@ -166,16 +161,14 @@ export default function CanvasPreview({
     }
 
     runCode();
-  }, [code, autoRun, TVG, canvas]);
+  }, [code, TVG, canvas]);
 
   // Re-run code when zoom changes to apply new DPR (only when not dragging)
   useEffect(() => {
     if (awaitingGesture) return;
     if (originalDPRRef.current !== null && TVG && canvas && code && !isZoomDragging) {
       // Re-run code to apply new DPR (DPR is set in runCode)
-      if (autoRun) {
-        runCode();
-      }
+      runCode();
     }
   }, [zoom, isZoomDragging]);
 
@@ -317,19 +310,6 @@ export default function CanvasPreview({
     }
   };
 
-  const clearCanvas = () => {
-    if (!canvas) return;
-
-    // Cancel any ongoing animation
-    if (animationIdRef.current !== null) {
-      cancelAnimationFrame(animationIdRef.current);
-      animationIdRef.current = null;
-    }
-
-    canvas.clear();
-    setStatus({ message: 'Canvas cleared', type: 'success' });
-  };
-
   return (
     <div className="h-full flex flex-col bg-[#252526]">
       {/* Canvas Container */}
@@ -356,9 +336,7 @@ export default function CanvasPreview({
             id="canvas"
             width={600}
             height={600}
-            className={`border border-[#3e3e42] shadow-lg ${
-              darkCanvas ? 'bg-[#2d2d30]' : 'bg-white'
-            }`}
+            className="border border-[#3e3e42] shadow-lg bg-white"
           />
 
           {awaitingGesture && (
@@ -412,25 +390,7 @@ export default function CanvasPreview({
 
         <div className="w-px h-5 bg-[#3e3e42]" /> */}
 
-        <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={darkCanvas}
-            onChange={(e) => setDarkCanvas(e.target.checked)}
-            className="cursor-pointer"
-          />
-          Dark Canvas
-        </label>
-
         <div className="flex-1" />
-
-        <button
-          onClick={clearCanvas}
-          disabled={isRunning || !TVG}
-          className="px-3 py-1 bg-[#3c3c3c] hover:bg-[#505050] rounded text-gray-300 transition-colors disabled:opacity-50"
-        >
-          Clear
-        </button>
 
         <button
           onClick={runCode}

@@ -6,7 +6,6 @@ export const lottieSlotsExample: ShowcaseExample = {
   description: 'Override Lottie properties at runtime with slots (color, gradient, transform, text)',
   category: 'media',
   thumbnail: '/assets/lottie-slots-thumbnail.png',
-  useDarkCanvas: true,
   code: `// Native example: LottieSlot.cpp
 
 import { init } from '@thorvg/webcanvas';

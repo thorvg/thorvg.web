@@ -6,7 +6,6 @@ export const lottieAssetResolverExample: ShowcaseExample = {
   description: 'Supply external Lottie assets (images, fonts) at runtime via a resolver callback',
   category: 'media',
   thumbnail: '/assets/lottie-asset-resolver-thumbnail.png',
-  useDarkCanvas: true,
   code: `// Native example: LottieAssetResolver.cpp
 
 import { init } from '@thorvg/webcanvas';
