@@ -6,7 +6,6 @@ export const lottieInteractionExample: ShowcaseExample = {
   description: 'Drag on the canvas to spin the Lottie in real time — driven by expression slots',
   category: 'media',
   thumbnail: '/assets/lottie-interaction-thumbnail.png',
-  useDarkCanvas: true,
   code: `// Native example: LottieInteraction.cpp
 // Drag on the canvas to spin the animation. A quick flick spins it further.
 

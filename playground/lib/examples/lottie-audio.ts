@@ -6,7 +6,6 @@ export const lottieAudioExample: ShowcaseExample = {
   description: 'Play the audio layers of a Lottie',
   category: 'media',
   thumbnail: '/assets/lottie-audio-thumbnail.png',
-  useDarkCanvas: true,
   requiresUserGesture: true,
   code: `// Native example: LottieAudio.cpp
 

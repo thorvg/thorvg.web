@@ -6,7 +6,6 @@ export const intersectsExample: ShowcaseExample = {
   description: 'Interactive example demonstrating paint.intersects() API with mouse hover detection',
   category: 'advanced',
   thumbnail: '/assets/intersects-thumbnail.png',
-  useDarkCanvas: true,
   code: `// Native example: Intersects.cpp
 
 import { init } from '@thorvg/webcanvas';
