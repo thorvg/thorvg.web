@@ -339,32 +339,35 @@ export class LottieAnimation extends Animation {
   }
 
   /**
-   * Get or set the audio volume level in the range [0.0, 1.0].
+   * Retrieves the master playback volume of the Lottie animation.
+   * @returns The current master playback volume, otherwise 0 if the animation is not loaded.
    * @beta
    */
   public volume(): number;
+  /**
+   * Sets the master playback volume of the Lottie animation.
+   *
+   * The specified volume is applied to all media assets in the animation.
+   * Each media asset preserves its own volume, and the effective playback
+   * volume is calculated by multiplying the master volume by the media
+   * asset's volume.
+   *
+   * A value of 1.0 preserves the original volume.
+   * A value of 0.0 mutes all media.
+   * Values greater than 1.0 amplify the playback volume.
+   *
+   * The recommended range is [0.0, 2.0].
+   *
+   * @param value - Master playback volume.
+   * @beta
+   */
   public volume(value: number): this;
   public volume(value?: number): number | this {
-    if (value === undefined) return this.#audio?.volume() ?? 1;
-    this.#audio?.volume(value);
+    const Module = getModule();
+    if (value === undefined) return Module._tvg_lottie_animation_get_volume(this.ptr);
+    const result = Module._tvg_lottie_animation_set_volume(this.ptr, value);
+    checkResult(result, 'volume');
     return this;
-  }
-
-  /**
-   * Mute or unmute the audio layers.
-   * @beta
-   */
-  public mute(on: boolean): this {
-    this.#audio?.mute(on);
-    return this;
-  }
-
-  /**
-   * Whether the audio layers are currently muted.
-   * @beta
-   */
-  public muted(): boolean {
-    return this.#audio?.muted() ?? false;
   }
 
   /**

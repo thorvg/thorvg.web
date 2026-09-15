@@ -274,6 +274,8 @@ export interface ThorVGCAPI {
   _tvg_lottie_animation_del_slot(animation: number, id: number): number;
   _tvg_lottie_animation_set_quality(animation: number, value: number): number;
   _tvg_lottie_animation_set_audio_resolver(animation: number, resolver: number, data: number): number;
+  _tvg_lottie_animation_set_volume(animation: number, volume: number): number;
+  _tvg_lottie_animation_get_volume(animation: number): number;
 
   // Gradient functions
   _tvg_linear_gradient_new(): number;
