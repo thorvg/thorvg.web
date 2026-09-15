@@ -1,0 +1,181 @@
+name: Bundle Size
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - 'wasm/**'
+      - 'thorvg'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/bundle_size.yml'
+      - '.github/scripts/bundle-size.mjs'
+      - '!**/*.md'
+  # pull_request_target runs this workflow and the measure script from main,
+  # so the PR side builds untrusted code only with a read-only token.
+  pull_request_target:
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - 'wasm/**'
+      - 'thorvg'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/bundle_size.yml'
+      - '.github/scripts/bundle-size.mjs'
+      - '!**/*.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bundle-size-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request_target' }}
+
+jobs:
+  build:
+    name: ${{ matrix.package }} (${{ matrix.ref }})
+    runs-on: ubuntu-latest
+    # Fork PRs wait for the required reviewers of the "external" environment
+    # before their build scripts run, like playground.yml.
+    environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [lottie-player, webcanvas]
+        # On push to main only the "main" side is built, to warm the cache
+        # that pull requests read their baseline from.
+        ref: ${{ github.event_name == 'pull_request_target' && fromJSON('["main", "pr"]') || fromJSON('["main"]') }}
+
+    steps:
+      # github.sha is the main tip in both events: the pushed commit, or the
+      # base the PR merge commit was built on (like thorvg core's Binary Size).
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Baseline sizes only depend on the main commit and the toolchain pinned
+      # here, so they are shared by every pull request on that commit.
+      - name: Restore baseline sizes
+        id: cache
+        if: matrix.ref == 'main'
+        uses: actions/cache@v4
+        with:
+          path: ci-report
+          key: bundle-size-${{ matrix.package }}-${{ github.sha }}-${{ hashFiles('.github/workflows/bundle_size.yml', '.github/scripts/bundle-size.mjs') }}
+
+      # The measure script is kept from main, so the PR only changes what is
+      # being measured.
+      - name: Checkout PR merge commit
+        if: matrix.ref == 'pr'
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          git fetch --depth=1 origin "refs/pull/$PR/merge"
+          git checkout FETCH_HEAD
+          git checkout "$GITHUB_SHA" -- .github/scripts/bundle-size.mjs
+          git submodule update --init --recursive
+          git log -1 --oneline
+
+      - name: Setup pnpm
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Setup Emscripten
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 6.0.0
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Install build tools
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build python3-pip
+          pip install meson==1.10.0
+
+      - name: Install pnpm dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and measure
+        if: steps.cache.outputs.cache-hit != 'true'
+        env:
+          PACKAGE: ${{ matrix.package }}
+          REF: ${{ matrix.ref }}
+        run: |
+          pnpm --filter "@thorvg/$PACKAGE" build
+          node .github/scripts/bundle-size.mjs measure "$PACKAGE" "$REF" ci-report
+
+      - name: Upload sizes
+        if: always() && github.event_name == 'pull_request_target'
+        uses: actions/upload-artifact@v4
+        with:
+          name: size-${{ matrix.package }}-${{ matrix.ref }}
+          path: ci-report/
+          if-no-files-found: ignore
+
+  report:
+    name: Report
+    if: ${{ !cancelled() && github.event_name == 'pull_request_target' }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Download sizes
+        uses: actions/download-artifact@v4
+        with:
+          path: ci-report
+          pattern: size-*
+          merge-multiple: true
+
+      - name: Render report
+        run: node .github/scripts/bundle-size.mjs report ci-report > report.md
+
+      - name: Create or update comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const header = '## Bundle Size Report';
+            const body = fs.readFileSync('report.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.findLast((c) =>
+              c.user?.login === 'github-actions[bot]' && c.body?.includes(header));
+
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              core.info(`Updated ${existing.html_url}`);
+            } else {
+              const res = await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              core.info(`Created ${res.data.html_url}`);
+            }
