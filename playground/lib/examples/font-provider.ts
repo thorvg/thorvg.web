@@ -5,7 +5,6 @@ export const fontProviderExample: ShowcaseExample = {
   title: 'Font Provider',
   description: 'Use a custom font provider to load fonts from any source',
   category: 'text',
-  useDarkCanvas: true,
   thumbnail: '/assets/font-provider-thumbnail.png',
   code: `import { init } from '@thorvg/webcanvas';
 

@@ -12,7 +12,6 @@ export default function ShowcasePageClient({ id }: { id: string }) {
 
   const [example, setExample] = useState(getExampleById(id));
   const [code, setCode] = useState(example?.code || '');
-  const [autoRun, setAutoRun] = useState(true);
   const [copied, setCopied] = useState(false);
   const [rendererParam, setRendererParam] = useState<string | null>(null);
 
@@ -107,16 +106,6 @@ export default function ShowcasePageClient({ id }: { id: string }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={autoRun}
-                onChange={(e) => setAutoRun(e.target.checked)}
-                className="cursor-pointer"
-              />
-              Auto Run
-            </label>
-
             <button
               onClick={handleReset}
               className="px-3 py-1.5 bg-[#3c3c3c] hover:bg-[#505050] rounded text-sm text-gray-300 transition-colors"
@@ -178,8 +167,6 @@ export default function ShowcasePageClient({ id }: { id: string }) {
           <div className="h-[calc(100%-40px)]">
             <CanvasPreview
               code={code}
-              autoRun={autoRun}
-              useDarkCanvas={example.useDarkCanvas}
               requiresUserGesture={example.requiresUserGesture}
             />
           </div>
