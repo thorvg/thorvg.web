@@ -99,6 +99,9 @@ export default function CanvasPreview({
               case ThorVGResultCode.NotSupported:
                 console.log('Not supported');
                 break;
+              case ThorVGResultCode.SystemError:
+                console.log('System error');
+                break;
               case ThorVGResultCode.Unknown:
                 console.log('Unknown error');
                 break;
