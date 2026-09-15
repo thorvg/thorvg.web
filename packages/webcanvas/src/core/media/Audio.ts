@@ -325,6 +325,7 @@ export class LottieAudio {
       this.#voices.set(state.src, voice);
     }
 
+    const playing = voice.active && voice.source !== null;
     voice.gain.gain.value = state.volume;
     voice.active = state.active;
     voice.baseFrame = frame;
@@ -335,6 +336,7 @@ export class LottieAudio {
       return;
     }
     if (voice.failed) return;
+    if (playing) return; // don't restart on a volume update
     if (voice.buffer) this.#start(voice, state.offset);
     else void this.#decode(voice, state.src);
   }
@@ -376,22 +378,6 @@ export class LottieAudio {
   hold(): void {
     for (const voice of this.#voices.values()) this.#stop(voice);
     this.#unwatch();
-  }
-
-  /** Get or set the volume of this animation, in the range [0.0, 1.0]. */
-  volume(): number;
-  volume(value: number): void;
-  volume(value?: number): number | void {
-    if (value === undefined) return this.#gain.volume();
-    this.#gain.volume(value);
-  }
-
-  mute(on: boolean): void {
-    this.#gain.mute(on);
-  }
-
-  muted(): boolean {
-    return this.#gain.muted();
   }
 
   dispose(): void {
