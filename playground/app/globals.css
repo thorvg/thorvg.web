@@ -31,3 +31,14 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #505050;
 }
+
+@keyframes canvas-loading {
+  to {
+    opacity: 1;
+  }
+}
+
+.canvas-loading {
+  opacity: 0;
+  animation: canvas-loading 100ms ease-out 150ms forwards;
+}

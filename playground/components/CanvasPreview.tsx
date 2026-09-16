@@ -36,6 +36,53 @@ const canStartAudio = (): boolean => {
   }
 };
 
+const cachedFetch = async (
+  nativeFetch: typeof fetch,
+  url: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> => {
+  const playgroundWindow = window as PlaygroundWindow;
+  if (!playgroundWindow.__playgroundFetchCache) {
+    playgroundWindow.__playgroundFetchCache = new Map<string, CachedResponse>();
+  }
+
+  const cache = playgroundWindow.__playgroundFetchCache;
+  const urlString = url.toString();
+
+  // Only cache GET requests
+  const method = init?.method?.toUpperCase() || 'GET';
+  if (method !== 'GET') {
+    return nativeFetch(url, init);
+  }
+
+  // Check cache
+  const cached = cache.get(urlString);
+  if (cached) {
+    return new Response(cached.data, {
+      status: cached.status,
+      statusText: cached.statusText + ' (cached)',
+      headers: cached.headers,
+    });
+  }
+
+  // Fetch and cache
+  const response = await nativeFetch(url, init);
+  const data = await response.arrayBuffer();
+
+  cache.set(urlString, {
+    data,
+    headers: response.headers,
+    status: response.status,
+    statusText: response.statusText,
+  });
+
+  return new Response(data, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+};
+
 export default function CanvasPreview({
   code,
   requiresUserGesture = false,
@@ -54,8 +101,38 @@ export default function CanvasPreview({
   const [currentRenderer, setCurrentRenderer] = useState<'sw' | 'gl' | 'wg'>('gl');
   const [isZoomDragging, setIsZoomDragging] = useState(false);
   const [awaitingGesture, setAwaitingGesture] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState(0);
   const animationIdRef = useRef<number | null>(null);
   const originalDPRRef = useRef<number | null>(null);
+  const nativeFetchRef = useRef<typeof fetch | null>(null);
+  const isRunningRef = useRef(false);
+  const pendingRef = useRef(0);
+
+  const trackedFetch = async (url: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const nativeFetch = nativeFetchRef.current!;
+    if (!isRunningRef.current && pendingRef.current === 0) return nativeFetch(url, init);
+
+    pendingRef.current += 1;
+    setPendingRequests(pendingRef.current);
+
+    try {
+      return await cachedFetch(nativeFetch, url, init);
+    } finally {
+      pendingRef.current -= 1;
+      setPendingRequests(pendingRef.current);
+    }
+  };
+
+  useEffect(() => {
+    nativeFetchRef.current = window.fetch.bind(window);
+    window.fetch = trackedFetch as typeof fetch;
+
+    return () => {
+      if (nativeFetchRef.current) {
+        window.fetch = nativeFetchRef.current;
+      }
+    };
+  }, []);
 
   // Initialize ThorVG with specified renderer
   const initThorVG = async (renderer: 'sw' | 'gl' | 'wg') => {
@@ -217,6 +294,7 @@ export default function CanvasPreview({
       }
     }
 
+    isRunningRef.current = true;
     setIsRunning(true);
     setStatus({ message: 'Running code...', type: 'info' });
 
@@ -241,51 +319,6 @@ export default function CanvasPreview({
         return animationIdRef.current;
       };
 
-      // Initialize global fetch cache if not exists
-      const playgroundWindow = window as PlaygroundWindow;
-      if (!playgroundWindow.__playgroundFetchCache) {
-        playgroundWindow.__playgroundFetchCache = new Map<string, CachedResponse>();
-      }
-
-      // Create cached fetch wrapper
-      const cachedFetch = async (url: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-        const urlString = url.toString();
-        const cache = playgroundWindow.__playgroundFetchCache!;
-
-        // Only cache GET requests (default method)
-        const method = init?.method?.toUpperCase() || 'GET';
-        if (method !== 'GET') {
-          return fetch(url, init);
-        }
-
-        // Check cache
-        const cached = cache.get(urlString);
-        if (cached) {
-          return new Response(cached.data, {
-            status: cached.status,
-            statusText: cached.statusText + ' (cached)',
-            headers: cached.headers
-          });
-        }
-
-        // Fetch and cache
-        const response = await fetch(url, init);
-        const data = await response.arrayBuffer();
-
-        cache.set(urlString, {
-          data,
-          headers: response.headers,
-          status: response.status,
-          statusText: response.statusText
-        });
-
-        return new Response(data, {
-          status: response.status,
-          statusText: response.statusText,
-          headers: response.headers
-        });
-      };
-
       // Create a function context with pre-loaded modules
       // The user code will have access to TVG, canvas, and requestAnimationFrame
       const executeFunction = new Function(
@@ -299,7 +332,7 @@ export default function CanvasPreview({
       );
 
       // Execute with pre-loaded context
-      await executeFunction(TVG, canvas, wrappedRAF, performance, console, cachedFetch);
+      await executeFunction(TVG, canvas, wrappedRAF, performance, console, trackedFetch);
 
       setStatus({ message: 'Code executed successfully', type: 'success' });
     } catch (error) {
@@ -309,9 +342,15 @@ export default function CanvasPreview({
         type: 'error',
       });
     } finally {
+      isRunningRef.current = false;
       setIsRunning(false);
     }
   };
+
+  const isLoading =
+    !awaitingGesture && status.type !== 'error' && (!TVG || isRunning || pendingRequests > 0);
+  const statusType = isLoading ? 'info' : status.type;
+  const statusMessage = isLoading ? 'Loading...' : status.message;
 
   return (
     <div className="h-full flex flex-col bg-[#252526]">
@@ -341,6 +380,15 @@ export default function CanvasPreview({
             height={600}
             className="border border-[#3e3e42] shadow-lg bg-white"
           />
+
+          {isLoading && (
+            <div
+              className="canvas-loading absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none bg-white/70 text-gray-600"
+            >
+              <span className="w-8 h-8 rounded-full border-2 border-current border-t-transparent opacity-70 animate-spin" />
+              <span className="text-sm font-medium">Loading...</span>
+            </div>
+          )}
 
           {awaitingGesture && (
             <button
@@ -407,14 +455,14 @@ export default function CanvasPreview({
       {/* Status Bar */}
       <div
         className={`px-4 py-2 text-xs border-t border-[#3e3e42] flex items-center justify-between ${
-          status.type === 'error'
+          statusType === 'error'
             ? 'bg-[#f48771] text-white'
-            : status.type === 'success'
+            : statusType === 'success'
             ? 'bg-[#89d185] text-gray-900'
             : 'bg-[#007acc] text-white'
         }`}
       >
-        <span>{status.message}</span>
+        <span>{statusMessage}</span>
         {TVG?.version && (
           <span className="opacity-70">
             ThorVG v{TVG.version} · {currentRenderer.toUpperCase()}
