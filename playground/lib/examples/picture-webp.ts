@@ -20,6 +20,12 @@ const canvas = new TVG.Canvas('#canvas', {
   height: 600,
 });
 
+//Background
+const bg = new TVG.Shape();
+bg.appendRect(0, 0, 600, 600);    //x, y, w, h
+bg.fill(255, 255, 255);           //r, g, b
+canvas.add(bg);
+
 //Load webp file from path
 (async () => {
   const response = await fetch('/assets/images/test.webp');

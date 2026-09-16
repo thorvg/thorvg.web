@@ -22,10 +22,10 @@ const canvas = new TVG.Canvas('#canvas', {
 
 (async () => {
   //Background
-  const background = new TVG.Shape();
-  background.appendRect(0, 0, 600, 600);
-  background.fill(75, 75, 75);
-  canvas.add(background);
+  const shape = new TVG.Shape();
+  shape.appendRect(0, 0, 600, 600);
+  shape.fill(75, 75, 75);
+  canvas.add(shape);
 
   //Load a necessary font data.
   const fonts = ['PublicSans-Regular', 'NotoSansKR', 'NanumGothicCoding', 'SentyCloud'];

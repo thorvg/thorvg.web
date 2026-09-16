@@ -22,6 +22,12 @@ const canvas = new TVG.Canvas('#canvas', {
   height: 600,
 });
 
+//Background
+const bg = new TVG.Shape();
+bg.appendRect(0, 0, 600, 600);
+bg.fill(75, 75, 75);
+canvas.add(bg);
+
 const size = 600 / NUM_PER_ROW;
 
 //Slot data per Lottie file. null keeps the authored default.

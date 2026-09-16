@@ -58,7 +58,7 @@ const canvas = new TVG.Canvas('#canvas', {
     text.align(0, 0);
     text.layout(w, h);
     text.text('Top-Left');
-    text.fill(0, 0, 0);
+    text.fill(255, 255, 255);
     canvas.add(text);
   }
 
@@ -71,7 +71,7 @@ const canvas = new TVG.Canvas('#canvas', {
     text.align(0.5, 0);
     text.layout(w, h);
     text.text('Top-Center');
-    text.fill(0, 0, 0);
+    text.fill(255, 255, 255);
     canvas.add(text);
   }
 
@@ -84,7 +84,7 @@ const canvas = new TVG.Canvas('#canvas', {
     text.align(1, 0);
     text.layout(w, h);
     text.text('Top-End');
-    text.fill(0, 0, 0);
+    text.fill(255, 255, 255);
     canvas.add(text);
   }
 
@@ -97,7 +97,7 @@ const canvas = new TVG.Canvas('#canvas', {
     text.align(0, 0.5);
     text.layout(w, h);
     text.text('Middle-Left');
-    text.fill(0, 0, 0);
+    text.fill(255, 255, 255);
     canvas.add(text);
   }
 
@@ -110,7 +110,7 @@ const canvas = new TVG.Canvas('#canvas', {
     text.align(0.5, 0.5);
     text.layout(w, h);
     text.text('Middle-Center');
-    text.fill(0, 0, 0);
+    text.fill(255, 255, 255);
     canvas.add(text);
   }
 
@@ -123,7 +123,7 @@ const canvas = new TVG.Canvas('#canvas', {
     text.align(1, 0.5);
     text.layout(w, h);
     text.text('Middle-End');
-    text.fill(0, 0, 0);
+    text.fill(255, 255, 255);
     canvas.add(text);
   }
 
@@ -136,7 +136,7 @@ const canvas = new TVG.Canvas('#canvas', {
     text.align(0, 1);
     text.layout(w, h);
     text.text('Bottom-Left');
-    text.fill(0, 0, 0);
+    text.fill(255, 255, 255);
     canvas.add(text);
   }
 
@@ -149,7 +149,7 @@ const canvas = new TVG.Canvas('#canvas', {
     text.align(0.5, 1);
     text.layout(w, h);
     text.text('Bottom-Center');
-    text.fill(0, 0, 0);
+    text.fill(255, 255, 255);
     canvas.add(text);
   }
 
@@ -162,7 +162,7 @@ const canvas = new TVG.Canvas('#canvas', {
     text.align(1, 1);
     text.layout(w, h);
     text.text('Bottom-End');
-    text.fill(0, 0, 0);
+    text.fill(255, 255, 255);
     canvas.add(text);
   }
 
@@ -174,7 +174,7 @@ const canvas = new TVG.Canvas('#canvas', {
     text.font('Arial');
     text.fontSize(fontSize);
     text.text(\`Alignment = \${(0.25 * i).toFixed(2)}\`);
-    text.fill(0, 0, 0);
+    text.fill(255, 255, 255);
     text.translate(490.5, yPositions[i] + yOffset);
     text.align(alignments[i].x, alignments[i].y);
     canvas.add(text);

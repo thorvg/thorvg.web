@@ -42,7 +42,7 @@ shape2.lineTo(200, 106.25);
 shape2.lineTo(200, 18.75);
 shape2.stroke({
   width: 6.25,
-  color: [100, 100, 255, 255],
+  color: [255, 255, 0, 255],
   join: TVG.StrokeJoin.Bevel,
   cap: TVG.StrokeCap.Square
 });
@@ -83,7 +83,7 @@ shape5.lineTo(200, 206.25);
 shape5.lineTo(200, 131.25);
 shape5.stroke({
   width: 3.125,
-  color: [100, 100, 255, 255],
+  color: [255, 255, 0, 255],
   join: TVG.StrokeJoin.Bevel,
   cap: TVG.StrokeCap.Square,
   dash: [6.25, 6.25]
@@ -123,7 +123,7 @@ shape8.cubicTo(300, 334.375, 262.5, 368.75, 200, 368.75);
 shape8.close();
 shape8.stroke({
   width: 9.375,
-  color: [100, 100, 255, 255],
+  color: [255, 255, 0, 255],
   join: TVG.StrokeJoin.Bevel,
   cap: TVG.StrokeCap.Square
 });
@@ -157,7 +157,7 @@ shape11.appendCircle(200, 437.5, 12.5, 37.5);
 shape11.appendRect(237.5, 406.25, 62.5, 50);
 shape11.stroke({
   width: 3.125,
-  color: [100, 100, 255, 255],
+  color: [255, 255, 0, 255],
   join: TVG.StrokeJoin.Bevel,
   cap: TVG.StrokeCap.Square,
   dash: [6.25, 6.25]
@@ -191,7 +191,7 @@ shape14.appendCircle(200, 531.25, 12.5, 37.5);
 shape14.appendRect(237.5, 500, 62.5, 50);
 shape14.stroke({
   width: 3.125,
-  color: [100, 100, 255, 255],
+  color: [255, 255, 0, 255],
   join: TVG.StrokeJoin.Bevel,
   cap: TVG.StrokeCap.Square,
   dash: [0, 12.5]
