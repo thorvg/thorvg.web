@@ -16,9 +16,15 @@ const TVG = await init({
 });
 
 const NUM_PER_ROW = 2;
-const W = 600, H = 300;
+const W = 600, H = 600;
 
 const canvas = new TVG.Canvas('#canvas', { width: W, height: H });
+
+//Background
+const bg = new TVG.Shape();
+bg.appendRect(0, 0, W, H);
+bg.fill(75, 75, 75);
+canvas.add(bg);
 
 const size = W / NUM_PER_ROW;
 

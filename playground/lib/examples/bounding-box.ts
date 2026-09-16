@@ -41,7 +41,7 @@ const canvas = new TVG.Canvas('#canvas', {
   text1.font('Arial')
     .fontSize(20)
     .text('Text Test')
-    .fill(100, 100, 255)
+    .fill(255, 255, 0)
     .translate(66.67, 13.33)
     .rotate(16);
   canvas.add(text1);
@@ -144,7 +144,7 @@ const canvas = new TVG.Canvas('#canvas', {
   curve1.moveTo(0, 0);
   curve1.cubicTo(26.67, -6.67, 80, -100, 53.33, 0);
   curve1.translate(33.33, 513.33);
-  curve1.stroke({ width: 1.33, color: [100, 0, 255, 255] });
+  curve1.stroke({ width: 1.33, color: [255, 255, 255, 255] });
   canvas.add(curve1);
   allShapes.push(curve1);
 }
@@ -248,7 +248,7 @@ const canvas = new TVG.Canvas('#canvas', {
   text2.font('Arial')
     .fontSize(33.33)
     .text('Text Test')
-    .fill(100, 100, 255)
+    .fill(255, 255, 0)
     .rotate(16);
   scene7.add(text2);
 
@@ -288,7 +288,7 @@ allShapes.forEach(shape => {
     obbShape.close();
     obbShape.stroke({
       width: 1.33,
-      color: [0, 0, 0, 255],
+      color: [255, 255, 255, 255],
       dash: [2, 6.67]
     });
     canvas.add(obbShape);

@@ -20,6 +20,12 @@ const canvas = new TVG.Canvas('#canvas', {
   height: 600,
 });
 
+//Background
+const bg = new TVG.Shape();
+bg.appendRect(0, 0, 600, 600);
+bg.fill(255, 255, 255);
+canvas.add(bg);
+
 //Load raw image data (200x300, ARGB8888)
 (async () => {
   const response = await fetch('/assets/images/rawimage_200x300.raw');

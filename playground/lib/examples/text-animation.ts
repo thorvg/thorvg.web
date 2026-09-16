@@ -26,6 +26,11 @@ function animate() {
   time += 0.05;
   canvas.clear();
 
+  const shape = new TVG.Shape();
+  shape.appendRect(0, 0, 600, 600);
+  shape.fill(50, 50, 50);
+  canvas.add(shape);
+
   // Rainbow effect on title
   const r = Math.sin(time) * 127 + 128;
   const g = Math.sin(time + 2) * 127 + 128;

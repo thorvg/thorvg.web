@@ -26,10 +26,10 @@ const canvas = new TVG.Canvas('#canvas', {
   const svgData = new TextEncoder().encode(svgString);
 
   //Background
-  const background = new TVG.Shape();
-  background.appendRect(0, 0, 600, 600);
-  background.fill(255, 255, 255);
-  canvas.add(background);
+  const shape = new TVG.Shape();
+  shape.appendRect(0, 0, 600, 600);
+  shape.fill(255, 255, 255);
+  canvas.add(shape);
 
   {
     const scene = new TVG.Scene();

@@ -23,7 +23,7 @@ const canvas = new TVG.Canvas('#canvas', {
 //BG
 const bg = new TVG.Shape();
 bg.appendRect(0, 0, 600, 600);
-bg.fill(100, 100, 100, 255);
+bg.fill(100, 100, 100);
 canvas.add(bg);
 
 //Create a Scene
