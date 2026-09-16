@@ -55,18 +55,50 @@ export class LottiePlayer extends BaseLottiePlayer {
    * Save current animation to png image
    * @since 1.0
    */
-  public save2png(): void {
-    if (!this.TVG) {
-      return;
+  public async save2png(): Promise<void> {
+    if (!wasmModule || !this.TVG) {
+      throw new Error(`Unable to save. Module is not initialized.`);
+    }
+    if (!this.src) {
+      throw new Error(`Unable to save. Source is not available.`);
     }
 
-    this.canvas!.toBlob((blob: Blob | null) => {
-      if (!blob) {
-        return;
+    //NOTE: the WebGL drawing buffer is flushed after a frame, so reading the display canvas yields an empty image.
+    const exporter = new wasmModule.TvgLottieAnimation(Renderer.SW, '');
+    try {
+      const width = this.canvas!.width;
+      const height = this.canvas!.height;
+      const bytes = await parseSrc(this.src, this.fileType);
+
+      this.applyAssetResolver(exporter);
+
+      if (!exporter.load(bytes, this.fileType, width, height)) {
+        throw new Error(`Unable to save. Error: ${exporter.error()}`);
       }
 
+      exporter.frame(this.currentFrame);
+      exporter.update();
+
+      const buffer = exporter.render();
+      const clamped = new Uint8ClampedArray(buffer, 0, buffer.byteLength);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d')!.putImageData(new ImageData(clamped, width, height), 0, 0);
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob: Blob | null) => {
+          if (!blob) {
+            reject(new Error(`Unable to save the PNG data.`));
+            return;
+          }
+          resolve(blob);
+        }, 'image/png');
+      });
       _downloadFile('output.png', blob);
-    }, 'image/png');
+    } finally {
+      exporter.delete();
+    }
   }
 
   /**
