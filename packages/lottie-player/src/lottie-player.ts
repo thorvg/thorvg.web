@@ -55,18 +55,44 @@ export class LottiePlayer extends BaseLottiePlayer {
    * Save current animation to png image
    * @since 1.0
    */
-  public save2png(): void {
-    if (!this.TVG) {
-      return;
+  public async save2png(src: string): Promise<void> {
+    if (!wasmModule) {
+      throw new Error(`Unable to save. Module is not initialized.`);
     }
 
-    this.canvas!.toBlob((blob: Blob | null) => {
-      if (!blob) {
-        return;
-      }
+    const [width, height] = this.size;
 
-      _downloadFile('output.png', blob);
-    }, 'image/png');
+    const bytes = await parseSrc(src, this.fileType);
+    const saver = new wasmModule.TvgLottieAnimation(Renderer.SW, '');
+    const isLoaded = saver.load(bytes, this.fileType, width, height);
+    if (!isLoaded) {
+      const error = saver.error();
+      saver.delete();
+      throw new Error(`Unable to save. Error: ${error}`);
+    }
+
+    saver.frame(this.currentFrame);
+    saver.update();
+    const buffer = saver.render();
+    const data = new Uint8ClampedArray(buffer, 0, buffer.byteLength);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d');
+    const imageData = new ImageData(data, width, height);
+    context!.putImageData(imageData, 0, 0);
+    saver.delete();
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/png');
+    });
+    if (!blob) {
+      throw new Error(`Unable to save the PNG data.`);
+    }
+
+    _downloadFile('output.png', blob);
   }
 
   /**
