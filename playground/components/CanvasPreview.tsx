@@ -294,7 +294,7 @@ export default function CanvasPreview({
             id="canvas"
             width={600}
             height={600}
-            className="border border-[#3e3e42] shadow-lg bg-white"
+            className="border border-[#3e3e42] shadow-lg bg-black"
           />
 
           {isLoading && (

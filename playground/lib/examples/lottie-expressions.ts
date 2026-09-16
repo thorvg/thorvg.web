@@ -23,6 +23,13 @@ const canvas = new TVG.Canvas('#canvas', {
   height: 600,
 });
 
+//Background
+const shape = new TVG.Shape();
+shape.appendRect(0, 0, 600, 600);
+shape.fill(75, 75, 75);
+
+canvas.add(shape);
+
 const size = 600 / NUM_PER_ROW;
 
 const animations = [];

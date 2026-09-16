@@ -28,7 +28,7 @@ star1.lineTo(18.75, 128.57);
 star1.lineTo(288.75, 128.57);
 star1.lineTo(60, 304.29);
 star1.close();
-star1.fill(0, 255, 255, 255);
+star1.fill(255, 255, 255, 255);
 star1.fillRule(TVG.FillRule.Winding);
 
 //Star 2
@@ -39,7 +39,7 @@ star2.lineTo(266.25, 385.71);
 star2.lineTo(536.25, 385.71);
 star2.lineTo(307.5, 561.43);
 star2.close();
-star2.fill(255, 0, 255, 255);
+star2.fill(255, 255, 255, 255);
 star2.fillRule(TVG.FillRule.EvenOdd);
 
 canvas.add(star1);

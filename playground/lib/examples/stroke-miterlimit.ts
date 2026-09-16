@@ -21,9 +21,12 @@ const canvas = new TVG.Canvas('#canvas', {
 });
 
 //background
-const bg = new TVG.Shape();
-bg.appendRect(0, 0, 600, 600);
-bg.fill(200, 200, 255, 255);
+{
+  const bg = new TVG.Shape();
+  bg.appendRect(0, 0, 600, 600);    //x, y, w, h
+  bg.fill(200, 200, 255);           //r, g, b
+  canvas.add(bg);
+}
 
 //wild
 const path = new TVG.Shape();
@@ -49,7 +52,6 @@ path.stroke({
   miterLimit: 10
 });
 
-canvas.add(bg);
 canvas.add(path);
 canvas.render();
 `

@@ -32,6 +32,14 @@ const canvas = new TVG.Canvas('#canvas', {
   const picture = animation.picture;
   picture.origin(0.5, 0.5);
 
+  //Lottie Boundary
+  {
+    const shape = new TVG.Shape();
+    shape.appendRect(58.59, 58.59, SIZE - 117.19, SIZE - 117.19);
+    shape.fill(50, 50, 50);
+    canvas.add(shape);
+  }
+
   //image scaling preserving its aspect ratio
   const { width, height } = picture.size();
   const scale = ((width > height) ? SIZE / width : SIZE / height) * 0.8;

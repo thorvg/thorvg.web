@@ -20,11 +20,6 @@ const canvas = new TVG.Canvas('#canvas', {
   height: 600
 });
 
-const bg = new TVG.Shape();
-bg.appendRect(0, 0, 600, 600);
-bg.fill(0, 0, 0, 255);
-canvas.add(bg);
-
 //Shape 1
 const shape1 = new TVG.Shape();
 shape1.appendRect(37.5, 37.5, 150, 150);

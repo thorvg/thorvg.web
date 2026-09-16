@@ -26,12 +26,6 @@ const canvas = new TVG.Canvas('#canvas', {
   const buffer = await response.arrayBuffer();
   TVG.Font.load('NotoSansKR', new Uint8Array(buffer), { type: 'ttf' });
 
-  //BG
-  const bg = new TVG.Shape();
-  bg.appendRect(0, 0, 600, 600);
-  bg.fill(0, 0, 0, 255);
-  canvas.add(bg);
-  
   const size = { x: 172.5, y: 90 };
   
   function guide(title, x, y) {
