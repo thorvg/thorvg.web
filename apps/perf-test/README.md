@@ -39,46 +39,22 @@ Performance benchmarking tool for ThorVG WebCanvas.
 ### Prerequisites
 
 - Node.js 20+
-- Yarn package manager
+- pnpm 10+
+- A built ThorVG WebCanvas (`pnpm --filter @thorvg/webcanvas build`)
 
 ### Launch
 
 ```bash
-yarn install
-yarn build
-yarn start
+pnpm install
+pnpm build
+pnpm start
 ```
 
 ### Development
 
 ```bash
-yarn dev
+pnpm dev
 # open http://localhost:3000
-```
-
-### Using Local WebCanvas Build
-
-To test with a local build of `@thorvg/webcanvas`:
-
-1. **Build the webcanvas package:**
-
-```bash
-cd ../packages/webcanvas
-pnpm install
-pnpm run build
-cd ../../perf-test
-```
-
-2. **Link to local package:**
-
-```bash
-yarn add ../packages/webcanvas
-```
-
-3. **Start the development server:**
-
-```bash
-yarn dev
 ```
 
 ## Headless Benchmark
@@ -90,19 +66,19 @@ Run automated benchmarks using Playwright (headless Chromium):
 npx playwright install chromium
 
 # Run with defaults (sw renderer, 20 animations, 150px)
-yarn bench
+pnpm bench
 
 # Customize
-yarn bench --renderer gl --count 50 --size 200
+pnpm bench --renderer gl --count 50 --size 200
 
 # JSON output only
-yarn bench --renderer sw --count 100 --json
+pnpm bench --renderer sw --count 100 --json
 
 # Reproducible set with seed
-yarn bench --seed <base64>
+pnpm bench --seed <base64>
 
 # Use already-running server
-yarn bench --url http://localhost:3000
+pnpm bench --url http://localhost:3000
 ```
 
 ### Bench Options
