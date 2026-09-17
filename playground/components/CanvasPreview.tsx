@@ -16,10 +16,16 @@ interface CachedResponse {
   statusText: string;
 }
 
+type PlaygroundDemo = {
+  dispose: () => void;
+}
+
 type PlaygroundWindow = Window &
   typeof globalThis & {
     webkitAudioContext?: typeof AudioContext;
     __playgroundFetchCache?: Map<string, CachedResponse>;
+    __lottieAudioDemo?: PlaygroundDemo;
+    __videoDemo?: PlaygroundDemo;
   };
 
 const canStartAudio = (): boolean => {
@@ -104,6 +110,13 @@ export default function CanvasPreview({
   const [pendingRequests, setPendingRequests] = useState(0);
   const animationIdRef = useRef<number | null>(null);
   const originalDPRRef = useRef<number | null>(null);
+
+  const disposeMedia = () => {
+    const playground = globalThis as PlaygroundWindow;
+    playground.__lottieAudioDemo?.dispose();
+    playground.__videoDemo?.dispose();
+  };
+
   const nativeFetchRef = useRef<typeof fetch | null>(null);
   const isRunningRef = useRef(false);
   const pendingRef = useRef(0);
@@ -225,6 +238,7 @@ export default function CanvasPreview({
           console.warn('Failed to restore DPR:', e);
         }
       }
+      disposeMedia();
     };
   }, []);
 
@@ -275,6 +289,8 @@ export default function CanvasPreview({
       const url = new URL(window.location.href);
       url.searchParams.set('renderer', detectedRenderer);
 
+      disposeMedia();
+
       setTimeout(() => {
         window.location.href = url.toString();
       }, 300);
@@ -307,6 +323,9 @@ export default function CanvasPreview({
 
       // Clear the canvas
       canvas.clear();
+
+      // Dispose of any media objects
+      disposeMedia();
 
       // Transform code: strip imports, init calls, and canvas creation
       // This is smart and works with any variable names
