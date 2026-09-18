@@ -22,8 +22,6 @@ const canvas = new TVG.Canvas('#canvas', {
 });
 
 (async () => {
-  globalThis.__videoDemo?.dispose();
-
   let playing = true;
   let paused = false;
 
@@ -106,13 +104,6 @@ const canvas = new TVG.Canvas('#canvas', {
   };
 
   window.addEventListener('keydown', onKeyDown);
-
-  globalThis.__videoDemo = {
-    dispose() {
-      window.removeEventListener('keydown', onKeyDown);
-      video.dispose();
-    },
-  };
 })();
 `
 };
