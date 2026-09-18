@@ -21,8 +21,6 @@ const W = 600, H = 600;
 const canvas = new TVG.Canvas('#canvas', { width: W, height: H });
 
 (async () => {
-  globalThis.__lottieAudioDemo?.dispose();
-
   //background
   const bg = new TVG.Shape();
   bg.appendRect(0, 0, W, H);
@@ -66,12 +64,6 @@ const canvas = new TVG.Canvas('#canvas', { width: W, height: H });
     canvas.update();
     canvas.render();
   });
-
-  globalThis.__lottieAudioDemo = {
-    dispose() {
-      animation.dispose();
-    },
-  };
 })();
 `
 };

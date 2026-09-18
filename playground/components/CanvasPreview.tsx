@@ -3,24 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Canvas as TVGCanvas, ThorVGNamespace } from '@thorvg/webcanvas';
 import wasmUrl from "../node_modules/@thorvg/webcanvas/dist/thorvg.wasm";
+import { CodeSandbox } from '@/lib/code-sandbox';
+import type { PlaygroundWindow } from '@/types/window';
 
 interface CanvasPreviewProps {
   code: string;
   requiresUserGesture?: boolean;
 }
-
-interface CachedResponse {
-  data: ArrayBuffer;
-  headers: Headers;
-  status: number;
-  statusText: string;
-}
-
-type PlaygroundWindow = Window &
-  typeof globalThis & {
-    webkitAudioContext?: typeof AudioContext;
-    __playgroundFetchCache?: Map<string, CachedResponse>;
-  };
 
 const canStartAudio = (): boolean => {
   const AudioCtx = window.AudioContext || (window as PlaygroundWindow).webkitAudioContext;
@@ -34,53 +23,6 @@ const canStartAudio = (): boolean => {
   } catch {
     return true;
   }
-};
-
-const cachedFetch = async (
-  nativeFetch: typeof fetch,
-  url: RequestInfo | URL,
-  init?: RequestInit,
-): Promise<Response> => {
-  const playgroundWindow = window as PlaygroundWindow;
-  if (!playgroundWindow.__playgroundFetchCache) {
-    playgroundWindow.__playgroundFetchCache = new Map<string, CachedResponse>();
-  }
-
-  const cache = playgroundWindow.__playgroundFetchCache;
-  const urlString = url.toString();
-
-  // Only cache GET requests
-  const method = init?.method?.toUpperCase() || 'GET';
-  if (method !== 'GET') {
-    return nativeFetch(url, init);
-  }
-
-  // Check cache
-  const cached = cache.get(urlString);
-  if (cached) {
-    return new Response(cached.data, {
-      status: cached.status,
-      statusText: cached.statusText + ' (cached)',
-      headers: cached.headers,
-    });
-  }
-
-  // Fetch and cache
-  const response = await nativeFetch(url, init);
-  const data = await response.arrayBuffer();
-
-  cache.set(urlString, {
-    data,
-    headers: response.headers,
-    status: response.status,
-    statusText: response.statusText,
-  });
-
-  return new Response(data, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: response.headers,
-  });
 };
 
 export default function CanvasPreview({
@@ -102,37 +44,14 @@ export default function CanvasPreview({
   const [isZoomDragging, setIsZoomDragging] = useState(false);
   const [awaitingGesture, setAwaitingGesture] = useState(false);
   const [pendingRequests, setPendingRequests] = useState(0);
-  const animationIdRef = useRef<number | null>(null);
+  const sandboxRef = useRef<CodeSandbox | null>(null);
   const originalDPRRef = useRef<number | null>(null);
-  const nativeFetchRef = useRef<typeof fetch | null>(null);
-  const isRunningRef = useRef(false);
-  const pendingRef = useRef(0);
 
-  const trackedFetch = async (url: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const nativeFetch = nativeFetchRef.current!;
-    if (!isRunningRef.current && pendingRef.current === 0) return nativeFetch(url, init);
-
-    pendingRef.current += 1;
-    setPendingRequests(pendingRef.current);
-
-    try {
-      return await cachedFetch(nativeFetch, url, init);
-    } finally {
-      pendingRef.current -= 1;
-      setPendingRequests(pendingRef.current);
-    }
+  const endRun = () => {
+    sandboxRef.current?.dispose();
+    sandboxRef.current = null;
+    setPendingRequests(0);
   };
-
-  useEffect(() => {
-    nativeFetchRef.current = window.fetch.bind(window);
-    window.fetch = trackedFetch as typeof fetch;
-
-    return () => {
-      if (nativeFetchRef.current) {
-        window.fetch = nativeFetchRef.current;
-      }
-    };
-  }, []);
 
   // Initialize ThorVG with specified renderer
   const initThorVG = async (renderer: 'sw' | 'gl' | 'wg') => {
@@ -212,9 +131,7 @@ export default function CanvasPreview({
     initThorVG(renderer as 'sw' | 'gl' | 'wg');
 
     return () => {
-      if (animationIdRef.current !== null) {
-        cancelAnimationFrame(animationIdRef.current);
-      }
+      endRun();
       if (originalDPRRef.current !== null) {
         try {
           Object.defineProperty(window, 'devicePixelRatio', {
@@ -231,6 +148,8 @@ export default function CanvasPreview({
   // Auto-run when code changes and ThorVG is ready
   useEffect(() => {
     if (!code || !TVG || !canvas) return;
+
+    endRun();
 
     // The example needs audio, which is blocked until the page gets a gesture
     // (a plain refresh has none). Wait for a click instead of stalling.
@@ -294,17 +213,14 @@ export default function CanvasPreview({
       }
     }
 
-    isRunningRef.current = true;
+    endRun();
+    const sandbox = new CodeSandbox({ onPendingChange: setPendingRequests });
+    sandboxRef.current = sandbox;
+
     setIsRunning(true);
     setStatus({ message: 'Running code...', type: 'info' });
 
     try {
-      // Cancel any ongoing animation
-      if (animationIdRef.current !== null) {
-        cancelAnimationFrame(animationIdRef.current);
-        animationIdRef.current = null;
-      }
-
       // Clear the canvas
       canvas.clear();
 
@@ -313,37 +229,37 @@ export default function CanvasPreview({
       const { transformCodeForExecution } = await import('@/lib/code-transformer');
       const executableCode = transformCodeForExecution(code);
 
-      // Wrap requestAnimationFrame to track animation IDs
-      const wrappedRAF = (callback: FrameRequestCallback) => {
-        animationIdRef.current = requestAnimationFrame(callback);
-        return animationIdRef.current;
+      const context = {
+        TVG: sandbox.proxyNamespace(TVG),
+        canvas,
+        requestAnimationFrame: sandbox.requestAnimationFrame,
+        cancelAnimationFrame: sandbox.cancelAnimationFrame,
+        setTimeout: sandbox.setTimeout,
+        clearTimeout: sandbox.clearTimeout,
+        setInterval: sandbox.setInterval,
+        clearInterval: sandbox.clearInterval,
+        window: sandbox.proxyEventTarget(window),
+        document: sandbox.proxyEventTarget(document),
+        performance,
+        console,
+        fetch: sandbox.fetch,
       };
+      const executeFunction = new Function(...Object.keys(context), executableCode);
+      await executeFunction(...Object.values(context));
 
-      // Create a function context with pre-loaded modules
-      // The user code will have access to TVG, canvas, and requestAnimationFrame
-      const executeFunction = new Function(
-        'TVG',
-        'canvas',
-        'requestAnimationFrame',
-        'performance',
-        'console',
-        'fetch',
-        executableCode
-      );
-
-      // Execute with pre-loaded context
-      await executeFunction(TVG, canvas, wrappedRAF, performance, console, trackedFetch);
-
+      if (sandbox.disposed) return;
       setStatus({ message: 'Code executed successfully', type: 'success' });
     } catch (error) {
+      if (sandbox.disposed) return;
       console.error('Error executing code:', error);
       setStatus({
         message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         type: 'error',
       });
     } finally {
-      isRunningRef.current = false;
-      setIsRunning(false);
+      if (sandboxRef.current === sandbox || sandboxRef.current === null) {
+        setIsRunning(false);
+      }
     }
   };
 
