@@ -40,6 +40,7 @@ const sharedPlugins = (aliasEntries, wasmPath) => [
     include: /\.[mc]?[jt]sx?$/,
     exclude: /node_modules/,
     tsconfig: "tsconfig.json",
+    sourceMaps: true,
     jsc: {
       parser: {
         syntax: "typescript",
