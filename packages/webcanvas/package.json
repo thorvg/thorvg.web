@@ -68,8 +68,8 @@
     "@rollup/plugin-terser": "^1.0.0",
     "@swc/core": "^1.15.46",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@vitest/browser-playwright": "^4.1.10",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/browser-playwright": "^4.1.11",
+    "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^8.57.1",
     "happy-dom": "^20.11.1",
     "mediabunny": "^1.49.0",
@@ -82,6 +82,6 @@
     "typedoc-plugin-missing-exports": "^4.1.4",
     "typescript": "^5.9.3",
     "vite": "^8.1.5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
