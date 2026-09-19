@@ -165,7 +165,7 @@ const createLottieConfig = (preset) => {
             declaration: true,
             dynamicImport: true,
           },
-          target: "esnext",
+          target: "es2022",
         },
       }),
       nodeResolve(),

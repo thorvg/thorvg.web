@@ -6,14 +6,13 @@
         "dist/*"
       ]
     },
-    "target": "es2017",
+    "target": "es2022",
     "lib": [
-      "esnext.array",
-      "esnext",
-      "es2017",
+      "es2022",
       "dom"
     ],
     "experimentalDecorators": true,
+    "useDefineForClassFields": false,
     "module": "esnext",
     "moduleResolution": "node",
     "allowJs": true,

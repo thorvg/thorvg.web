@@ -49,7 +49,7 @@ const sharedPlugins = (aliasEntries, wasmPath) => [
         declaration: true,
         dynamicImport: true,
       },
-      target: "es2020",
+      target: "es2022",
     },
   }),
   nodeResolve(),
