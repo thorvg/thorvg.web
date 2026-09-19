@@ -187,14 +187,6 @@ const shape = new TVG.Shape();
 canvas.add(shape);
 shape = null; // Call dispose()
 
-// Automatic cleanup on page unload (registry.ts)
-window.addEventListener('beforeunload', () => {
-  if (hasModule()) {
-    const Module = getModule();
-    Module.term(); // Terminate WASM
-  }
-});
-
 // Explicit cleanup (recommended for predictable memory management)
 shape.dispose();
 picture.dispose();

@@ -82,13 +82,3 @@ export const callbackRegistry = createFunctionRegistry();
  * Registry for Video objects
  */
 export const videoRegistry = createMediaRegistry();
-
-// Automatic cleanup on page unload (browser only)
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', () => {
-    if (hasModule()) {
-      const Module = getModule();
-      Module.term();
-    }
-  });
-}
