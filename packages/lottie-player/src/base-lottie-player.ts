@@ -238,7 +238,7 @@ export class BaseLottiePlayer extends LitElement {
   * @since 1.0
   */
   @property({ type: String })
-  public src?: string;
+  public src?: string | object;
 
   /**
    * Custom WASM URL for ThorVG engine
@@ -498,14 +498,12 @@ export class BaseLottiePlayer extends LitElement {
     }
   }
 
-  private _loadBytes(data: Uint8Array): void {
+  private _loadBytes(data: Uint8Array, src: string | object): void {
     if (!this.TVG) {
       throw new Error(`TVG is not initialized`);
     }
 
-    if (this._assetResolverCallback) {
-      this.TVG.setAssetResolver(this._assetResolverCallback, this._assetResolverData);
-    }
+    this.applyAssetResolver(this.TVG);
 
     const isLoaded = this.TVG.load(data, this.fileType, this.canvas!.width, this.canvas!.height);
     if (!isLoaded) {
@@ -518,6 +516,7 @@ export class BaseLottiePlayer extends LitElement {
     const audioFn = this._audioResolverCallback ?? this._audioResolver.bind(this);
     this.TVG.setAudioResolver(audioFn, this._audioResolverCallback ? this._audioResolverData : null);
 
+    this.src = src;
     this._render();
     this.dispatchEvent(new CustomEvent(PlayerEvent.Load));
 
@@ -718,6 +717,7 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   public async load(src: string | object, fileType: FileType = FileType.JSON): Promise<void> {
+    this.src = undefined;
     try {
       this.currentState = PlayerState.Loading;
       await this._init();
@@ -725,7 +725,7 @@ export class BaseLottiePlayer extends LitElement {
       this.dispatchEvent(new CustomEvent(PlayerEvent.Ready));
 
       this.fileType = fileType;
-      await this._loadBytes(bytes);
+      this._loadBytes(bytes, src);
     } catch (err) {
       this.currentState = PlayerState.Error;
       this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
@@ -949,6 +949,14 @@ export class BaseLottiePlayer extends LitElement {
     if (this.TVG.quality(value) && this.currentState !== PlayerState.Playing) {
       this._render();
     }
+  }
+
+  protected applyAssetResolver(tvg: TvgLottieAnimation): void {
+    if (!this._assetResolverCallback) {
+      return;
+    }
+
+    tvg.setAssetResolver(this._assetResolverCallback, this._assetResolverData);
   }
 
   public setAssetResolver(callback: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string }, data: unknown | null): void {
