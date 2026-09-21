@@ -329,7 +329,7 @@ export default ThorVG;
 export { init, Paint, Canvas, Shape, Scene, Picture, Text, Animation, LottieAnimation, Video, LinearGradient, RadialGradient, Font, FontsourceProvider, Accessor, constants, ThorVGResultCode, ThorVGError };
 
 // Re-export types
-export type { CanvasOptions } from './core/Canvas';
+export type { CanvasOptions, CanvasPixelData } from './core/Canvas';
 export type { ErrorContext, ErrorHandler } from './common/errors';
 export type { Bounds, Matrix } from './core/Paint';
 export type { RectOptions, StrokeOptions } from './core/Shape';

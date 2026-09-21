@@ -48,7 +48,7 @@ export interface TvgCanvasInstance {
   error(): string;
   resize(width: number, height: number): boolean;
   clear(): boolean;
-  render(): ArrayBuffer;
+  render(): Uint8Array;
   size(): { width: number; height: number };
   ptr(): number;
   delete(): void;

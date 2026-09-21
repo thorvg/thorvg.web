@@ -61,10 +61,16 @@ export interface CanvasOptions {
   width?: number;
   /** Canvas height in pixels. Default: 600 */
   height?: number;
-  /** Enable device pixel ratio for high-DPI displays. Default: true */
+  /** Enable automatic DPR scaling for an HTML canvas target. Disabled for selectorless rendering. Default: true */
   enableDevicePixelRatio?: boolean;
   /** Rendering engine behavior option. Default: EngineOption.Default */
   engineOption?: EngineOption;
+}
+
+export interface CanvasPixelData {
+  width: number;
+  height: number;
+  pixels: Uint8Array;
 }
 
 /**
@@ -170,23 +176,29 @@ export class Canvas {
    * });
    * ```
    */
-  constructor(selector: string, options: CanvasOptions = {}) {
+  constructor(selector?: string, options: CanvasOptions = {}) {
     const { width = 800, height = 600, enableDevicePixelRatio = true, engineOption = EngineOption.Default } = options;
+    const hasSelector = typeof selector === 'string' && selector.length > 0;
 
     // Store logical dimensions
     this.#logicalWidth = width;
     this.#logicalHeight = height;
-    this.#enableDevicePixelRatio = enableDevicePixelRatio;
+    this.#enableDevicePixelRatio = enableDevicePixelRatio && hasSelector;
 
     // Get the global renderer set during ThorVG.init()
     const renderer = getGlobalRenderer();
     this.#renderer = renderer;
 
+    if (!hasSelector && renderer !== 'sw') {
+      handleError(`Canvas selector is required for the '${renderer}' renderer`, 'Canvas constructor');
+      return;
+    }
+
     // Module should already be initialized by ThorVG.init()
     const Module = getModule();
 
     // Calculate DPR and physical dimensions
-    const dpr = enableDevicePixelRatio ? this._calculateDPR() : 1;
+    const dpr = this.#enableDevicePixelRatio ? this._calculateDPR() : 1;
     this.#currentDPR = dpr;
 
     const physicalWidth = width * dpr;
@@ -194,7 +206,7 @@ export class Canvas {
 
     // Create TvgCanvas with physical dimensions and the configured thread count.
     const threadCount = getThreadCount();
-    this.#engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight, threadCount, engineOption);
+    this.#engine = new Module.TvgCanvas(renderer, selector ?? '', physicalWidth, physicalHeight, threadCount, engineOption);
 
     // Check for errors
     const error = this.#engine.error();
@@ -211,25 +223,27 @@ export class Canvas {
       return;
     }
 
-    this.#htmlCanvas = document.querySelector(selector);
-    if (!this.#htmlCanvas) {
-      handleError(`Failed to create canvas with ${renderer} renderer: HTML canvas element not found`, 'Canvas constructor');
-      return;
+    if (hasSelector) {
+      this.#htmlCanvas = document.querySelector(selector);
+      if (!this.#htmlCanvas) {
+        handleError(`Failed to create canvas with ${renderer} renderer: HTML canvas element not found`, 'Canvas constructor');
+        return;
+      }
+
+      // Set CSS dimensions to logical size
+      this.#htmlCanvas.style.width = `${width}px`;
+      this.#htmlCanvas.style.height = `${height}px`;
+
+      // Set canvas pixel dimensions to physical size
+      this.#htmlCanvas.width = physicalWidth;
+      this.#htmlCanvas.height = physicalHeight;
     }
-
-    // Set CSS dimensions to logical size
-    this.#htmlCanvas.style.width = `${width}px`;
-    this.#htmlCanvas.style.height = `${height}px`;
-
-    // Set canvas pixel dimensions to physical size
-    this.#htmlCanvas.width = physicalWidth;
-    this.#htmlCanvas.height = physicalHeight;
 
     // Create main Scene
     this.#mainScene = new Scene();
 
     // Apply DPR scale transform if enabled
-    if (enableDevicePixelRatio) {
+    if (this.#enableDevicePixelRatio) {
       this.#mainScene.scale(dpr);
     }
 
@@ -412,7 +426,7 @@ export class Canvas {
    * For static scenes, render() can be called directly.
    */
   public render(): this {
-    if (!this.#engine || !this.#htmlCanvas || !this.#mainScene) {
+    if (!this.#engine || !this.#mainScene) {
       return this;
     }
 
@@ -424,7 +438,7 @@ export class Canvas {
       this.#needsUpdate = false;
     }
 
-    if (this.#enableDevicePixelRatio) {
+    if (this.#enableDevicePixelRatio && this.#htmlCanvas) {
       const dpr = this._calculateDPR();
 
       // Apply new DPR when it's changed
@@ -464,6 +478,17 @@ export class Canvas {
     }
 
     return this;
+  }
+
+  public readPixels(): CanvasPixelData | null {
+    if (this.#renderer !== 'sw' || !this.#engine) {
+      return null;
+    }
+
+    const source = this.#engine.render();
+    const { width, height } = this.#engine.size();
+
+    return { width, height, pixels: new Uint8Array(source) };
   }
 
   private _calculateDPR(): number {
@@ -511,23 +536,23 @@ export class Canvas {
     this.#logicalWidth = width;
     this.#logicalHeight = height;
 
+    // Calculate physical dimensions
+    const dpr = this.#enableDevicePixelRatio ? this.#currentDPR : 1;
+    const physicalWidth = width * dpr;
+    const physicalHeight = height * dpr;
+
     if (this.#htmlCanvas) {
       // Update CSS dimensions to logical size
       this.#htmlCanvas.style.width = `${width}px`;
       this.#htmlCanvas.style.height = `${height}px`;
 
-      // Calculate physical dimensions
-      const dpr = this.#enableDevicePixelRatio ? this.#currentDPR : 1;
-      const physicalWidth = width * dpr;
-      const physicalHeight = height * dpr;
-
       // Set canvas pixel dimensions to physical size
       this.#htmlCanvas.width = physicalWidth;
       this.#htmlCanvas.height = physicalHeight;
+    }
 
-      if (this.#engine) {
-        this.#engine.resize(physicalWidth, physicalHeight);
-      }
+    if (this.#engine) {
+      this.#engine.resize(physicalWidth, physicalHeight);
     }
 
     return this;
