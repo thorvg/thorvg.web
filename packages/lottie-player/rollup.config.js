@@ -142,10 +142,9 @@ const createLottieConfig = (preset) => {
         include: ['src/**/*.ts'],
         preventAssignment: true,
         values: {
-          '/dist': presetMap[preset].path,
+          '__WASM_PATH__': pkg.version + presetMap[preset].path,
           '__THORVG_VERSION__': process.env.THORVG_VERSION,
           '__RENDERER__': presetMap[preset].renderer,
-          '__PACKAGE_VERSION__': pkg.version,
         },
       }),
       nodePolyfills(),
