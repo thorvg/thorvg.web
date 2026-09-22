@@ -1,4 +1,15 @@
+import { getModule, hasModule } from '../../interop/module';
+
+let selectorKey = 0; // counter for special HTML targets
+
 export abstract class Surface {
+  public readonly key: string;
+
+  protected constructor(canvas: HTMLCanvasElement | OffscreenCanvas) {
+    this.key = `!thorvg-${++selectorKey}`;
+    getModule().specialHTMLTargets[this.key] = canvas;
+  }
+
   public dpr(): number {
     return 1;
   }
@@ -9,5 +20,9 @@ export abstract class Surface {
 
   public abstract clear(): void;
 
-  public dispose(): void {}
+  public dispose(): void {
+    if (hasModule()) {
+      delete getModule().specialHTMLTargets[this.key];
+    }
+  }
 }

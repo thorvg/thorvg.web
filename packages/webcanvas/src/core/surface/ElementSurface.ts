@@ -4,7 +4,7 @@ export class ElementSurface extends Surface {
   #canvas: HTMLCanvasElement;
 
   constructor(element: HTMLCanvasElement) {
-    super();
+    super(element);
     this.#canvas = element;
   }
 

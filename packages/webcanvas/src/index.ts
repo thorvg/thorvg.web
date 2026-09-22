@@ -342,6 +342,6 @@ export type { FontsourceOptions } from './providers/FontsourceProvider';
 export type { FontProvider, FontProviderResult } from './core/FontProvider';
 export type { ColorStop } from './core/Fill';
 /** @category Canvas */
-export type { RendererType } from './common/constants';
+export type { RendererType, CanvasTarget } from './common/constants';
 /** @category Picture */
 export type { MimeType } from './common/constants';
