@@ -40,6 +40,9 @@ On the web platform, the rendered output is presented through an **HTML `<canvas
   - [Prerequisites](#prerequisites)
   - [Building from Source](#building-from-source)
   - [Building WASM Bindings](#building-wasm-bindings)
+  - [Contributors](#contributors)
+- [Partners](#partners)
+- [Communication](#communication)
 
 ## 📦 Packages
 
@@ -82,7 +85,7 @@ canvas.render();
 
 [Back to contents](#contents)
 <br />
-
+<br />
 ## Examples
 
 ### Lottie Player
@@ -108,7 +111,7 @@ canvas.render();
 
 [Back to contents](#contents)
 <br />
-
+<br />
 ## Development
 
 ### Prerequisites
@@ -147,3 +150,22 @@ sh ./wasm_wcanvas_setup.sh
 
 [Back to contents](#contents)
 <br />
+<br />
+## Partners
+Corporate partners collaborate with ThorVG Web through development, integration, and strategic initiatives that help advance the project. 
+<br />
+<br />
+<p align="center", href="https://www.lottiefiles.com">
+  <a href="https://www.lottiefiles.com">
+  <img width="250" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/partner_lottiefiles.jpg"  alt="LottieFiles">
+  </a>
+</p>
+<br />
+
+If you’re interested in partnering with ThorVG, we’d love to hear from you. Please reach out at thorvg@thorvg.org
+
+[Back to contents](#contents)
+<br />
+<br />
+## Communication
+For real-time conversations and discussions, please join us on [Discord](https://discord.gg/n25xj6J6HM)
