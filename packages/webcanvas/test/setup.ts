@@ -1,4 +1,4 @@
-import { beforeAll, afterAll } from 'vitest';
+import { beforeAll, afterAll, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import ThorVG from '../src/index';
@@ -34,6 +34,11 @@ beforeAll(async () => {
   canvas.height = 600;
   document.body.appendChild(canvas);
 
+  // mock canvas context for happy-dom environment
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
+    () => ({ putImageData: vi.fn(), clearRect: vi.fn() }) as unknown as CanvasRenderingContext2D
+  );
+
   Object.defineProperty(window, 'devicePixelRatio', {
     value: 1,
     writable: true,
@@ -44,5 +49,6 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
+  vi.restoreAllMocks();
   TVG.term();
 });
