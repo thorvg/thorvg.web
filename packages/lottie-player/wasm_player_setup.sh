@@ -36,3 +36,9 @@ rm -rf build_wasm_player && sh ./wasm_player_build.sh wg-lite "$EMSDK/"
 mkdir -p ./dist/wg-lite
 mv build_wasm_player/thorvg.wasm ./dist/wg-lite
 mv build_wasm_player/thorvg.js ./dist/wg-lite
+
+rm -rf build_wasm_player && sh ./wasm_player_build.sh pthread "$EMSDK/"
+mkdir -p ./dist/thread
+mv build_wasm_player/thorvg.wasm ./dist/thread
+mv build_wasm_player/thorvg.js ./dist/thread
+

@@ -21,7 +21,29 @@
  */
 
 import { customElement, property } from 'lit/decorators.js';
-import { BaseLottiePlayer, RenderConfig, Renderer } from './base-lottie-player';
+import { BaseLottiePlayer, RenderConfig, Renderer, isModuleRequested } from './base-lottie-player';
+
+/**
+ * Sets the number of worker threads for the multi-threaded build.
+ * @param threads Number of worker threads (a non-negative integer; 0 = default).
+ * @throws {Error} If the WASM module is already initialized.
+ * @beta
+ */
+export function setThreadCount(threads: number): void {
+  if (isModuleRequested()) {
+    throw new Error('[lottie-player] setThreadCount() must be called before the WASM module is initialized.');
+  }
+  globalThis.__THORVG_THREAD_COUNT = threads >= 0 ? threads : 0;
+}
+
+/**
+ * Gets the configured worker thread count.
+ * @beta
+ */
+export function getThreadCount(): number {
+  return globalThis.__THORVG_THREAD_COUNT ?? 0
+}
+
 
 type PresetRenderConfig = Exclude<RenderConfig, 'renderer'>;
 

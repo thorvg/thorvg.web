@@ -30,6 +30,7 @@ declare global {
   interface Window {
     webkitAudioContext?: typeof AudioContext;
   }
+  var __THORVG_THREAD_COUNT: number | undefined;
 }
 
 type LottieJson = Record<string, unknown>;
@@ -39,6 +40,10 @@ const DEFAULT_RENDERER = '__RENDERER__';
 const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@__WASM_PATH__/thorvg.wasm';
 export let wasmModule: MainModule | null = null;
 let _moduleRequested: boolean = false;
+
+export function isModuleRequested(): boolean {
+  return _moduleRequested;
+}
 
 // Define library version
 export interface LibraryVersion {
@@ -402,7 +407,7 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`);
+    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`, globalThis.__THORVG_THREAD_COUNT ?? 0);
 
     if (this.src) {
       this.load(this.src, this.fileType);
@@ -882,6 +887,7 @@ export class BaseLottiePlayer extends LitElement {
 
     wasmModule.term();
     wasmModule = null;
+    globalThis.__THORVG_THREAD_COUNT = undefined;
   }
 
   /**

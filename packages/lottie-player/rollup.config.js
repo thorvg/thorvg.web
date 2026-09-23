@@ -31,6 +31,7 @@ const PresetModule = {
   SW_LITE: "lottie-player-sw-lite",
   GL_LITE: "lottie-player-gl-lite",
   WG_LITE: "lottie-player-wg-lite",
+  THREAD: "lottie-player-thread",
 }
 
 const presetMap = {
@@ -104,22 +105,77 @@ const presetMap = {
       esm: pkg.exports['./wg-lite'].import,
     }
   },
+  [PresetModule.THREAD]: {
+    path: '/dist/thread',
+    renderer: 'sw',
+    input: "./src/lottie-preset-player.ts",
+    output: {
+      esm: pkg.exports['./thread'].import,
+    }
+  },
 }
+
+const commonTreeshake = {
+  moduleSideEffects: false,
+  propertyReadSideEffects: false,
+  tryCatchDeoptimization: false
+};
+
+const createCommonPlugins = (preset) => [
+  replace({
+    include: ['src/**/*.ts'],
+    preventAssignment: true,
+    values: {
+      '__WASM_PATH__': pkg.version + presetMap[preset].path,
+      '__THORVG_VERSION__': process.env.THORVG_VERSION,
+      '__RENDERER__': presetMap[preset].renderer,
+    },
+  }),
+  nodePolyfills(),
+  commonjs({
+    include: /node_modules/
+  }),
+  swc({
+    include: /\.[mc]?[jt]sx?$/,
+    exclude: /node_modules/,
+    tsconfig: "tsconfig.json",
+    sourceMaps: true,
+    jsc: {
+      parser: {
+        syntax: "typescript",
+        tsx: false,
+        decorators: true,
+        declaration: true,
+        dynamicImport: true,
+      },
+      target: "es2022",
+    },
+  }),
+  nodeResolve(),
+  terser({
+    compress: {
+      pure_getters: true,
+      passes: 3,
+      drop_console: true,
+      drop_debugger: true
+    },
+    mangle: true,
+    output: {
+      comments: false,
+    },
+  }),
+];
 
 const createLottieConfig = (preset) => {
   return {
     input: presetMap[preset].input,
-    treeshake: {
-      moduleSideEffects: false,
-      propertyReadSideEffects: false,
-      tryCatchDeoptimization: false
-    },
+    treeshake: commonTreeshake,
     output: [
       {
         file: presetMap[preset].output.umd,
         format: "umd",
         hoistTransitiveImports: true,
-        ...commonOutput, 
+        ...commonOutput,
       },
       {
         file: presetMap[preset].output.cjs,
@@ -138,48 +194,36 @@ const createLottieConfig = (preset) => {
           { find: '../dist/thorvg.js', replacement: path.join('..', presetMap[preset].path, 'thorvg')  },
         ]
       }),
-      replace({
-        include: ['src/**/*.ts'],
-        preventAssignment: true,
-        values: {
-          '__WASM_PATH__': pkg.version + presetMap[preset].path,
-          '__THORVG_VERSION__': process.env.THORVG_VERSION,
-          '__RENDERER__': presetMap[preset].renderer,
-        },
-      }),
-      nodePolyfills(),
-      commonjs({
-        include: /node_modules/
-      }),
-      swc({
-        include: /\.[mc]?[jt]sx?$/,
-        exclude: /node_modules/,
-        tsconfig: "tsconfig.json",
-        sourceMaps: true,
-        jsc: {
-          parser: {
-            syntax: "typescript",
-            tsx: false,
-            decorators: true,
-            declaration: true,
-            dynamicImport: true,
-          },
-          target: "es2022",
-        },
-      }),
-      nodeResolve(),
-      terser({
-        compress: {
-          pure_getters: true,
-          passes: 3,
-          drop_console: true,
-          drop_debugger: true
-        },
-        mangle: true,
-        output: {
-          comments: false,
-        },
-      }),
+      ...createCommonPlugins(preset),
+    ],
+  };
+}
+
+const threadGlueExternal = {
+  name: 'thread-glue-external',
+  resolveId(source) {
+    if (source === '../dist/thorvg.js') {
+      return { id: './thorvg.js', external: 'absolute' };
+    }
+    return null;
+  },
+};
+
+const createThreadConfig = () => {
+  const preset = PresetModule.THREAD;
+  return {
+    input: presetMap[preset].input,
+    treeshake: commonTreeshake,
+    output: [
+      {
+        file: presetMap[preset].output.esm,
+        format: "esm",
+        ...commonOutput,
+      },
+    ],
+    plugins: [
+      threadGlueExternal,
+      ...createCommonPlugins(preset),
     ],
   };
 }
@@ -192,6 +236,7 @@ export default [
   createLottieConfig(PresetModule.SW_LITE),
   createLottieConfig(PresetModule.GL_LITE),
   createLottieConfig(PresetModule.WG_LITE),
+  createThreadConfig(),
   {
     input: "./src/lottie-player.ts",
     treeshake: true,

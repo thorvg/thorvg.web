@@ -13,6 +13,9 @@
       "import": "./dist/sw/lottie-player.esm.js",
       "require": "./dist/sw/lottie-player.cjs.js"
     },
+    "./thread": {
+      "import": "./dist/thread/lottie-player.esm.js"
+    },
     "./gl": {
       "import": "./dist/gl/lottie-player.esm.js",
       "require": "./dist/gl/lottie-player.cjs.js"
@@ -40,7 +43,8 @@
   "files": [
     "dist/",
     "!dist/thorvg.d.ts",
-    "!dist/**/thorvg.js"
+    "!dist/**/thorvg.js",
+    "dist/thread/thorvg.js"
   ],
   "types": "./dist/lottie-player.d.ts",
   "scripts": {
