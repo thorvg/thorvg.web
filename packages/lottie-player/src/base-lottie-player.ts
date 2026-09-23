@@ -384,7 +384,7 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`);
+    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`, globalThis.__THORVG_THREAD_COUNT ?? 0);
 
     if (this.src) {
       this.load(this.src, this.fileType);

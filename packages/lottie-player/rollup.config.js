@@ -31,6 +31,26 @@ const PresetModule = {
   SW_LITE: "lottie-player-sw-lite",
   GL_LITE: "lottie-player-gl-lite",
   WG_LITE: "lottie-player-wg-lite",
+  THREAD: "lottie-player-thread",
+}
+
+const threadWorker = () => {
+  const workerPattern = /new Worker\(new URL\("thorvg\.js",import\.meta\.url\),(\{[^}]*\})\)/;
+  const bundleFile = path.basename(pkg.exports['./thread'].import);
+  return {
+    name: 'thorvg-worker-url',
+    transform(code, id) {
+      if (!id.endsWith(path.join('dist', 'thread', 'thorvg.js'))) return null;
+      if (!workerPattern.test(code)) this.error(`pthread worker not found in ${id}.`);
+      return {
+        code: code.replace(workerPattern, (_, options) =>
+          `(new URL(import.meta.url).origin===location.origin` +
+          `?new Worker(new URL("./${bundleFile}",import.meta.url),${options})` +
+          `:new Worker(URL.createObjectURL(new Blob(['import"'+import.meta.url+'"'],{type:"text/javascript"})),${options}))`),
+        map: null,
+      };
+    },
+  };
 }
 
 const presetMap = {
@@ -38,6 +58,8 @@ const presetMap = {
     path: '/dist',
     renderer: 'sw',
     input: "./src/lottie-player.ts",
+    options: {},
+    plugins: [],
     output: {
       umd: './dist/lottie-player.js',
       cjs: pkg.main,
@@ -48,6 +70,8 @@ const presetMap = {
     path: '/dist/sw',
     renderer: 'sw',
     input: "./src/lottie-preset-player.ts",
+    options: {},
+    plugins: [],
     output: {
       umd: './dist/sw/lottie-player.js',
       cjs: pkg.exports['./sw'].require,
@@ -58,6 +82,8 @@ const presetMap = {
     path: '/dist/gl',
     renderer: 'gl',
     input: "./src/lottie-preset-player.ts",
+    options: {},
+    plugins: [],
     output: {
       umd: './dist/gl/lottie-player.js',
       cjs: pkg.exports['./gl'].require,
@@ -68,6 +94,8 @@ const presetMap = {
     path: '/dist/sw-lite',
     renderer: 'sw',
     input: "./src/lottie-preset-player.ts",
+    options: {},
+    plugins: [],
     output: {
       umd: './dist/sw-lite/lottie-player.js',
       cjs: pkg.exports['./sw-lite'].require,
@@ -78,6 +106,8 @@ const presetMap = {
     path: '/dist/gl-lite',
     renderer: 'gl',
     input: "./src/lottie-preset-player.ts",
+    options: {},
+    plugins: [],
     output: {
       umd: './dist/gl-lite/lottie-player.js',
       cjs: pkg.exports['./gl-lite'].require,
@@ -88,6 +118,8 @@ const presetMap = {
     path: '/dist/wg',
     renderer: 'wg',
     input: "./src/lottie-preset-player.ts",
+    options: {},
+    plugins: [],
     output: {
       umd: './dist/wg/lottie-player.js',
       cjs: pkg.exports['./wg'].require,
@@ -98,17 +130,77 @@ const presetMap = {
     path: '/dist/wg-lite',
     renderer: 'wg',
     input: "./src/lottie-preset-player.ts",
+    options: {},
+    plugins: [],
     output: {
       umd: './dist/wg-lite/lottie-player.js',
       cjs: pkg.exports['./wg-lite'].require,
       esm: pkg.exports['./wg-lite'].import,
     }
   },
+  [PresetModule.THREAD]: {
+    path: '/dist/thread',
+    renderer: 'sw',
+    input: "./src/lottie-preset-player.ts",
+    options: {
+      exportConditions: ['node'],
+    },
+    plugins: [threadWorker()],
+    output: {
+      esm: pkg.exports['./thread'].import,
+    }
+  },
 }
 
+const resolveCommonPlugins = (config) => [
+  replace({
+    include: ['src/**/*.ts'],
+    preventAssignment: true,
+    values: {
+      '__WASM_PATH__': pkg.version + config.path,
+      '__THORVG_VERSION__': process.env.THORVG_VERSION,
+      '__RENDERER__': config.renderer,
+    },
+  }),
+  nodePolyfills(),
+  commonjs({
+    include: /node_modules/
+  }),
+  swc({
+    include: /\.[mc]?[jt]sx?$/,
+    exclude: /node_modules/,
+    tsconfig: "tsconfig.json",
+    sourceMaps: true,
+    jsc: {
+      parser: {
+        syntax: "typescript",
+        tsx: false,
+        decorators: true,
+        declaration: true,
+        dynamicImport: true,
+      },
+      target: "es2022",
+    },
+  }),
+  nodeResolve(config.options),
+  terser({
+    compress: {
+      pure_getters: true,
+      passes: 3,
+      drop_console: true,
+      drop_debugger: true
+    },
+    mangle: true,
+    output: {
+      comments: false,
+    },
+  }),
+];
+
 const createLottieConfig = (preset) => {
+  const config = presetMap[preset];
   return {
-    input: presetMap[preset].input,
+    input: config.input,
     treeshake: {
       moduleSideEffects: false,
       propertyReadSideEffects: false,
@@ -116,70 +208,29 @@ const createLottieConfig = (preset) => {
     },
     output: [
       {
-        file: presetMap[preset].output.umd,
+        file: config.output.umd,
         format: "umd",
-        hoistTransitiveImports: true,
-        ...commonOutput, 
+        ...commonOutput,
       },
       {
-        file: presetMap[preset].output.cjs,
+        file: config.output.cjs,
         format: "cjs",
         ...commonOutput,
       },
       {
-        file: presetMap[preset].output.esm,
+        file: config.output.esm,
         format: "esm",
         ...commonOutput,
       },
-    ],
+    ].filter((output) => output.file),
     plugins: [
       alias({
         entries: [
-          { find: '../dist/thorvg.js', replacement: path.join('..', presetMap[preset].path, 'thorvg')  },
+          { find: '../dist/thorvg.js', replacement: path.join('..', config.path, 'thorvg')  },
         ]
       }),
-      replace({
-        include: ['src/**/*.ts'],
-        preventAssignment: true,
-        values: {
-          '__WASM_PATH__': pkg.version + presetMap[preset].path,
-          '__THORVG_VERSION__': process.env.THORVG_VERSION,
-          '__RENDERER__': presetMap[preset].renderer,
-        },
-      }),
-      nodePolyfills(),
-      commonjs({
-        include: /node_modules/
-      }),
-      swc({
-        include: /\.[mc]?[jt]sx?$/,
-        exclude: /node_modules/,
-        tsconfig: "tsconfig.json",
-        sourceMaps: true,
-        jsc: {
-          parser: {
-            syntax: "typescript",
-            tsx: false,
-            decorators: true,
-            declaration: true,
-            dynamicImport: true,
-          },
-          target: "es2022",
-        },
-      }),
-      nodeResolve(),
-      terser({
-        compress: {
-          pure_getters: true,
-          passes: 3,
-          drop_console: true,
-          drop_debugger: true
-        },
-        mangle: true,
-        output: {
-          comments: false,
-        },
-      }),
+      ...config.plugins,
+      ...resolveCommonPlugins(config),
     ],
   };
 }
@@ -217,6 +268,7 @@ export default [
   createLottieConfig(PresetModule.SW_LITE),
   createLottieConfig(PresetModule.GL_LITE),
   createLottieConfig(PresetModule.WG_LITE),
+  createLottieConfig(PresetModule.THREAD),
   createTypesConfig("./src/lottie-player.ts", pkg.types),
   createTypesConfig("./src/lottie-preset-player.ts", pkg.exports['./sw'].types),
 ];

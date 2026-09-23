@@ -40,6 +40,10 @@
       "types": "./dist/lottie-preset-player.d.ts",
       "import": "./dist/wg-lite/lottie-player.esm.js",
       "require": "./dist/wg-lite/lottie-player.cjs.js"
+    },
+    "./thread": {
+      "types": "./dist/lottie-preset-player.d.ts",
+      "import": "./dist/thread/lottie-player.esm.js"
     }
   },
   "publishConfig": {
