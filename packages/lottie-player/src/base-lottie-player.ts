@@ -643,7 +643,7 @@ export class BaseLottiePlayer extends LitElement {
     }
 
     const buffer = this.TVG.render();
-    const clampedBuffer = new Uint8ClampedArray(buffer, 0, buffer.byteLength);
+    const clampedBuffer = new Uint8ClampedArray(buffer);
     if (clampedBuffer.length < 1) {
       return;
     }
