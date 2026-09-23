@@ -17,8 +17,9 @@ const commonOutput = {
   sourcemap: true,
 };
 
-const sharedPlugins = (aliasEntries, wasmPath) => [
+const sharedPlugins = (aliasEntries, wasmPath, extraPlugins = []) => [
   ...(aliasEntries.length ? [alias({ entries: aliasEntries })] : []),
+  ...extraPlugins,
   webWorkerLoader({
     targetPlatform: 'browser',
     inline: true,
@@ -98,6 +99,9 @@ const createWebCanvasConfig = () => {
 }
 
 const createThreadConfig = () => {
+  const workerUrl = 'new URL("thorvg.js",import.meta.url)';
+  const bundleFile = path.basename(pkg.exports['./thread'].import);
+
   return {
     input: "./src/index.ts",
     treeshake: {
@@ -114,7 +118,17 @@ const createThreadConfig = () => {
     ],
     plugins: sharedPlugins([
       { find: '../dist/thorvg.js', replacement: path.resolve('./dist/thread/thorvg.js') },
-    ], 'dist/thread/thorvg.wasm'),
+    ], 'dist/thread/thorvg.wasm', [{
+      name: 'thorvg-worker-url',
+      transform(code, id) {
+        if (!id.endsWith(path.join('dist', 'thread', 'thorvg.js'))) return null;
+        if (!code.includes(workerUrl)) this.error(`pthread worker URL not found in ${id}.`);
+        return {
+          code: code.replace(workerUrl, `new URL("./${bundleFile}",import.meta.url)`),
+          map: null,
+        };
+      },
+    }]),
   };
 }
 
