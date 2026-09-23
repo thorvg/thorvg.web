@@ -12,6 +12,11 @@ mkdir -p ./dist/sw
 mv build_wasm_player/thorvg.wasm ./dist/sw
 mv build_wasm_player/thorvg.js ./dist/sw
 
+rm -rf build_wasm_player && sh ./wasm_player_build.sh pthread "$EMSDK/"
+mkdir -p ./dist/thread
+mv build_wasm_player/thorvg.wasm ./dist/thread
+mv build_wasm_player/thorvg.js ./dist/thread
+
 rm -rf build_wasm_player && sh ./wasm_player_build.sh gl "$EMSDK/"
 mkdir -p ./dist/gl
 mv build_wasm_player/thorvg.wasm ./dist/gl

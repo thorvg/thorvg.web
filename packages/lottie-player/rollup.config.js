@@ -26,6 +26,7 @@ const commonOutput = {
 const PresetModule = {
   Default: "lottie-player",
   SW: "lottie-player-sw",
+  THREAD: "lottie-player-thread",
   GL: "lottie-player-gl",
   WG: "lottie-player-wg",
   SW_LITE: "lottie-player-sw-lite",
@@ -52,6 +53,14 @@ const presetMap = {
       umd: './dist/sw/lottie-player.js',
       cjs: pkg.exports['./sw'].require,
       esm: pkg.exports['./sw'].import,
+    }
+  },
+  [PresetModule.THREAD]: {
+    path: '/dist/thread',
+    renderer: 'sw',
+    input: "./src/lottie-preset-player.ts",
+    output: {
+      esm: pkg.exports['./thread'].import,
     }
   },
   [PresetModule.GL]: {
@@ -106,6 +115,18 @@ const presetMap = {
   },
 }
 
+const createOutputOptions = ([format, file]) => {
+  const output = {
+    file,
+    format,
+    ...commonOutput,
+  }
+  if (format === 'umd') {
+    output.hoistTransitiveImports = true
+  }
+  return output
+}
+
 const createLottieConfig = (preset) => {
   return {
     input: presetMap[preset].input,
@@ -114,24 +135,7 @@ const createLottieConfig = (preset) => {
       propertyReadSideEffects: false,
       tryCatchDeoptimization: false
     },
-    output: [
-      {
-        file: presetMap[preset].output.umd,
-        format: "umd",
-        hoistTransitiveImports: true,
-        ...commonOutput, 
-      },
-      {
-        file: presetMap[preset].output.cjs,
-        format: "cjs",
-        ...commonOutput,
-      },
-      {
-        file: presetMap[preset].output.esm,
-        format: "esm",
-        ...commonOutput,
-      },
-    ],
+    output: Object.entries(presetMap[preset].output).map(createOutputOptions),
     plugins: [
       alias({
         entries: [
@@ -192,6 +196,7 @@ export default [
   createLottieConfig(PresetModule.SW_LITE),
   createLottieConfig(PresetModule.GL_LITE),
   createLottieConfig(PresetModule.WG_LITE),
+  createLottieConfig(PresetModule.THREAD),
   {
     input: "./src/lottie-player.ts",
     treeshake: true,
