@@ -30,7 +30,7 @@ using namespace emscripten;
 using namespace std;
 using namespace tvg;
 
-EMSCRIPTEN_DECLARE_VAL_TYPE(ArrayBuffer);
+EMSCRIPTEN_DECLARE_VAL_TYPE(Uint8Array);
 EMSCRIPTEN_DECLARE_VAL_TYPE(Float32Array);
 EMSCRIPTEN_DECLARE_VAL_TYPE(AssetResolverCallback);
 EMSCRIPTEN_DECLARE_VAL_TYPE(AudioResolverCallback);
@@ -46,9 +46,9 @@ struct TvgEngineMethod
     virtual ~TvgEngineMethod() {}
     virtual Canvas* init(string&) = 0;
     virtual void resize(Canvas* canvas, uint32_t w, uint32_t h) = 0;
-    virtual ArrayBuffer output(uint32_t w, uint32_t h)
+    virtual Uint8Array output(uint32_t w, uint32_t h)
     {
-        return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
+        return Uint8Array(val(typed_memory_view<uint8_t>(0, nullptr)));
     }
 
     void loadFont() {
@@ -85,9 +85,9 @@ struct TvgSwEngine : TvgEngineMethod
         static_cast<SwCanvas*>(canvas)->target((uint32_t *)buffer, w, w, h, ColorSpace::ABGR8888S);
     }
 
-    ArrayBuffer output(uint32_t w, uint32_t h) override
+    Uint8Array output(uint32_t w, uint32_t h) override
     {
-        return ArrayBuffer(val(typed_memory_view(w * h * 4, buffer)));
+        return Uint8Array(val(typed_memory_view(w * h * 4, buffer)));
     }
 };
 
@@ -357,18 +357,18 @@ public:
         return true;
     }
 
-    ArrayBuffer render()
+    Uint8Array render()
     {
         errorMsg = NoError;
 
-        if (!canvas || !animation) return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
-        if (width == 0 || height == 0) return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
+        if (!canvas || !animation) return Uint8Array(val(typed_memory_view<uint8_t>(0, nullptr)));
+        if (width == 0 || height == 0) return Uint8Array(val(typed_memory_view<uint8_t>(0, nullptr)));
 
         if (!updated) return engine->output(width, height);
 
         if (canvas->draw(true) != Result::Success) {
             errorMsg = "draw() fail";
-            return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
+            return Uint8Array(val(typed_memory_view<uint8_t>(0, nullptr)));
         }
 
         canvas->sync();
@@ -641,7 +641,7 @@ void term()
 
 EMSCRIPTEN_BINDINGS(thorvg_bindings)
 {
-    register_type<ArrayBuffer>("ArrayBuffer");
+    register_type<Uint8Array>("Uint8Array");
     register_type<Float32Array>("Float32Array");
     register_type<AssetResolverCallback>("(src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string }");
     register_type<AudioResolverCallback>("(info: { id: number, active: boolean, offset: number, volume: number, path: string | null, data: Uint8Array | null, mimeType: string | null }, data: unknown) => void");

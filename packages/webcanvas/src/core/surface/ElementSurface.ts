@@ -21,7 +21,7 @@ export class ElementSurface extends Surface {
     this.#canvas.height = physicalHeight;
   }
 
-  public present(buffer: ArrayBuffer, width: number, height: number): void {
+  public present(buffer: Uint8Array, width: number, height: number): void {
     const ctx = this.#canvas.getContext('2d') as CanvasRenderingContext2D;
     const imageData = new ImageData(new Uint8ClampedArray(buffer), width, height);
     ctx.putImageData(imageData, 0, 0);
