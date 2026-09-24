@@ -4,6 +4,28 @@
     <meta charset="UTF-8" />
     <title>ThorVG Lottie Player</title>
     <meta name="description" content="A web lottie player using ThorVG as a renderer" />
+    <!--
+      Build the player package, then serve this repository over HTTP.
+      This example uses WebGL with the Non-Lite Default bundle.
+      The bundle includes SW, WebGL, and WebGPU renderers; select the renderer
+      with renderConfig.renderer before initialization, as shown below.
+
+      To use a smaller preset, replace this script's src with:
+        ../packages/lottie-player/dist/sw/lottie-player.js       (CPU)
+        ../packages/lottie-player/dist/gl/lottie-player.js       (WebGL)
+        ../packages/lottie-player/dist/wg/lottie-player.js       (WebGPU)
+        ../packages/lottie-player/dist/sw-lite/lottie-player.js  (CPU Lite)
+        ../packages/lottie-player/dist/gl-lite/lottie-player.js  (WebGL Lite)
+        ../packages/lottie-player/dist/wg-lite/lottie-player.js  (WebGPU Lite)
+      Also change animation.wasmUrl below to the SAME preset directory.
+      Load only ONE player bundle: they all register <lottie-player>.
+      Presets fix the renderer; renderConfig.renderer cannot change it.
+
+      Lite supports Lottie and PNG, but excludes JPG/WebP images, TTF fonts,
+      and Expressions. This example uses a shape-only animation for Lite.
+      The controls below use APIs shared by Default and all presets.
+      save2gif() and save2png() are available only in the Default bundle.
+    -->
     <script src="../packages/lottie-player/dist/lottie-player.js"></script>
   </head>
   <body>
@@ -14,8 +36,6 @@
         <button onclick="stopAnimation()">Stop</button>
         <button onclick="createAnimation()">Create</button>
         <button onclick="destroyAnimation()">Destroy</button>
-        <button onclick="save2gif()">save2gif</button>
-        <button onclick="save2png()">save2png</button>
         <div>
           <label for="reverseCheckbox">Reverse</label>
           <input type="checkbox" id="reverseCheckbox" onchange="toggleReverse(event)">
@@ -33,7 +53,7 @@
         
         <div>
           <label for="frameRange">Frame</label>
-          <input type="range" id="frameRange" min="1" max="100" step="1" value="1" onchange="seekFrame(this.value)">
+          <input type="range" id="frameRange" min="0" max="100" step="1" value="0" onchange="seekFrame(this.value)">
         </div>
       </div>
 
@@ -56,9 +76,18 @@
 
         animation.autoPlay = true;
         animation.loop = true;
-        animation.src = "https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json";
+        animation.src = "./resources/coin.json";
         animation.style.width = "500px";
         animation.style.height = "500px";
+        // Use WebGL by default; change to 'sw' (CPU) or 'wg' (WebGPU) if needed.
+        // Set this before appendChild(), which starts player initialization.
+        // GPU rendering requires browser/device support; WebGPU also requires
+        // a secure context such as HTTPS or localhost.
+        // With a preset bundle, omit this line; the bundle selects the renderer.
+        animation.renderConfig = { renderer: 'gl' };
+
+        // Match the script bundle above. For example, WebGL Lite uses:
+        // animation.wasmUrl = "../packages/lottie-player/dist/gl-lite/thorvg.wasm";
         animation.wasmUrl = "../packages/lottie-player/dist/thorvg.wasm";
 
         lottie.appendChild(animation);
@@ -95,7 +124,7 @@
           return;
         }
 
-        animation.seek(animation.totalFrames * framePercentage / 100);
+        animation.seek(animation.totalFrame * framePercentage / 100);
       }
 
       function destroyAnimation() {
@@ -151,22 +180,6 @@
         if (animation.currentState !== 'playing') {
           animation.play();
         }
-      }
-
-      function save2gif() {
-        if (!animation) {
-          alert('Animation is not created yet');
-          return;
-        }
-        animation.save2gif(animation.src);
-      }
-
-      function save2png() {
-        if (!animation) {
-          alert('Animation is not created yet');
-          return;
-        }
-        animation.save2png();
       }
 
   </script>
