@@ -30,11 +30,11 @@ On the web platform, the rendered output is presented through an **HTML `<canvas
 
 ## Contents
 - [Packages](#-packages)
-  - [Lottie Player](#lottie-player)
   - [WebCanvas](#webcanvas)
+  - [Lottie Player](#lottie-player)
 - [Examples](#examples)
-  - [Lottie Player](#lottie-player)
   - [WebCanvas](#webcanvas)
+  - [Lottie Player](#lottie-player)
   - [Framework Integration](#framework-integration)
 - [Development](#development)
   - [Prerequisites](#prerequisites)
@@ -46,22 +46,6 @@ On the web platform, the rendered output is presented through an **HTML `<canvas
 ## 📦 Packages
 
 This monorepo contains two complementary packages:
-
-### [Lottie Player](./packages/lottie-player)
-[![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player)
-
-**Lottie animation player** - [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components) for embedding Lottie animations
-
-```html
-<lottie-player
-  autoPlay
-  loop
-  src="animation.json"
-  style="width: 500px; height: 500px;"
-></lottie-player>
-```
-
----
 
 ### [WebCanvas](./packages/webcanvas)
 [![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas)
@@ -82,18 +66,26 @@ canvas.add(shape);
 canvas.render();
 ```
 
+---
+
+### [Lottie Player](./packages/lottie-player)
+[![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player)
+
+**Lottie animation player** - [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components) for embedding Lottie animations
+
+```html
+<lottie-player
+  autoPlay
+  loop
+  src="animation.json"
+  style="width: 500px; height: 500px;"
+></lottie-player>
+```
+
 [Back to contents](#contents)
 <br />
 <br />
 ## Examples
-
-### Lottie Player
-- [Software Renderer](./examples/software.html) - Full Lottie support with CPU rendering
-- [WebGL Renderer](./examples/webgl.html) - GPU-accelerated Lottie rendering
-- [WebGPU Renderer](./examples/webgpu.html) - Next-gen GPU acceleration
-- [Software Lite](./examples/software-lite.html) - Lightweight CPU rendering
-- [WebGL Lite](./examples/webgl-lite.html) - Lightweight GPU rendering
-- [WebGPU Lite](./examples/webgpu-lite.html) - Lightweight WebGPU rendering
 
 ### WebCanvas
 - [Basic Usage](./examples/basic-usage.html) - Getting started with shapes
@@ -102,6 +94,14 @@ canvas.render();
 - [Picture Loading](./examples/picture-example.html) - SVG and image rendering
 - [Text Rendering](./examples/text-example.html) - Typography and fonts
 - [Live Editor](./examples/live-editor.html) - Interactive code playground
+
+### Lottie Player
+- [Software Renderer](./examples/software.html) - Full Lottie support with CPU rendering
+- [WebGL Renderer](./examples/webgl.html) - GPU-accelerated Lottie rendering
+- [WebGPU Renderer](./examples/webgpu.html) - Next-gen GPU acceleration
+- [Software Lite](./examples/software-lite.html) - Lightweight CPU rendering
+- [WebGL Lite](./examples/webgl-lite.html) - Lightweight GPU rendering
+- [WebGPU Lite](./examples/webgpu-lite.html) - Lightweight WebGPU rendering
 
 ### Framework Integration
 - [React Example](./examples/react/)
@@ -138,13 +138,13 @@ pnpm run clean
 Each package has its own WASM build script:
 
 ```bash
-# Build lottie-player WASM
-cd packages/lottie-player
-sh ./wasm_player_setup.sh
-
 # Build webcanvas WASM
 cd packages/webcanvas
 sh ./wasm_wcanvas_setup.sh
+
+# Build lottie-player WASM
+cd packages/lottie-player
+sh ./wasm_player_setup.sh
 ```
 
 [Back to contents](#contents)
