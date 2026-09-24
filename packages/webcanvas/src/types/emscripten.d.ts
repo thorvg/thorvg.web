@@ -25,6 +25,9 @@ export interface EmscriptenModule {
   HEAPF32: Float32Array;
   HEAPF64: Float64Array;
 
+  // Emscripten HTML5 target registry
+  specialHTMLTargets: Record<string, unknown>;
+
   // ThorVG initialization
   init(): number;
   term(): void;

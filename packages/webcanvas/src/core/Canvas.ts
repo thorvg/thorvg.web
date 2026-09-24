@@ -48,7 +48,7 @@ import type { Surface } from './surface/Surface';
 import { createSurface } from './surface/surfaceFactory';
 import { Video } from './media/Video';
 import { EngineOption } from '../common/constants';
-import type { RendererType } from '../common/constants';
+import type { RendererType, CanvasTarget } from '../common/constants';
 import { checkResult, handleError } from '../common/errors';
 import type { TvgCanvasInstance } from '../types/emscripten';
 import { getGlobalRenderer } from '../index';
@@ -131,7 +131,8 @@ export class Canvas {
    *
    * The renderer is determined by the global setting from ThorVG.init().
    *
-   * @param selector - CSS selector for the target HTML canvas element (e.g., '#canvas', '.my-canvas')
+   * @param target - CSS selector for the target HTML canvas element (e.g., '#canvas', '.my-canvas'),
+   *                 the `HTMLCanvasElement` itself, or an `OffscreenCanvas`
    * @param options - Configuration options for the canvas
    *
    * @throws {Error} If the canvas element is not found or renderer initialization fails
@@ -174,7 +175,7 @@ export class Canvas {
    * });
    * ```
    */
-  constructor(selector: string, options: CanvasOptions = {}) {
+  constructor(target: CanvasTarget, options: CanvasOptions = {}) {
     const { width = 800, height = 600, enableDevicePixelRatio = true, engineOption = EngineOption.Default } = options;
 
     // Store logical dimensions
@@ -190,7 +191,7 @@ export class Canvas {
     const Module = getModule();
 
     // Create the render target
-    const surface = createSurface(selector);
+    const surface = createSurface(target);
     if (!surface) {
       handleError(`Failed to create canvas with ${renderer} renderer: HTML canvas element not found`, 'Canvas constructor');
       return;
@@ -208,7 +209,7 @@ export class Canvas {
 
     // Create TvgCanvas with physical dimensions and the configured thread count.
     const threadCount = getThreadCount();
-    this.#engine = new Module.TvgCanvas(renderer, selector, physicalWidth, physicalHeight, threadCount, engineOption);
+    this.#engine = new Module.TvgCanvas(renderer, surface.key, physicalWidth, physicalHeight, threadCount, engineOption);
 
     // Check for errors
     const error = this.#engine.error();
