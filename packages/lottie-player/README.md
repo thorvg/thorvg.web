@@ -435,13 +435,7 @@ This will automatically detect framework projects in the `example/` directory an
 The build testing script is located in `./build-test/`.
 
 ### Local Examples
-Check the usage of each preset in the `example/` directory:
-
-- [Software Renderer (Standard)](example/software.html) - Full Lottie support with CPU rendering
-- [WebGL Renderer (Standard)](example/webgl.html) - Full Lottie support with WebGL acceleration
-- [Software Renderer (Lite)](example/software-lite.html) - Basic Lottie support with CPU rendering
-- [WebGL Renderer (Lite)](example/webgl-lite.html) - Basic Lottie support with WebGL acceleration
-- [WebGPU Renderer](example/webgpu.html) - Full Lottie support with WebGPU acceleration
+[Lottie Player Example](../../examples/index.html) demonstrates player setup and basic Lottie playback with WebGL and the Non-Lite Default bundle. Source comments explain how to switch renderers and use Lite presets.
 
 [Back to contents](#contents)
 <br />

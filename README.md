@@ -96,12 +96,7 @@ canvas.render();
 - [Live Editor](./examples/live-editor.html) - Interactive code playground
 
 ### Lottie Player
-- [Software Renderer](./examples/software.html) - Full Lottie support with CPU rendering
-- [WebGL Renderer](./examples/webgl.html) - GPU-accelerated Lottie rendering
-- [WebGPU Renderer](./examples/webgpu.html) - Next-gen GPU acceleration
-- [Software Lite](./examples/software-lite.html) - Lightweight CPU rendering
-- [WebGL Lite](./examples/webgl-lite.html) - Lightweight GPU rendering
-- [WebGPU Lite](./examples/webgpu-lite.html) - Lightweight WebGPU rendering
+- [Basic Usage](./examples/index.html) - Get started with player setup and basic Lottie playback.
 
 ### Framework Integration
 - [React Example](./examples/react/)
