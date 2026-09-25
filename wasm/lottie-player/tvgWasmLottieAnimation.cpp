@@ -44,7 +44,7 @@ static bool isValidProperty(const val& obj, const char* propName) {
 struct TvgEngineMethod
 {
     virtual ~TvgEngineMethod() {}
-    virtual Canvas* init(string&) = 0;
+    virtual Canvas* init(string&, uint32_t threads) = 0;
     virtual void resize(Canvas* canvas, uint32_t w, uint32_t h) = 0;
     virtual Uint8Array output(uint32_t w, uint32_t h)
     {
@@ -69,9 +69,9 @@ struct TvgSwEngine : TvgEngineMethod
         retrieveFont();
     }
 
-    Canvas* init(string&) override
+    Canvas* init(string&, uint32_t threads) override
     {
-        Initializer::init();
+        Initializer::init(threads);
         loadFont();
         return SwCanvas::gen(EngineOption::None);
     }
@@ -116,7 +116,7 @@ struct TvgWgEngine : TvgEngineMethod
         retrieveFont();
     }
 
-    Canvas* init(string& selector) override
+    Canvas* init(string& selector, uint32_t threads) override
     {
         WGPUEmscriptenSurfaceSourceCanvasHTMLSelector canvasDesc{};
         canvasDesc.chain.next = nullptr;
@@ -128,7 +128,7 @@ struct TvgWgEngine : TvgEngineMethod
         surfaceDesc.nextInChain = &canvasDesc.chain;
         surface = wgpuInstanceCreateSurface(instance, &surfaceDesc);
 
-        Initializer::init();
+        Initializer::init(threads);
         loadFont();
         return WgCanvas::gen();
     }
@@ -209,7 +209,7 @@ struct TvgGLEngine : TvgEngineMethod
         retrieveFont();
     }
 
-    Canvas* init(string& selector) override
+    Canvas* init(string& selector, uint32_t threads) override
     {
         EmscriptenWebGLContextAttributes attrs{};
         attrs.alpha = true;
@@ -226,7 +226,7 @@ struct TvgGLEngine : TvgEngineMethod
 
         emscripten_webgl_make_context_current(context);
 
-        if (Initializer::init() != Result::Success) return nullptr;
+        if (Initializer::init(threads) != Result::Success) return nullptr;
         loadFont();
 
         return GlCanvas::gen();
@@ -250,7 +250,7 @@ public:
         delete(engine);
     }
 
-    explicit TvgLottieAnimation(string engine = "sw", string selector = "")
+    explicit TvgLottieAnimation(string engine = "sw", string selector = "", uint32_t threads = 0)
     {
         errorMsg = NoError;
 
@@ -269,7 +269,7 @@ public:
             return;
         }
 
-        canvas = this->engine->init(selector);
+        canvas = this->engine->init(selector, threads);
 
         if (!canvas) {
             errorMsg = "Unsupported!";
@@ -332,7 +332,7 @@ public:
 
         animation->picture()->resolver(resolver.func, &resolver.data);
 
-        if (animation->picture()->load(data.c_str(), data.size(), filetype.c_str()) != Result::Success) {
+        if (animation->picture()->load(data.c_str(), data.size(), filetype.c_str(), nullptr, true) != Result::Success) {
             errorMsg = "load() fail";
             return false;
         }
@@ -651,6 +651,7 @@ EMSCRIPTEN_BINDINGS(thorvg_bindings)
 
     class_<TvgLottieAnimation>("TvgLottieAnimation")
         .constructor<string, string>()
+        .constructor<string, string, uint32_t>()
         .function("error", &TvgLottieAnimation ::error, allow_raw_pointers())
         .function("size", &TvgLottieAnimation ::size)
         .function("duration", &TvgLottieAnimation ::duration)

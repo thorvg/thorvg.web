@@ -30,6 +30,7 @@ declare global {
   interface Window {
     webkitAudioContext?: typeof AudioContext;
   }
+  var __THORVG_THREAD_COUNT: number | undefined;
 }
 
 type LottieJson = Record<string, unknown>;
@@ -248,6 +249,13 @@ export class BaseLottiePlayer extends LitElement {
   public wasmUrl?: string;
 
   /**
+   * Number of worker threads.
+   * @beta
+   */
+  @property({ type: Number })
+  public threads: number = 0;
+
+  /**
   * File type.
   * @since 1.0
   */
@@ -375,6 +383,7 @@ export class BaseLottiePlayer extends LitElement {
 
     if (!wasmModule) {
       _moduleRequested = true;
+      globalThis.__THORVG_THREAD_COUNT = this.threads;
       wasmModule = await Module({
         locateFile: (path: string, prefix: string) => {
           if (path.endsWith('.wasm')) {
@@ -402,7 +411,7 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`);
+    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`, this.threads);
 
     if (this.src) {
       this.load(this.src, this.fileType);
@@ -882,6 +891,7 @@ export class BaseLottiePlayer extends LitElement {
 
     wasmModule.term();
     wasmModule = null;
+    globalThis.__THORVG_THREAD_COUNT = undefined;
   }
 
   /**
