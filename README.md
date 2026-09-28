@@ -28,7 +28,7 @@ On the web platform, the rendered output is presented through an **HTML `<canvas
   <img width="600" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/example_webcanvas.png">
 </p>
 
-## 📑 Contents
+## Contents
 - [Packages](#-packages)
 - [Demo](#demo)
   - [Thor MarbleRace](#thor-marblerace)
@@ -46,7 +46,7 @@ On the web platform, the rendered output is presented through an **HTML `<canvas
 
 <br />
 
-## 📦 Packages
+## Packages
 
 This monorepo contains two complementary packages:
 
@@ -57,7 +57,7 @@ This monorepo contains two complementary packages:
 
 <br />
 
-## ▶️Demo
+## Demo
 
 ### Thor MarbleRace
 A pinball-inspired racing demo game where multiple balls bounce through obstacles and race to the finish, showcasing the power of ThorVG WebCanvas. [Give it try](https://thorvg-marblerace.vercel.app/)!
@@ -73,7 +73,7 @@ An animation benchmarking app for testing Lottie rendering performance, powered 
 
 <br />
 
-## 🎨 Examples
+## Examples
 
 ### WebCanvas
 - [Playground](https://www.thorvg.org/playground) - Explore vector graphics interactively.
@@ -88,7 +88,7 @@ An animation benchmarking app for testing Lottie rendering performance, powered 
 
 <br />
 
-## 🛠️ Development
+## Development
 
 ### Prerequisites
 
@@ -126,7 +126,7 @@ sh ./wasm_player_setup.sh
 
 <br />
 
-## 🤝 Partners
+## Partners
 Corporate partners collaborate with ThorVG Web through development, integration, and strategic initiatives that help advance the project. 
 <br />
 <br />
@@ -141,5 +141,5 @@ If you’re interested in partnering with ThorVG, we’d love to hear from you. 
 
 <br />
 
-## 💬Communication
+## Communication
 For real-time conversations and discussions, please join us on [Discord](https://discord.gg/n25xj6J6HM)
