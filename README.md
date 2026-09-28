@@ -28,14 +28,15 @@ On the web platform, the rendered output is presented through an **HTML `<canvas
   <img width="600" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/example_webcanvas.png">
 </p>
 
-## Contents
+## 📑 Contents
 - [Packages](#-packages)
-  - [WebCanvas](#webcanvas)
-  - [Lottie Player](#lottie-player)
 - [Examples](#examples)
   - [WebCanvas](#webcanvas)
   - [Lottie Player](#lottie-player)
   - [Framework Integration](#framework-integration)
+- [Demo](#demo)
+  - [Thor MarbleRace](#thor-marblerace)
+  - [Lottie Test](#lottie-test)
 - [Development](#development)
   - [Prerequisites](#prerequisites)
   - [Building from Source](#building-from-source)
@@ -43,57 +44,23 @@ On the web platform, the rendered output is presented through an **HTML `<canvas
 - [Partners](#partners)
 - [Communication](#communication)
 
+<br />
+
 ## 📦 Packages
 
 This monorepo contains two complementary packages:
 
-### [WebCanvas](./packages/webcanvas)
-[![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas)
+| Package | Description | Version |
+| :--- | :--- | :--- |
+| [WebCanvas](./packages/webcanvas) | Fluent TypeScript API for vector graphics rendering | [![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas) |
+| [Lottie Player](./packages/lottie-player) | Web Component for embedding Lottie animations | [![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player) |
 
-**ThorVG Canvas for Web** – A TypeScript API with a fluent interface for vector graphics rendering
-
-```typescript
-import ThorVG from '@thorvg/webcanvas';
-
-const TVG = await ThorVG.init({ renderer: 'gl' });
-const canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });
-
-const shape = new TVG.Shape();
-shape.appendRect(100, 100, 200, 150, { rx: 10, ry: 10 });
-shape.fill(255, 0, 0, 255);
-
-canvas.add(shape);
-canvas.render();
-```
-
----
-
-### [Lottie Player](./packages/lottie-player)
-[![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player)
-
-**Lottie animation player** - [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components) for embedding Lottie animations
-
-```html
-<lottie-player
-  autoPlay
-  loop
-  src="animation.json"
-  style="width: 500px; height: 500px;"
-></lottie-player>
-```
-
-[Back to contents](#contents)
 <br />
-<br />
-## Examples
+
+## 🎨 Examples
 
 ### WebCanvas
-- [Basic Usage](./examples/basic-usage.html) - Getting started with shapes
-- [Animation](./examples/animation-example.html) - Frame-based animations
-- [Scene Composition](./examples/scene.html) - Hierarchical object grouping
-- [Picture Loading](./examples/picture-example.html) - SVG and image rendering
-- [Text Rendering](./examples/text-example.html) - Typography and fonts
-- [Live Editor](./examples/live-editor.html) - Interactive code playground
+- [ThorVG Playground](https://www.thorvg.org/playground) - Explore vector graphics interactively.
 
 ### Lottie Player
 - [Basic Usage](./examples/index.html) - Get started with player setup and basic Lottie playback.
@@ -103,10 +70,25 @@ canvas.render();
 - [Vue Example](./examples/vue/)
 - [Svelte Example](./examples/svelte/)
 
-[Back to contents](#contents)
 <br />
+
+## ▶️Demo
+
+### Thor MarbleRace
+A pinball-inspired racing demo game where multiple balls bounce through obstacles and race to the finish, showcasing the power of ThorVG WebCanvas. [Give it try!](https://thorvg-marblerace.vercel.app/)!
+<p align="center">
+  <img width="700" height="auto" src="https://github.com/thorvg/thorvg.demo.marblerace/blob/main/docs/screenshot.jpg">
+</p>
+
+### Lottie Test
+An animation benchmarking app for testing Lottie rendering performance, powered by ThorVG WebCanvas. 👉 [Link](https://thorvg-perf-test.vercel.app/)
+<p align="center">
+  <img width="700" height="auto" alt="image" src="https://github.com/user-attachments/assets/b6bb08a1-f481-4c25-b1c7-27cababb3230" />
+</p>
+
 <br />
-## Development
+
+## 🛠️ Development
 
 ### Prerequisites
 
@@ -142,10 +124,9 @@ cd packages/lottie-player
 sh ./wasm_player_setup.sh
 ```
 
-[Back to contents](#contents)
 <br />
-<br />
-## Partners
+
+## 🤝 Partners
 Corporate partners collaborate with ThorVG Web through development, integration, and strategic initiatives that help advance the project. 
 <br />
 <br />
@@ -158,8 +139,7 @@ Corporate partners collaborate with ThorVG Web through development, integration,
 
 If you’re interested in partnering with ThorVG, we’d love to hear from you. Please reach out at thorvg@thorvg.org
 
-[Back to contents](#contents)
 <br />
-<br />
-## Communication
+
+## 💬Communication
 For real-time conversations and discussions, please join us on [Discord](https://discord.gg/n25xj6J6HM)
