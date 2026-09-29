@@ -31,7 +31,7 @@ On the web platform, the rendered output is presented through an **HTML `<canvas
 ## Contents
 - [Packages](#-packages)
 - [Demo](#demo)
-  - [Thor MarbleRace](#thor-marblerace)
+  - [Thor Marble Race](#thor-marble-race)
   - [Lottie Test](#lottie-test)
 - [Examples](#examples)
   - [WebCanvas](#webcanvas)
@@ -59,7 +59,7 @@ This monorepo contains two complementary packages:
 
 ## Demo
 
-### Thor MarbleRace
+### Thor Marble Race
 A pinball-inspired racing demo game where multiple balls bounce through obstacles and race to the finish, showcasing the power of ThorVG WebCanvas. [Give it try](https://thorvg-marblerace.vercel.app/)!
 <p align="center">
   <img width="700" height="auto" src="https://github.com/thorvg/thorvg.demo.marblerace/blob/main/docs/screenshot.jpg">
