@@ -725,7 +725,7 @@ export class BaseLottiePlayer extends LitElement {
       this.dispatchEvent(new CustomEvent(PlayerEvent.Ready));
 
       this.fileType = fileType;
-      await this._loadBytes(bytes);
+      this._loadBytes(bytes);
     } catch (err) {
       this.currentState = PlayerState.Error;
       this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
