@@ -144,7 +144,7 @@ export class AudioSink {
 
   static async create(format: AudioFormat | null): Promise<AudioSink> {
     const sink = new AudioSink();
-    if (format) {
+    if (format && typeof window !== 'undefined') {
       try {
         await sink.#initAudio(format);
         return sink;
@@ -301,6 +301,7 @@ export class LottieAudio {
 
   resolve(state: AudioInfo, frame: number): void {
     if (this.#disposed) return;
+    if (typeof window === 'undefined') return;
     if (typeof state.src === 'string') return;
 
     this.#frame = frame;
