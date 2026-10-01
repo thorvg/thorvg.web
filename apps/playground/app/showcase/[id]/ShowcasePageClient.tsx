@@ -3,9 +3,18 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import CodeEditor from '@/components/CodeEditor';
+import dynamic from 'next/dynamic';
 import CanvasPreview from '@/components/CanvasPreview';
 import { getExampleById, showcaseExamples } from '@/lib/examples';
+
+const CodeEditor = dynamic(() => import('@/components/CodeEditor'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full flex items-center justify-center text-sm text-gray-400">
+      Loading...
+    </div>
+  ),
+});
 
 export default function ShowcasePageClient({ id }: { id: string }) {
   const router = useRouter();
