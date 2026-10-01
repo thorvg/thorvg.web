@@ -99,7 +99,7 @@ const createWebCanvasConfig = () => {
 }
 
 const createThreadConfig = () => {
-  const workerUrl = 'new URL("thorvg.js",import.meta.url)';
+  const workerPattern = /new Worker\(new URL\("thorvg\.js",import\.meta\.url\),(\{[^}]*\})\)/;
   const bundleFile = path.basename(pkg.exports['./thread'].import);
 
   return {
@@ -122,9 +122,12 @@ const createThreadConfig = () => {
       name: 'thorvg-worker-url',
       transform(code, id) {
         if (!id.endsWith(path.join('dist', 'thread', 'thorvg.js'))) return null;
-        if (!code.includes(workerUrl)) this.error(`pthread worker URL not found in ${id}.`);
+        if (!workerPattern.test(code)) this.error(`pthread worker not found in ${id}.`);
         return {
-          code: code.replace(workerUrl, `new URL("./${bundleFile}",import.meta.url)`),
+          code: code.replace(workerPattern, (_, options) =>
+            `(new URL(import.meta.url).origin===location.origin` +
+            `?new Worker(new URL("./${bundleFile}",import.meta.url),${options})` +
+            `:new Worker(URL.createObjectURL(new Blob(['import"'+import.meta.url+'"'],{type:"text/javascript"})),${options}))`),
           map: null,
         };
       },
