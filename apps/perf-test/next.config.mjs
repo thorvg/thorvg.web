@@ -14,7 +14,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_WEBCANVAS_VERSION: webcanvasPkg.version,
   },
-  outputFileTracingRoot: __dirname,
+  outputFileTracingRoot: path.join(__dirname, '../../'),
   webpack: (config) => {
     if (typeof nextRuntime === 'undefined') {
       config.resolve.fallback = {
