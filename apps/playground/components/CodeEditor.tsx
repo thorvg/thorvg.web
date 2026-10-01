@@ -1,10 +1,29 @@
 'use client';
 
 import { useRef } from 'react';
-import Editor, { type Monaco } from '@monaco-editor/react';
-import type { editor } from 'monaco-editor';
+import Editor, { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
 // @ts-expect-error: can't resolve the bundler-only raw file imports
 import webcanvasTypes from "../node_modules/@thorvg/webcanvas/dist/webcanvas.d.ts?raw";
+
+// Use the installed one instead of CDN build by default
+loader.config({ monaco });
+
+self.MonacoEnvironment = {
+  getWorker(_workerId: string, label: string) {
+    if (label === 'typescript' || label === 'javascript') {
+      return new Worker(
+        new URL('monaco-editor/languages/features/typescript/ts.worker.js', import.meta.url),
+        { type: 'module' }
+      );
+    }
+    return new Worker(new URL('monaco-editor/editor/editor.worker.js', import.meta.url), {
+      type: 'module',
+    });
+  },
+};
+
+type Monaco = typeof monaco;
 
 interface CodeEditorProps {
   code: string;
@@ -13,21 +32,21 @@ interface CodeEditorProps {
 }
 
 export default function CodeEditor({ code, onChange, readOnly = false }: CodeEditorProps) {
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
 
   function handleEditorWillMount(monaco: Monaco) {
     monacoRef.current = monaco;
 
     // Configure TypeScript compiler options
-    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-      target: monaco.languages.typescript.ScriptTarget.ES2020,
-      module: monaco.languages.typescript.ModuleKind.ESNext,
-      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+    monaco.typescript.typescriptDefaults.setCompilerOptions({
+      target: monaco.typescript.ScriptTarget.ES2020,
+      module: monaco.typescript.ModuleKind.ESNext,
+      moduleResolution: monaco.typescript.ModuleResolutionKind.NodeJs,
       allowNonTsExtensions: true,
       allowSyntheticDefaultImports: true,
       esModuleInterop: true,
-      jsx: monaco.languages.typescript.JsxEmit.React,
+      jsx: monaco.typescript.JsxEmit.React,
       noLib: false,
       skipLibCheck: true,
       lib: [
@@ -45,7 +64,7 @@ export default function CodeEditor({ code, onChange, readOnly = false }: CodeEdi
     });
 
     // Enable more permissive validation for playground
-    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+    monaco.typescript.typescriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: false,
       noSyntaxValidation: false,
       diagnosticCodesToIgnore: [
@@ -72,13 +91,13 @@ declare const TVG: import('@thorvg/webcanvas').ThorVGNamespace;
 declare const canvas: import('@thorvg/webcanvas').Canvas;
 `;
 
-    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+    monaco.typescript.typescriptDefaults.addExtraLib(
       thorvgTypes,
       'file:///node_modules/@types/thorvg-webcanvas/index.d.ts'
     );
   }
 
-  function handleEditorDidMount(editorInstance: editor.IStandaloneCodeEditor) {
+  function handleEditorDidMount(editorInstance: monaco.editor.IStandaloneCodeEditor) {
     editorRef.current = editorInstance;
   }
 
