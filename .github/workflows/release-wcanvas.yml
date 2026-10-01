@@ -296,17 +296,14 @@ jobs:
           pnpm --filter playground add @thorvg/webcanvas@latest
 
       - name: Pull Vercel Environment Information
-        working-directory: ./apps/playground
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Playground
-        working-directory: ./apps/playground
         run: |
-          pnpm build
+          pnpm --filter playground build
           vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Production
-        working-directory: ./apps/playground
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
   deploy-perf-test:
@@ -344,15 +341,12 @@ jobs:
           pnpm --filter perf-test add @thorvg/webcanvas@latest
 
       - name: Pull Vercel Environment Information
-        working-directory: ./apps/perf-test
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Perf Test
-        working-directory: ./apps/perf-test
         run: |
-          pnpm build
+          pnpm --filter perf-test build
           vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Production
-        working-directory: ./apps/perf-test
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
