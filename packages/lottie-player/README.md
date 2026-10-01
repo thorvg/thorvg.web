@@ -30,12 +30,14 @@ npm install @thorvg/lottie-player
 - [Player Preset Variants](#player-preset-variants)
   - [Standard Presets](#standard-presets)
   - [Lite Presets](#lite-presets)
+  - [Thread Preset](#thread-preset)
   - [Preset Comparison](#preset-comparison)
   - [Preset Usage](#preset-usage)
 - [API](#api)
   - [Properties](#properties)
   - [Events](#events)
   - [Methods](#methods)
+  - [Functions](#functions)
 - [Examples](#examples)
   - [Framework-specific Examples](#framework-specific-examples)
   - [Build Testing](#build-testing)
@@ -158,6 +160,18 @@ ThorVG Lottie Player provides multiple presets optimized for different use cases
 - **GL-Lite**: A WebGL accelerated renderer that supports basic Lottie specification (PNG only; Fonts and Expressions are not supported)
 - **WG-Lite**: A WebGPU accelerated renderer that supports basic Lottie specification (PNG only; Fonts and Expressions are not supported)
 
+### Thread Preset
+- **Thread**: A multi-threaded rendering with full Lottie specification support (ESM only)
+
+Please note, the page must be [cross-origin isolated](https://developer.mozilla.org/en-US/docs/Web/API/Window/crossOriginIsolated) with the thread preset.
+
+```shell
+# Serve your page with:
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+
+
 ### Preset Comparison
 
 | Preset | Renderer | Features | Bundle Size | Use Case |
@@ -168,6 +182,7 @@ ThorVG Lottie Player provides multiple presets optimized for different use cases
 | `sw-lite` | Software | lottie, png | ~250KB | Lightweight applications with CPU rendering |
 | `gl-lite` | WebGL | lottie, png | ~250KB | Lightweight applications with WebGL acceleration |
 | `wg-lite` | WebGPU | lottie, png | ~300KB | Lightweight applications with WebGPU acceleration |
+| `thread` | Software | lottie + expressions, jpg, png, webp, ttf | ~900KB | Multi-threaded CPU rendering |
 
 ### Preset Usage
 
@@ -217,6 +232,9 @@ import '@thorvg/lottie-player/gl-lite';
 
 // WebGPU Renderer (Lite)
 import '@thorvg/lottie-player/wg-lite';
+
+// Multi-threading (ESM)
+import '@thorvg/lottie-player/thread';
 ```
 
 [Back to contents](#contents)
@@ -411,6 +429,30 @@ player.addEventListener('load', () => {
 **Purpose** : Return current ThorVG version
 
 **Return Type** : `LibraryVersion`
+
+### Functions
+
+**Function** : `setThreadCount(threads: number)`
+
+**Purpose** : Set the number of worker threads
+
+**Parameters**
+| Name | Type | Description
+| --- | --- | --- |
+| threads | `number` | The number of worker threads (default: 0).
+
+**Return Type** : `void`
+
+> [!IMPORTANT]
+> It must be called before the first `<lottie-player>` is initialized.
+
+---
+
+**Function** : `getThreadCount()`
+
+**Purpose** : Return the configured number of worker threads
+
+**Return Type** : `number`
 
 [Back to contents](#contents)
 <br />
