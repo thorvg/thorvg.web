@@ -60,17 +60,11 @@ jobs:
       - name: Install pnpm dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
-        run: pnpm build
-
-      - name: Setup Yarn
-        run: npm install -g yarn
+      - name: Build packages
+        run: pnpm --filter @thorvg/webcanvas --filter @thorvg/lottie-player build
 
       - name: Build Svelte Example
-        working-directory: examples/svelte
-        run: |
-          yarn install
-          yarn build
+        run: pnpm --filter thorvg-svelte-example build
 
       - name: Verify Svelte build artifacts
         working-directory: examples/svelte

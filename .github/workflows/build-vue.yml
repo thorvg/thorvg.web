@@ -60,17 +60,11 @@ jobs:
       - name: Install pnpm dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
-        run: pnpm build
-
-      - name: Setup Yarn
-        run: npm install -g yarn
+      - name: Build packages
+        run: pnpm --filter @thorvg/webcanvas --filter @thorvg/lottie-player build
 
       - name: Build Vue Example
-        working-directory: examples/vue
-        run: |
-          yarn install
-          yarn build
+        run: pnpm --filter thorvg-vue-example build
 
       - name: Verify Vue build artifacts
         working-directory: examples/vue

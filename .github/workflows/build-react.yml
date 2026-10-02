@@ -60,17 +60,11 @@ jobs:
       - name: Install pnpm dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
-        run: pnpm build
-
-      - name: Setup Yarn
-        run: npm install -g yarn
+      - name: Build packages
+        run: pnpm --filter @thorvg/webcanvas --filter @thorvg/lottie-player build
 
       - name: Build React Example
-        working-directory: examples/react
-        run: |
-          yarn install
-          yarn build
+        run: pnpm --filter thorvg-react-example build
 
       - name: Verify React build artifacts
         working-directory: examples/react
