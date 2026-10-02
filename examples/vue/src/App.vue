@@ -55,7 +55,7 @@ onMounted(async () => {
       <lottie-player
         autoplay
         loop
-        intermission="1000"
+        :intermission="1000"
         mode="normal"
         src="https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json"
         style="width: 500px; height: 500px"
