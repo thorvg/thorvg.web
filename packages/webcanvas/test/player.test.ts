@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { initMedia } from '../src/core/media/Player';
 import type { ThorVGModule, WebMediaPlayer } from '../src/types/emscripten';
 
@@ -8,8 +8,9 @@ const HEIGHT = 2;
 const DURATION = 10;
 const FRAME_BYTES = WIDTH * HEIGHT * 4;
 
+// the worker reports the source size alongside the smaller size it decodes at
 const READY = {
-  type: 'ready', width: WIDTH, height: HEIGHT, decodeWidth: WIDTH, decodeHeight: HEIGHT,
+  type: 'ready', width: WIDTH * 2, height: HEIGHT * 2, decodeWidth: WIDTH, decodeHeight: HEIGHT,
   duration: DURATION, hasAudio: false, sampleRate: 0, channels: 0,
 };
 
@@ -46,9 +47,29 @@ function lastOf(worker: StubWorker, type: string): Message {
   return worker.messages.filter((message) => message.type === type).pop()!;
 }
 
+// the generation the player is on, which a seek or a resync bumps
+function generation(worker: StubWorker): number {
+  const bumps = worker.messages.filter((message) => message.type === 'restart' || message.type === 'resync');
+  return (bumps[bumps.length - 1]?.videoGen as number | undefined) ?? 0;
+}
+
 // the audio sink attaches on a promise, so the player needs a turn after 'ready'
-function settle(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+async function settle(): Promise<void> {
+  if (vi.isFakeTimers()) await vi.advanceTimersByTimeAsync(0);
+  else await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+// the silent clock reads performance.now(), and the stall watchdog runs on an interval
+function useClock(): void {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'performance'] });
+}
+
+// a host that keeps rendering, so the watchdog leaves the clock running
+async function pump(player: WebMediaPlayer, ms: number): Promise<void> {
+  for (let elapsed = 0; elapsed < ms; elapsed += 100) {
+    await vi.advanceTimersByTimeAsync(100);
+    player.sync();
+  }
 }
 
 describe('MediaPlayer', () => {
@@ -70,6 +91,14 @@ describe('MediaPlayer', () => {
     return created;
   }
 
+  // the clock only starts once a frame has been taken
+  async function createPlaying(duration = DURATION): Promise<{ player: WebMediaPlayer; worker: StubWorker }> {
+    const created = await createReady(duration);
+    deliver(created.worker, frame(0));
+    created.player.sync();
+    return created;
+  }
+
   beforeEach(() => {
     workers().length = 0;
   });
@@ -77,6 +106,7 @@ describe('MediaPlayer', () => {
   afterEach(() => {
     for (const player of opened) player.dispose();
     opened = [];
+    vi.useRealTimers();
   });
 
   it('constructor posts the media bytes to the worker', () => {
@@ -169,6 +199,85 @@ describe('MediaPlayer', () => {
     player.stop();
 
     expect(lastOf(worker, 'restart').time).toBe(0);
+  });
+
+  it('the clock follows the host while playing', async () => {
+    useClock();
+    const { player, worker } = await createPlaying();
+
+    await pump(player, 500);
+    deliver(worker, frame(0.4));
+
+    expect(player.sync()?.time).toBeCloseTo(0.5, 2);
+  });
+
+  it('pause freezes the clock', async () => {
+    useClock();
+    const { player, worker } = await createPlaying();
+    player.pause();
+
+    await vi.advanceTimersByTimeAsync(1000);
+    deliver(worker, frame(0));
+
+    expect(player.sync()?.time).toBeCloseTo(0, 2);
+  });
+
+  it('the clock holds while the host stops syncing', async () => {
+    useClock();
+    const { player, worker } = await createPlaying();
+
+    await vi.advanceTimersByTimeAsync(1000); // no sync, so the watchdog parks the clock
+    deliver(worker, frame(0.3));
+
+    expect(player.sync()?.time).toBeCloseTo(0.4, 2); // STALL_MS, not the full second
+  });
+
+  it('the end restarts the media while looping', async () => {
+    useClock();
+    const { player, worker } = await createPlaying(0.2);
+
+    await vi.advanceTimersByTimeAsync(300);
+    player.sync();
+
+    expect(lastOf(worker, 'restart').time).toBe(0);
+  });
+
+  it('the end pauses the media when looping is off', async () => {
+    useClock();
+    const { player, worker } = await createPlaying(0.2);
+    player.loop(false);
+
+    await vi.advanceTimersByTimeAsync(300);
+    player.sync();
+
+    expect(countOf(worker, 'restart')).toBe(0);
+  });
+
+  it('falling behind the clock resyncs the video alone', async () => {
+    useClock();
+    const { player, worker } = await createPlaying();
+
+    await pump(player, 1500); // the frame on screen is more than a second behind
+
+    const resync = lastOf(worker, 'resync');
+    expect(resync.videoGen).toBe(1);
+    expect(resync.time as number).toBeGreaterThan(1); // it picks up where the clock is
+    expect(countOf(worker, 'restart')).toBe(0); // the audio keeps running
+  });
+
+  it('seeking twice to the same spot parks the clock there', async () => {
+    useClock();
+    const { player, worker } = await createPlaying();
+    player.seek(0.5);
+    deliver(worker, frame(0.5, generation(worker)));
+    await pump(player, 1500); // the clock runs well past the target
+
+    player.seek(0.5); // the same spot again, so the clock stays put from here
+    deliver(worker, frame(0.5, generation(worker)));
+    await pump(player, 500);
+
+    deliver(worker, frame(0.5, generation(worker)));
+    expect(player.sync()?.time).toBeCloseTo(0.5, 2);
   });
 
   it('dispose terminates the worker', async () => {
