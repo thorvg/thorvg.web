@@ -184,6 +184,31 @@ const createLottieConfig = (preset) => {
   };
 }
 
+const createTypesConfig = (input, file) => {
+  const tagNameMap = [
+    `declare global {`,
+    `  interface HTMLElementTagNameMap {`,
+    `    '${name}': LottiePlayer;`,
+    `  }`,
+    `}`,
+  ].join('\n');
+
+  return {
+    input,
+    treeshake: true,
+    output: [
+      {
+        file,
+        format: "esm",
+        footer: tagNameMap,
+      }
+    ],
+    plugins: [
+      dts(),
+    ],
+  };
+}
+
 export default [
   createLottieConfig(PresetModule.Default),
   createLottieConfig(PresetModule.SW),
@@ -192,17 +217,6 @@ export default [
   createLottieConfig(PresetModule.SW_LITE),
   createLottieConfig(PresetModule.GL_LITE),
   createLottieConfig(PresetModule.WG_LITE),
-  {
-    input: "./src/lottie-player.ts",
-    treeshake: true,
-    output: [
-      {
-        file: './dist/lottie-player.d.ts',
-        format: "esm",
-      }
-    ],
-    plugins: [
-      dts(),
-    ],
-  }
+  createTypesConfig("./src/lottie-player.ts", pkg.types),
+  createTypesConfig("./src/lottie-preset-player.ts", pkg.exports['./sw'].types),
 ];
