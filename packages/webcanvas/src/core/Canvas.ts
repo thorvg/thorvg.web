@@ -42,7 +42,7 @@
  */
 
 import { getModule, getThreadCount } from '../interop/module';
-import { Paint } from './Paint';
+import type { Paint } from './Paint';
 import { Scene } from './Scene';
 import type { Surface } from './surface/Surface';
 import { createSurface } from './surface/surfaceFactory';

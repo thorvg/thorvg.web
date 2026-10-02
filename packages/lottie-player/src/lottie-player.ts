@@ -21,7 +21,8 @@
  */
 
 import { customElement, property } from 'lit/decorators.js';
-import { BaseLottiePlayer, RenderConfig, parseSrc, wasmModule } from './base-lottie-player';
+import type { RenderConfig } from './base-lottie-player';
+import { BaseLottiePlayer, parseSrc, wasmModule } from './base-lottie-player';
 
 const _downloadFile = (fileName: string, blob: Blob) => {
   const link = document.createElement('a');
@@ -30,7 +31,7 @@ const _downloadFile = (fileName: string, blob: Blob) => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-}
+};
 
 @customElement('lottie-player')
 export class LottiePlayer extends BaseLottiePlayer {

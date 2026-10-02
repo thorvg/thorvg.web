@@ -163,7 +163,7 @@ class MediaPlayer implements WebMediaPlayer {
       case 'ready': {
         this.#metadata = { width: data.decodeWidth, height: data.decodeHeight, duration: data.duration };
         this.#format = data.hasAudio ? { sampleRate: data.sampleRate, channels: data.channels } : null;
-        void this.#attach(this.#format);
+        this.#attach(this.#format);
         if (this.#time > 0) this.#restart(this.#time);
         if (this.#autoplay) this.play();
         break;
@@ -178,7 +178,7 @@ class MediaPlayer implements WebMediaPlayer {
       }
       case 'error': {
         this.dispose();
-        handleError('Media decode failed: ' + data.message, 'MediaPlayer');
+        handleError(`Media decode failed: ${data.message}`, 'MediaPlayer');
         break;
       }
     }
@@ -282,7 +282,7 @@ class MediaPlayer implements WebMediaPlayer {
       sink = await AudioSink.create(format);
     } catch {
       this.#format = null;
-      if (format) void this.#attach(null);
+      if (format) this.#attach(null);
       return;
     }
 
@@ -316,7 +316,7 @@ class MediaPlayer implements WebMediaPlayer {
       if (this.#disposed || this.#fallback || !this.#playing || this.#stalled || this.#pinned) return;
       if (this.#audio?.running() !== false) return;
       this.#fallback = true;
-      void this.#attach(null);
+      this.#attach(null);
       this.#armGesture();
     }, AUDIO_START_MS);
   }
@@ -327,7 +327,7 @@ class MediaPlayer implements WebMediaPlayer {
       this.#gestureOff = null;
       if (this.#disposed || !this.#format) return;
       this.#fallback = false;
-      void this.#attach(this.#format);
+      this.#attach(this.#format);
     });
   }
 

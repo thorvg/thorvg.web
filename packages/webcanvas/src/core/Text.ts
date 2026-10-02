@@ -8,7 +8,7 @@ import { Fill } from './Fill';
 import { getModule } from '../interop/module';
 import { textRegistry } from '../interop/registry';
 import { checkResult } from '../common/errors';
-import { TextWrapMode } from '../common/constants';
+import type { TextWrapMode } from '../common/constants';
 
 /**
  * @category Text

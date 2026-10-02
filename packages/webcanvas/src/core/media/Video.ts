@@ -197,7 +197,7 @@ export class Video {
             break;
           }
           case 'error': {
-            const message = 'Video decode failed: ' + data.message;
+            const message = `Video decode failed: ${data.message}`;
             if (self.#state === 'loading') {
               self.#abortLoad = null;
               reject(new Error(message));
