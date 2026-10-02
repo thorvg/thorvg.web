@@ -21,7 +21,7 @@
  */
 
 import { customElement, property } from 'lit/decorators.js';
-import { BaseLottiePlayer, FileType, RenderConfig, Renderer, parseSrc, wasmModule } from './base-lottie-player';
+import { BaseLottiePlayer, RenderConfig, parseSrc, wasmModule } from './base-lottie-player';
 
 const _downloadFile = (fileName: string, blob: Blob) => {
   const link = document.createElement('a');
@@ -63,7 +63,7 @@ export class LottiePlayer extends BaseLottiePlayer {
     const [width, height] = this.size;
 
     const bytes = await parseSrc(src, this.fileType);
-    const saver = new wasmModule.TvgLottieAnimation(Renderer.SW, '');
+    const saver = new wasmModule.TvgLottieAnimation('sw', '');
     const isLoaded = saver.load(bytes, this.fileType, width, height);
     if (!isLoaded) {
       const error = saver.error();
@@ -74,7 +74,7 @@ export class LottiePlayer extends BaseLottiePlayer {
     saver.frame(this.currentFrame);
     saver.update();
     const buffer = saver.render();
-    const data = new Uint8ClampedArray(buffer, 0, buffer.byteLength);
+    const data = new Uint8ClampedArray(buffer);
 
     const canvas = document.createElement('canvas');
     canvas.width = width;
@@ -104,8 +104,8 @@ export class LottiePlayer extends BaseLottiePlayer {
       throw new Error(`Unable to save. Module is not initialized.`);
     }
 
-    const saver = new wasmModule.TvgLottieAnimation(Renderer.SW, `#${this.canvas!.id}`);
-    const bytes = await parseSrc(src, FileType.JSON);
+    const saver = new wasmModule.TvgLottieAnimation('sw', `#${this.canvas!.id}`);
+    const bytes = await parseSrc(src, 'json');
     const isExported = saver.save(bytes, 'gif');
     if (!isExported) {
       const error = saver.error();
@@ -126,3 +126,5 @@ export class LottiePlayer extends BaseLottiePlayer {
     saver.delete();
   }
 }
+
+export type { AudioInfo, FileType, LibraryVersion, PlayMode, PlayerState, RenderConfig, Renderer } from './base-lottie-player';
