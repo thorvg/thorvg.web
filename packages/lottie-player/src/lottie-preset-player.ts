@@ -21,18 +21,18 @@
  */
 
 import { customElement, property } from 'lit/decorators.js';
-import { BaseLottiePlayer, RenderConfig, Renderer } from './base-lottie-player';
+import { BaseLottiePlayer, RenderConfig as BaseRenderConfig, Renderer } from './base-lottie-player';
 
-type PresetRenderConfig = Exclude<RenderConfig, 'renderer'>;
+export type RenderConfig = Omit<BaseRenderConfig, 'renderer'>;
 
 @customElement('lottie-player')
-export class LottiePresetPlayer extends BaseLottiePlayer {
+export class LottiePlayer extends BaseLottiePlayer {
   /**
    * Sets the rendering configurations.
    * @since 1.0
    */
   @property({ type: Object })
-  public set renderConfig(value: PresetRenderConfig) {
+  public set renderConfig(value: RenderConfig) {
     this.config = {
       renderer: '__RENDERER__' as Renderer,
       enableDevicePixelRatio: value.enableDevicePixelRatio
@@ -43,7 +43,9 @@ export class LottiePresetPlayer extends BaseLottiePlayer {
    * Gets the current rendering configuration.
    * @since 1.0
    */
-  public get renderConfig(): PresetRenderConfig {
+  public get renderConfig(): RenderConfig {
     return this.config || {};
   }
 }
+
+export type { AudioInfo, FileType, LibraryVersion, PlayMode, PlayerState } from './base-lottie-player';
