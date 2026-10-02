@@ -1,7 +1,7 @@
 import { WasmObject } from '../interop/WasmObject';
 import { getModule, allocString } from '../interop/module';
 import { checkResult } from '../common/errors';
-import { BlendMethod, MaskMethod } from '../common/constants';
+import type { BlendMethod, MaskMethod } from '../common/constants';
 
 /**
  * @category Shapes

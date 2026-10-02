@@ -57,7 +57,7 @@ import { Paint } from './Paint';
 import { Fill } from './Fill';
 import { getModule } from '../interop/module';
 import { shapeRegistry } from '../interop/registry';
-import { StrokeCap, StrokeJoin, FillRule, PathCommand } from '../common/constants';
+import type { StrokeCap, StrokeJoin, FillRule, PathCommand } from '../common/constants';
 import { checkResult } from '../common/errors';
 
 /**
@@ -728,7 +728,7 @@ export class Shape extends Paint {
       // Handle dash pattern and offset
       if (dash !== undefined || dashOffset !== undefined) {
         let pattern = dash;
-        let offset = dashOffset ?? 0;
+        const offset = dashOffset ?? 0;
 
         // If only dashOffset is provided, get current pattern from engine
         if (pattern === undefined && dashOffset !== undefined) {

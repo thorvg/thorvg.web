@@ -21,7 +21,8 @@
  */
 
 import { customElement, property } from 'lit/decorators.js';
-import { BaseLottiePlayer, RenderConfig as BaseRenderConfig, Renderer } from './base-lottie-player';
+import type { RenderConfig as BaseRenderConfig, Renderer } from './base-lottie-player';
+import { BaseLottiePlayer } from './base-lottie-player';
 
 export type RenderConfig = Omit<BaseRenderConfig, 'renderer'>;
 

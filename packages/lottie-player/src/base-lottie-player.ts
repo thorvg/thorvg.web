@@ -68,7 +68,7 @@ export enum InitStatus {
 }
 
 // Define rendering configurations
-export type RenderConfig = {
+export interface RenderConfig {
   enableDevicePixelRatio?: boolean;
   renderer?: Renderer;
 }
@@ -115,28 +115,28 @@ const _parseLottieFromURL = async (url: string): Promise<LottieJson> => {
     const json = await result.json();
 
     return json;
-  } catch (err) {
+  } catch {
     throw new Error(
       `An error occurred while trying to load the Lottie file from URL`
     );
   }
-}
+};
 
 const _parseImageFromURL = async (url: string): Promise<ArrayBuffer> => {
   const response = await fetch(url);
   return response.arrayBuffer();
-}
+};
 
 const _parseJSON = async (data: string): Promise<string> => {
   try {
     data = JSON.parse(data);
-  } catch (err) {
+  } catch {
     const json = await _parseLottieFromURL(data as string);
     data = JSON.stringify(json);
   }
 
   return data;
-}
+};
 
 export const parseSrc = async (src: string | object | ArrayBuffer, fileType: FileType): Promise<Uint8Array> => {
   const encoder = new TextEncoder();
@@ -163,10 +163,10 @@ export const parseSrc = async (src: string | object | ArrayBuffer, fileType: Fil
     default:
       throw new Error('Invalid src type');
   }
-}
+};
 
 const _wait = (timeToDelay: number) => {
-  return new Promise((resolve) => setTimeout(resolve, timeToDelay))
+  return new Promise((resolve) => setTimeout(resolve, timeToDelay));
 };
 
 let _initStatus = InitStatus.IDLE;
@@ -193,23 +193,26 @@ const _initModule = async (engine: Renderer) => {
   while (true) {
     const res = wasmModule.init();
     switch (res) {
-      case 0:
+      case 0: {
         _initStatus = InitStatus.INITIALIZED;
         return;
-      case 1:
+      }
+      case 1: {
         _initStatus = InitStatus.FAILED;
         return;
-      case 2:
+      }
+      case 2: {
         await _wait(100);
         break;
+      }
       default:
     }
   }
-}
+};
 
 const _generateUID = () => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
-}
+};
 
 export class BaseLottiePlayer extends LitElement {
   /**
@@ -434,9 +437,9 @@ export class BaseLottiePlayer extends LitElement {
     }
   }
 
-  protected firstUpdated(): void {
+  protected override firstUpdated(): void {
     this.canvas = this.querySelector('.thorvg') as HTMLCanvasElement;
-    
+
     this.canvas.id = `thorvg-${_generateUID()}`;
     this.canvas.width = this.canvas.offsetWidth;
     this.canvas.height = this.canvas.offsetHeight;
@@ -454,7 +457,7 @@ export class BaseLottiePlayer extends LitElement {
     }
   }
 
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
+  protected override createRenderRoot(): HTMLElement | DocumentFragment {
     this.style.display = 'block';
     return this;
   }
@@ -560,7 +563,7 @@ export class BaseLottiePlayer extends LitElement {
           : await fetch(info.path!).then(r => r.arrayBuffer());
         buffer = await this._audioCtx.decodeAudioData(data);
         this._audioBuffers.set(info.id, buffer);
-      } catch (err) {
+      } catch {
         this.currentState = 'error';
         this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
         return;
@@ -684,7 +687,7 @@ export class BaseLottiePlayer extends LitElement {
     if (!this.TVG) {
       return;
     }
-    
+
     this.pause();
     this.currentFrame = curFrame;
     this.TVG.frame(curFrame);
@@ -705,7 +708,7 @@ export class BaseLottiePlayer extends LitElement {
 
       this.fileType = fileType;
       this._loadBytes(bytes);
-    } catch (err) {
+    } catch {
       this.currentState = 'error';
       this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
     }
@@ -813,7 +816,7 @@ export class BaseLottiePlayer extends LitElement {
    * @param height The height to resize
    * @since 1.0
    */
-  public resize(width: number, height: number) {
+  public resize(width: number, height: number): void {
     this.canvas!.width = width;
     this.canvas!.height = height;
 
@@ -845,7 +848,7 @@ export class BaseLottiePlayer extends LitElement {
       this._observer.disconnect();
       this._observer = undefined;
     }
-    
+
     this.dispatchEvent(new CustomEvent(PlayerEvent.Destroyed));
     this.remove();
   }
@@ -1001,7 +1004,7 @@ export class BaseLottiePlayer extends LitElement {
     };
   }
 
-  public render(): TemplateResult {
+  public override render(): TemplateResult {
     return html`
       <canvas class="thorvg" style="width: 100%; height: 100%;" />
     `;

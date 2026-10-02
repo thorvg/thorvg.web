@@ -73,15 +73,15 @@ class AudioOutput {
   }
 
   resume(): void {
-    void this.ctx.resume().catch(() => {});
+    this.ctx.resume().catch(() => {});
   }
 
   suspend(): void {
-    void this.ctx.suspend().catch(() => {});
+    this.ctx.suspend().catch(() => {});
   }
 
   close(): void {
-    void this.ctx.close().catch(() => {});
+    this.ctx.close().catch(() => {});
   }
 }
 
@@ -149,7 +149,7 @@ export class AudioSink {
         await sink.#initAudio(format);
         return sink;
       } catch (e) {
-        handleError('Audio output unavailable: ' + String((e as Error)?.message ?? e), 'AudioSink');
+        handleError(`Audio output unavailable: ${String((e as Error)?.message ?? e)}`, 'AudioSink');
       }
     }
     sink.#silent = true;
@@ -339,7 +339,7 @@ export class LottieAudio {
     if (voice.failed) return;
     if (playing) return; // don't restart on a volume update
     if (voice.buffer) this.#start(voice, state.offset);
-    else void this.#decode(voice, state.src);
+    else this.#decode(voice, state.src);
   }
 
   tick(frame: number, fps: number, totalFrames: number): void {
@@ -427,7 +427,7 @@ export class LottieAudio {
       if (voice.active) this.#start(voice, this.#expected(voice));
     } catch (e) {
       voice.failed = true;
-      handleError('Failed to decode an audio layer: ' + String((e as Error)?.message ?? e), 'LottieAudio');
+      handleError(`Failed to decode an audio layer: ${String((e as Error)?.message ?? e)}`, 'LottieAudio');
     }
   }
 

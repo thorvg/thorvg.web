@@ -6,7 +6,7 @@
 import { WasmObject } from '../interop/WasmObject';
 import { getModule } from '../interop/module';
 import { gradientRegistry } from '../interop/registry';
-import { GradientSpread } from '../common/constants';
+import type { GradientSpread } from '../common/constants';
 
 /**
  * @category Gradients
