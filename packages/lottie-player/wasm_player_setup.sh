@@ -1,43 +1,30 @@
 #!/bin/bash
+set -e
 
 echo "EMSDK: $EMSDK"
 
-rm -rf build_wasm_player && sh ./wasm_player_build.sh "$EMSDK/"
-mv build_wasm_player/thorvg.wasm ./dist
-mv build_wasm_player/thorvg.js ./dist
-mv build_wasm_player/thorvg.d.ts ./dist
+if [ $# -eq 0 ]; then
+  set -- default sw gl wg sw-lite gl-lite wg-lite pthread
+fi
 
-rm -rf build_wasm_player && sh ./wasm_player_build.sh sw "$EMSDK/"
-mkdir -p ./dist/sw
-mv build_wasm_player/thorvg.wasm ./dist/sw
-mv build_wasm_player/thorvg.js ./dist/sw
+mkdir -p build_wasm_player
+for preset in "$@"; do
+  rm -f "build_wasm_player/$preset.exit"
+  { sh ./wasm_player_build.sh "$preset" "$EMSDK/" 2>&1 || echo $? > "build_wasm_player/$preset.exit"; } |
+    while IFS= read -r line; do
+      printf '[%s] %s\n' "$preset" "$line"
+    done &
+done
+wait
 
-rm -rf build_wasm_player && sh ./wasm_player_build.sh gl "$EMSDK/"
-mkdir -p ./dist/gl
-mv build_wasm_player/thorvg.wasm ./dist/gl
-mv build_wasm_player/thorvg.js ./dist/gl
+failed=""
+for preset in "$@"; do
+  if [ -f "build_wasm_player/$preset.exit" ]; then
+    failed="$failed $preset"
+  fi
+done
 
-rm -rf build_wasm_player && sh ./wasm_player_build.sh sw-lite "$EMSDK/"
-mkdir -p ./dist/sw-lite
-mv build_wasm_player/thorvg.wasm ./dist/sw-lite
-mv build_wasm_player/thorvg.js ./dist/sw-lite
-
-rm -rf build_wasm_player && sh ./wasm_player_build.sh gl-lite "$EMSDK/"
-mkdir -p ./dist/gl-lite
-mv build_wasm_player/thorvg.wasm ./dist/gl-lite
-mv build_wasm_player/thorvg.js ./dist/gl-lite
-
-rm -rf build_wasm_player && sh ./wasm_player_build.sh wg "$EMSDK/"
-mkdir -p ./dist/wg
-mv build_wasm_player/thorvg.wasm ./dist/wg
-mv build_wasm_player/thorvg.js ./dist/wg
-
-rm -rf build_wasm_player && sh ./wasm_player_build.sh wg-lite "$EMSDK/"
-mkdir -p ./dist/wg-lite
-mv build_wasm_player/thorvg.wasm ./dist/wg-lite
-mv build_wasm_player/thorvg.js ./dist/wg-lite
-
-rm -rf build_wasm_player && sh ./wasm_player_build.sh pthread "$EMSDK/"
-mkdir -p ./dist/thread
-mv build_wasm_player/thorvg.wasm ./dist/thread
-mv build_wasm_player/thorvg.js ./dist/thread
+if [ -n "$failed" ]; then
+  echo "Failed presets:$failed" >&2
+  exit 1
+fi

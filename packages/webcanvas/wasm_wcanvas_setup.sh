@@ -1,7 +1,8 @@
 #!/bin/bash
+set -e
 
 # WebCanvas WASM Setup Script
-# Builds WASM and copies output to dist/
+# Builds every WASM mode in parallel and moves the output to dist/
 
 echo "EMSDK: $EMSDK"
 
@@ -11,32 +12,30 @@ if [ -z "$EMSDK" ]; then
   exit 1
 fi
 
-# Build WASM with all backends (sw, gl, wg)
-echo "Building ThorVG WASM with WebCanvas bindings (default)..."
-if ! sh ./wasm_wcanvas_build.sh "$EMSDK/"; then
-  echo "WASM build failed!"
+if [ $# -eq 0 ]; then
+  set -- default pthread
+fi
+
+mkdir -p build_wasm_wcanvas
+for mode in "$@"; do
+  rm -f "build_wasm_wcanvas/$mode.exit"
+  { sh ./wasm_wcanvas_build.sh "$mode" "$EMSDK/" 2>&1 || echo $? > "build_wasm_wcanvas/$mode.exit"; } |
+    while IFS= read -r line; do
+      printf '[%s] %s\n' "$mode" "$line"
+    done &
+done
+wait
+
+failed=""
+for mode in "$@"; do
+  if [ -f "build_wasm_wcanvas/$mode.exit" ]; then
+    failed="$failed $mode"
+  fi
+done
+
+if [ -n "$failed" ]; then
+  echo "WASM build failed:$failed" >&2
   exit 1
 fi
-
-# Copy output files to dist/
-mv build_wasm_wcanvas/thorvg.js ./dist/
-mv build_wasm_wcanvas/thorvg.wasm ./dist/
-mv build_wasm_wcanvas/thorvg.d.ts ./dist/
-
-# Build WASM with pthread support
-echo "Building ThorVG WASM with WebCanvas bindings (pthread)..."
-if ! sh ./wasm_wcanvas_build.sh pthread "$EMSDK/"; then
-  echo "Pthread WASM build failed!"
-  exit 1
-fi
-
-mkdir -p ./dist/thread
-mv build_wasm_wcanvas/thorvg.js ./dist/thread/
-mv build_wasm_wcanvas/thorvg.wasm ./dist/thread/
-if [ -f build_wasm_wcanvas/thorvg.worker.js ]; then
-  mv build_wasm_wcanvas/thorvg.worker.js ./dist/thread/
-fi
-rm -f build_wasm_wcanvas/thorvg.d.ts
 
 echo "WASM setup completed successfully!"
-ls -lh ./dist/thorvg.* ./dist/thread/thorvg.* 2>/dev/null
