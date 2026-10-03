@@ -30,6 +30,19 @@ elif [ "$BACKEND" = "gl-lite" ]; then
 elif [ "$BACKEND" = "wg-lite" ]; then
   sed "s|EMSDK:|$EMSDK|g" ../wasm/wasm32_wg.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, png" -Dextra="" -Dthreads=false -Dpartial=false -Dengines="wg" -Dfile="false" --cross-file /tmp/.wasm_cross.txt build_wasm_player
+elif [ "$BACKEND" = "pthread" ]; then
+  # Use prebuilt OpenMP runtime
+  LIBOMP_DIR="$(cd ../wasm/common && pwd)/libomp"
+  CLANG_REVISION=$("${EMSDK}upstream/bin/clang" --version | sed -n 's/.*llvm-project \([0-9a-f]\{40\}\)).*/\1/p')
+  if [ -z "$CLANG_REVISION" ] || ! grep -q "$CLANG_REVISION" "$LIBOMP_DIR/lib/libomp.a"; then
+    echo "libomp.a was not built with this version of emsdk."
+    exit 1
+  fi
+  POOL_SIZE='(function(){var n=globalThis["__THORVG_THREAD_COUNT"];return n>0?2*n-1:0})()'
+  sed "s|EMSDK:|$EMSDK|g" ../wasm/wasm32_sw.txt | \
+  sed "s|cpp_args = \[|cpp_args = ['-pthread', '-fopenmp', '-I${LIBOMP_DIR}/include', |g" | \
+  sed "s|'--bind'|'--bind', '-pthread', '-fopenmp', '-L${LIBOMP_DIR}/lib', '-lomp', '-sPTHREAD_POOL_SIZE=${POOL_SIZE}', '-sPTHREAD_POOL_SIZE_STRICT=0', '-sINITIAL_MEMORY=134217728'|g" > /tmp/.wasm_cross.txt
+  meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, jpg, png, webp, ttf" -Dextra="lottie_exp, openmp" -Dthreads=true -Dpartial=false -Dfile="false" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 else
   sed "s|EMSDK:|$EMSDK|g; s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts'|g" ../wasm/wasm32.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="all" -Dsavers="all" -Dextra="lottie_exp" -Dthreads=false -Dpartial=false -Dengines="all" --cross-file /tmp/.wasm_cross.txt build_wasm_player
