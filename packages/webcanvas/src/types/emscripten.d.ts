@@ -293,6 +293,8 @@ export interface ThorVGCAPI {
     fy: number,
     fr: number
   ): number;
+  _tvg_conic_gradient_new(): number;
+  _tvg_conic_gradient_set(gradient: number, cx: number, cy: number, angle: number): number;
   _tvg_gradient_set_color_stops(gradient: number, stops: number, count: number): number;
   _tvg_gradient_set_spread(gradient: number, spread: number): number;
   _tvg_gradient_del(gradient: number): number;
