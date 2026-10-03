@@ -1,6 +1,6 @@
 import { WasmObject } from '../interop/WasmObject';
 import { Paint } from './Paint';
-import { getModule, allocString, readString } from '../interop/module';
+import { getModule, allocString, readString, createFunction, deleteFunction } from '../interop/module';
 import { accessorRegistry } from '../interop/registry';
 import { checkResult } from '../common/errors';
 
@@ -61,15 +61,14 @@ export class Accessor extends WasmObject {
   public set(paint: Paint, callback: (paint: Paint) => boolean): void {
     const Module = getModule();
 
-    // Signature: bool func(Tvg_Paint paint, void* data) → 'iii' (i32 return, i32 paint, i32 data)
-    const funcPtr = Module.addFunction((paintPtr: number): number => {
-      return callback(Paint.fromPtr(paintPtr)) ? 1 : 0;
-    }, 'iii');
+    const funcPtr = createFunction(Module, 'bool', ['ptr', 'ptr'], (paintPtr) => {
+      return callback(Paint.fromPtr(paintPtr));
+    });
 
     try {
       checkResult(Module._tvg_accessor_set(this.ptr, paint.ptr, funcPtr, 0), 'Accessor.set');
     } finally {
-      Module.removeFunction(funcPtr);
+      deleteFunction(Module, funcPtr);
     }
   }
 

@@ -3,7 +3,7 @@
  * @category LottieAnimation
  */
 
-import { getModule } from '../interop/module';
+import { getModule, createFunction, deleteFunction } from '../interop/module';
 import { callbackRegistry } from '../interop/registry';
 import { Animation } from './Animation';
 import { LottieAudio } from './media/Audio';
@@ -418,7 +418,7 @@ export class LottieAnimation extends Animation {
     if (this.#resolverPtr) {
       const Module = getModule();
       Module._tvg_lottie_animation_set_audio_resolver(this.ptr, 0, 0);
-      Module.removeFunction(this.#resolverPtr);
+      deleteFunction(Module, this.#resolverPtr);
       callbackRegistry.unregister(this);
       this.#resolverPtr = null;
     }
@@ -482,7 +482,7 @@ export class LottieAnimation extends Animation {
     if (!this.#resolverPtr) {
       const self = new WeakRef(this);
 
-      const funcPtr = Module.addFunction((infoPtr: number): void => {
+      const funcPtr = createFunction(Module, 'void', ['ptr', 'ptr'], (infoPtr) => {
         const anim = self.deref();
         if (!anim) return;
 
@@ -491,7 +491,7 @@ export class LottieAnimation extends Animation {
 
         if (anim.#resolver) anim.#resolver(info);
         else anim.#audio?.resolve(info, anim.frame());
-      }, 'vii');
+      });
 
       this.#resolverPtr = funcPtr;
       callbackRegistry.register(this, funcPtr, this);

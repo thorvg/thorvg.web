@@ -4,7 +4,7 @@
  */
 
 import { Paint } from './Paint';
-import { getModule, allocString } from '../interop/module';
+import { getModule, allocString, createFunction, deleteFunction } from '../interop/module';
 import { pictureRegistry, callbackRegistry } from '../interop/registry';
 import { checkResult, handleError, ThorVGResultCode } from '../common/errors';
 import { ColorSpace, FilterMethod } from '../common/constants';
@@ -181,7 +181,7 @@ export class Picture extends Paint {
 
     // Unregister previous resolver.
     if (this.#resolverPtr) {
-      Module.removeFunction(this.#resolverPtr);
+      deleteFunction(Module, this.#resolverPtr);
       callbackRegistry.unregister(this);
       this.#resolverPtr = null;
     }
@@ -194,16 +194,15 @@ export class Picture extends Paint {
       return this;
     }
 
-    // C signature: bool(Tvg_Paint paint, const char* src, void* data) -> 'iiii'
-    const funcPtr = Module.addFunction((paintPtr: number, srcPtr: number): number => {
+    const funcPtr = createFunction(Module, 'bool', ['ptr', 'ptr', 'ptr'], (paintPtr, srcPtr) => {
       const paint = Paint.fromPtr(paintPtr);
       const src = Module.UTF8ToString(srcPtr);
       try {
-        return callback(paint, src) ? 1 : 0;
+        return callback(paint, src);
       } catch {
-        return 0;
+        return false;
       }
-    }, 'iiii');
+    });
 
     this.#resolverPtr = funcPtr;
     callbackRegistry.register(this, funcPtr, this);
@@ -213,7 +212,7 @@ export class Picture extends Paint {
 
   public override dispose(): void {
     if (this.#resolverPtr) {
-      getModule().removeFunction(this.#resolverPtr);
+      deleteFunction(getModule(), this.#resolverPtr);
       callbackRegistry.unregister(this);
       this.#resolverPtr = null;
     }
