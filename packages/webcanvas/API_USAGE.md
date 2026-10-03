@@ -30,7 +30,7 @@ ThorVG WebCanvas provides an object-oriented API supporting WebGPU, WebGL, and S
 - **Image/Vector Files**: SVG, PNG, JPG, WebP, Lottie
 - **Text Rendering**: Custom fonts, alignment, layout, outlines
 - **Animation**: Lottie animation playback and control
-- **Gradients**: Linear and radial gradients
+- **Gradients**: Linear, radial and conic gradients
 - **Transforms**: Translation, rotation, scaling
 - **Opacity and visibility control**
 
@@ -472,7 +472,7 @@ shape.fill(gradient);
 - `g: number` - Green (0-255)
 - `b: number` - Blue (0-255)
 - `a?: number` - Alpha (0-255, default: 255)
-- `gradient: LinearGradient | RadialGradient` - Gradient object
+- `gradient: LinearGradient | RadialGradient | ConicGradient` - Gradient object
 
 **Returns:** `this`
 
@@ -865,7 +865,7 @@ text.fill(gradient);
 - `r: number` - Red (0-255)
 - `g: number` - Green (0-255)
 - `b: number` - Blue (0-255)
-- `gradient: LinearGradient | RadialGradient` - Gradient object
+- `gradient: LinearGradient | RadialGradient | ConicGradient` - Gradient object
 
 **Returns:** `this`
 
@@ -1425,7 +1425,7 @@ animation.quality(80);
 
 ## Gradients
 
-Creates linear and radial gradients.
+Creates linear, radial and conic gradients.
 
 ### LinearGradient
 
@@ -1462,6 +1462,40 @@ const gradient = new TVG.RadialGradient(cx, cy, r, fx?, fy?, fr?);
 - `fx?: number` - Focus X (default: cx)
 - `fy?: number` - Focus Y (default: cy)
 - `fr?: number` - Focus radius (default: 0)
+
+---
+
+### ConicGradient
+
+Creates a conic gradient. The colors sweep one full clockwise turn around the center, starting at `angle`.
+
+#### Constructor
+
+```typescript
+const gradient = new TVG.ConicGradient(cx, cy, angle?);
+```
+
+**Parameters:**
+- `cx: number` - Center X
+- `cy: number` - Center Y
+- `angle?: number` - Start angle in degrees, measured clockwise from the 3 o'clock direction (default: 0)
+
+Stop offsets from 0 to 1 map clockwise over the full turn. `spread()` has no effect on a conic gradient.
+
+**Example:**
+```typescript
+// Color wheel
+const gradient = new TVG.ConicGradient(100, 100);
+gradient.setStops(
+  [0, [255, 0, 0, 255]],
+  [1 / 3, [0, 255, 0, 255]],
+  [2 / 3, [0, 0, 255, 255]],
+  [1, [255, 0, 0, 255]]
+);
+
+const shape = new TVG.Shape();
+shape.appendCircle(100, 100, 80, 80).fill(gradient);
+```
 
 ---
 
