@@ -89,6 +89,7 @@ export interface PictureSize {
 export class Picture extends Paint {
   /** @internal */
   public _owner: object | null = null;
+  #resolver: AssetResolver | null = null;
   #resolverPtr: number | null = null;
 
   constructor();
@@ -186,6 +187,8 @@ export class Picture extends Paint {
       this.#resolverPtr = null;
     }
 
+    this.#resolver = callback;
+
     if (!callback) {
       const result = Module._tvg_picture_set_asset_resolver(this.ptr, 0, 0);
       if (result !== ThorVGResultCode.Success && result !== ThorVGResultCode.InsufficientCondition) {
@@ -194,11 +197,17 @@ export class Picture extends Paint {
       return this;
     }
 
+    const self = new WeakRef(this);
+
     const funcPtr = createFunction(Module, 'bool', ['ptr', 'ptr', 'ptr'], (paintPtr, srcPtr) => {
+      const picture = self.deref();
+      if (!picture || !picture.#resolver) return false;
+      const resolver = picture.#resolver;
+
       const paint = Paint.fromPtr(paintPtr);
       const src = Module.UTF8ToString(srcPtr);
       try {
-        return callback(paint, src);
+        return resolver(paint, src);
       } catch {
         return false;
       }
@@ -216,6 +225,7 @@ export class Picture extends Paint {
       callbackRegistry.unregister(this);
       this.#resolverPtr = null;
     }
+    this.#resolver = null;
     this._owner = null;
     super.dispose();
   }
