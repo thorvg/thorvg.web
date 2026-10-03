@@ -568,7 +568,7 @@ export class Shape extends Paint {
   /**
    * Sets the fill for the shape with a gradient.
    *
-   * @param gradient - LinearGradient or RadialGradient to use as fill
+   * @param gradient - LinearGradient, RadialGradient or ConicGradient to use as fill
    * @returns The Shape instance for method chaining
    */
   public fill(gradient: Fill): this;

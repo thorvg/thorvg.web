@@ -51,6 +51,7 @@ import { Video } from './core/media/Video';
 import { initMedia } from './core/media/Player';
 import { LinearGradient } from './core/LinearGradient';
 import { RadialGradient } from './core/RadialGradient';
+import { ConicGradient } from './core/ConicGradient';
 import { Font } from './core/Font';
 import { Accessor } from './core/Accessor';
 import { FontsourceProvider } from './providers/FontsourceProvider';
@@ -89,6 +90,7 @@ export interface ThorVGNamespace {
   Video: typeof Video;
   LinearGradient: typeof LinearGradient;
   RadialGradient: typeof RadialGradient;
+  ConicGradient: typeof ConicGradient;
   Font: typeof Font;
   Accessor: typeof Accessor;
   // Enums
@@ -298,6 +300,7 @@ function createNamespace(): ThorVGNamespace {
     Video,
     LinearGradient,
     RadialGradient,
+    ConicGradient,
     Font,
     Accessor,
     // Enums
@@ -326,7 +329,7 @@ const ThorVG = {
 export default ThorVG;
 
 // Named exports for advanced usage
-export { init, Paint, Canvas, Shape, Scene, Picture, Text, Animation, LottieAnimation, Video, LinearGradient, RadialGradient, Font, FontsourceProvider, Accessor, constants, ThorVGResultCode, ThorVGError };
+export { init, Paint, Canvas, Shape, Scene, Picture, Text, Animation, LottieAnimation, Video, LinearGradient, RadialGradient, ConicGradient, Font, FontsourceProvider, Accessor, constants, ThorVGResultCode, ThorVGError };
 
 // Re-export types
 export type { CanvasOptions } from './core/Canvas';
