@@ -4,7 +4,7 @@
  */
 
 import { Paint } from './Paint';
-import { getModule, allocString } from '../interop/module';
+import { getModule, allocString, createFunction, deleteFunction } from '../interop/module';
 import { pictureRegistry, callbackRegistry } from '../interop/registry';
 import { checkResult, handleError, ThorVGResultCode } from '../common/errors';
 import { ColorSpace, FilterMethod } from '../common/constants';
@@ -89,6 +89,7 @@ export interface PictureSize {
 export class Picture extends Paint {
   /** @internal */
   public _owner: object | null = null;
+  #resolver: AssetResolver | null = null;
   #resolverPtr: number | null = null;
 
   constructor();
@@ -181,10 +182,12 @@ export class Picture extends Paint {
 
     // Unregister previous resolver.
     if (this.#resolverPtr) {
-      Module.removeFunction(this.#resolverPtr);
+      deleteFunction(Module, this.#resolverPtr);
       callbackRegistry.unregister(this);
       this.#resolverPtr = null;
     }
+
+    this.#resolver = callback;
 
     if (!callback) {
       const result = Module._tvg_picture_set_asset_resolver(this.ptr, 0, 0);
@@ -194,16 +197,21 @@ export class Picture extends Paint {
       return this;
     }
 
-    // C signature: bool(Tvg_Paint paint, const char* src, void* data) -> 'iiii'
-    const funcPtr = Module.addFunction((paintPtr: number, srcPtr: number): number => {
+    const self = new WeakRef(this);
+
+    const funcPtr = createFunction(Module, 'bool', ['ptr', 'ptr', 'ptr'], (paintPtr, srcPtr) => {
+      const picture = self.deref();
+      if (!picture || !picture.#resolver) return false;
+      const resolver = picture.#resolver;
+
       const paint = Paint.fromPtr(paintPtr);
       const src = Module.UTF8ToString(srcPtr);
       try {
-        return callback(paint, src) ? 1 : 0;
+        return resolver(paint, src);
       } catch {
-        return 0;
+        return false;
       }
-    }, 'iiii');
+    });
 
     this.#resolverPtr = funcPtr;
     callbackRegistry.register(this, funcPtr, this);
@@ -213,10 +221,11 @@ export class Picture extends Paint {
 
   public override dispose(): void {
     if (this.#resolverPtr) {
-      getModule().removeFunction(this.#resolverPtr);
+      deleteFunction(getModule(), this.#resolverPtr);
       callbackRegistry.unregister(this);
       this.#resolverPtr = null;
     }
+    this.#resolver = null;
     this._owner = null;
     super.dispose();
   }

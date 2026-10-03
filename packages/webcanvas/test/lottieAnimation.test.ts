@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { LottieAnimation } from '../src/core/LottieAnimation';
+import { getModule } from '../src/interop/module';
 import { assertGCCleanup, assertNoDoubleFree, canForceGC, getTVG } from './helpers';
 import lottieJson from './resources/lottie.json';
 
@@ -78,5 +79,24 @@ describe('LottieAnimation', () => {
   it.skipIf(!canForceGC)('unreferenced animation is cleaned up by GC', async () => {
     const TVG = getTVG();
     await assertGCCleanup(() => new TVG.LottieAnimation());
+  });
+
+  it.skipIf(!canForceGC)('self-referencing resolver does not block GC', async () => {
+    const TVG = getTVG();
+    const addFunction = vi.spyOn(getModule(), 'addFunction');
+    const removeFunction = vi.spyOn(getModule(), 'removeFunction');
+    try {
+      await assertGCCleanup(() => {
+        const lottie = new TVG.LottieAnimation();
+        lottie.resolver(() => lottie.ptr);
+        lottie.load(TEST_LOTTIE);
+        return lottie;
+      });
+      expect(addFunction).toHaveBeenCalledTimes(1);
+      expect(removeFunction).toHaveBeenCalledWith(addFunction.mock.results[0].value);
+    } finally {
+      addFunction.mockRestore();
+      removeFunction.mockRestore();
+    }
   });
 });

@@ -11,6 +11,7 @@ export const canForceGC = typeof globalThis.gc === 'function';
 
 // Force GC and wait for FinalizationRegistry callbacks to fire.
 export async function forceFinalization(): Promise<void> {
+  await new Promise((r) => setTimeout(r, 0)); // wait for WeakRef creation
   globalThis.gc?.();
   await new Promise((r) => setTimeout(r, 10)); // wait for the GC to finish
 }
