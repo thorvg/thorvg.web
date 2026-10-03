@@ -3,6 +3,7 @@ import { basicShapesExample } from './basic-shapes';
 import { blendingExample } from './blending';
 import { gradientsExample } from './gradients';
 import { radialGradientExample } from './radial-gradient';
+import { conicGradientExample } from './conic-gradient';
 import { gradientStrokeExample } from './gradient-stroke';
 import { strokeExample } from './stroke';
 import { pathExample } from './path';
@@ -59,6 +60,7 @@ export * from './types';
 export const showcaseExamples: ShowcaseExample[] = [
   // Basic (alphabetically sorted by title)
   // updateExample,
+  conicGradientExample,
   customTransformExample,
   directUpdateExample,
   fillRuleExample,
