@@ -145,4 +145,22 @@ describe('Picture', () => {
     const TVG = getTVG();
     await assertGCCleanup(() => new TVG.Picture());
   });
+
+  it.skipIf(!canForceGC)('self-referencing resolver does not block GC', async () => {
+    const TVG = getTVG();
+    const addFunction = vi.spyOn(getModule(), 'addFunction');
+    const removeFunction = vi.spyOn(getModule(), 'removeFunction');
+    try {
+      await assertGCCleanup(() => {
+        const picture = new TVG.Picture();
+        picture.resolver(() => picture.ptr > 0);
+        return picture;
+      });
+      expect(addFunction).toHaveBeenCalledTimes(1);
+      expect(removeFunction).toHaveBeenCalledWith(addFunction.mock.results[0].value);
+    } finally {
+      addFunction.mockRestore();
+      removeFunction.mockRestore();
+    }
+  });
 });
