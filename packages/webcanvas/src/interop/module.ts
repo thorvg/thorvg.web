@@ -51,6 +51,37 @@ export function readString(Module: ThorVGModule, ptr: number): string | null {
   return new TextDecoder().decode(heap.subarray(ptr, end));
 }
 
+/**
+ * Value types of a C function signature. Pointers, bools and ints are all i32 in WASM.
+ */
+export type WasmType = 'void' | 'bool' | 'int' | 'ptr';
+
+/**
+ * Create a function pointer that C code can call, backed by a JS function.
+ * Caller is responsible for calling deleteFunction() on the returned pointer.
+ *
+ * @param ret - Return type of the C signature
+ * @param args - Argument types of the C signature, including ones the JS function ignores
+ * @param fn - JS implementation.
+ */
+export function createFunction(
+  Module: ThorVGModule,
+  ret: WasmType,
+  args: WasmType[],
+  fn: (...args: number[]) => unknown
+): number {
+  const sig = (ret === 'void' ? 'v' : 'i') + 'i'.repeat(args.length);
+  const impl = ret === 'bool' ? (...a: number[]): number => (fn(...a) ? 1 : 0) : fn;
+  return Module.addFunction(impl, sig);
+}
+
+/**
+ * Release a function pointer created by createFunction().
+ */
+export function deleteFunction(Module: ThorVGModule, ptr: number): void {
+  Module.removeFunction(ptr);
+}
+
 // Module-level worker thread count.
 let threadCount = 0;
 

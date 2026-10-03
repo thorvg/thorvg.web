@@ -2,7 +2,7 @@
  * FinalizationRegistry instances for automatic memory management
  */
 
-import { getModule, hasModule } from './module';
+import { getModule, hasModule, deleteFunction } from './module';
 import type { VideoResource } from '../core/media/Video';
 
 export interface RegistryToken {
@@ -18,11 +18,11 @@ function createRegistry(): FinalizationRegistry<RegistryToken> {
   });
 }
 
-// Used for emscripten function-table entries (addFunction)
+// Used for function pointers
 function createFunctionRegistry(): FinalizationRegistry<number> {
   return new FinalizationRegistry<number>((funcPtr) => {
     if (hasModule()) {
-      getModule().removeFunction(funcPtr);
+      deleteFunction(getModule(), funcPtr);
     }
   });
 }
