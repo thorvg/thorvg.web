@@ -55,8 +55,10 @@
     "!dist/**/thorvg.js"
   ],
   "scripts": {
-    "build": "npm run clean && sh ./wasm_player_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
-    "build:watch": "npm run clean && sh ./wasm_player_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
+    "build": "npm run clean && npm run build:wasm && npm run build:js",
+    "build:wasm": "sh ./wasm_player_setup.sh",
+    "build:js": "THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
+    "build:watch": "npm run clean && npm run build:wasm && npm run build:js -- --watch",
     "clean": "rm -rf dist && mkdir dist",
     "test": "THORVG_VERSION=$(npm run version --silent) web-test-runner tests/**/*.test.ts",
     "lint": "eslint src",
