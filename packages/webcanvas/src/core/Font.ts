@@ -155,7 +155,7 @@ export class Font {
     Module.HEAPU8[namePtr + name.length] = 0;
 
     try {
-      const result = Module._tvg_font_unload(namePtr);
+      const result = Module._tvg_font_load_data(namePtr, 0, 0, 0, 0);
       checkResult(result, `Font.unload("${name}")`);
     } finally {
       Module._free(namePtr);

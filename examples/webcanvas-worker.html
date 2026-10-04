@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ThorVG WebCanvas - Web Worker</title>
+    <meta name="description" content="Render with @thorvg/webcanvas inside a Web Worker via OffscreenCanvas" />
+    <style>
+      body { font-family: sans-serif; margin: 24px; }
+      canvas { border: 1px solid #ccc; display: block; margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <h2>ThorVG WebCanvas in a Web Worker</h2>
+
+    <label for="renderer">Renderer</label>
+    <select id="renderer">
+      <option value="gl">WebGL (gl)</option>
+      <option value="wg">WebGPU (wg)</option>
+      <option value="sw">Software (sw)</option>
+    </select>
+
+    <canvas id="canvas"></canvas>
+
+    <script type="module">
+      const select = document.querySelector('#renderer');
+      const renderer = new URLSearchParams(location.search).get('renderer') || 'gl';
+      select.value = renderer;
+      select.onchange = () => { location.search = `?renderer=${select.value}`; };
+
+      const size = 500;
+      const dpr = window.devicePixelRatio || 1;
+      const canvas = document.querySelector('#canvas');
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+
+      const offscreen = canvas.transferControlToOffscreen();
+      const worker = new Worker('./webcanvas-worker.js', { type: 'module' });
+      worker.postMessage({ canvas: offscreen, renderer, size: size * dpr }, [offscreen]);
+    </script>
+  </body>
+</html>

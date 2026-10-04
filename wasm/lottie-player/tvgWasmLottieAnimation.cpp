@@ -30,9 +30,10 @@ using namespace emscripten;
 using namespace std;
 using namespace tvg;
 
-EMSCRIPTEN_DECLARE_VAL_TYPE(ArrayBuffer);
+EMSCRIPTEN_DECLARE_VAL_TYPE(Uint8Array);
 EMSCRIPTEN_DECLARE_VAL_TYPE(Float32Array);
 EMSCRIPTEN_DECLARE_VAL_TYPE(AssetResolverCallback);
+EMSCRIPTEN_DECLARE_VAL_TYPE(AudioResolverCallback);
 
 static const char* NoError = "None";
 
@@ -45,9 +46,9 @@ struct TvgEngineMethod
     virtual ~TvgEngineMethod() {}
     virtual Canvas* init(string&) = 0;
     virtual void resize(Canvas* canvas, uint32_t w, uint32_t h) = 0;
-    virtual ArrayBuffer output(uint32_t w, uint32_t h)
+    virtual Uint8Array output(uint32_t w, uint32_t h)
     {
-        return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
+        return Uint8Array(val(typed_memory_view<uint8_t>(0, nullptr)));
     }
 
     void loadFont() {
@@ -84,9 +85,9 @@ struct TvgSwEngine : TvgEngineMethod
         static_cast<SwCanvas*>(canvas)->target((uint32_t *)buffer, w, w, h, ColorSpace::ABGR8888S);
     }
 
-    ArrayBuffer output(uint32_t w, uint32_t h) override
+    Uint8Array output(uint32_t w, uint32_t h) override
     {
-        return ArrayBuffer(val(typed_memory_view(w * h * 4, buffer)));
+        return Uint8Array(val(typed_memory_view(w * h * 4, buffer)));
     }
 };
 
@@ -336,6 +337,8 @@ public:
             return false;
         }
 
+        animation->resolver(audioResolver.func, &audioResolver.data);
+
         animation->picture()->size(&psize[0], &psize[1]);
 
         /* need to reset size to calculate scale in Picture.size internally before calling resize() */
@@ -354,18 +357,18 @@ public:
         return true;
     }
 
-    ArrayBuffer render()
+    Uint8Array render()
     {
         errorMsg = NoError;
 
-        if (!canvas || !animation) return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
-        if (width == 0 || height == 0) return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
+        if (!canvas || !animation) return Uint8Array(val(typed_memory_view<uint8_t>(0, nullptr)));
+        if (width == 0 || height == 0) return Uint8Array(val(typed_memory_view<uint8_t>(0, nullptr)));
 
         if (!updated) return engine->output(width, height);
 
         if (canvas->draw(true) != Result::Success) {
             errorMsg = "draw() fail";
-            return ArrayBuffer(val(typed_memory_view<uint8_t>(0, nullptr)));
+            return Uint8Array(val(typed_memory_view<uint8_t>(0, nullptr)));
         }
 
         canvas->sync();
@@ -520,6 +523,47 @@ public:
         return true;
     }
 
+    bool setAudioResolver(AudioResolverCallback callback, val data)
+    {
+        errorMsg = NoError;
+
+        if (!canvas || !animation) return false;
+
+        if (callback.isUndefined() || callback.isNull()) {
+            audioResolver.func = nullptr;
+            animation->resolver(nullptr, nullptr);
+            return true;
+        }
+
+        auto func = [callback](const tvg::LottieAudioResolver& info, void* data) {
+            auto& userData = *static_cast<val*>(data);
+            val jsInfo = val::object();
+            jsInfo.set("id", (unsigned int)reinterpret_cast<uintptr_t>(info.src));
+            jsInfo.set("active", info.active);
+            jsInfo.set("offset", info.offset);
+            jsInfo.set("volume", info.volume / 100.0f);
+
+            if (!info.embedded) {
+                jsInfo.set("path", info.src ? std::string(info.src) : std::string(""));
+                jsInfo.set("data", val::null());
+                jsInfo.set("mimeType", val::null());
+            } else {
+                jsInfo.set("path", val::null());
+                jsInfo.set("data", (info.src && info.size > 0)
+                    ? val(typed_memory_view(info.size, reinterpret_cast<const uint8_t*>(info.src)))
+                    : val::null());
+                jsInfo.set("mimeType", info.mimeType ? std::string(info.mimeType) : std::string(""));
+            }
+
+            callback(jsInfo, userData);
+        };
+
+        audioResolver = {func, data};
+        animation->resolver(audioResolver.func, &audioResolver.data);
+
+        return true;
+    }
+
     bool setAssetResolver(AssetResolverCallback callback, val data)
     {
         errorMsg = NoError;
@@ -569,6 +613,10 @@ private:
         std::function<bool(Paint* paint, const char* src, void* data)> func;
         val data; //user data for JS data type
     } resolver;
+    struct {
+        std::function<void(const tvg::LottieAudioResolver& info, void* data)> func;
+        val data; //user data for JS data type
+    } audioResolver;
 };
 
 
@@ -593,9 +641,10 @@ void term()
 
 EMSCRIPTEN_BINDINGS(thorvg_bindings)
 {
-    register_type<ArrayBuffer>("ArrayBuffer");
+    register_type<Uint8Array>("Uint8Array");
     register_type<Float32Array>("Float32Array");
     register_type<AssetResolverCallback>("(src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string }");
+    register_type<AudioResolverCallback>("(info: { id: number, active: boolean, offset: number, volume: number, path: string | null, data: Uint8Array | null, mimeType: string | null }, data: unknown) => void");
 
     emscripten::function("init", &init);
     emscripten::function("term", &term);
@@ -615,5 +664,6 @@ EMSCRIPTEN_BINDINGS(thorvg_bindings)
         .function("resize", &TvgLottieAnimation ::resize)
         .function("save", &TvgLottieAnimation ::save)
         .function("quality", &TvgLottieAnimation ::quality)
-        .function("setAssetResolver", &TvgLottieAnimation ::setAssetResolver);
+        .function("setAssetResolver", &TvgLottieAnimation ::setAssetResolver)
+        .function("setAudioResolver", &TvgLottieAnimation ::setAudioResolver);
 }

@@ -47,6 +47,8 @@ import { Picture } from './core/Picture';
 import { Text } from './core/Text';
 import { Animation } from './core/Animation';
 import { LottieAnimation } from './core/LottieAnimation';
+import { Video } from './core/media/Video';
+import { initMedia } from './core/media/Player';
 import { LinearGradient } from './core/LinearGradient';
 import { RadialGradient } from './core/RadialGradient';
 import { Font } from './core/Font';
@@ -59,7 +61,7 @@ import { setThreadCount } from './interop/module';
 import ThorVGModuleFactory from '../dist/thorvg';
 
 const THORVG_VERSION = '__THORVG_VERSION__';
-const THORVG_WASM_URL = 'https://unpkg.com/@thorvg/webcanvas@__PACKAGE_VERSION__/dist/thorvg.wasm';
+const THORVG_WASM_URL = 'https://unpkg.com/@thorvg/webcanvas@__PACKAGE_VERSION__/__WASM_PATH__';
 
 /**
  * @category Initialization
@@ -84,6 +86,7 @@ export interface ThorVGNamespace {
   Text: typeof Text;
   Animation: typeof Animation;
   LottieAnimation: typeof LottieAnimation;
+  Video: typeof Video;
   LinearGradient: typeof LinearGradient;
   RadialGradient: typeof RadialGradient;
   Font: typeof Font;
@@ -247,6 +250,9 @@ async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
   globalThis.__ThorVGModule = Module;
   initialized = true;
 
+  // Initialize Media glue interface
+  initMedia(Module);
+
   // Automatically initialize the engine with specified renderer
   await initEngine(renderer);
 
@@ -289,6 +295,7 @@ function createNamespace(): ThorVGNamespace {
     Text,
     Animation,
     LottieAnimation,
+    Video,
     LinearGradient,
     RadialGradient,
     Font,
@@ -319,7 +326,7 @@ const ThorVG = {
 export default ThorVG;
 
 // Named exports for advanced usage
-export { init, Paint, Canvas, Shape, Scene, Picture, Text, Animation, LottieAnimation, LinearGradient, RadialGradient, Font, FontsourceProvider, Accessor, constants, ThorVGResultCode, ThorVGError };
+export { init, Paint, Canvas, Shape, Scene, Picture, Text, Animation, LottieAnimation, Video, LinearGradient, RadialGradient, Font, FontsourceProvider, Accessor, constants, ThorVGResultCode, ThorVGError };
 
 // Re-export types
 export type { CanvasOptions } from './core/Canvas';
@@ -329,12 +336,12 @@ export type { RectOptions, StrokeOptions } from './core/Shape';
 export type { LoadDataOptions, PictureSize, AssetResolver } from './core/Picture';
 export type { TextLayout, TextOutline } from './core/Text';
 export type { AnimationInfo, AnimationSegment } from './core/Animation';
-export type { LottieMarker, LottieSlotData } from './core/LottieAnimation';
+export type { LottieMarker, LottieSlotData, AudioInfo, AudioResolver } from './core/LottieAnimation';
 export type { LoadFontOptions, FontType } from './core/Font';
 export type { FontsourceOptions } from './providers/FontsourceProvider';
 export type { FontProvider, FontProviderResult } from './core/FontProvider';
 export type { ColorStop } from './core/Fill';
 /** @category Canvas */
-export type { RendererType } from './common/constants';
+export type { RendererType, CanvasTarget } from './common/constants';
 /** @category Picture */
 export type { MimeType } from './common/constants';

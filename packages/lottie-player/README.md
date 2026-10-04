@@ -25,7 +25,7 @@ npm install @thorvg/lottie-player
 - [Usage](#usage)
   - [With HTML (Basic Usage)](#with-html-basic-usage)
   - [With NPM (JS/TS)](#with-npm-jsts)
-  - [With ReactJS + TypeScript](#with-reactjs--typescript)
+  - [With React (TypeScript)](#with-react-typescript)
   - [With SSR Framework](#with-ssr-framework)
 - [Player Preset Variants](#player-preset-variants)
   - [Standard Presets](#standard-presets)
@@ -67,28 +67,32 @@ Import the library and please follow Basic Usage, you can use library on any NPM
 import '@thorvg/lottie-player';
 ```
 
-### With ReactJS + TypeScript
+### With React (TypeScript)
 
 Add `declarations.d.ts` on the root of project and make sure following declaration.
 
-```js
-declare namespace JSX {
-  interface IntrinsicElements {
-    "lottie-player": any;
+```ts
+declare module "react/jsx-runtime" {
+  namespace JSX {
+    interface IntrinsicElements {
+      "lottie-player": any;
+    }
   }
 }
+
+export {};
 ```
 
 Then you will be able to use this as same as above
-```js
+```tsx
 import '@thorvg/lottie-player';
 
-<lottie-player 
-  autoPlay 
+<lottie-player
+  autoPlay
   loop
   mode="normal"
   src="https://lottie.host/6d7dd6e2-ab92-4e98-826a-2f8430768886/NGnHQ6brWA.json"
-  style="width: 500px; height: 500px;"
+  style={{ width: 500, height: 500 }}
 >
 </lottie-player>
 ```
@@ -225,11 +229,11 @@ import '@thorvg/lottie-player/wg-lite';
 | --- | --- | --- | --- | --- |
 | src | A graphic resource to play. It could be an internal/external URL or JSON string for Lottie. | string | undefined | Y |
 | speed | Animation speed (for Lottie) | number | 1 | N |
-| autoplay | When set to true, automatically plays the animation on loading it (for Lottie) | boolean | false | N |
+| autoPlay | When set to true, automatically plays the animation on loading it (for Lottie) | boolean | false | N |
 | count | Number of times to loop the animation | number | undefined | N |
 | loop | When set to true, loops the animation. The count property defines the number of times to loop the animation. Setting the count property to 0 and setting the loop to true, loops the animation indefinitely. | boolean | false | N |
 | direction | Direction of the animation. Set to 1 to play the animation forward or set to -1 to play it backward. | number (1 or -1) | 1 | N |
-| mode | Play mode. Setting the mode to PlayMode.Bounce plays the animation in an indefinite cycle, forwards and then backwards. | PlayMode | PlayMode.Normal | N |
+| mode | Play mode. Setting the mode to `"bounce"` plays the animation in an indefinite cycle, forwards and then backwards. | PlayMode | "normal" | N |
 | intermission | Duration (in milliseconds) to pause before playing each cycle in a looped animation. Set this parameter to 0 (no pause) or any positive number. | number | 1 | N |
 
 ### Events
@@ -435,13 +439,7 @@ This will automatically detect framework projects in the `example/` directory an
 The build testing script is located in `./build-test/`.
 
 ### Local Examples
-Check the usage of each preset in the `example/` directory:
-
-- [Software Renderer (Standard)](example/software.html) - Full Lottie support with CPU rendering
-- [WebGL Renderer (Standard)](example/webgl.html) - Full Lottie support with WebGL acceleration
-- [Software Renderer (Lite)](example/software-lite.html) - Basic Lottie support with CPU rendering
-- [WebGL Renderer (Lite)](example/webgl-lite.html) - Basic Lottie support with WebGL acceleration
-- [WebGPU Renderer](example/webgpu.html) - Full Lottie support with WebGPU acceleration
+[Lottie Player Example](../../examples/index.html) demonstrates player setup and basic Lottie playback with WebGL and the Non-Lite Default bundle. Source comments explain how to switch renderers and use Lite presets.
 
 [Back to contents](#contents)
 <br />

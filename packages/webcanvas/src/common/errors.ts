@@ -10,7 +10,8 @@ export enum ThorVGResultCode {
   FailedAllocation = 3,
   MemoryCorruption = 4,
   NotSupported = 5,
-  Unknown = 6,
+  SystemError = 6,
+  Unknown = 255,
 }
 
 /**
@@ -38,6 +39,7 @@ export class ThorVGError extends Error {
       [ThorVGResultCode.FailedAllocation]: 'Failed allocation',
       [ThorVGResultCode.MemoryCorruption]: 'Memory corruption',
       [ThorVGResultCode.NotSupported]: 'Not supported',
+      [ThorVGResultCode.SystemError]: 'System error',
       [ThorVGResultCode.Unknown]: 'Unknown error',
     };
 

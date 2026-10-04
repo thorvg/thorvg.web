@@ -249,7 +249,7 @@ export enum FilterMethod {
  * Supported image and vector file formats for Picture class.
  * @category Picture
  */
-export type MimeType = 'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' | 'lottie+json';
+export type MimeType = 'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' | 'lottie+json' | 'mp4';
 
 /**
  * Rendering backend type for Canvas.
@@ -300,3 +300,14 @@ export type MimeType = 'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' |
  * @category Other
  */
 export type RendererType = 'sw' | 'gl' | 'wg';
+
+/**
+ * Canvas target accepted by {@link Canvas}.
+ *
+ * - `string` - CSS selector of an HTML canvas element (e.g., `'#canvas'`)
+ * - `HTMLCanvasElement` - the canvas element itself
+ * - `OffscreenCanvas` - an offscreen canvas that transferred to a Web Worker
+ *
+ * @category Other
+ */
+export type CanvasTarget = string | HTMLCanvasElement | OffscreenCanvas;

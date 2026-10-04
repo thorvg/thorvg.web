@@ -1,35 +1,43 @@
 {
   "name": "@thorvg/lottie-player",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A web lottie player using ThorVG as a renderer",
   "main": "./dist/lottie-player.cjs.js",
   "module": "./dist/lottie-player.esm.js",
+  "types": "./dist/lottie-player.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/lottie-player.d.ts",
       "import": "./dist/lottie-player.esm.js",
       "require": "./dist/lottie-player.cjs.js"
     },
     "./sw": {
+      "types": "./dist/lottie-preset-player.d.ts",
       "import": "./dist/sw/lottie-player.esm.js",
       "require": "./dist/sw/lottie-player.cjs.js"
     },
     "./gl": {
+      "types": "./dist/lottie-preset-player.d.ts",
       "import": "./dist/gl/lottie-player.esm.js",
       "require": "./dist/gl/lottie-player.cjs.js"
     },
     "./wg": {
+      "types": "./dist/lottie-preset-player.d.ts",
       "import": "./dist/wg/lottie-player.esm.js",
       "require": "./dist/wg/lottie-player.cjs.js"
     },
     "./sw-lite": {
+      "types": "./dist/lottie-preset-player.d.ts",
       "import": "./dist/sw-lite/lottie-player.esm.js",
       "require": "./dist/sw-lite/lottie-player.cjs.js"
     },
     "./gl-lite": {
+      "types": "./dist/lottie-preset-player.d.ts",
       "import": "./dist/gl-lite/lottie-player.esm.js",
       "require": "./dist/gl-lite/lottie-player.cjs.js"
     },
     "./wg-lite": {
+      "types": "./dist/lottie-preset-player.d.ts",
       "import": "./dist/wg-lite/lottie-player.esm.js",
       "require": "./dist/wg-lite/lottie-player.cjs.js"
     }
@@ -42,7 +50,6 @@
     "!dist/thorvg.d.ts",
     "!dist/**/thorvg.js"
   ],
-  "types": "./dist/lottie-player.d.ts",
   "scripts": {
     "build": "npm run clean && sh ./wasm_player_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
     "build:watch": "npm run clean && sh ./wasm_player_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",

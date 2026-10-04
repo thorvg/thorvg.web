@@ -3,6 +3,7 @@
  */
 
 import { getModule, hasModule } from './module';
+import type { VideoResource } from '../core/media/Video';
 
 export interface RegistryToken {
   ptr: number;
@@ -22,6 +23,17 @@ function createFunctionRegistry(): FinalizationRegistry<number> {
   return new FinalizationRegistry<number>((funcPtr) => {
     if (hasModule()) {
       getModule().removeFunction(funcPtr);
+    }
+  });
+}
+
+// off-thread resources for media objects
+function createMediaRegistry(): FinalizationRegistry<VideoResource> {
+  return new FinalizationRegistry<VideoResource>((res) => {
+    res.worker?.terminate();
+    res.audio?.close();
+    if (res.ptr && hasModule()) {
+      getModule()._tvg_video_del(res.ptr);
     }
   });
 }
@@ -66,12 +78,7 @@ export const animationRegistry = createRegistry();
  */
 export const callbackRegistry = createFunctionRegistry();
 
-// Automatic cleanup on page unload (browser only)
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', () => {
-    if (hasModule()) {
-      const Module = getModule();
-      Module.term();
-    }
-  });
-}
+/**
+ * Registry for Video objects
+ */
+export const videoRegistry = createMediaRegistry();

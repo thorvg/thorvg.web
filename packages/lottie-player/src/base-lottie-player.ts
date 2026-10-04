@@ -29,7 +29,7 @@ type LottieJson = Record<string, unknown>;
 
 const THORVG_VERSION = '__THORVG_VERSION__';
 const DEFAULT_RENDERER = '__RENDERER__';
-const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@__PACKAGE_VERSION__/dist/thorvg.wasm';
+const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@__WASM_PATH__/thorvg.wasm';
 export let wasmModule: MainModule | null = null;
 let _moduleRequested: boolean = false;
 
@@ -38,12 +38,26 @@ export interface LibraryVersion {
   THORVG_VERSION: string
 }
 
-// Define renderer type
-export enum Renderer {
-  SW = 'sw',
-  WG = 'wg',
-  GL = 'gl',
+// Audio resolver event payload
+export interface AudioInfo {
+  id: number;
+  active: boolean;
+  offset: number;
+  volume: number;
+  path: string | null;
+  data: Uint8Array | null;
+  mimeType: string | null;
 }
+
+interface AudioVoice {
+  info: AudioInfo;
+  source?: AudioBufferSourceNode;
+  baseFrame: number;
+  baseOffset: number;
+}
+
+// Define renderer type
+export type Renderer = 'sw' | 'wg' | 'gl';
 
 // Define initialization status
 export enum InitStatus {
@@ -54,36 +68,26 @@ export enum InitStatus {
 }
 
 // Define rendering configurations
-export type RenderConfig = {
+export interface RenderConfig {
   enableDevicePixelRatio?: boolean;
   renderer?: Renderer;
 }
 
 // Define file type which player can load
-export enum FileType {
-  JSON = 'json',
-  LOT = 'lot',
-  JPG = 'jpg',
-  PNG = 'png',
-  SVG = 'svg',
-}
+export type FileType = 'json' | 'lot' | 'jpg' | 'png' | 'svg';
 
 // Define valid player states
-export enum PlayerState {
-  Destroyed = 'destroyed', // Player is destroyed by `destroy()` method
-  Error = 'error', // An error occurred
-  Loading = 'loading', // Player is loading
-  Paused = 'paused', // Player is paused
-  Playing = 'playing', // Player is playing
-  Stopped = 'stopped',  // Player is stopped
-  Frozen = 'frozen', // Player is paused due to player being invisible
-}
+export type PlayerState =
+  | 'destroyed' // Player is destroyed by `destroy()` method
+  | 'error' // An error occurred
+  | 'loading' // Player is loading
+  | 'paused' // Player is paused
+  | 'playing' // Player is playing
+  | 'stopped' // Player is stopped
+  | 'frozen'; // Player is paused due to player being invisible
 
 // Define play modes
-export enum PlayMode {
-  Bounce = 'bounce',
-  Normal = 'normal',
-}
+export type PlayMode = 'bounce' | 'normal';
 
 // Define player events
 export enum PlayerEvent {
@@ -111,28 +115,28 @@ const _parseLottieFromURL = async (url: string): Promise<LottieJson> => {
     const json = await result.json();
 
     return json;
-  } catch (err) {
+  } catch {
     throw new Error(
       `An error occurred while trying to load the Lottie file from URL`
     );
   }
-}
+};
 
 const _parseImageFromURL = async (url: string): Promise<ArrayBuffer> => {
   const response = await fetch(url);
   return response.arrayBuffer();
-}
+};
 
 const _parseJSON = async (data: string): Promise<string> => {
   try {
     data = JSON.parse(data);
-  } catch (err) {
+  } catch {
     const json = await _parseLottieFromURL(data as string);
     data = JSON.stringify(json);
   }
 
   return data;
-}
+};
 
 export const parseSrc = async (src: string | object | ArrayBuffer, fileType: FileType): Promise<Uint8Array> => {
   const encoder = new TextEncoder();
@@ -148,7 +152,7 @@ export const parseSrc = async (src: string | object | ArrayBuffer, fileType: Fil
       return encoder.encode(data);
     }
     case 'string': {
-      if (fileType === FileType.JSON || fileType === FileType.LOT) {
+      if (fileType === 'json' || fileType === 'lot') {
         data = await _parseJSON(data);
         return encoder.encode(data);
       }
@@ -159,15 +163,15 @@ export const parseSrc = async (src: string | object | ArrayBuffer, fileType: Fil
     default:
       throw new Error('Invalid src type');
   }
-}
+};
 
 const _wait = (timeToDelay: number) => {
-  return new Promise((resolve) => setTimeout(resolve, timeToDelay))
+  return new Promise((resolve) => setTimeout(resolve, timeToDelay));
 };
 
 let _initStatus = InitStatus.IDLE;
 const _initModule = async (engine: Renderer) => {
-  if (engine !== Renderer.WG) {
+  if (engine !== 'wg') {
     //NOTE: thorvg software/webgl renderer doesn't do anything in the module init(). Skip ASAP.
     return;
   }
@@ -189,23 +193,26 @@ const _initModule = async (engine: Renderer) => {
   while (true) {
     const res = wasmModule.init();
     switch (res) {
-      case 0:
+      case 0: {
         _initStatus = InitStatus.INITIALIZED;
         return;
-      case 1:
+      }
+      case 1: {
         _initStatus = InitStatus.FAILED;
         return;
-      case 2:
+      }
+      case 2: {
         await _wait(100);
         break;
+      }
       default:
     }
   }
-}
+};
 
 const _generateUID = () => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
-}
+};
 
 export class BaseLottiePlayer extends LitElement {
   /**
@@ -226,8 +233,8 @@ export class BaseLottiePlayer extends LitElement {
   * File type.
   * @since 1.0
   */
-  @property({ type: FileType })
-  public fileType: FileType = FileType.JSON;
+  @property({ type: String })
+  public fileType: FileType = 'json';
 
   /**
    * Animation speed.
@@ -269,7 +276,7 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   @property()
-  public mode: PlayMode = PlayMode.Normal;
+  public mode: PlayMode = 'normal';
 
   /**
    * Intermission
@@ -297,7 +304,7 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   @property({ type: Number })
-  public currentState: PlayerState = PlayerState.Loading;
+  public currentState: PlayerState = 'loading';
 
   /**
    * original size of the animation (readonly)
@@ -330,6 +337,15 @@ export class BaseLottiePlayer extends LitElement {
   private _rafId?: number;
   private _assetResolverCallback?: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string };
   private _assetResolverData?: unknown;
+  //Audio
+  private _audioResolverCallback?: (info: AudioInfo, data: unknown) => void;
+  private _audioResolverData?: unknown;
+  private _audioCtx?: AudioContext;
+  private _audioMasterGain?: GainNode;
+  private _volume: number = 1;
+  private _muted: boolean = false;
+  private _audioBuffers = new Map<number, AudioBuffer>();
+  private _audioVoices = new Map<number, AudioVoice>();
 
   private async _init(): Promise<void> {
     // Ensure module is loaded only once
@@ -363,7 +379,7 @@ export class BaseLottiePlayer extends LitElement {
 
     await _initModule(engine);
     if (_initStatus === InitStatus.FAILED) {
-      this.currentState = PlayerState.Error;
+      this.currentState = 'error';
       this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
       return;
     }
@@ -412,18 +428,18 @@ export class BaseLottiePlayer extends LitElement {
     target._observable = entry.isIntersecting;
 
     if (entry.isIntersecting) {
-      if (target.currentState === PlayerState.Frozen) {
+      if (target.currentState === 'frozen') {
         target.play();
       }
-    } else if (target.currentState === PlayerState.Playing) {
+    } else if (target.currentState === 'playing') {
       target.freeze();
       target.dispatchEvent(new CustomEvent(PlayerEvent.Freeze));
     }
   }
 
-  protected firstUpdated(): void {
+  protected override firstUpdated(): void {
     this.canvas = this.querySelector('.thorvg') as HTMLCanvasElement;
-    
+
     this.canvas.id = `thorvg-${_generateUID()}`;
     this.canvas.width = this.canvas.offsetWidth;
     this.canvas.height = this.canvas.offsetHeight;
@@ -441,7 +457,7 @@ export class BaseLottiePlayer extends LitElement {
     }
   }
 
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
+  protected override createRenderRoot(): HTMLElement | DocumentFragment {
     this.style.display = 'block';
     return this;
   }
@@ -478,12 +494,103 @@ export class BaseLottiePlayer extends LitElement {
       throw new Error(`Unable to load an image. Error: ${this.TVG.error()}`);
     }
 
+    for (const id of [...this._audioVoices.keys()]) {
+      this._stopVoice(id);
+    }
+    const audioFn = this._audioResolverCallback ?? this._audioResolver.bind(this);
+    this.TVG.setAudioResolver(audioFn, this._audioResolverCallback ? this._audioResolverData : null);
+
     this._render();
     this.dispatchEvent(new CustomEvent(PlayerEvent.Load));
-    
+
     if (this.autoPlay) {
       this.play();
     }
+  }
+
+  private _stopVoice(id: number, keep = false): void {
+    const voice = this._audioVoices.get(id);
+    if (!voice) return;
+    voice.source?.stop();
+    voice.source = undefined;
+    if (!keep) this._audioVoices.delete(id);
+  }
+
+  private _resumeAudio(): void {
+    for (const voice of this._audioVoices.values()) {
+      this._audioResolver({ ...voice.info, active: true, offset: 0 });
+    }
+  }
+
+  private _fps(): number {
+    if (!this.TVG) return 0;
+    const duration = this.TVG.duration();
+    return duration > 0 ? this.TVG.totalFrame() / duration : 0;
+  }
+
+  private _syncAudioToFrame(): void {
+    const fps = this._fps();
+    if (fps <= 0) return;
+
+    for (const voice of this._audioVoices.values()) {
+      if (!voice.source) continue;
+      const offset = voice.baseOffset + (this.currentFrame - voice.baseFrame) / fps;
+      this._audioResolver({ ...voice.info, active: true, offset });
+    }
+  }
+
+  private async _audioResolver(info: AudioInfo): Promise<void> {
+    if (!this._audioCtx) {
+      this._audioCtx = new AudioContext();
+    }
+
+    if (!this._audioMasterGain) {
+      this._audioMasterGain = this._audioCtx.createGain();
+      this._audioMasterGain.connect(this._audioCtx.destination);
+      this._applyVolume();
+    }
+
+    if (!info.active) {
+      this._stopVoice(info.id);
+      return;
+    }
+
+    let buffer = this._audioBuffers.get(info.id);
+    if (!buffer) {
+      try {
+        const data = info.data
+          ? info.data.slice().buffer
+          : await fetch(info.path!).then(r => r.arrayBuffer());
+        buffer = await this._audioCtx.decodeAudioData(data);
+        this._audioBuffers.set(info.id, buffer);
+      } catch {
+        this.currentState = 'error';
+        this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
+        return;
+      }
+    }
+
+    this._stopVoice(info.id, true);
+
+    const gain = this._audioCtx.createGain();
+    gain.gain.value = info.volume;
+    gain.connect(this._audioMasterGain);
+
+    const source = this._audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.connect(gain);
+    const startOffset = buffer.duration > 0
+      ? ((info.offset % buffer.duration) + buffer.duration) % buffer.duration
+      : 0;
+    source.start(0, startOffset);
+
+    this._audioVoices.set(info.id, {
+      info,
+      source,
+      baseFrame: this.currentFrame,
+      baseOffset: info.offset,
+    });
   }
 
   private _flush(): void {
@@ -512,13 +619,13 @@ export class BaseLottiePlayer extends LitElement {
     }
 
     // webgpu & webgl
-    if (this.config?.renderer === Renderer.WG || this.config?.renderer === Renderer.GL) {
+    if (this.config?.renderer === 'wg' || this.config?.renderer === 'gl') {
       this.TVG.render();
       return;
     }
 
     const buffer = this.TVG.render();
-    const clampedBuffer = new Uint8ClampedArray(buffer, 0, buffer.byteLength);
+    const clampedBuffer = new Uint8ClampedArray(buffer);
     if (clampedBuffer.length < 1) {
       return;
     }
@@ -532,7 +639,7 @@ export class BaseLottiePlayer extends LitElement {
       return false;
     }
 
-    if (this.currentState !== PlayerState.Playing) {
+    if (this.currentState !== 'playing') {
       return false;
     }
 
@@ -547,12 +654,12 @@ export class BaseLottiePlayer extends LitElement {
       (this.direction === 1 && this.currentFrame >= this.totalFrame) ||
       (this.direction === -1 && this.currentFrame <= 0)
     ) {
-      const totalCount = this.count ? this.mode === PlayMode.Bounce ? this.count * 2 : this.count : 0;
+      const totalCount = this.count ? this.mode === 'bounce' ? this.count * 2 : this.count : 0;
       if (this.loop || (totalCount && this._counter < totalCount)) {
-        if (this.mode === PlayMode.Bounce) {
+        if (this.mode === 'bounce') {
           this.direction = this.direction === 1 ? -1 : 1;
-          this.currentFrame = this.direction === 1 ? 0 : this.totalFrame;
         }
+        this.currentFrame = this.direction === 1 ? 0 : this.totalFrame;
 
         if (this.count) {
           this._counter += 1;
@@ -560,11 +667,12 @@ export class BaseLottiePlayer extends LitElement {
 
         await _wait(this.intermission);
         this.play();
+        this._syncAudioToFrame();
         return true;
       }
 
       this.dispatchEvent(new CustomEvent(PlayerEvent.Complete));
-      this.currentState = PlayerState.Stopped;
+      this.currentState = 'stopped';
     }
 
     this.dispatchEvent(new CustomEvent(PlayerEvent.Frame, {
@@ -579,7 +687,7 @@ export class BaseLottiePlayer extends LitElement {
     if (!this.TVG) {
       return;
     }
-    
+
     this.pause();
     this.currentFrame = curFrame;
     this.TVG.frame(curFrame);
@@ -591,17 +699,17 @@ export class BaseLottiePlayer extends LitElement {
    * @param fileType The file type of the data to be loaded, defaults to JSON
    * @since 1.0
    */
-  public async load(src: string | object, fileType: FileType = FileType.JSON): Promise<void> {
+  public async load(src: string | object, fileType: FileType = 'json'): Promise<void> {
     try {
-      this.currentState = PlayerState.Loading;
+      this.currentState = 'loading';
       await this._init();
       const bytes = await parseSrc(src, fileType);
       this.dispatchEvent(new CustomEvent(PlayerEvent.Ready));
 
       this.fileType = fileType;
-      await this._loadBytes(bytes);
-    } catch (err) {
-      this.currentState = PlayerState.Error;
+      this._loadBytes(bytes);
+    } catch {
+      this.currentState = 'error';
       this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
     }
   }
@@ -615,7 +723,7 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    if (this.fileType !== FileType.JSON && this.fileType !== FileType.LOT) {
+    if (this.fileType !== 'json' && this.fileType !== 'lot') {
       return;
     }
 
@@ -624,18 +732,32 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
+    //resume the AudioContext if suspended earlier
+    if (this._audioCtx?.state === 'suspended') this._audioCtx.resume();
+
     this._beginTime = Date.now() / 1000;
-    if (this.currentState === PlayerState.Playing) {
+    if (this.currentState === 'paused') {
+      const duration = this.TVG.duration();
+      this._beginTime -= this.currentFrame * duration / (this.totalFrame * this.speed);
+    }
+
+    if (this.currentState === 'playing') {
       return;
     }
 
+    if (this.currentState === 'stopped') {
+      const audioFn = this._audioResolverCallback ?? this._audioResolver.bind(this);
+      this.TVG.setAudioResolver(audioFn, this._audioResolverCallback ? this._audioResolverData : null);
+      this._resumeAudio();
+    }
+
     if (this._observable) {
-      this.currentState = PlayerState.Playing;
+      this.currentState = 'playing';
       this._startLoop();
       return;
     }
 
-    this.currentState = PlayerState.Frozen;
+    this.currentState = 'frozen';
   }
 
   /**
@@ -643,8 +765,9 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   public pause(): void {
-    this.currentState = PlayerState.Paused;
+    this.currentState = 'paused';
     this.dispatchEvent(new CustomEvent(PlayerEvent.Pause));
+    if (this._audioCtx?.state === 'running') this._audioCtx.suspend();
   }
 
   /**
@@ -652,10 +775,16 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   public stop(): void {
+    for (const id of this._audioVoices.keys()) {
+      this._stopVoice(id, true);
+    }
+
+    this.TVG?.setAudioResolver(null as unknown as (info: AudioInfo, data: unknown) => void, null);
     this.seek(0);
-    this._counter = 1;
+
+    this.currentState = 'stopped';
     this.currentFrame = 0;
-    this.currentState = PlayerState.Stopped;
+    this._counter = 1;
 
     this.dispatchEvent(new CustomEvent(PlayerEvent.Stop));
   }
@@ -665,7 +794,7 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   public freeze(): void {
-    this.currentState = PlayerState.Frozen;
+    this.currentState = 'frozen';
     this.dispatchEvent(new CustomEvent(PlayerEvent.Freeze));
   }
 
@@ -678,6 +807,7 @@ export class BaseLottiePlayer extends LitElement {
     this._frame(frame);
     await this._update();
     this._render();
+    this._syncAudioToFrame();
   }
 
   /**
@@ -686,11 +816,11 @@ export class BaseLottiePlayer extends LitElement {
    * @param height The height to resize
    * @since 1.0
    */
-  public resize(width: number, height: number) {
+  public resize(width: number, height: number): void {
     this.canvas!.width = width;
     this.canvas!.height = height;
 
-    if (this.currentState !== PlayerState.Playing) {
+    if (this.currentState !== 'playing') {
       this._render();
     }
   }
@@ -704,15 +834,21 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
+    for (const id of [...this._audioVoices.keys()]) this._stopVoice(id);
+    this._audioBuffers.clear();
+    this._audioCtx?.close();
+    this._audioCtx = undefined;
+    this._audioMasterGain = undefined;
+
     this.TVG.delete();
     this.TVG = null;
-    this.currentState = PlayerState.Destroyed;
+    this.currentState = 'destroyed';
 
     if (this._observer) {
       this._observer.disconnect();
       this._observer = undefined;
     }
-    
+
     this.dispatchEvent(new CustomEvent(PlayerEvent.Destroyed));
     this.remove();
   }
@@ -792,7 +928,7 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    if (this.TVG.quality(value) && this.currentState !== PlayerState.Playing) {
+    if (this.TVG.quality(value) && this.currentState !== 'playing') {
       this._render();
     }
   }
@@ -806,6 +942,58 @@ export class BaseLottiePlayer extends LitElement {
     }
   }
 
+  public setAudioResolver(callback: ((info: AudioInfo, data: unknown) => void) | null, data: unknown | null): void {
+    this._audioResolverCallback = callback ?? undefined;
+    this._audioResolverData = data;
+
+    if (this.TVG) {
+      const fn = callback ?? this._audioResolver.bind(this);
+      this.TVG.setAudioResolver(fn, callback ? data : null);
+    }
+  }
+
+  private _applyVolume(): void {
+    if (this._audioMasterGain) {
+      this._audioMasterGain.gain.value = this._muted ? 0 : this._volume;
+    }
+  }
+
+  /**
+   * Set the master playback volume for the built-in audio backend.
+   * @param volume A multiplier applied on top of each layer's own volume. 0 mutes, 1 is the original level.
+   * @beta
+   */
+  public setVolume(volume: number): void {
+    this._volume = Math.max(0, volume);
+    this._applyVolume();
+  }
+
+  /**
+   * Return the master playback volume for the built-in audio backend.
+   * @beta
+   */
+  public get volume(): number {
+    return this._volume;
+  }
+
+  /**
+   * Mute or unmute the built-in audio backend without losing the current volume.
+   * @param muted Pass true to silence audio, false to restore the previous volume.
+   * @beta
+   */
+  public setMute(muted: boolean): void {
+    this._muted = muted;
+    this._applyVolume();
+  }
+
+  /**
+   * Return whether the built-in audio backend is currently muted.
+   * @beta
+   */
+  public get muted(): boolean {
+    return this._muted;
+  }
+
   /**
    * Return thorvg version
    * @since 1.0
@@ -816,7 +1004,7 @@ export class BaseLottiePlayer extends LitElement {
     };
   }
 
-  public render(): TemplateResult {
+  public override render(): TemplateResult {
     return html`
       <canvas class="thorvg" style="width: 100%; height: 100%;" />
     `;

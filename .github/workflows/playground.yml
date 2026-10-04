@@ -8,7 +8,7 @@ on:
       - main
     paths:
       - 'packages/webcanvas/**'
-      - 'playground/**'
+      - 'apps/playground/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/playground.yml'
       - '!**/*.md'
@@ -22,26 +22,26 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
           allow-unsafe-pr-checkout: true # required reviewers (environment: external)
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: 10
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'pnpm'
           cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: Setup Emscripten
-        uses: mymindstorm/setup-emsdk@v14
+        uses: emscripten-core/setup-emsdk@v16
         with:
           version: 6.0.0
           actions-cache-folder: 'emsdk-cache'
@@ -68,30 +68,23 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Install Playground dependencies
-        working-directory: ./playground
-        run: |
-          yarn install --frozen-lockfile
-          yarn add ../packages/webcanvas
-
       - name: Pull Vercel Environment Information
-        working-directory: ./playground
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Playground
-        working-directory: ./playground
         run: |
-          yarn build
+          pnpm --filter playground build
           vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Playground Preview
         id: deploy-preview
-        working-directory: ./playground
-        run: echo "preview_url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_OUTPUT
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview_url=$url" >> $GITHUB_OUTPUT
 
       - name: Comment PR with preview URL
         if: ${{ github.actor != 'dependabot[bot]' }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             github.rest.issues.createComment({

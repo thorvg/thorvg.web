@@ -25,6 +25,9 @@ export interface EmscriptenModule {
   HEAPF32: Float32Array;
   HEAPF64: Float64Array;
 
+  // Emscripten HTML5 target registry
+  specialHTMLTargets: Record<string, unknown>;
+
   // ThorVG initialization
   init(): number;
   term(): void;
@@ -48,7 +51,7 @@ export interface TvgCanvasInstance {
   error(): string;
   resize(width: number, height: number): boolean;
   clear(): boolean;
-  render(): ArrayBuffer;
+  render(): Uint8Array;
   size(): { width: number; height: number };
   ptr(): number;
   delete(): void;
@@ -185,8 +188,8 @@ export interface ThorVGCAPI {
     picture: number,
     data: number,
     size: number,
-    mimetype: string,
-    rpath: string,
+    mimetype: string | number,
+    rpath: string | number,
     copy: number
   ): number;
   _tvg_picture_load(picture: number, path: string): number;
@@ -208,6 +211,26 @@ export interface ThorVGCAPI {
   _tvg_picture_get_paint(picture: number, id: number): number;
   _tvg_paint_rel(paint: number): number;
 
+  // Video functions
+  _tvg_video_new(): number;
+  _tvg_video_del(video: number): number;
+  _tvg_video_get_picture(video: number): number;
+  _tvg_video_play(video: number): number;
+  _tvg_video_pause(video: number): number;
+  _tvg_video_stop(video: number): number;
+  _tvg_video_seek(video: number, seconds: number): number;
+  _tvg_video_set_loop(video: number, on: number): number;
+  _tvg_video_get_loop(video: number): number;
+  _tvg_video_set_volume(video: number, volume: number): number;
+  _tvg_video_set_mute(video: number, on: number): number;
+  _tvg_video_get_time(video: number): number;
+  _tvg_video_get_duration(video: number): number;
+  _tvg_video_get_volume(video: number): number;
+  _tvg_video_get_muted(video: number): number;
+
+  // WebMediaLoader interfaces
+  createMediaPlayer?: (loader: number, bytes: Uint8Array) => WebMediaPlayer | null;
+
   // Text functions
   _tvg_text_new(): number;
   _tvg_text_set_font(text: number, name: number): number;
@@ -227,7 +250,6 @@ export interface ThorVGCAPI {
   // Font functions
   _tvg_font_load_data(name: number, data: number, size: number, mimetype: number, copy: number): number;
   _tvg_font_load(name: number, path: string): number;
-  _tvg_font_unload(name: number): number;
 
   // Animation functions
   _tvg_animation_new(): number;
@@ -254,6 +276,9 @@ export interface ThorVGCAPI {
   _tvg_lottie_animation_apply_slot(animation: number, id: number): number;
   _tvg_lottie_animation_del_slot(animation: number, id: number): number;
   _tvg_lottie_animation_set_quality(animation: number, value: number): number;
+  _tvg_lottie_animation_set_audio_resolver(animation: number, resolver: number, data: number): number;
+  _tvg_lottie_animation_set_volume(animation: number, volume: number): number;
+  _tvg_lottie_animation_get_volume(animation: number): number;
 
   // Gradient functions
   _tvg_linear_gradient_new(): number;
@@ -278,6 +303,29 @@ export interface ThorVGCAPI {
   _tvg_accessor_set(accessor: number, paint: number, func: number, data: number): number;
   _tvg_accessor_generate_id(name: number): number;
   _tvg_accessor_get_name(accessor: number, id: number): number;
+}
+
+// Playback state pulled by the core web media loader on every render sync.
+// null until metadata is known; data/time carry a newly due frame.
+export interface WebMediaState {
+  width: number;
+  height: number;
+  duration: number;
+  data?: Uint8Array;
+  time?: number;
+}
+
+// Contract expected by the core web media loader (WebPlayer)
+export interface WebMediaPlayer {
+  sync(): WebMediaState | null;
+  play(): void;
+  pause(): void;
+  stop(): void;
+  seek(seconds: number): void;
+  loop(on: boolean): void;
+  volume(volume: number): void;
+  mute(on: boolean): void;
+  dispose(): void;
 }
 
 // Combined module interface

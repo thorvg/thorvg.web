@@ -14,90 +14,78 @@
   <img width="550" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/logo/animated_brand.svg">
 </p>
 
-**ThorVG.Web** is a WebAssembly (WASM)-based extension of the ThorVG vector graphics engine, designed to run seamlessly in modern web environments. It enables efficient and high-performance rendering of **vector graphics** and **Lottie animations** directly in the browser, leveraging both **WebGL** and **WebGPU** for hardware-accelerated rendering. Fully compatible with ThorVG's core rendering logic, ThorVG.Web ensures consistent output across desktop, mobile, and web platforms, allowing developers to reuse the same vector assets and rendering code across multiple targets with minimal changes.
+**ThorVG.Web** is a **WebAssembly (WASM)-based extension** of the ThorVG vector graphics engine, bringing ThorVG’s rendering capabilities to modern web environments. It provides a lightweight and flexible foundation for rendering vector graphics and Lottie animations directly in the browser, with hardware acceleration through **WebGL** and **WebGPU**.</br>
 
-Whether you're building a high-performance Lottie animation, a graphics editing tool, or a scalable UI framework for the browser, ThorVG.Web provides the speed and flexibility needed to **deliver modern vector graphics experiences on the web**.
-<br />
+At the core of ThorVG.Web is **WebCanvas**, a **JavaScript/TypeScript API** that provides programmatic access to ThorVG’s drawing primitives, scene graph, animation, effects, and vector rendering pipeline. Developers can create, manipulate, and render dynamic graphics while sharing ThorVG’s core rendering architecture, assets, and graphics workflows across native and web platforms.</br>
+
+The following diagram illustrates the architecture of ThorVG.Web, from the web application layer to the underlying rendering backends and web platform.</br>
+
+The **WebCanvas API** is built on top of lower-level **WebAssembly bindings** generated using **Emscripten**, bridging the JavaScript environment with the native ThorVG engine. The engine handles scene composition and rendering through multiple backends, including the **CPU software renderer**, **WebGL**, and **WebGPU**.</br>
+
+On the web platform, the rendered output is presented through an **HTML `<canvas>` element**, providing consistent rendering behavior while leveraging the appropriate rendering backend for the target environment. <br/>
+
+<p align="center">
+  <img width="600" height="auto" src="https://raw.githubusercontent.com/thorvg/thorvg.site/main/readme/example_webcanvas.png">
+</p>
 
 ## Contents
 - [Packages](#-packages)
-  - [Lottie Player](#lottie-player)
-  - [WebCanvas](#webcanvas)
+- [Demo](#demo)
+  - [Thor Marble Race](#thor-marble-race)
+  - [Lottie Test](#lottie-test)
 - [Examples](#examples)
-  - [Lottie Player](#lottie-player)
   - [WebCanvas](#webcanvas)
+  - [Lottie Player](#lottie-player)
   - [Framework Integration](#framework-integration)
 - [Development](#development)
   - [Prerequisites](#prerequisites)
   - [Building from Source](#building-from-source)
   - [Building WASM Bindings](#building-wasm-bindings)
+- [Partners](#partners)
+- [Communication](#communication)
 
-## 📦 Packages
+<br />
+
+## Packages
 
 This monorepo contains two complementary packages:
 
-### [Lottie Player](./packages/lottie-player)
-[![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player)
+| Package | Description | Version |
+| :--- | :--- | :--- |
+| [WebCanvas](./packages/webcanvas) | Fluent TypeScript API for vector graphics rendering | [![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas) |
+| [Lottie Player](./packages/lottie-player) | Web Component for embedding Lottie animations | [![npm](https://img.shields.io/npm/v/@thorvg/lottie-player)](https://www.npmjs.com/package/@thorvg/lottie-player) |
 
-**Lottie animation player** - [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components) for embedding Lottie animations
+<br />
 
-```html
-<lottie-player
-  autoPlay
-  loop
-  src="animation.json"
-  style="width: 500px; height: 500px;"
-></lottie-player>
-```
+## Demo
 
----
+### Thor Marble Race
+A pinball-inspired racing demo game where multiple balls bounce through obstacles and race to the finish, showcasing the power of ThorVG WebCanvas. [Give it try](https://thorvg-marblerace.vercel.app/)!
+<p align="center">
+  <img width="700" height="auto" src="https://github.com/thorvg/thorvg.demo.marblerace/blob/main/docs/screenshot.jpg">
+</p>
 
-### [WebCanvas](./packages/webcanvas)
-[![npm](https://img.shields.io/npm/v/@thorvg/webcanvas)](https://www.npmjs.com/package/@thorvg/webcanvas)
+### Lottie Test
+An animation benchmarking app for testing Lottie rendering performance, powered by ThorVG WebCanvas. 👉 [Link](https://thorvg-perf-test.vercel.app/)
+<p align="center">
+  <img width="700" height="auto" alt="image" src="https://github.com/user-attachments/assets/c2e348ed-c61d-4b36-814f-f073794ba058" />
+</p>
 
-**ThorVG Canvas for Web** – A TypeScript API with a fluent interface for vector graphics rendering
-
-```typescript
-import ThorVG from '@thorvg/webcanvas';
-
-const TVG = await ThorVG.init({ renderer: 'gl' });
-const canvas = new TVG.Canvas('#canvas', { width: 800, height: 600 });
-
-const shape = new TVG.Shape();
-shape.appendRect(100, 100, 200, 150, { rx: 10, ry: 10 });
-shape.fill(255, 0, 0, 255);
-
-canvas.add(shape);
-canvas.render();
-```
-
-[Back to contents](#contents)
 <br />
 
 ## Examples
 
-### Lottie Player
-- [Software Renderer](./examples/software.html) - Full Lottie support with CPU rendering
-- [WebGL Renderer](./examples/webgl.html) - GPU-accelerated Lottie rendering
-- [WebGPU Renderer](./examples/webgpu.html) - Next-gen GPU acceleration
-- [Software Lite](./examples/software-lite.html) - Lightweight CPU rendering
-- [WebGL Lite](./examples/webgl-lite.html) - Lightweight GPU rendering
-- [WebGPU Lite](./examples/webgpu-lite.html) - Lightweight WebGPU rendering
-
 ### WebCanvas
-- [Basic Usage](./examples/basic-usage.html) - Getting started with shapes
-- [Animation](./examples/animation-example.html) - Frame-based animations
-- [Scene Composition](./examples/scene.html) - Hierarchical object grouping
-- [Picture Loading](./examples/picture-example.html) - SVG and image rendering
-- [Text Rendering](./examples/text-example.html) - Typography and fonts
-- [Live Editor](./examples/live-editor.html) - Interactive code playground
+- [Playground](https://www.thorvg.org/playground) - Explore vector graphics interactively.
+
+### Lottie Player
+- [Basic Usage](./examples/index.html) - Get started with player setup and basic Lottie playback.
 
 ### Framework Integration
 - [React Example](./examples/react/)
 - [Vue Example](./examples/vue/)
 - [Svelte Example](./examples/svelte/)
 
-[Back to contents](#contents)
 <br />
 
 ## Development
@@ -127,14 +115,31 @@ pnpm run clean
 Each package has its own WASM build script:
 
 ```bash
-# Build lottie-player WASM
-cd packages/lottie-player
-sh ./wasm_player_setup.sh
-
 # Build webcanvas WASM
 cd packages/webcanvas
 sh ./wasm_wcanvas_setup.sh
+
+# Build lottie-player WASM
+cd packages/lottie-player
+sh ./wasm_player_setup.sh
 ```
 
-[Back to contents](#contents)
 <br />
+
+## Partners
+Corporate partners collaborate with ThorVG Web through development, integration, and strategic initiatives that help advance the project. 
+<br />
+<br />
+<p align="center", href="https://www.lottiefiles.com">
+  <a href="https://www.lottiefiles.com">
+  <img width="250" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/partner_lottiefiles.jpg"  alt="LottieFiles">
+  </a>
+</p>
+<br />
+
+If you’re interested in partnering with ThorVG, we’d love to hear from you. Please reach out at thorvg@thorvg.org
+
+<br />
+
+## Communication
+For real-time conversations and discussions, please join us on [Discord](https://discord.gg/n25xj6J6HM)

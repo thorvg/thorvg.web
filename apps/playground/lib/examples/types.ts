@@ -1,0 +1,9 @@
+export interface ShowcaseExample {
+  id: string;
+  title: string;
+  description: string;
+  code: string;
+  category: 'basic' | 'advanced' | 'text' | 'media';
+  thumbnail?: string;
+  requiresUserGesture?: boolean; // Default: false
+}

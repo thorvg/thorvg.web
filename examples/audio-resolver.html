@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ThorVG Lottie Player — Audio</title>
+    <meta name="description" content="Lottie audio layers play automatically via the built-in Web Audio backend; setAudioResolver() is shown commented out as a reference for custom engines." />
+    <script src="../packages/lottie-player/dist/lottie-player.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+      }
+      .controls {
+        max-width: 500px;
+      }
+      .progress {
+        margin-top: 12px;
+      }
+      .progress-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      /* seek bar styled as a progress bar */
+      #seek {
+        flex: 1;
+        height: 6px;
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 3px;
+        outline: none;
+        cursor: pointer;
+        /* --pct is updated from JS to render the filled portion */
+        background: linear-gradient(to right, #4f46e5 var(--pct, 0%), #d8d8d8 var(--pct, 0%));
+      }
+      #seek::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #4f46e5;
+        border: 2px solid #fff;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+      }
+      #seek::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: #4f46e5;
+      }
+      #time {
+        min-width: 110px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        font-size: 13px;
+        color: #333;
+      }
+      .volume {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .volume input[type="range"] {
+        width: 200px;
+      }
+      .volume #volume-value {
+        width: 40px;
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="controls">
+      <div>
+        <button onclick="playAnimation()">Play</button>
+        <button onclick="pauseAnimation()">Pause</button>
+        <button onclick="stopAnimation()">Stop</button>
+      </div>
+
+      <div class="progress">
+        <div class="progress-row">
+          <input id="seek" type="range" min="0" max="1000" step="1" value="0" disabled />
+          <span id="time">0% · 0 / 0</span>
+        </div>
+      </div>
+
+      <div class="volume">
+        <label>
+          <input id="mute" type="checkbox" onchange="toggleMute(this.checked)" />
+          Mute
+        </label>
+        <label for="volume">Volume</label>
+        <input id="volume" type="range" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)" />
+        <span id="volume-value">100%</span>
+      </div>
+
+      <div class="lottie"></div>
+    </div>
+    <script>
+      let animation;
+
+      // progress state
+      const SEEK_MAX = 1000;
+      let isSeeking = false;
+      let wasPlaying = false;
+
+      window.onload = function() {
+        const lottie = document.querySelector('.lottie');
+        animation = document.createElement('lottie-player');
+
+        animation.loop = true;
+        animation.src = new URL("./resources/emoji_audio.json", location.href).href;
+        animation.style.width = "500px";
+        animation.style.height = "500px";
+        animation.wasmUrl = "../packages/lottie-player/dist/thorvg.wasm";
+
+        lottie.appendChild(animation);
+
+        // progress bar control
+        const seek = document.getElementById('seek');
+
+        animation.addEventListener('load', function() {
+          seek.disabled = false;
+          updateProgress(animation.currentFrame || 0);
+        });
+
+        animation.addEventListener('frame', function(e) {
+          const frame = e.detail ? e.detail.frame : animation.currentFrame;
+          updateProgress(frame);
+        });
+
+        animation.addEventListener('stop', function() {
+          updateProgress(0);
+        });
+        animation.addEventListener('complete', function() {
+          updateProgress(animation.totalFrame || 0);
+        });
+
+        seek.addEventListener('pointerdown', function() {
+          wasPlaying = animation.currentState === 'playing';
+        });
+
+        seek.addEventListener('input', function() {
+          if (!isSeeking) wasPlaying = animation.currentState === 'playing';
+          isSeeking = true;
+          const total = ensureTotalFrame();
+          const frame = (Number(seek.value) / SEEK_MAX) * total;
+          animation.seek(frame);              // seek() pauses + renders the frame
+          updateLabel(frame, total);
+          setFill(Number(seek.value) / SEEK_MAX);
+        });
+
+        seek.addEventListener('change', function() {
+          isSeeking = false;
+          if (wasPlaying) animation.play();
+        });
+      }
+
+      function ensureTotalFrame() {
+        if (animation && !animation.totalFrame) {
+          animation.play();
+          animation.pause();
+        }
+        return (animation && animation.totalFrame) || 0;
+      }
+
+      function updateProgress(frame) {
+        const total = (animation && animation.totalFrame) || 0;
+        if (!isSeeking) {
+          const fraction = total ? frame / total : 0;
+          const seek = document.getElementById('seek');
+          seek.value = Math.round(fraction * SEEK_MAX);
+          setFill(fraction);
+        }
+        updateLabel(frame, total);
+      }
+
+      function updateLabel(frame, total) {
+        const pct = total ? Math.round((frame / total) * 100) : 0;
+        document.getElementById('time').textContent =
+          pct + '% · ' + Math.round(frame) + ' / ' + Math.round(total);
+      }
+
+      function setFill(fraction) {
+        const pct = Math.max(0, Math.min(1, fraction)) * 100;
+        document.getElementById('seek').style.setProperty('--pct', pct + '%');
+      }
+
+      function playAnimation() {
+        if (animation) animation.play();
+      }
+
+      function pauseAnimation() {
+        if (animation) animation.pause();
+      }
+
+      function stopAnimation() {
+        if (animation) animation.stop();
+      }
+
+      function setVolume(value) {
+        const volume = Number(value);
+        if (animation) animation.setVolume(volume);
+        document.getElementById('volume-value').textContent = Math.round(volume * 100) + '%';
+      }
+
+      function toggleMute(muted) {
+        if (animation) animation.setMute(muted);
+      }
+    </script>
+  </body>
+</html>

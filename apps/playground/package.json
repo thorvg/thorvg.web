@@ -1,0 +1,38 @@
+{
+  "name": "playground",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive playground for testing @thorvg/webcanvas",
+  "homepage": "https://thorvg-playground.vercel.app/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thorvg/thorvg.web.git",
+    "directory": "apps/playground"
+  },
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev --webpack -p 3001",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@thorvg/webcanvas": "workspace:*",
+    "monaco-editor": "^0.57.0",
+    "next": "^16.3.8",
+    "prism-react-renderer": "^2.4.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9",
+    "eslint-config-next": "^16.3.8",
+    "postcss": "^8.5.23",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5"
+  }
+}

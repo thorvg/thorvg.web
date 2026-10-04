@@ -9,7 +9,8 @@ describe('ThorVGResultCode', () => {
     expect(ThorVGResultCode.FailedAllocation).toBe(3);
     expect(ThorVGResultCode.MemoryCorruption).toBe(4);
     expect(ThorVGResultCode.NotSupported).toBe(5);
-    expect(ThorVGResultCode.Unknown).toBe(6);
+    expect(ThorVGResultCode.SystemError).toBe(6);
+    expect(ThorVGResultCode.Unknown).toBe(255);
   });
 });
 

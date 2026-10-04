@@ -14,7 +14,9 @@
   },
   "homepage": "https://thorvg.org",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*",
+    "examples/*"
   ],
   "scripts": {
     "build": "pnpm -r build",

@@ -142,10 +142,9 @@ const createLottieConfig = (preset) => {
         include: ['src/**/*.ts'],
         preventAssignment: true,
         values: {
-          '/dist': presetMap[preset].path,
+          '__WASM_PATH__': pkg.version + presetMap[preset].path,
           '__THORVG_VERSION__': process.env.THORVG_VERSION,
           '__RENDERER__': presetMap[preset].renderer,
-          '__PACKAGE_VERSION__': pkg.version,
         },
       }),
       nodePolyfills(),
@@ -156,6 +155,7 @@ const createLottieConfig = (preset) => {
         include: /\.[mc]?[jt]sx?$/,
         exclude: /node_modules/,
         tsconfig: "tsconfig.json",
+        sourceMaps: true,
         jsc: {
           parser: {
             syntax: "typescript",
@@ -164,7 +164,7 @@ const createLottieConfig = (preset) => {
             declaration: true,
             dynamicImport: true,
           },
-          target: "esnext",
+          target: "es2022",
         },
       }),
       nodeResolve(),
@@ -184,6 +184,31 @@ const createLottieConfig = (preset) => {
   };
 }
 
+const createTypesConfig = (input, file) => {
+  const tagNameMap = [
+    `declare global {`,
+    `  interface HTMLElementTagNameMap {`,
+    `    '${name}': LottiePlayer;`,
+    `  }`,
+    `}`,
+  ].join('\n');
+
+  return {
+    input,
+    treeshake: true,
+    output: [
+      {
+        file,
+        format: "esm",
+        footer: tagNameMap,
+      }
+    ],
+    plugins: [
+      dts(),
+    ],
+  };
+}
+
 export default [
   createLottieConfig(PresetModule.Default),
   createLottieConfig(PresetModule.SW),
@@ -192,17 +217,6 @@ export default [
   createLottieConfig(PresetModule.SW_LITE),
   createLottieConfig(PresetModule.GL_LITE),
   createLottieConfig(PresetModule.WG_LITE),
-  {
-    input: "./src/lottie-player.ts",
-    treeshake: true,
-    output: [
-      {
-        file: './dist/lottie-player.d.ts',
-        format: "esm",
-      }
-    ],
-    plugins: [
-      dts(),
-    ],
-  }
+  createTypesConfig("./src/lottie-player.ts", pkg.types),
+  createTypesConfig("./src/lottie-preset-player.ts", pkg.exports['./sw'].types),
 ];

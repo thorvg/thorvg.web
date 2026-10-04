@@ -21,5 +21,9 @@ For definitions and responsibilities of each project role, see [Roles & Responsi
 - Yujin Lee @Ujaa
 - Yukyung Lee @nunomi0
 - Soongeon Noh @Nor-s
+- Jay WenJie @wenjieshen
 - JaeHyun Hwang @hd1534
 - DaHee Chae @chae-dahee
+- Juyon Lee  @juyonLee00
+- Hyojin Lee @jinlee0310
+- JaeHyun Im @inmare

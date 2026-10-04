@@ -5,6 +5,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import terser from "@rollup/plugin-terser";
 import replace from '@rollup/plugin-replace';
 import alias from '@rollup/plugin-alias';
+import webWorkerLoader from 'rollup-plugin-web-worker-loader';
 import pkg from './package.json' assert { type: 'json' };
 import path from 'path';
 
@@ -16,14 +17,21 @@ const commonOutput = {
   sourcemap: true,
 };
 
-const sharedPlugins = (aliasEntries = []) => [
+const sharedPlugins = (aliasEntries, wasmPath, extraPlugins = []) => [
   ...(aliasEntries.length ? [alias({ entries: aliasEntries })] : []),
+  ...extraPlugins,
+  webWorkerLoader({
+    targetPlatform: 'browser',
+    inline: true,
+    extensions: ['.js', '.ts'],
+  }),
   replace({
     include: ['src/**/*.ts'],
     preventAssignment: true,
     values: {
       '__THORVG_VERSION__': process.env.THORVG_VERSION,
       '__PACKAGE_VERSION__': pkg.version,
+      '__WASM_PATH__': wasmPath,
     },
   }),
   commonjs({
@@ -33,6 +41,7 @@ const sharedPlugins = (aliasEntries = []) => [
     include: /\.[mc]?[jt]sx?$/,
     exclude: /node_modules/,
     tsconfig: "tsconfig.json",
+    sourceMaps: true,
     jsc: {
       parser: {
         syntax: "typescript",
@@ -41,7 +50,7 @@ const sharedPlugins = (aliasEntries = []) => [
         declaration: true,
         dynamicImport: true,
       },
-      target: "es2020",
+      target: "es2022",
     },
   }),
   nodeResolve(),
@@ -85,11 +94,14 @@ const createWebCanvasConfig = () => {
         ...commonOutput,
       },
     ],
-    plugins: sharedPlugins(),
+    plugins: sharedPlugins([], 'dist/thorvg.wasm'),
   };
 }
 
 const createThreadConfig = () => {
+  const workerPattern = /new Worker\(new URL\("thorvg\.js",import\.meta\.url\),(\{[^}]*\})\)/;
+  const bundleFile = path.basename(pkg.exports['./thread'].import);
+
   return {
     input: "./src/index.ts",
     treeshake: {
@@ -106,7 +118,20 @@ const createThreadConfig = () => {
     ],
     plugins: sharedPlugins([
       { find: '../dist/thorvg.js', replacement: path.resolve('./dist/thread/thorvg.js') },
-    ]),
+    ], 'dist/thread/thorvg.wasm', [{
+      name: 'thorvg-worker-url',
+      transform(code, id) {
+        if (!id.endsWith(path.join('dist', 'thread', 'thorvg.js'))) return null;
+        if (!workerPattern.test(code)) this.error(`pthread worker not found in ${id}.`);
+        return {
+          code: code.replace(workerPattern, (_, options) =>
+            `(new URL(import.meta.url).origin===location.origin` +
+            `?new Worker(new URL("./${bundleFile}",import.meta.url),${options})` +
+            `:new Worker(URL.createObjectURL(new Blob(['import"'+import.meta.url+'"'],{type:"text/javascript"})),${options}))`),
+          map: null,
+        };
+      },
+    }]),
   };
 }
 

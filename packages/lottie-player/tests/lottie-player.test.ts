@@ -202,7 +202,7 @@ describe('Lottie Player', () => {
     });
 
     it('save2png', () => {
-      expect(() => player.save2png()).to.not.throw();
+      return player.save2png(ANIMATION);
     });
 
     it('save2gif', async () => {

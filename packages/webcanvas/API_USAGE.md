@@ -104,11 +104,11 @@ Rendering context. Renders vector graphics to an HTML Canvas element.
 ### Constructor
 
 ```typescript
-const canvas = new TVG.Canvas(selector, options);
+const canvas = new TVG.Canvas(target, options);
 ```
 
 **Parameters:**
-- `selector: string` - CSS selector for HTML Canvas element (e.g., `'#canvas'`)
+- `target: string | HTMLCanvasElement | OffscreenCanvas` - Canvas target (CSS selector, HTML canvas element or OffscreenCanvas)
 - `options.renderer?: RendererType` - Renderer type (default: `'gl'`)
 - `options.width?: number` - Canvas width (default: 800)
 - `options.height?: number` - Canvas height (default: 600)

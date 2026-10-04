@@ -1,0 +1,621 @@
+'use client';
+
+import { use, useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import wasmUrl from '../node_modules/@thorvg/webcanvas/dist/thorvg.wasm';
+import { initProfiler } from '../lib/profiler';
+import { loadThorVGModule, getWasmUrl, type ThorVGVersion } from '../lib/thorvg-loader';
+import { type Renderer, RENDERER_LABELS, COUNT_OPTIONS, MIN_SIZE, MAX_SIZE } from '../lib/constants';
+import { type AnimEntry, encodeSeed, decodeSeed, buildAnimList, randomAnimList } from '../lib/seed';
+import { getParam, setParams } from '../lib/url-params';
+import { useInternalMode } from '../lib/internal-mode';
+import {
+  type BenchPhase,
+  type BenchmarkResult,
+  BENCH_WARMUP_MS,
+  BENCH_MEASURE_MS,
+  computeBenchResult,
+} from '../lib/benchmark';
+import { VersionSelector } from '../components/VersionSelector';
+import { BenchmarkModal } from '../components/BenchmarkModal';
+import { DragOverlay } from '../components/DragOverlay';
+
+export default function Home({ searchParams }: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const params = use(searchParams);
+  const router = useRouter();
+  const internalMode = useInternalMode();
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const tvgRef = useRef<any>(null);
+  const tvgCanvasRef = useRef<any>(null);
+  const animsRef = useRef<{
+    anim: any; info: any; name: string; url: string;
+    picture: any; visible: boolean;
+    posX: number; gridY: number; xOff: number; yOff: number;
+  }[]>([]);
+  const rafRef = useRef<number>(0);
+  const colsRef = useRef<number>(1);
+  const itemSizeRef = useRef<number>(150);
+  const scrollOffsetRef = useRef<number>(0);
+  const pendingLayoutRef = useRef(false);
+  const canvasWRef = useRef<number>(0);
+  const canvasHRef = useRef<number>(0);
+  const [gridHeight, setGridHeight] = useState(0);
+  const [canvasCssHeight, setCanvasCssHeight] = useState(0);
+
+  const benchPhaseRef = useRef<'idle' | 'warmup' | 'measuring'>('idle');
+  const benchTimingsRef = useRef<number[]>([]);
+  const benchMemRef = useRef<number[]>([]);
+  const benchTimeoutA = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const benchTimeoutB = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const benchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const benchWarmupMsRef = useRef(BENCH_WARMUP_MS);
+  const benchMeasureMsRef = useRef(BENCH_MEASURE_MS);
+
+  const seed = params.seed ?? '';
+  const renderer = (params.renderer as Renderer) ?? 'gl';
+  const version = (params.v as ThorVGVersion) ?? 'local';
+  const initialCount = seed ? decodeSeed(seed).length : Math.max(1, parseInt(params.count ?? '20'));
+  const initialSize = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parseInt(params.size ?? '150')));
+  const [count, setCount] = useState(initialCount);
+  const [size, setSize] = useState(initialSize);
+  const [seedInput, setSeedInput] = useState(seed);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingStatus, setLoadingStatus] = useState('');
+  const [animList, setAnimList] = useState<AnimEntry[]>([]);
+  const [displayVersion, setDisplayVersion] = useState('');
+  const blobUrlsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    return () => { blobUrlsRef.current.forEach((u) => URL.revokeObjectURL(u)); };
+  }, []);
+
+  const [showBench, setShowBench] = useState(false);
+  const [benchPhase, setBenchPhase] = useState<BenchPhase>('idle');
+  const [benchProgress, setBenchProgress] = useState(0);
+  const [benchResult, setBenchResult] = useState<BenchmarkResult | null>(null);
+
+  // Init from URL params
+  useEffect(() => {
+    const warmupParam = getParam('warmup', '');
+    const measureParam = getParam('measure', '');
+    if (warmupParam) benchWarmupMsRef.current = Math.max(0, parseInt(warmupParam));
+    if (measureParam) benchMeasureMsRef.current = Math.max(1000, parseInt(measureParam));
+
+    let list: AnimEntry[];
+    let seedStr = seed;
+    if (seed) {
+      list = buildAnimList(decodeSeed(seed));
+    } else {
+      list = randomAnimList(count);
+      seedStr = encodeSeed(list.map((a) => a.name));
+      setSeedInput(seedStr);
+    }
+
+    setParams({
+      renderer,
+      count: String(list.length),
+      size: String(size),
+      seed: seedStr,
+    });
+
+    setAnimList(list);
+    initProfiler();
+  }, []);
+
+  // Grid layout
+  const applyLayout = useCallback((total: number) => {
+    const cellSize = itemSizeRef.current;
+    const cols = Math.max(1, Math.floor(containerRef.current!.clientWidth / cellSize));
+    const canvasW = cols * cellSize;
+    const gridH = Math.ceil(total / cols) * cellSize;
+    const headerH = headerRef.current?.offsetHeight ?? 0;
+    const canvasH = Math.min(gridH, Math.max(0, window.innerHeight - headerH));
+
+    colsRef.current = cols;
+    setGridHeight(gridH);
+    setCanvasCssHeight(canvasH);
+
+    const list = animsRef.current;
+    for (let i = 0; i < list.length; i++) {
+      const entry = list[i];
+      entry.posX = (i % cols) * cellSize + entry.xOff;
+      entry.gridY = Math.floor(i / cols) * cellSize;
+    }
+
+    if (canvasW !== canvasWRef.current || canvasH !== canvasHRef.current) {
+      canvasWRef.current = canvasW;
+      canvasHRef.current = canvasH;
+      tvgCanvasRef.current?.resize(canvasW, canvasH);
+    }
+    return { cellSize, canvasW, canvasH };
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => { pendingLayoutRef.current = true; };
+    window.addEventListener('resize', onResize);
+    return () => { window.removeEventListener('resize', onResize); };
+  }, []);
+
+  // Stop the render loop before leaving the page
+  const navigateTo = useCallback((url: string) => {
+    cancelAnimationFrame(rafRef.current);
+    window.location.href = url;
+  }, []);
+
+  useEffect(() => {
+    const stopLoop = () => cancelAnimationFrame(rafRef.current);
+    window.addEventListener('pagehide', stopLoop);
+    return () => { window.removeEventListener('pagehide', stopLoop); };
+  }, []);
+
+  // TVG setup
+  useEffect(() => {
+    if (animList.length === 0 || !canvasRef.current || !containerRef.current) return;
+
+    let cancelled = false;
+
+    const setup = async () => {
+      cancelAnimationFrame(rafRef.current);
+
+      for (const { anim } of animsRef.current) {
+        try { anim.dispose(); } catch { /* */ }
+      }
+      animsRef.current = [];
+      if (tvgCanvasRef.current) { try { tvgCanvasRef.current.destroy(); } catch { /* */ } tvgCanvasRef.current = null; }
+      if (tvgRef.current) { try { tvgRef.current.term(); } catch { /* */ } tvgRef.current = null; }
+
+      setIsLoading(true);
+      setLoadingStatus('Loading…');
+      setDisplayVersion('');
+
+      const tvgDpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
+      itemSizeRef.current = size / tvgDpr;
+      const { cellSize, canvasW, canvasH } = applyLayout(animList.length);
+
+      const canvasEl = canvasRef.current!;
+      canvasEl.width = canvasW;
+      canvasEl.height = canvasH;
+
+      try {
+        const v = getParam('v', 'local') as ThorVGVersion;
+        const ThorVGModule = await loadThorVGModule(v);
+        if (cancelled) return;
+
+        const TVG = await ThorVGModule.init({
+          renderer,
+          locateFile: () => getWasmUrl(v, wasmUrl),
+          onError: (error: Error) => {
+            // console.error('TVG initialization error:', error);
+          },
+        });
+        if (cancelled) return;
+        tvgRef.current = TVG;
+        setDisplayVersion(version === 'local'
+          ? (process.env.NEXT_PUBLIC_WEBCANVAS_VERSION || '')
+          : version
+        );
+
+        const tvgCanvas = new TVG.Canvas('#tvg-main-canvas', {
+          width: canvasW,
+          height: canvasH,
+          enableDevicePixelRatio: true,
+          engineOption: TVG.EngineOption?.None ?? 0,
+        });
+        tvgCanvasRef.current = tvgCanvas;
+
+        setLoadingStatus('Loading…');
+        const fetchResults = await Promise.allSettled(
+          animList.map((a) => fetch(a.url).then((r) => r.text())),
+        );
+        if (cancelled) return;
+
+        const loaded: typeof animsRef.current = [];
+        for (let i = 0; i < fetchResults.length; i++) {
+          const result = fetchResults[i];
+          if (result.status === 'rejected') continue;
+
+          const anim = new TVG.Animation();
+          anim.load(result.value);
+          const info = anim.info();
+          const pic = anim.picture;
+          let xOff = 0, yOff = 0;
+          if (pic) {
+            let naturalW = cellSize;
+            let naturalH = cellSize;
+            try {
+              const json = JSON.parse(result.value);
+              if (json.w > 0 && json.h > 0) { naturalW = json.w; naturalH = json.h; }
+            } catch { /* */ }
+            const scale = Math.min(cellSize / naturalW, cellSize / naturalH);
+            const displayW = naturalW * scale;
+            const displayH = naturalH * scale;
+            xOff = (cellSize - displayW) / 2;
+            yOff = (cellSize - displayH) / 2;
+            pic.size(displayW, displayH);
+            // not added to canvas yet — tick will add when visible
+          }
+          loaded.push({ anim, info, name: animList[i].name, url: animList[i].url, picture: pic, visible: false, posX: 0, gridY: 0, xOff, yOff });
+        }
+
+        if (cancelled) return;
+        animsRef.current = loaded;
+        applyLayout(loaded.length);
+        setIsLoading(false);
+        setLoadingStatus('');
+
+        const startTime = performance.now();
+        let lastTs = 0;
+        const tick = (ts: number) => {
+          const elapsed = (ts - startTime) / 1000;
+          const dt = lastTs > 0 ? ts - lastTs : 0;
+          lastTs = ts;
+
+          if (pendingLayoutRef.current) {
+            pendingLayoutRef.current = false;
+            if (animsRef.current.length) applyLayout(animsRef.current.length);
+          }
+
+          const cellSize = itemSizeRef.current;
+          const cols = colsRef.current;
+          const scrollEl = scrollAreaRef.current;
+          if (!scrollEl) {
+            rafRef.current = requestAnimationFrame(tick);
+            return;
+          }
+          const scrollRect = scrollEl.getBoundingClientRect();
+          const canvasRect = canvasEl.getBoundingClientRect();
+          const offsetGridToCanvas = scrollRect.top - canvasRect.top;
+          scrollOffsetRef.current = offsetGridToCanvas;
+
+          // visible grid Y range (in grid coords)
+          const visTopGrid = -offsetGridToCanvas;
+          const visBotGrid = visTopGrid + canvasRect.height;
+          const firstRow = Math.max(0, Math.floor(visTopGrid / cellSize));
+          const lastRow = Math.ceil(visBotGrid / cellSize) - 1;
+
+          const list = animsRef.current;
+          for (let i = 0; i < list.length; i++) {
+            const entry = list[i];
+            const row = Math.floor(i / cols);
+            const shouldShow = row >= firstRow && row <= lastRow;
+
+            if (entry.picture && shouldShow !== entry.visible) {
+              entry.visible = shouldShow;
+              if (shouldShow) tvgCanvas.add(entry.picture);
+              else tvgCanvas.remove(entry.picture);
+            }
+
+            if (shouldShow && entry.picture) {
+              entry.picture.translate(entry.posX, entry.gridY + offsetGridToCanvas + entry.yOff);
+              if (entry.info?.totalFrames > 0) {
+                entry.anim.frame((elapsed * entry.info.fps) % entry.info.totalFrames);
+              }
+            }
+          }
+
+          tvgCanvas.update().render();
+
+          if (benchPhaseRef.current === 'measuring' && dt > 0) {
+            benchTimingsRef.current.push(dt);
+            const mem = (self as any).performance?.memory;
+            if (mem) benchMemRef.current.push(mem.usedJSHeapSize / 1048576);
+          }
+
+          rafRef.current = requestAnimationFrame(tick);
+        };
+        rafRef.current = requestAnimationFrame(tick);
+      } catch (err) {
+        console.error('TVG setup failed:', err);
+        if (cancelled) return;
+        setLoadingStatus(`Error: ${(err as Error).message}`);
+        setIsLoading(false);
+        setDisplayVersion('');
+      }
+    };
+
+    setup();
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafRef.current);
+      for (const { anim } of animsRef.current) {
+        try { anim.dispose(); } catch { /* */ }
+      }
+      animsRef.current = [];
+      if (tvgCanvasRef.current) { try { tvgCanvasRef.current.destroy(); } catch { /* */ } tvgCanvasRef.current = null; }
+      if (tvgRef.current) { try { tvgRef.current.term(); } catch { /* */ } tvgRef.current = null; }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animList]);
+
+  const handleCanvasClick = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas || animsRef.current.length === 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const yLocal = e.clientY - rect.top;
+      const gridY = yLocal - scrollOffsetRef.current;
+      if (gridY < 0) return;
+      const idx = Math.floor(gridY / itemSizeRef.current) * colsRef.current + Math.floor(x / itemSizeRef.current);
+      if (idx >= 0 && idx < animsRef.current.length) {
+        const { name, url } = animsRef.current[idx];
+        if (url.startsWith('blob:')) {
+          fetch(url).then((r) => r.text()).then((data) => {
+            sessionStorage.setItem('tvg-viewer-data', data);
+            router.push(`/viewer?${new URLSearchParams({ url: 'local', name, renderer, v: getParam('v', 'local') })}`);
+          });
+        } else {
+          router.push(`/viewer?${new URLSearchParams({ url, name, renderer, v: getParam('v', 'local') })}`);
+        }
+      }
+    },
+    [renderer, router],
+  );
+
+  const handleSet = () => {
+    navigateTo(`/?${new URLSearchParams({ renderer, count: count.toString(), size: size.toString() })}`);
+  };
+
+  const handleSeedApply = () => {
+    const trimmed = seedInput.trim();
+    if (!trimmed) return;
+    const params = new URLSearchParams(window.location.search);
+    params.set('seed', trimmed);
+    navigateTo(`/?${params}`);
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
+  }, []);
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (animList.length === 0) return;
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.name.endsWith('.json'));
+    if (files.length === 0) return;
+
+    blobUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+    blobUrlsRef.current = [];
+
+    const next = [...animList];
+    files.forEach((file) => {
+      const blobUrl = URL.createObjectURL(file);
+      blobUrlsRef.current.push(blobUrl);
+      const idx = Math.floor(Math.random() * next.length);
+      next[idx] = { name: file.name.replace('.json', ''), url: blobUrl };
+    });
+    setAnimList(next);
+  }, [animList]);
+
+  // Benchmark
+  const cancelBenchmark = useCallback(() => {
+    if (benchTimeoutA.current) clearTimeout(benchTimeoutA.current);
+    if (benchTimeoutB.current) clearTimeout(benchTimeoutB.current);
+    if (benchIntervalRef.current) clearInterval(benchIntervalRef.current);
+    benchTimeoutA.current = benchTimeoutB.current = benchIntervalRef.current = null;
+    benchPhaseRef.current = 'idle';
+    setBenchPhase('idle');
+    setBenchProgress(0);
+  }, []);
+
+  const startBenchmark = useCallback(() => {
+    cancelBenchmark();
+    benchTimingsRef.current = [];
+    benchMemRef.current = [];
+    benchPhaseRef.current = 'warmup';
+    setBenchPhase('warmup');
+    setBenchProgress(0);
+    setBenchResult(null);
+
+    const warmupMs = benchWarmupMsRef.current;
+    const measureMs = benchMeasureMsRef.current;
+
+    const runStart = performance.now();
+    benchIntervalRef.current = setInterval(() => {
+      const elapsed = performance.now() - runStart;
+      setBenchProgress(elapsed < warmupMs
+        ? (elapsed / warmupMs) * 50
+        : 50 + Math.min(50, ((elapsed - warmupMs) / measureMs) * 50));
+    }, 100);
+
+    benchTimeoutA.current = setTimeout(() => {
+      benchPhaseRef.current = 'measuring';
+      setBenchPhase('measuring');
+    }, warmupMs);
+
+    benchTimeoutB.current = setTimeout(() => {
+      if (benchIntervalRef.current) clearInterval(benchIntervalRef.current);
+      benchPhaseRef.current = 'idle';
+      setBenchProgress(100);
+
+      const timings = benchTimingsRef.current;
+      if (timings.length === 0) {
+        (window as any).__BENCH_ERROR = 'No frames rendered — check renderer/animation load errors';
+        setBenchPhase('idle');
+        return;
+      }
+
+      setBenchResult(computeBenchResult(timings, benchMemRef.current, {
+        renderer, version: getParam('v', 'local'), count, size, seed: getParam('seed', ''),
+      }, warmupMs, measureMs));
+      setBenchPhase('done');
+    }, warmupMs + measureMs);
+  }, [cancelBenchmark, renderer, count, size]);
+
+  // Autorun benchmark (headless CI mode via ?autorun=1)
+  const autorunRef = useRef(false);
+  useEffect(() => {
+    if (autorunRef.current) return;
+    const autorun = new URLSearchParams(window.location.search).get('autorun');
+    if (autorun !== '1' && autorun !== 'true') return;
+    if (isLoading || animList.length === 0) return;
+    autorunRef.current = true;
+    setTimeout(() => {
+      setShowBench(true);
+      startBenchmark();
+    }, 500);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, animList, startBenchmark]);
+
+  // Expose benchmark result to window for headless extraction
+  useEffect(() => {
+    if (benchResult) {
+      (window as any).__BENCH_RESULT = benchResult;
+    }
+  }, [benchResult]);
+
+  const sizePercent = ((size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE)) * 100;
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div ref={headerRef} className="sticky top-0 z-20 bg-gray-900/95 backdrop-blur-sm border-b border-white/10">
+        <div className="max-w-screen-xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+          <span className="font-bold text-brand mr-1 text-sm tracking-wide hidden sm:block">ThorVG</span>
+
+          <div className="flex bg-white/5 rounded-lg p-0.5">
+            {(['sw', 'gl', 'wg'] as Renderer[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => {
+                  if (r === renderer) return;
+                  const params = new URLSearchParams(window.location.search);
+                  params.set('renderer', r);
+                  navigateTo(`/?${params}`);
+                }}
+                className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
+                  renderer === r ? 'bg-brand text-gray-900' : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                {RENDERER_LABELS[r]}
+              </button>
+            ))}
+          </div>
+
+          <select
+            value={count}
+            onChange={(e) => setCount(Number(e.target.value))}
+            className="bg-white/5 border border-white/10 rounded px-2 py-1.5 text-xs text-white appearance-none cursor-pointer"
+          >
+            {COUNT_OPTIONS.map((n) => (
+              <option key={n} value={n} className="bg-gray-800">{n} animations</option>
+            ))}
+          </select>
+
+          <div className="flex items-center gap-2 w-40 shrink-0">
+            <span className="text-xs text-gray-400 w-12 shrink-0">{size}px</span>
+            <input
+              type="range" min={MIN_SIZE} max={MAX_SIZE} value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+              className="slider flex-1"
+              style={{ background: `linear-gradient(to right, #00deb5 0%, #00deb5 ${sizePercent}%, #444 ${sizePercent}%, #444 100%)` }}
+            />
+          </div>
+
+          <button onClick={handleSet} className="px-4 py-1.5 bg-brand text-gray-900 rounded text-xs font-bold hover:opacity-90 transition-opacity">
+            Set
+          </button>
+
+          {internalMode && (
+            <>
+              <button
+                onClick={() => { setBenchResult(null); setBenchPhase('idle'); setShowBench(true); }}
+                disabled={isLoading || animList.length === 0}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-gray-300 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="8" cy="8" r="6" /><path d="M8 5v3.5l2 1.5" />
+                </svg>
+                Benchmark
+              </button>
+
+              <div className="ml-auto">
+                <VersionSelector
+                  current={version}
+                  localVersion={process.env.NEXT_PUBLIC_WEBCANVAS_VERSION || ''}
+                  onChange={(v) => {
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('v', v);
+                    navigateTo(`/?${params}`);
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          <div className="flex gap-2 w-full sm:w-auto sm:flex-1 min-w-0">
+            <input
+              type="text"
+              placeholder="Paste a seed to restore a session…"
+              value={seedInput}
+              onChange={(e) => setSeedInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSeedApply()}
+              spellCheck={false}
+              className="min-w-0 flex-1 bg-white/5 border border-white/10 rounded px-3 py-1.5 text-xs text-white font-mono placeholder:text-gray-500 placeholder:font-sans focus:outline-none focus:ring-1 focus:ring-brand/50"
+            />
+            <button onClick={handleSeedApply} className="px-3 py-1.5 bg-white/10 rounded text-xs hover:bg-white/20 transition-colors shrink-0">
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {showBench && (
+        <BenchmarkModal
+          renderer={renderer} count={count} size={size}
+          phase={benchPhase} progress={benchProgress} result={benchResult}
+          onStart={startBenchmark} onCancel={cancelBenchmark}
+          onClose={() => { cancelBenchmark(); setShowBench(false); }}
+        />
+      )}
+
+      <div
+        ref={containerRef}
+        className={`max-w-screen-xl mx-auto px-4 py-6 relative transition-colors ${isDragging ? 'bg-brand/5' : ''}`}
+        onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
+      >
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-24 text-gray-400 gap-3">
+            <div className="w-8 h-8 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
+            <div className="text-sm">{loadingStatus || 'Loading…'}</div>
+            <div className="text-xs text-gray-500">{RENDERER_LABELS[renderer]} renderer</div>
+          </div>
+        )}
+
+        {isDragging && <DragOverlay />}
+
+        <div
+          ref={scrollAreaRef}
+          style={{ height: gridHeight ? `${gridHeight}px` : undefined, position: 'relative' }}
+        >
+          <canvas
+            ref={canvasRef}
+            id="tvg-main-canvas"
+            onClick={handleCanvasClick}
+            style={{
+              position: 'sticky',
+              top: `${headerRef.current?.offsetHeight ?? 0}px`,
+              height: canvasCssHeight ? `${canvasCssHeight}px` : undefined,
+            }}
+            className={`cursor-pointer transition-opacity duration-300 block ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+            title="Click any animation to open the detailed viewer"
+          />
+        </div>
+      </div>
+
+      {displayVersion && (
+        <div className='fixed right-5 bottom-0 z-40 flex rounded-t bg-brand/5 text-xs px-3 py-1 text-white whitespace-nowrap'>
+          <span>ThorVG v{displayVersion}</span>
+        </div>
+      )}
+    </div>
+  );
+}

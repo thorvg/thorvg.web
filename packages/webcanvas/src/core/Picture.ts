@@ -26,6 +26,8 @@ import type { MimeType } from '../common/constants';
  *          back to its own resolution.
  *
  * @category Picture
+ *
+ * @beta
  */
 export type AssetResolver = (paint: Paint, src: string) => boolean;
 
@@ -171,6 +173,8 @@ export class Picture extends Paint {
    * ```
    *
    * @see {@link AssetResolver}
+   *
+   * @beta
    */
   public resolver(callback: AssetResolver | null): this {
     const Module = getModule();
