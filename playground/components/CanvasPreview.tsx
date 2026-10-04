@@ -2,11 +2,152 @@
 
 import { useEffect, useRef, useState } from 'react';
 import wasmUrl from "../node_modules/@thorvg/webcanvas/dist/thorvg.wasm";
-import type { Paint, Scene } from '@thorvg/webcanvas';
-
-type Canvas = import('@thorvg/webcanvas').Canvas;
+import type { Canvas, Paint, Scene } from '@thorvg/webcanvas';
 
 const CANVAS_SIZE = 600;
+
+interface CanvasPreviewController {
+  setZoom(factor: number): void;
+  resetForRun(): void;
+}
+
+/** Adapt one canvas for preview zoom without changing user paint transforms. */
+function createCanvasPreviewController(
+  canvasInstance: Canvas,
+  rootScene: Scene,
+  element: HTMLCanvasElement,
+  onSizeChange: (width: number, height: number) => void,
+): CanvasPreviewController {
+  let logicalWidth = CANVAS_SIZE;
+  let logicalHeight = CANVAS_SIZE;
+  const nativeUpdate = canvasInstance.update.bind(canvasInstance);
+  const nativeRender = canvasInstance.render.bind(canvasInstance);
+  const nativeResize = canvasInstance.resize.bind(canvasInstance);
+  const nativeViewport = canvasInstance.viewport.bind(canvasInstance);
+  let previewZoom = 1;
+  let viewport: [number, number, number, number] | null = null;
+  // Changes inside our root scene do not set Canvas's private needsUpdate flag.
+  // Track those separately; updatePending records explicit native updates until draw/sync.
+  let sceneDirty = true;
+  // Canvas construction/root attachment can also leave native updates pending.
+  let updatePending = true;
+
+  canvasInstance.add(rootScene);
+
+  function update(): Canvas {
+    nativeUpdate();
+    sceneDirty = false;
+    updatePending = true;
+    return canvasInstance;
+  }
+
+  function applyViewport(): void {
+    if (viewport) {
+      const [x, y, width, height] = viewport;
+      // Existing viewport arguments are render-target pixels, without DPR conversion.
+      nativeViewport(
+        Math.trunc(x * previewZoom), Math.trunc(y * previewZoom),
+        Math.trunc(width * previewZoom), Math.trunc(height * previewZoom),
+      );
+    } else {
+      nativeViewport(0, 0, element.width, element.height);
+    }
+    sceneDirty = true;
+  }
+
+  function render(): Canvas {
+    if (sceneDirty) update();
+    const previousDPR = canvasInstance.dpr;
+    const previousWidth = element.width;
+    const previousHeight = element.height;
+    nativeRender();
+    updatePending = false;
+
+    // WebCanvas may resize its target and change its DPR transform during render().
+    // Restore clipping and process that transform before presenting the final frame.
+    if (canvasInstance.dpr !== previousDPR || element.width !== previousWidth || element.height !== previousHeight) {
+      applyViewport();
+      update();
+      nativeRender();
+      updatePending = false;
+    }
+    return canvasInstance;
+  }
+
+  function finishPendingUpdate(): void {
+    // ThorVG requires pending updates to finish before changing the viewport.
+    if (updatePending) render();
+  }
+
+  // Shared by user resizing, zoom, and new-run reset, after pending work is finished.
+  function resizeTarget(): void {
+    nativeResize(logicalWidth * previewZoom, logicalHeight * previewZoom);
+    applyViewport();
+    onSizeChange(logicalWidth * previewZoom, logicalHeight * previewZoom);
+  }
+
+  // Override only this preview instance, preserving native identity and chaining.
+  const methods = {
+    resize(width: number, height: number): Canvas {
+      finishPendingUpdate();
+      logicalWidth = width;
+      logicalHeight = height;
+      resizeTarget();
+      return canvasInstance;
+    },
+    add(paint: Paint): Canvas {
+      rootScene.add(paint);
+      sceneDirty = true;
+      return canvasInstance;
+    },
+    remove(paint?: Paint): Canvas {
+      rootScene.remove(paint);
+      sceneDirty = true;
+      return canvasInstance;
+    },
+    clear(): Canvas {
+      finishPendingUpdate();
+      rootScene.clear();
+      sceneDirty = true;
+      return render();
+    },
+    update,
+    render,
+    viewport(x: number, y: number, width: number, height: number): Canvas {
+      finishPendingUpdate();
+      viewport = [x, y, width, height];
+      applyViewport();
+      return canvasInstance;
+    },
+  };
+  for (const [name, value] of Object.entries(methods)) {
+    Object.defineProperty(canvasInstance, name, { configurable: true, writable: true, value });
+  }
+
+  return {
+    setZoom(factor: number): void {
+      if (!Number.isFinite(factor) || factor <= 0) {
+        throw new Error('Preview zoom must be finite and positive');
+      }
+      finishPendingUpdate();
+      if (factor !== previewZoom) {
+        previewZoom = factor;
+        rootScene.scale(factor);
+        resizeTarget();
+      }
+      render();
+    },
+    resetForRun(): void {
+      finishPendingUpdate();
+      viewport = null;
+      rootScene.clear();
+      logicalWidth = CANVAS_SIZE;
+      logicalHeight = CANVAS_SIZE;
+      resizeTarget();
+      render();
+    },
+  };
+}
 
 interface CanvasPreviewProps {
   code: string;
@@ -31,17 +172,15 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
   const [currentRenderer, setCurrentRenderer] = useState<'sw' | 'gl' | 'wg'>('gl');
   const animationIdRef = useRef<number | null>(null);
   const zoomAnimationIdRef = useRef<number | null>(null);
-  const previewRef = useRef<{
-    setZoom(factor: number): void;
-    resetForRun(): void;
-  } | null>(null);
+  const previewRef = useRef<CanvasPreviewController | null>(null);
 
   // Initialize ThorVG with specified renderer
-  const initThorVG = async (renderer: 'sw' | 'gl' | 'wg') => {
+  const initThorVG = async (renderer: 'sw' | 'gl' | 'wg', isCancelled: () => boolean) => {
     try {
       setStatus({ message: `Initializing ThorVG with ${renderer.toUpperCase()} renderer...`, type: 'info' });
 
       const { init, ThorVGError, ThorVGResultCode } = await import('@thorvg/webcanvas');
+      if (isCancelled()) return;
       const TVGInstance = await init({
         renderer,
         locateFile: (path: string) => wasmUrl,
@@ -80,128 +219,32 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
         },
       });
 
+      if (isCancelled()) return;
+
       const canvasInstance: Canvas = new TVGInstance.Canvas('#canvas', {
         width: CANVAS_SIZE,
         height: CANVAS_SIZE,
       });
-      const rootScene: Scene = new TVGInstance.Scene();
-      const element = canvasRef.current!;
-      const nativeUpdate = canvasInstance.update.bind(canvasInstance);
-      const nativeRender = canvasInstance.render.bind(canvasInstance);
-      const nativeResize = canvasInstance.resize.bind(canvasInstance);
-      const nativeViewport = canvasInstance.viewport.bind(canvasInstance);
-      let previewZoom = 1;
-      let viewport: [number, number, number, number] | null = null;
-      let sceneDirty = true;
-      // Canvas construction/root attachment can also leave native updates pending.
-      let updatePending = true;
-
-      canvasInstance.add(rootScene);
-
-      function update(): Canvas {
-        nativeUpdate();
-        sceneDirty = false;
-        updatePending = true;
-        return canvasInstance;
-      }
-
-      function applyViewport(): void {
-        if (viewport) {
-          const [x, y, width, height] = viewport;
-          // Existing viewport arguments are render-target pixels, without DPR conversion.
-          nativeViewport(
-            Math.trunc(x * previewZoom), Math.trunc(y * previewZoom),
-            Math.trunc(width * previewZoom), Math.trunc(height * previewZoom),
-          );
-        } else {
-          nativeViewport(0, 0, element.width, element.height);
-        }
-        sceneDirty = true;
-      }
-
-      function render(): Canvas {
-        if (sceneDirty) update();
-        const previousDPR = canvasInstance.dpr;
-        const previousWidth = element.width;
-        const previousHeight = element.height;
-        nativeRender();
-        updatePending = false;
-
-        // WebCanvas may resize its target and change its DPR transform during render().
-        // Restore clipping and process that transform before presenting the final frame.
-        if (canvasInstance.dpr !== previousDPR || element.width !== previousWidth || element.height !== previousHeight) {
-          applyViewport();
-          update();
-          nativeRender();
-          updatePending = false;
-        }
-        return canvasInstance;
-      }
-
-      function finishPendingUpdate(): void {
-        // ThorVG requires pending updates to finish before changing the viewport.
-        if (updatePending) render();
-      }
-
-      // Override only this preview instance, preserving native identity and chaining.
-      const methods = {
-        add(paint: Paint): Canvas {
-          rootScene.add(paint);
-          sceneDirty = true;
-          return canvasInstance;
-        },
-        remove(paint?: Paint): Canvas {
-          rootScene.remove(paint);
-          sceneDirty = true;
-          return canvasInstance;
-        },
-        clear(): Canvas {
-          finishPendingUpdate();
-          rootScene.clear();
-          sceneDirty = true;
-          return render();
-        },
-        update,
-        render,
-        viewport(x: number, y: number, width: number, height: number): Canvas {
-          finishPendingUpdate();
-          viewport = [x, y, width, height];
-          applyViewport();
-          return canvasInstance;
-        },
-      };
-      for (const [name, value] of Object.entries(methods)) {
-        Object.defineProperty(canvasInstance, name, { configurable: true, writable: true, value });
-      }
-
-      previewRef.current = {
-        setZoom(factor: number): void {
-          if (!Number.isFinite(factor) || factor <= 0) {
-            throw new Error('Preview zoom must be finite and positive');
+      previewRef.current = createCanvasPreviewController(
+        canvasInstance,
+        new TVGInstance.Scene(),
+        canvasRef.current!,
+        (width, height) => {
+          const wrapper = canvasWrapperRef.current;
+          if (wrapper) {
+            wrapper.style.width = `${width + 2}px`;
+            wrapper.style.height = `${height + 2}px`;
           }
-          finishPendingUpdate();
-          if (factor !== previewZoom) {
-            previewZoom = factor;
-            rootScene.scale(factor);
-            nativeResize(CANVAS_SIZE * factor, CANVAS_SIZE * factor);
-            applyViewport();
-          }
-          render();
         },
-        resetForRun(): void {
-          finishPendingUpdate();
-          viewport = null;
-          rootScene.clear();
-          applyViewport();
-          render();
-        },
-      };
+      );
 
       setTVG(TVGInstance);
       setCanvas(canvasInstance);
       setCurrentRenderer(renderer);
       setStatus({ message: 'Ready', type: 'success' });
+      return canvasInstance;
     } catch (error) {
+      if (isCancelled()) return;
       console.error('Error initializing ThorVG:', error);
       setStatus({
         message: `Initialization error: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -216,12 +259,25 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
     const urlRenderer = params.get('renderer');
     const renderer = (urlRenderer && ['sw', 'gl', 'wg'].includes(urlRenderer)) ? urlRenderer : 'gl';
 
-    initThorVG(renderer as 'sw' | 'gl' | 'wg');
+    let cancelled = false;
+    let initializedCanvas: Canvas | undefined;
+    void initThorVG(renderer as 'sw' | 'gl' | 'wg', () => cancelled).then((instance) => {
+      if (cancelled) instance?.destroy();
+      else initializedCanvas = instance;
+    });
 
     return () => {
+      cancelled = true;
       if (animationIdRef.current !== null) {
         cancelAnimationFrame(animationIdRef.current);
+        animationIdRef.current = null;
       }
+      if (zoomAnimationIdRef.current !== null) {
+        cancelAnimationFrame(zoomAnimationIdRef.current);
+        zoomAnimationIdRef.current = null;
+      }
+      previewRef.current = null;
+      initializedCanvas?.destroy();
     };
   }, []);
 
@@ -240,6 +296,7 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
     }
 
     zoomAnimationIdRef.current = requestAnimationFrame(() => {
+      if (previewRef.current !== preview) return;
       const container = containerRef.current;
       const element = canvasRef.current;
       const wrapper = canvasWrapperRef.current;
@@ -255,8 +312,6 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
       const anchorY = (centerY - before.top) / before.height;
 
       preview.setZoom(zoom / 100);
-      wrapper.style.width = `${CANVAS_SIZE * zoom / 100 + 2}px`;
-      wrapper.style.height = `${CANVAS_SIZE * zoom / 100 + 2}px`;
 
       const after = element.getBoundingClientRect();
       container.scrollLeft += after.left + anchorX * after.width
@@ -275,13 +330,15 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
   }, [zoom, canvas]);
 
   const runCode = async () => {
-    if (!canvas || !TVG || !previewRef.current) {
+    const preview = previewRef.current;
+    if (!canvas || !TVG || !preview) {
       setStatus({ message: 'ThorVG not initialized yet', type: 'error' });
       return;
     }
 
     // Detect renderer from code
     const { extractInitConfig } = await import('@/lib/code-transformer');
+    if (previewRef.current !== preview) return;
     const config = extractInitConfig(code);
     const detectedRenderer = (config.renderer as 'sw' | 'gl' | 'wg') || 'gl';
 
@@ -312,16 +369,20 @@ export default function CanvasPreview({ code, autoRun = true, useDarkCanvas = fa
       }
 
       // Clear the previous example and its clipping while retaining preview zoom.
-      previewRef.current.resetForRun();
+      preview.resetForRun();
 
       // Transform code: strip imports, init calls, and canvas creation
       // This is smart and works with any variable names
       const { transformCodeForExecution } = await import('@/lib/code-transformer');
+      if (previewRef.current !== preview) return;
       const executableCode = transformCodeForExecution(code);
 
       // Wrap requestAnimationFrame to track animation IDs
       const wrappedRAF = (callback: FrameRequestCallback) => {
-        animationIdRef.current = requestAnimationFrame(callback);
+        if (previewRef.current !== preview) return 0;
+        animationIdRef.current = requestAnimationFrame((timestamp) => {
+          if (previewRef.current === preview) callback(timestamp);
+        });
         return animationIdRef.current;
       };
 
