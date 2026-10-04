@@ -27,6 +27,8 @@ export function createCanvasPreviewController(
   const nativeRender = canvasInstance.render.bind(canvasInstance);
   const nativeResize = canvasInstance.resize.bind(canvasInstance);
   const nativeViewport = canvasInstance.viewport.bind(canvasInstance);
+  const canvasPrototype = Object.getPrototypeOf(canvasInstance);
+  const nativeDPR = (): number => Reflect.get(canvasPrototype, "dpr", canvasInstance);
   let previewZoom = 1;
   let viewport: [number, number, number, number] | null = null;
   // Changes inside our root scene do not set Canvas's private needsUpdate flag.
@@ -36,6 +38,13 @@ export function createCanvasPreviewController(
   let updatePending = true;
 
   canvasInstance.add(rootScene);
+
+  // Examples use DPR to convert between their coordinates and rendered pixels.
+  // Include preview zoom here while Canvas keeps its native DPR internally.
+  Object.defineProperty(canvasInstance, "dpr", {
+    configurable: true,
+    get: () => nativeDPR() * previewZoom,
+  });
 
   function update(): Canvas {
     nativeUpdate();
@@ -73,7 +82,7 @@ export function createCanvasPreviewController(
 
   function render(): Canvas {
     if (sceneDirty) update();
-    const previousDPR = canvasInstance.dpr;
+    const previousDPR = nativeDPR();
     const previousWidth = element.width;
     const previousHeight = element.height;
     renderNative();
@@ -82,7 +91,7 @@ export function createCanvasPreviewController(
     // WebCanvas may resize its target and change its DPR transform during render().
     // Restore clipping and process that transform before presenting the final frame.
     if (
-      canvasInstance.dpr !== previousDPR ||
+      nativeDPR() !== previousDPR ||
       element.width !== previousWidth ||
       element.height !== previousHeight
     ) {
