@@ -57,6 +57,16 @@ describe('Scene', () => {
     expect(result).toBe(scene);
   });
 
+  it('motionBlur returns this', () => {
+    const TVG = getTVG();
+    const scene = new TVG.Scene();
+    const shape = new TVG.Shape();
+    shape.appendRect(0, 0, 50, 50).fill(255, 0, 0, 255);
+    scene.add(shape);
+    const result = scene.motionBlur(10, 45);
+    expect(result).toBe(scene);
+  });
+
   it('dropShadow returns this', () => {
     const TVG = getTVG();
     const scene = new TVG.Scene();
