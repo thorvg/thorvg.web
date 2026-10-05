@@ -175,7 +175,7 @@ export class Canvas {
    * });
    * ```
    */
-  constructor(target: CanvasTarget, options: CanvasOptions = {}) {
+  constructor(target: string | CanvasTarget, options: CanvasOptions = {}) {
     const { width = 800, height = 600, enableDevicePixelRatio = true, engineOption = EngineOption.Default } = options;
 
     // Store logical dimensions

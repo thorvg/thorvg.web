@@ -9,7 +9,7 @@ import { OffscreenSurface } from './OffscreenSurface';
  * @returns The surface, or null when the target cannot be created.
  * @internal
  */
-export function createSurface(target: CanvasTarget): Surface | null {
+export function createSurface(target: string | CanvasTarget): Surface | null {
   if (typeof OffscreenCanvas !== 'undefined' && target instanceof OffscreenCanvas) {
     return new OffscreenSurface(target);
   }

@@ -304,12 +304,12 @@ export type MimeType = 'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' |
 export type RendererType = 'sw' | 'gl' | 'wg';
 
 /**
- * Canvas target accepted by {@link Canvas}.
+ * Canvas target object accepted by {@link Canvas}.
  *
- * - `string` - CSS selector of an HTML canvas element (e.g., `'#canvas'`)
  * - `HTMLCanvasElement` - the canvas element itself
  * - `OffscreenCanvas` - an offscreen canvas that transferred to a Web Worker
  *
+ * @beta
  * @category Other
  */
-export type CanvasTarget = string | HTMLCanvasElement | OffscreenCanvas;
+export type CanvasTarget = HTMLCanvasElement | OffscreenCanvas;
