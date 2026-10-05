@@ -142,6 +142,33 @@ export class Scene extends Paint {
   }
 
   /**
+   * Apply a centered linear motion blur effect to the scene.
+   *
+   * The blur is spread evenly on both sides of the content along the given angle.
+   * The scene transform applies to the blur vector.
+   *
+   * @param distance - Total blur length in scene-local units (>= 0)
+   * @param angle - Blur angle in degrees, measured clockwise from the positive x-axis. Default: 0
+   * @param quality - Blur quality (0-100)
+   * @returns The Scene instance for method chaining
+   *
+   * @example
+   * ```typescript
+   * const scene = new TVG.Scene();
+   * scene.add(shape);
+   * scene.motionBlur(30, 45, 75); // 30px blur along the 45° direction
+   * ```
+   *
+   * @beta
+   */
+  public motionBlur(distance: number, angle: number = 0, quality: number = 75): this {
+    const Module = getModule();
+    const result = Module._tvg_scene_add_effect_motion_blur(this.ptr, distance, angle, quality);
+    checkResult(result, 'motionBlur');
+    return this;
+  }
+
+  /**
    * Apply a drop shadow effect with Gaussian blur filter to the scene.
    *
    * @param r - Red component (0-255)

@@ -177,6 +177,7 @@ export interface ThorVGCAPI {
   _tvg_scene_remove(scene: number, paint: number): number;
   _tvg_scene_clear_effects(scene: number): number;
   _tvg_scene_add_effect_gaussian_blur(scene: number, sigma: number, direction: number, border: number, quality: number): number;
+  _tvg_scene_add_effect_motion_blur(scene: number, distance: number, angle: number, quality: number): number;
   _tvg_scene_add_effect_drop_shadow(scene: number, r: number, g: number, b: number, a: number, angle: number, distance: number, sigma: number, quality: number): number;
   _tvg_scene_add_effect_fill(scene: number, r: number, g: number, b: number, a: number): number;
   _tvg_scene_add_effect_tint(scene: number, black_r: number, black_g: number, black_b: number, white_r: number, white_g: number, white_b: number, intensity: number): number;

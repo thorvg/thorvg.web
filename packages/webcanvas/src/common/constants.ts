@@ -191,6 +191,8 @@ export enum SceneEffect {
   Tint = 4,
   /** Apply tritone color effect using shadows, midtones, and highlights. Params: shadow RGB, midtone RGB, highlight RGB (all 0-255), blend (0-255) */
   Tritone = 5,
+  /** Apply a centered linear motion blur. Params: distance (>=0, scene-local units), angle (degrees, clockwise from the positive X axis), quality (0-100) @beta */
+  MotionBlur = 6,
 }
 
 /**
