@@ -88,6 +88,7 @@ describe('SceneEffect', () => {
     expect(SceneEffect.Fill).toBe(3);
     expect(SceneEffect.Tint).toBe(4);
     expect(SceneEffect.Tritone).toBe(5);
+    expect(SceneEffect.MotionBlur).toBe(6);
   });
 });
 
