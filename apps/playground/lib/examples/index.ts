@@ -46,6 +46,7 @@ import { strokeMiterlimitExample } from './stroke-miterlimit';
 import { updateExample } from './update';
 import { directUpdateExample } from './direct-update';
 import { maskingExample } from './masking';
+import { motionBlurExample } from './motion-blur';
 import { maskingMethodsExample } from './masking-methods';
 import { gradientMaskingExample } from './gradient-masking';
 import { intersectsExample } from './intersects';
@@ -95,6 +96,7 @@ export const showcaseExamples: ShowcaseExample[] = [
   intersectsExample,
   maskingExample,
   maskingMethodsExample,
+  motionBlurExample,
   sceneEffectsExample,
   viewportExample,
   // Text (alphabetically sorted by title)
