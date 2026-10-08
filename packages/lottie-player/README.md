@@ -171,6 +171,8 @@ Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 ```
 
+The CPU-based presets (SW, SW-Lite, Thread) are accelerated with WebAssembly SIMD, which is enabled by default.
+
 
 ### Preset Comparison
 
