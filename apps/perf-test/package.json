@@ -14,7 +14,6 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint .",
     "bench": "node scripts/bench.mjs"
   },
   "dependencies": {
@@ -31,8 +30,6 @@
     "@types/node": "^22",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "eslint": "^9",
-    "eslint-config-next": "^16.3.8",
     "file-loader": "^6.2.0",
     "playwright": "^1.62.0",
     "tailwindcss": "^4.3.3",
