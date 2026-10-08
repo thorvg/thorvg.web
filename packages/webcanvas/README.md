@@ -141,6 +141,8 @@ ThorVG WebCanvas supports Software (CPU) rendering, WebGL, and the next-generati
 | **WebGL (gl)** | Chrome/Firefox/Safari 90+ |
 | **WebGPU (wg)** | Chrome/Edge 113+/Firefox 141+/Safari 26+ |
 
+The Software renderer is accelerated with WebAssembly SIMD, which is enabled by default.
+
 ### Backend-Specific Initialization
 
 ```typescript
