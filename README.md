@@ -20,7 +20,7 @@ At the core of ThorVG.Web is **WebCanvas**, a **JavaScript/TypeScript API** that
 
 The following diagram illustrates the architecture of ThorVG.Web, from the web application layer to the underlying rendering backends and web platform.</br>
 
-The **WebCanvas API** is built on top of lower-level **WebAssembly bindings** generated using **Emscripten**, bridging the JavaScript environment with the native ThorVG engine. The engine handles scene composition and rendering through multiple backends, including the **CPU software renderer**, **WebGL**, and **WebGPU**.</br>
+The **WebCanvas API** is built on top of lower-level **WebAssembly bindings** generated using **Emscripten**, bridging the JavaScript environment with the native ThorVG engine. The engine handles scene composition and rendering through multiple backends, including the **CPU/SIMD software renderer**, **WebGL**, and **WebGPU**.</br>
 
 On the web platform, the rendered output is presented through an **HTML `<canvas>` element**, providing consistent rendering behavior while leveraging the appropriate rendering backend for the target environment. <br/>
 
