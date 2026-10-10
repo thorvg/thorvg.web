@@ -347,6 +347,10 @@ export class BaseLottiePlayer extends LitElement {
   private _audioBuffers = new Map<number, AudioBuffer>();
   private _audioVoices = new Map<number, AudioVoice>();
 
+  protected get threads(): number {
+    return 0;
+  }
+
   private async _init(): Promise<void> {
     // Ensure module is loaded only once
     if (_moduleRequested) {
@@ -384,7 +388,7 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`, globalThis.__THORVG_THREAD_COUNT ?? 0);
+    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`, this.threads);
 
     if (this.src) {
       this.load(this.src, this.fileType);
