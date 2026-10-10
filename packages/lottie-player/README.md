@@ -443,6 +443,9 @@ player.addEventListener('load', () => {
 
 **Return Type** : `void`
 
+> [!NOTE]
+> Available in the thread preset only (`@thorvg/lottie-player/thread`).
+
 > [!IMPORTANT]
 > It must be called before the first `<lottie-player>` is initialized.
 
@@ -453,6 +456,9 @@ player.addEventListener('load', () => {
 **Purpose** : Return the configured number of worker threads
 
 **Return Type** : `number`
+
+> [!NOTE]
+> Available in the thread preset only (`@thorvg/lottie-player/thread`).
 
 [Back to contents](#contents)
 <br />

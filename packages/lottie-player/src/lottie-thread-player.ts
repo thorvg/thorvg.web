@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 - 2026 ThorVG project. All rights reserved.
+ * Copyright (c) 2026 ThorVG project. All rights reserved.
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,6 +64,10 @@ export class LottiePlayer extends BaseLottiePlayer {
    */
   public get renderConfig(): RenderConfig {
     return this.config || {};
+  }
+
+  protected override get threads(): number {
+    return getThreadCount();
   }
 }
 
