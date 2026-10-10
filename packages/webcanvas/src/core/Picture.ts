@@ -111,7 +111,7 @@ export class Picture extends Paint {
     return new Picture(ptr);
   }
 
-  private _accessible = false;
+  #accessible = false;
 
   /**
    * Whether accessible mode is enabled.
@@ -138,14 +138,14 @@ export class Picture extends Paint {
    * ```
    */
   public get accessible(): boolean {
-    return this._accessible;
+    return this.#accessible;
   }
 
   public set accessible(value: boolean) {
     const Module = getModule();
     const result = Module._tvg_picture_set_accessible(this.ptr, value ? 1 : 0);
     checkResult(result, 'accessible');
-    this._accessible = value;
+    this.#accessible = value;
   }
 
   /**
