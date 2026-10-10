@@ -172,6 +172,7 @@ const resolveCommonPlugins = (config) => [
     tsconfig: "tsconfig.json",
     sourceMaps: true,
     jsc: {
+      externalHelpers: true,
       parser: {
         syntax: "typescript",
         tsx: false,

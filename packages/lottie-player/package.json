@@ -87,6 +87,7 @@
     "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-terser": "^1.0.0",
     "@swc/core": "^1.15.46",
+    "@swc/helpers": "^0.5.23",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@web/dev-server-esbuild": "^2.0.0",
     "@web/test-runner": "^1.0.0",
