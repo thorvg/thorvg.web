@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 - 2026 ThorVG project. All rights reserved.
+ * Copyright (c) 2026 ThorVG project. All rights reserved.
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
  */
 
 import { customElement, property } from 'lit/decorators.js';
-import type { RenderConfig as BaseRenderConfig, Renderer } from './base-lottie-player';
+import type { RenderConfig } from './base-lottie-player';
 import { BaseLottiePlayer } from './base-lottie-player';
 
 /**
@@ -42,20 +42,16 @@ export function getThreadCount(): number {
   return globalThis.__THORVG_THREAD_COUNT ?? 0;
 }
 
-export type RenderConfig = Omit<BaseRenderConfig, 'renderer'>;
-
 @customElement('lottie-player')
 export class LottiePlayer extends BaseLottiePlayer {
   /**
    * Sets the rendering configurations.
+   * @remarks The thread preset enables multi-threading for the software renderer.
    * @since 1.0
    */
   @property({ type: Object })
   public set renderConfig(value: RenderConfig) {
-    this.config = {
-      renderer: '__RENDERER__' as Renderer,
-      enableDevicePixelRatio: value.enableDevicePixelRatio
-    };
+    this.config = value;
   }
 
   /**
@@ -65,6 +61,10 @@ export class LottiePlayer extends BaseLottiePlayer {
   public get renderConfig(): RenderConfig {
     return this.config || {};
   }
+
+  protected override get threads(): number {
+    return getThreadCount();
+  }
 }
 
-export type { AudioInfo, FileType, LibraryVersion, PlayMode, PlayerState } from './base-lottie-player';
+export type { AudioInfo, FileType, LibraryVersion, PlayMode, PlayerState, RenderConfig, Renderer } from './base-lottie-player';
