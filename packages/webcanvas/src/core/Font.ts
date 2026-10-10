@@ -63,8 +63,8 @@ export interface LoadFontOptions {
  * ```
  */
 export class Font {
-  private static _provider: FontProvider = new FontsourceProvider();
-  private static readonly _loaded = new Set<string>();
+  static #provider: FontProvider = new FontsourceProvider();
+  static readonly #loaded = new Set<string>();
 
   /**
    * Set the font provider used when calling `Font.load()` without raw data.
@@ -85,7 +85,7 @@ export class Font {
    * ```
    */
   public static provider(provider: FontProvider): void {
-    Font._provider = provider;
+    Font.#provider = provider;
   }
 
 
@@ -121,23 +121,23 @@ export class Font {
     loadOptions?: LoadFontOptions,
   ): void | Promise<void> {
     if (dataOrOptions instanceof Uint8Array) {
-      Font._loadData(name, dataOrOptions, loadOptions);
+      Font.#loadData(name, dataOrOptions, loadOptions);
       return;
     }
 
-    if (Font._loaded.has(name)) {
+    if (Font.#loaded.has(name)) {
       return Promise.resolve();
     }
 
-    Font._loaded.add(name);
+    Font.#loaded.add(name);
 
-    return Font._provider
+    return Font.#provider
       .fetch(name, dataOrOptions)
       .then((result) => {
-        Font._loadData(name, result.data, { type: result.type });
+        Font.#loadData(name, result.data, { type: result.type });
       })
       .catch((err) => {
-        Font._loaded.delete(name);
+        Font.#loaded.delete(name);
         throw err;
       });
   }
@@ -147,7 +147,7 @@ export class Font {
    * @param name - Font name to unload
    */
   public static unload(name: string): void {
-    Font._loaded.delete(name);
+    Font.#loaded.delete(name);
     const Module = getModule();
 
     const namePtr = Module._malloc(name.length + 1);
@@ -163,7 +163,7 @@ export class Font {
   }
 
   /** @internal */
-  private static _loadData(name: string, data: Uint8Array, options: LoadFontOptions = {}): void {
+  static #loadData(name: string, data: Uint8Array, options: LoadFontOptions = {}): void {
     const Module = getModule();
     const { type = 'ttf' } = options;
 
