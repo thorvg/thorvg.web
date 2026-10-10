@@ -328,30 +328,30 @@ export class BaseLottiePlayer extends LitElement {
   protected TVG: TvgLottieAnimation | null = null;
   protected canvas?: HTMLCanvasElement;
   protected config?: RenderConfig;
-  private _imageData?: ImageData;
-  private _beginTime: number = Date.now();
-  private _counter: number = 1;
-  private _timer?: ReturnType<typeof setInterval>;
-  private _observer?: IntersectionObserver;
-  private _observable: boolean = false;
-  private _rafId?: number;
-  private _assetResolverCallback?: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string };
-  private _assetResolverData?: unknown;
+  #imageData?: ImageData;
+  #beginTime: number = Date.now();
+  #counter: number = 1;
+  #timer?: ReturnType<typeof setInterval>;
+  #observer?: IntersectionObserver;
+  #observable: boolean = false;
+  #rafId?: number;
+  #assetResolverCallback?: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string };
+  #assetResolverData?: unknown;
   //Audio
-  private _audioResolverCallback?: (info: AudioInfo, data: unknown) => void;
-  private _audioResolverData?: unknown;
-  private _audioCtx?: AudioContext;
-  private _audioMasterGain?: GainNode;
-  private _volume: number = 1;
-  private _muted: boolean = false;
-  private _audioBuffers = new Map<number, AudioBuffer>();
-  private _audioVoices = new Map<number, AudioVoice>();
+  #audioResolverCallback?: (info: AudioInfo, data: unknown) => void;
+  #audioResolverData?: unknown;
+  #audioCtx?: AudioContext;
+  #audioMasterGain?: GainNode;
+  #volume: number = 1;
+  #muted: boolean = false;
+  #audioBuffers = new Map<number, AudioBuffer>();
+  #audioVoices = new Map<number, AudioVoice>();
 
   protected get threads(): number {
     return 0;
   }
 
-  private async _init(): Promise<void> {
+  async #init(): Promise<void> {
     // Ensure module is loaded only once
     if (_moduleRequested) {
       while (!wasmModule) {
@@ -371,13 +371,13 @@ export class BaseLottiePlayer extends LitElement {
       });
     }
 
-    if (!this._timer) {
+    if (!this.#timer) {
       //NOTE: ThorVG Module has loaded, but called this function again
       return;
     }
 
-    clearInterval(this._timer);
-    this._timer = undefined;
+    clearInterval(this.#timer);
+    this.#timer = undefined;
 
     const engine = this.config?.renderer || (DEFAULT_RENDERER as Renderer);
 
@@ -395,7 +395,7 @@ export class BaseLottiePlayer extends LitElement {
     }
   }
 
-  private _viewport(): void {
+  #viewport(): void {
     const { left, right, top, bottom } = this.getBoundingClientRect();
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
@@ -426,10 +426,10 @@ export class BaseLottiePlayer extends LitElement {
     this.TVG!.viewport(x, y, width, height);
   }
 
-  private _observerCallback(entries: IntersectionObserverEntry[]) {
+  #observerCallback(entries: IntersectionObserverEntry[]) {
     const entry = entries[0];
     const target = entry.target as BaseLottiePlayer;
-    target._observable = entry.isIntersecting;
+    target.#observable = entry.isIntersecting;
 
     if (entry.isIntersecting) {
       if (target.currentState === 'frozen') {
@@ -448,11 +448,11 @@ export class BaseLottiePlayer extends LitElement {
     this.canvas.width = this.canvas.offsetWidth;
     this.canvas.height = this.canvas.offsetHeight;
 
-    this._observer = new IntersectionObserver(this._observerCallback);
-    this._observer.observe(this);
+    this.#observer = new IntersectionObserver(this.#observerCallback);
+    this.#observer.observe(this);
 
     if (!this.TVG) {
-      this._timer = setInterval(this._init.bind(this), 100);
+      this.#timer = setInterval(this.#init.bind(this), 100);
       return;
     }
 
@@ -466,31 +466,31 @@ export class BaseLottiePlayer extends LitElement {
     return this;
   }
 
-  private _startLoop(): void {
-    if (this._rafId) {
-      window.cancelAnimationFrame(this._rafId);
+  #startLoop(): void {
+    if (this.#rafId) {
+      window.cancelAnimationFrame(this.#rafId);
     }
-    this._rafId = window.requestAnimationFrame(this._animLoop.bind(this));
+    this.#rafId = window.requestAnimationFrame(this.#animLoop.bind(this));
   }
 
-  private async _animLoop(){
+  async #animLoop(){
     if (!this.TVG) {
       return;
     }
 
-    if (await this._update()) {
-      this._render();
-      this._rafId = window.requestAnimationFrame(this._animLoop.bind(this));
+    if (await this.#update()) {
+      this.#render();
+      this.#rafId = window.requestAnimationFrame(this.#animLoop.bind(this));
     }
   }
 
-  private _loadBytes(data: Uint8Array): void {
+  #loadBytes(data: Uint8Array): void {
     if (!this.TVG) {
       throw new Error(`TVG is not initialized`);
     }
 
-    if (this._assetResolverCallback) {
-      this.TVG.setAssetResolver(this._assetResolverCallback, this._assetResolverData);
+    if (this.#assetResolverCallback) {
+      this.TVG.setAssetResolver(this.#assetResolverCallback, this.#assetResolverData);
     }
 
     const isLoaded = this.TVG.load(data, this.fileType, this.canvas!.width, this.canvas!.height);
@@ -498,13 +498,13 @@ export class BaseLottiePlayer extends LitElement {
       throw new Error(`Unable to load an image. Error: ${this.TVG.error()}`);
     }
 
-    for (const id of [...this._audioVoices.keys()]) {
-      this._stopVoice(id);
+    for (const id of [...this.#audioVoices.keys()]) {
+      this.#stopVoice(id);
     }
-    const audioFn = this._audioResolverCallback ?? this._audioResolver.bind(this);
-    this.TVG.setAudioResolver(audioFn, this._audioResolverCallback ? this._audioResolverData : null);
+    const audioFn = this.#audioResolverCallback ?? this.#audioResolver.bind(this);
+    this.TVG.setAudioResolver(audioFn, this.#audioResolverCallback ? this.#audioResolverData : null);
 
-    this._render();
+    this.#render();
     this.dispatchEvent(new CustomEvent(PlayerEvent.Load));
 
     if (this.autoPlay) {
@@ -512,61 +512,61 @@ export class BaseLottiePlayer extends LitElement {
     }
   }
 
-  private _stopVoice(id: number, keep = false): void {
-    const voice = this._audioVoices.get(id);
+  #stopVoice(id: number, keep = false): void {
+    const voice = this.#audioVoices.get(id);
     if (!voice) return;
     voice.source?.stop();
     voice.source = undefined;
-    if (!keep) this._audioVoices.delete(id);
+    if (!keep) this.#audioVoices.delete(id);
   }
 
-  private _resumeAudio(): void {
-    for (const voice of this._audioVoices.values()) {
-      this._audioResolver({ ...voice.info, active: true, offset: 0 });
+  #resumeAudio(): void {
+    for (const voice of this.#audioVoices.values()) {
+      this.#audioResolver({ ...voice.info, active: true, offset: 0 });
     }
   }
 
-  private _fps(): number {
+  #fps(): number {
     if (!this.TVG) return 0;
     const duration = this.TVG.duration();
     return duration > 0 ? this.TVG.totalFrame() / duration : 0;
   }
 
-  private _syncAudioToFrame(): void {
-    const fps = this._fps();
+  #syncAudioToFrame(): void {
+    const fps = this.#fps();
     if (fps <= 0) return;
 
-    for (const voice of this._audioVoices.values()) {
+    for (const voice of this.#audioVoices.values()) {
       if (!voice.source) continue;
       const offset = voice.baseOffset + (this.currentFrame - voice.baseFrame) / fps;
-      this._audioResolver({ ...voice.info, active: true, offset });
+      this.#audioResolver({ ...voice.info, active: true, offset });
     }
   }
 
-  private async _audioResolver(info: AudioInfo): Promise<void> {
-    if (!this._audioCtx) {
-      this._audioCtx = new AudioContext();
+  async #audioResolver(info: AudioInfo): Promise<void> {
+    if (!this.#audioCtx) {
+      this.#audioCtx = new AudioContext();
     }
 
-    if (!this._audioMasterGain) {
-      this._audioMasterGain = this._audioCtx.createGain();
-      this._audioMasterGain.connect(this._audioCtx.destination);
-      this._applyVolume();
+    if (!this.#audioMasterGain) {
+      this.#audioMasterGain = this.#audioCtx.createGain();
+      this.#audioMasterGain.connect(this.#audioCtx.destination);
+      this.#applyVolume();
     }
 
     if (!info.active) {
-      this._stopVoice(info.id);
+      this.#stopVoice(info.id);
       return;
     }
 
-    let buffer = this._audioBuffers.get(info.id);
+    let buffer = this.#audioBuffers.get(info.id);
     if (!buffer) {
       try {
         const data = info.data
           ? info.data.slice().buffer
           : await fetch(info.path!).then(r => r.arrayBuffer());
-        buffer = await this._audioCtx.decodeAudioData(data);
-        this._audioBuffers.set(info.id, buffer);
+        buffer = await this.#audioCtx.decodeAudioData(data);
+        this.#audioBuffers.set(info.id, buffer);
       } catch {
         this.currentState = 'error';
         this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
@@ -574,13 +574,13 @@ export class BaseLottiePlayer extends LitElement {
       }
     }
 
-    this._stopVoice(info.id, true);
+    this.#stopVoice(info.id, true);
 
-    const gain = this._audioCtx.createGain();
+    const gain = this.#audioCtx.createGain();
     gain.gain.value = info.volume;
-    gain.connect(this._audioMasterGain);
+    gain.connect(this.#audioMasterGain);
 
-    const source = this._audioCtx.createBufferSource();
+    const source = this.#audioCtx.createBufferSource();
     source.buffer = buffer;
     source.loop = true;
     source.connect(gain);
@@ -589,7 +589,7 @@ export class BaseLottiePlayer extends LitElement {
       : 0;
     source.start(0, startOffset);
 
-    this._audioVoices.set(info.id, {
+    this.#audioVoices.set(info.id, {
       info,
       source,
       baseFrame: this.currentFrame,
@@ -597,12 +597,12 @@ export class BaseLottiePlayer extends LitElement {
     });
   }
 
-  private _flush(): void {
+  #flush(): void {
     const context = this.canvas!.getContext('2d');
-    context!.putImageData(this._imageData!, 0, 0);
+    context!.putImageData(this.#imageData!, 0, 0);
   }
 
-  private _render(): void {
+  #render(): void {
     if (!this.TVG) {
       return;
     }
@@ -615,7 +615,7 @@ export class BaseLottiePlayer extends LitElement {
     }
 
     this.TVG.resize(this.canvas!.width, this.canvas!.height);
-    this._viewport();
+    this.#viewport();
     const isUpdated = this.TVG.update();
 
     if (!isUpdated) {
@@ -634,11 +634,11 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    this._imageData = new ImageData(clampedBuffer, this.canvas!.width, this.canvas!.height);
-    this._flush();
+    this.#imageData = new ImageData(clampedBuffer, this.canvas!.width, this.canvas!.height);
+    this.#flush();
   }
 
-  private async _update(): Promise<boolean> {
+  async #update(): Promise<boolean> {
     if (!this.TVG) {
       return false;
     }
@@ -649,7 +649,7 @@ export class BaseLottiePlayer extends LitElement {
 
     const duration = this.TVG.duration();
     const currentTime = Date.now() / 1000;
-    this.currentFrame = (currentTime - this._beginTime) / duration * this.totalFrame * this.speed;
+    this.currentFrame = (currentTime - this.#beginTime) / duration * this.totalFrame * this.speed;
     if (this.direction === -1) {
       this.currentFrame = this.totalFrame - this.currentFrame;
     }
@@ -659,19 +659,19 @@ export class BaseLottiePlayer extends LitElement {
       (this.direction === -1 && this.currentFrame <= 0)
     ) {
       const totalCount = this.count ? this.mode === 'bounce' ? this.count * 2 : this.count : 0;
-      if (this.loop || (totalCount && this._counter < totalCount)) {
+      if (this.loop || (totalCount && this.#counter < totalCount)) {
         if (this.mode === 'bounce') {
           this.direction = this.direction === 1 ? -1 : 1;
         }
         this.currentFrame = this.direction === 1 ? 0 : this.totalFrame;
 
         if (this.count) {
-          this._counter += 1;
+          this.#counter += 1;
         }
 
         await _wait(this.intermission);
         this.play();
-        this._syncAudioToFrame();
+        this.#syncAudioToFrame();
         return true;
       }
 
@@ -687,7 +687,7 @@ export class BaseLottiePlayer extends LitElement {
     return this.TVG.frame(this.currentFrame);
   }
 
-  private _frame(curFrame: number): void {
+  #frame(curFrame: number): void {
     if (!this.TVG) {
       return;
     }
@@ -706,12 +706,12 @@ export class BaseLottiePlayer extends LitElement {
   public async load(src: string | object, fileType: FileType = 'json'): Promise<void> {
     try {
       this.currentState = 'loading';
-      await this._init();
+      await this.#init();
       const bytes = await parseSrc(src, fileType);
       this.dispatchEvent(new CustomEvent(PlayerEvent.Ready));
 
       this.fileType = fileType;
-      this._loadBytes(bytes);
+      this.#loadBytes(bytes);
     } catch {
       this.currentState = 'error';
       this.dispatchEvent(new CustomEvent(PlayerEvent.Error));
@@ -737,12 +737,12 @@ export class BaseLottiePlayer extends LitElement {
     }
 
     //resume the AudioContext if suspended earlier
-    if (this._audioCtx?.state === 'suspended') this._audioCtx.resume();
+    if (this.#audioCtx?.state === 'suspended') this.#audioCtx.resume();
 
-    this._beginTime = Date.now() / 1000;
+    this.#beginTime = Date.now() / 1000;
     if (this.currentState === 'paused') {
       const duration = this.TVG.duration();
-      this._beginTime -= this.currentFrame * duration / (this.totalFrame * this.speed);
+      this.#beginTime -= this.currentFrame * duration / (this.totalFrame * this.speed);
     }
 
     if (this.currentState === 'playing') {
@@ -750,14 +750,14 @@ export class BaseLottiePlayer extends LitElement {
     }
 
     if (this.currentState === 'stopped') {
-      const audioFn = this._audioResolverCallback ?? this._audioResolver.bind(this);
-      this.TVG.setAudioResolver(audioFn, this._audioResolverCallback ? this._audioResolverData : null);
-      this._resumeAudio();
+      const audioFn = this.#audioResolverCallback ?? this.#audioResolver.bind(this);
+      this.TVG.setAudioResolver(audioFn, this.#audioResolverCallback ? this.#audioResolverData : null);
+      this.#resumeAudio();
     }
 
-    if (this._observable) {
+    if (this.#observable) {
       this.currentState = 'playing';
-      this._startLoop();
+      this.#startLoop();
       return;
     }
 
@@ -771,7 +771,7 @@ export class BaseLottiePlayer extends LitElement {
   public pause(): void {
     this.currentState = 'paused';
     this.dispatchEvent(new CustomEvent(PlayerEvent.Pause));
-    if (this._audioCtx?.state === 'running') this._audioCtx.suspend();
+    if (this.#audioCtx?.state === 'running') this.#audioCtx.suspend();
   }
 
   /**
@@ -779,8 +779,8 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   public stop(): void {
-    for (const id of this._audioVoices.keys()) {
-      this._stopVoice(id, true);
+    for (const id of this.#audioVoices.keys()) {
+      this.#stopVoice(id, true);
     }
 
     this.TVG?.setAudioResolver(null as unknown as (info: AudioInfo, data: unknown) => void, null);
@@ -788,7 +788,7 @@ export class BaseLottiePlayer extends LitElement {
 
     this.currentState = 'stopped';
     this.currentFrame = 0;
-    this._counter = 1;
+    this.#counter = 1;
 
     this.dispatchEvent(new CustomEvent(PlayerEvent.Stop));
   }
@@ -808,10 +808,10 @@ export class BaseLottiePlayer extends LitElement {
    * @since 1.0
    */
   public async seek(frame: number): Promise<void> {
-    this._frame(frame);
-    await this._update();
-    this._render();
-    this._syncAudioToFrame();
+    this.#frame(frame);
+    await this.#update();
+    this.#render();
+    this.#syncAudioToFrame();
   }
 
   /**
@@ -825,7 +825,7 @@ export class BaseLottiePlayer extends LitElement {
     this.canvas!.height = height;
 
     if (this.currentState !== 'playing') {
-      this._render();
+      this.#render();
     }
   }
 
@@ -838,19 +838,19 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    for (const id of [...this._audioVoices.keys()]) this._stopVoice(id);
-    this._audioBuffers.clear();
-    this._audioCtx?.close();
-    this._audioCtx = undefined;
-    this._audioMasterGain = undefined;
+    for (const id of [...this.#audioVoices.keys()]) this.#stopVoice(id);
+    this.#audioBuffers.clear();
+    this.#audioCtx?.close();
+    this.#audioCtx = undefined;
+    this.#audioMasterGain = undefined;
 
     this.TVG.delete();
     this.TVG = null;
     this.currentState = 'destroyed';
 
-    if (this._observer) {
-      this._observer.disconnect();
-      this._observer = undefined;
+    if (this.#observer) {
+      this.#observer.disconnect();
+      this.#observer = undefined;
     }
 
     this.dispatchEvent(new CustomEvent(PlayerEvent.Destroyed));
@@ -933,13 +933,13 @@ export class BaseLottiePlayer extends LitElement {
     }
 
     if (this.TVG.quality(value) && this.currentState !== 'playing') {
-      this._render();
+      this.#render();
     }
   }
 
   public setAssetResolver(callback: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string }, data: unknown | null): void {
-    this._assetResolverCallback = callback;
-    this._assetResolverData = data;
+    this.#assetResolverCallback = callback;
+    this.#assetResolverData = data;
 
     if (this.TVG) {
       this.TVG.setAssetResolver(callback, data);
@@ -947,18 +947,18 @@ export class BaseLottiePlayer extends LitElement {
   }
 
   public setAudioResolver(callback: ((info: AudioInfo, data: unknown) => void) | null, data: unknown | null): void {
-    this._audioResolverCallback = callback ?? undefined;
-    this._audioResolverData = data;
+    this.#audioResolverCallback = callback ?? undefined;
+    this.#audioResolverData = data;
 
     if (this.TVG) {
-      const fn = callback ?? this._audioResolver.bind(this);
+      const fn = callback ?? this.#audioResolver.bind(this);
       this.TVG.setAudioResolver(fn, callback ? data : null);
     }
   }
 
-  private _applyVolume(): void {
-    if (this._audioMasterGain) {
-      this._audioMasterGain.gain.value = this._muted ? 0 : this._volume;
+  #applyVolume(): void {
+    if (this.#audioMasterGain) {
+      this.#audioMasterGain.gain.value = this.#muted ? 0 : this.#volume;
     }
   }
 
@@ -968,8 +968,8 @@ export class BaseLottiePlayer extends LitElement {
    * @beta
    */
   public setVolume(volume: number): void {
-    this._volume = Math.max(0, volume);
-    this._applyVolume();
+    this.#volume = Math.max(0, volume);
+    this.#applyVolume();
   }
 
   /**
@@ -977,7 +977,7 @@ export class BaseLottiePlayer extends LitElement {
    * @beta
    */
   public get volume(): number {
-    return this._volume;
+    return this.#volume;
   }
 
   /**
@@ -986,8 +986,8 @@ export class BaseLottiePlayer extends LitElement {
    * @beta
    */
   public setMute(muted: boolean): void {
-    this._muted = muted;
-    this._applyVolume();
+    this.#muted = muted;
+    this.#applyVolume();
   }
 
   /**
@@ -995,7 +995,7 @@ export class BaseLottiePlayer extends LitElement {
    * @beta
    */
   public get muted(): boolean {
-    return this._muted;
+    return this.#muted;
   }
 
   /**
