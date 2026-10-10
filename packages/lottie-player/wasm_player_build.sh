@@ -44,7 +44,7 @@ elif [ "$BACKEND" = "pthread" ]; then
   sed "s|'--bind'|'--bind', '-pthread', '-fopenmp', '-L${LIBOMP_DIR}/lib', '-lomp', '-sPTHREAD_POOL_SIZE=${POOL_SIZE}', '-sPTHREAD_POOL_SIZE_STRICT=0', '-sINITIAL_MEMORY=134217728'|g" > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, jpg, png, webp, ttf" -Dextra="lottie_exp, openmp" -Dthreads=true -Dpartial=false -Dfile="false" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 else
-  sed "s|EMSDK:|$EMSDK|g; s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts'|g" ../wasm/wasm32.txt > /tmp/.wasm_cross.txt
+  sed "s|EMSDK:|$EMSDK|g; s|'-sFILESYSTEM=0', ||g; s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts'|g" ../wasm/wasm32.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="all" -Dsavers="all" -Dextra="lottie_exp" -Dthreads=false -Dpartial=false -Dengines="all" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 fi
 
