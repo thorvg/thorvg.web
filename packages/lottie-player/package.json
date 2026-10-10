@@ -12,37 +12,37 @@
       "require": "./dist/lottie-player.cjs.js"
     },
     "./sw": {
-      "types": "./dist/lottie-preset-player.d.ts",
+      "types": "./dist/lottie-standard-player.d.ts",
       "import": "./dist/sw/lottie-player.esm.js",
       "require": "./dist/sw/lottie-player.cjs.js"
     },
     "./gl": {
-      "types": "./dist/lottie-preset-player.d.ts",
+      "types": "./dist/lottie-standard-player.d.ts",
       "import": "./dist/gl/lottie-player.esm.js",
       "require": "./dist/gl/lottie-player.cjs.js"
     },
     "./wg": {
-      "types": "./dist/lottie-preset-player.d.ts",
+      "types": "./dist/lottie-standard-player.d.ts",
       "import": "./dist/wg/lottie-player.esm.js",
       "require": "./dist/wg/lottie-player.cjs.js"
     },
     "./sw-lite": {
-      "types": "./dist/lottie-preset-player.d.ts",
+      "types": "./dist/lottie-lite-player.d.ts",
       "import": "./dist/sw-lite/lottie-player.esm.js",
       "require": "./dist/sw-lite/lottie-player.cjs.js"
     },
     "./gl-lite": {
-      "types": "./dist/lottie-preset-player.d.ts",
+      "types": "./dist/lottie-lite-player.d.ts",
       "import": "./dist/gl-lite/lottie-player.esm.js",
       "require": "./dist/gl-lite/lottie-player.cjs.js"
     },
     "./wg-lite": {
-      "types": "./dist/lottie-preset-player.d.ts",
+      "types": "./dist/lottie-lite-player.d.ts",
       "import": "./dist/wg-lite/lottie-player.esm.js",
       "require": "./dist/wg-lite/lottie-player.cjs.js"
     },
     "./thread": {
-      "types": "./dist/lottie-preset-player.d.ts",
+      "types": "./dist/lottie-thread-player.d.ts",
       "import": "./dist/thread/lottie-player.esm.js"
     }
   },

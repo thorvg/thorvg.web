@@ -69,7 +69,7 @@ const presetMap = {
   [PresetModule.SW]: {
     path: '/dist/sw',
     renderer: 'sw',
-    input: "./src/lottie-preset-player.ts",
+    input: "./src/lottie-standard-player.ts",
     options: {},
     plugins: [],
     output: {
@@ -81,7 +81,7 @@ const presetMap = {
   [PresetModule.GL]: {
     path: '/dist/gl',
     renderer: 'gl',
-    input: "./src/lottie-preset-player.ts",
+    input: "./src/lottie-standard-player.ts",
     options: {},
     plugins: [],
     output: {
@@ -93,7 +93,7 @@ const presetMap = {
   [PresetModule.SW_LITE]: {
     path: '/dist/sw-lite',
     renderer: 'sw',
-    input: "./src/lottie-preset-player.ts",
+    input: "./src/lottie-lite-player.ts",
     options: {},
     plugins: [],
     output: {
@@ -105,7 +105,7 @@ const presetMap = {
   [PresetModule.GL_LITE]: {
     path: '/dist/gl-lite',
     renderer: 'gl',
-    input: "./src/lottie-preset-player.ts",
+    input: "./src/lottie-lite-player.ts",
     options: {},
     plugins: [],
     output: {
@@ -117,7 +117,7 @@ const presetMap = {
   [PresetModule.WG]: {
     path: '/dist/wg',
     renderer: 'wg',
-    input: "./src/lottie-preset-player.ts",
+    input: "./src/lottie-standard-player.ts",
     options: {},
     plugins: [],
     output: {
@@ -129,7 +129,7 @@ const presetMap = {
   [PresetModule.WG_LITE]: {
     path: '/dist/wg-lite',
     renderer: 'wg',
-    input: "./src/lottie-preset-player.ts",
+    input: "./src/lottie-lite-player.ts",
     options: {},
     plugins: [],
     output: {
@@ -141,7 +141,7 @@ const presetMap = {
   [PresetModule.THREAD]: {
     path: '/dist/thread',
     renderer: 'sw',
-    input: "./src/lottie-preset-player.ts",
+    input: "./src/lottie-thread-player.ts",
     options: {
       exportConditions: ['node'],
     },
@@ -271,5 +271,7 @@ export default [
   createLottieConfig(PresetModule.WG_LITE),
   createLottieConfig(PresetModule.THREAD),
   createTypesConfig("./src/lottie-player.ts", pkg.types),
-  createTypesConfig("./src/lottie-preset-player.ts", pkg.exports['./sw'].types),
+  createTypesConfig("./src/lottie-standard-player.ts", pkg.exports['./sw'].types),
+  createTypesConfig("./src/lottie-lite-player.ts", pkg.exports['./sw-lite'].types),
+  createTypesConfig("./src/lottie-thread-player.ts", pkg.exports['./thread'].types),
 ];
