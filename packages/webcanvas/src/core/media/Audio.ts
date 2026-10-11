@@ -285,11 +285,32 @@ const RESYNC = 0.12; // drift threshold, seconds
 const RATE_MIN = 0.25; // slowest playback rate
 const RATE_MAX = 4; // fastest playback rate
 
+export function createLottieAudio(): LottieAudio | null {
+  if (typeof window === 'undefined') return null;
+  if (typeof AudioContext !== 'function') return null;
+  return new LottieAudio();
+}
+
+function setupLottieAudioOutput() {
+  const out = AudioOutput.acquire();
+  const cancelGesture = onUserGesture(() => {
+    out.resume();
+  });
+
+  return {
+    out,
+    dispose(): void {
+      cancelGesture();
+      AudioOutput.release();
+    }
+  };
+}
+
 export class LottieAudio {
   #out: AudioOutput | null = null;
   #gain = new GainControl();
   #voices = new Map<Uint8Array, Voice>();
-  #gestureOff: (() => void) | null = null;
+  #disposeOutput: (() => void) | null = null;
   #watchdog: ReturnType<typeof setInterval> | null = null;
 
   #frame = 0;
@@ -301,7 +322,6 @@ export class LottieAudio {
 
   resolve(state: AudioInfo, frame: number): void {
     if (this.#disposed) return;
-    if (typeof window === 'undefined') return;
     if (typeof state.src === 'string') return;
 
     this.#frame = frame;
@@ -389,29 +409,23 @@ export class LottieAudio {
     for (const voice of this.#voices.values()) voice.gain.disconnect();
     this.#voices.clear();
 
-    this.#gestureOff?.();
-    this.#gestureOff = null;
     this.#gain.disconnect();
 
-    if (this.#out) {
-      this.#out = null;
-      AudioOutput.release();
-    }
+    this.#disposeOutput?.();
+    this.#disposeOutput = null;
+    this.#out = null;
   }
 
   #attach(): AudioOutput {
     if (this.#out) return this.#out;
 
-    const out = AudioOutput.acquire();
+    const { out, dispose } = setupLottieAudioOutput();
     this.#gain.attach(out.gain());
     this.#out = out;
+    this.#disposeOutput = dispose;
     this.#lastAt = performance.now();
 
     out.resume();
-    this.#gestureOff = onUserGesture(() => {
-      this.#gestureOff = null;
-      this.#out?.resume();
-    });
     return out;
   }
 
