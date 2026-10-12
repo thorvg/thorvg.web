@@ -207,7 +207,14 @@ export abstract class Paint extends WasmObject {
       Module._tvg_paint_set_opacity(this.ptr, value);
       return this;
     }
-    return Module._tvg_paint_get_opacity(this.ptr);
+
+    const opacityPtr = Module._malloc(1);
+    try {
+      Module._tvg_paint_get_opacity(this.ptr, opacityPtr);
+      return Module.HEAPU8[opacityPtr]!;
+    } finally {
+      Module._free(opacityPtr);
+    }
   }
 
   /**
