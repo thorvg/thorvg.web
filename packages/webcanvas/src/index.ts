@@ -58,10 +58,9 @@ import { FontsourceProvider } from './providers/FontsourceProvider';
 import { ThorVGResultCode, ThorVGError, setGlobalErrorHandler, handleError, type ErrorHandler } from './common/errors';
 import * as constants from './common/constants';
 import type { RendererType } from './common/constants';
-import { setThreadCount } from './interop/module';
+import { getModule, readString, setThreadCount } from './interop/module';
 import ThorVGModuleFactory from '../dist/thorvg';
 
-const THORVG_VERSION = '__THORVG_VERSION__';
 const THORVG_WASM_URL = 'https://unpkg.com/@thorvg/webcanvas@__PACKAGE_VERSION__/__WASM_PATH__';
 
 /**
@@ -285,6 +284,21 @@ function term(): void {
 }
 
 /**
+ * Read the engine version
+ */
+function engineVersion(): string {
+  const Module = getModule();
+  const versionPtr = Module._malloc(4);
+
+  try {
+    Module._tvg_engine_version(0, 0, 0, versionPtr);
+    return readString(Module, Module.HEAPU32[versionPtr >> 2]!) ?? '';
+  } finally {
+    Module._free(versionPtr);
+  }
+}
+
+/**
  * Create namespace with all classes and enums
  */
 function createNamespace(): ThorVGNamespace {
@@ -316,7 +330,7 @@ function createNamespace(): ThorVGNamespace {
     ColorSpace: constants.ColorSpace,
     FilterMethod: constants.FilterMethod,
     EngineOption: constants.EngineOption,
-    version: THORVG_VERSION,
+    version: engineVersion(),
     term,
   };
 }

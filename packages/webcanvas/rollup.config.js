@@ -29,7 +29,6 @@ const sharedPlugins = (aliasEntries, wasmPath, extraPlugins = []) => [
     include: ['src/**/*.ts'],
     preventAssignment: true,
     values: {
-      '__THORVG_VERSION__': process.env.THORVG_VERSION,
       '__PACKAGE_VERSION__': pkg.version,
       '__WASM_PATH__': wasmPath,
     },

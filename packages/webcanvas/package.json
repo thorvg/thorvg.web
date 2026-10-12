@@ -25,8 +25,8 @@
     "!dist/**/thorvg.js"
   ],
   "scripts": {
-    "build": "npm run clean && sh ./wasm_wcanvas_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
-    "build:watch": "npm run clean && sh ./wasm_wcanvas_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
+    "build": "npm run clean && sh ./wasm_wcanvas_setup.sh && rollup -c --bundleConfigAsCjs",
+    "build:watch": "npm run clean && sh ./wasm_wcanvas_setup.sh && rollup -c --bundleConfigAsCjs --watch",
     "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -37,8 +37,7 @@
     "lint:fix": "eslint src --fix",
     "docs": "typedoc && node ./tools/docs/generate.js",
     "docs:watch": "typedoc --watch",
-    "docs:serve": "typedoc --watch --serve",
-    "version": "sed -n -e 4p ../../thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'"
+    "docs:serve": "typedoc --watch --serve"
   },
   "repository": {
     "type": "git",

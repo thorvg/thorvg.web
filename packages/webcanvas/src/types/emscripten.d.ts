@@ -59,6 +59,9 @@ export interface TvgCanvasInstance {
 
 // CAPI function signatures
 export interface ThorVGCAPI {
+  // Engine functions
+  _tvg_engine_version(major: number, minor: number, micro: number, version: number): number;
+
   // Canvas functions
   _tvg_canvas_add(canvas: number, paint: number): number;
   _tvg_canvas_remove(canvas: number, paint: number): number;
