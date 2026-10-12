@@ -3,7 +3,7 @@ import { ShowcaseExample } from './types';
 export const videoExample: ShowcaseExample = {
   id: 'video',
   title: 'Video',
-  description: 'Load and play a video with keyboard playback controls',
+  description: 'Load and play a video asset',
   category: 'media',
   thumbnail: '/assets/video-thumbnail.png',
   requiresUserGesture: true,
@@ -48,8 +48,8 @@ const canvas = new TVG.Canvas('#canvas', {
   const picture = video.picture;
   picture.origin(0.5, 0.5);
 
-  const response = await fetch('/assets/video/video.mp4');
-  await video.load(new Uint8Array(await response.arrayBuffer()));
+  const data = await fetch('/assets/video/video.mp4').then(res => res.bytes());
+  await video.load(data);
 
   // video scaling preserving its aspect ratio
   const { width: w2, height: h2 } = picture.size();

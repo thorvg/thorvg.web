@@ -1,7 +1,7 @@
 import { ShowcaseExample } from './types';
 
-export const basicShapesExample: ShowcaseExample = {
-  id: 'basic-shapes',
+export const shapesExample: ShowcaseExample = {
+  id: 'shapes',
   title: 'Shapes',
   description: 'Draw simple shapes',
   category: 'basic',

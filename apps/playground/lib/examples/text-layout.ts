@@ -3,7 +3,7 @@ import { ShowcaseExample } from './types';
 export const textLayoutExample: ShowcaseExample = {
   id: 'text-layout',
   title: 'Text Layout',
-  description: 'Demonstrate text layout with alignment within a bounding box',
+  description: 'Demonstrate text layout with alignment',
   category: 'text',
   thumbnail: '/assets/text-layout-thumbnail.png',
   code: `// Native example: TextLayout.cpp
@@ -22,9 +22,8 @@ const canvas = new TVG.Canvas('#canvas', {
 
 (async () => {
   //Load fonts
-  const response = await fetch('/fonts/Arial.ttf');
-  const buffer = await response.arrayBuffer();
-  TVG.Font.load('Arial', new Uint8Array(buffer), { type: 'ttf' });
+  const data = await fetch('/fonts/Arial.ttf').then(res => res.bytes());
+  TVG.Font.load('Arial', data, { type: 'ttf' });
 
   //guide line
   const yOffset = 82;

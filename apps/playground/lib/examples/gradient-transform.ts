@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const gradientTransformExample: ShowcaseExample = {
   id: 'gradient-transform',
-  title: 'Gradient with Transforms',
+  title: 'Gradient Transform',
   description: 'Animate gradients with shape transformations',
   category: 'basic',
   thumbnail: '/assets/gradient-with-transform-thumbnail.png',
@@ -24,7 +24,9 @@ const startTime = Date.now();
 
 function animate() {
   const elapsed = Date.now() - startTime;
-  const progress = ((elapsed % 2000) / 2000); // 2 second loop
+  const duration = 2000; // play time 2 sec.
+  let progress = (elapsed % duration) / duration;
+  if (Math.floor(elapsed / duration) % 2 !== 0) progress = 1 - progress;
 
   canvas.clear();
 
@@ -64,11 +66,22 @@ function animate() {
 
   shape2.fill(fill2);
 
+  //Gradient Stroke
+  const strokeFill2 = new TVG.LinearGradient(-31.25, -31.25, 81.25, 81.25);
+  strokeFill2.setStops(
+    [0, [255, 0, 0, 255]],
+    [0.5, [255, 255, 0, 255]],
+    [1, [255, 255, 255, 255]]
+  );
+  shape2.stroke({ width: 9.375, gradient: strokeFill2 });
+
   shape2.rotate(360 * progress);
   shape2.translate(300 + progress * 187.5, 300);
 
   //Shape3
   const shape3 = new TVG.Shape();
+  /* Look, how shape3's origin is different with shape2
+  The center of the shape is the anchor point for transformation. */
   shape3.appendRect(62.5, 62.5, 93.75, 62.5, { rx: 12.5, ry: 12.5 });
 
   //RadialGradient

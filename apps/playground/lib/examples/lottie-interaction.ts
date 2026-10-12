@@ -3,7 +3,7 @@ import { ShowcaseExample } from './types';
 export const lottieInteractionExample: ShowcaseExample = {
   id: 'lottie-interaction',
   title: 'Lottie Interaction',
-  description: 'Drag on the canvas to spin the Lottie in real time — driven by expression slots',
+  description: 'Demonstrate interactivity with Lottie animation',
   category: 'media',
   thumbnail: '/assets/lottie-interaction-thumbnail.png',
   code: `// Native example: LottieInteraction.cpp

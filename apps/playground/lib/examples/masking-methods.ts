@@ -3,7 +3,7 @@ import { ShowcaseExample } from './types';
 export const maskingMethodsExample: ShowcaseExample = {
   id: 'masking-methods',
   title: 'Masking Methods',
-  description: 'Demonstrate all 6 mask composition methods (Add, Subtract, Intersect, Difference, Lighten, Darken)',
+  description: 'Demonstrate mask composition methods (Add, Subtract, Intersect, Difference, Lighten, Darken)',
   category: 'advanced',
   thumbnail: '/assets/masking-methods-thumbnail.png',
   code: `// Native example: MaskingMethods.cpp
@@ -21,9 +21,7 @@ const canvas = new TVG.Canvas('#canvas', {
 });
 
 (async () => {
-  const response = await fetch('/assets/images/rawimage_200x300.raw');
-  const arrayBuffer = await response.arrayBuffer();
-  const imageData = new Uint8Array(arrayBuffer);
+  const imageData = await fetch('/assets/images/rawimage_200x300.raw').then(res => res.bytes());
 
   //background
   const bg = new TVG.Shape();
@@ -325,8 +323,9 @@ const canvas = new TVG.Canvas('#canvas', {
   {
     //Transformed Image + Shape Mask Add
     const image = new TVG.Picture();
-    image.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 }).size(80, 175.78);
+    image.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 });
     image.translate(60, 260);
+    image.scale(0.2);
     image.rotate(45);
 
     const mask = new TVG.Shape();
@@ -342,8 +341,9 @@ const canvas = new TVG.Canvas('#canvas', {
 
     //Transformed Image + Shape Mask Subtract
     const image2 = new TVG.Picture();
-    image2.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 }).size(80, 175.78);
+    image2.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 });
     image2.translate(160, 260);
+    image2.scale(0.2);
     image2.rotate(45);
 
     const mask2 = new TVG.Shape();
@@ -359,8 +359,9 @@ const canvas = new TVG.Canvas('#canvas', {
 
     //Transformed Image + Shape Mask Intersect
     const image3 = new TVG.Picture();
-    image3.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 }).size(80, 175.78);
+    image3.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 });
     image3.translate(260, 260);
+    image3.scale(0.2);
     image3.rotate(45);
 
     const mask3 = new TVG.Shape();
@@ -376,8 +377,9 @@ const canvas = new TVG.Canvas('#canvas', {
 
     //Transformed Image + Shape Mask Difference
     const image4 = new TVG.Picture();
-    image4.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 }).size(80, 175.78);
+    image4.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 });
     image4.translate(360, 260);
+    image4.scale(0.2);
     image4.rotate(45);
 
     const mask4 = new TVG.Shape();
@@ -393,8 +395,9 @@ const canvas = new TVG.Canvas('#canvas', {
 
     //Transformed Image + Shape Mask Lighten
     const image5 = new TVG.Picture();
-    image5.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 }).size(80, 175.78);
+    image5.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 });
     image5.translate(460, 260);
+    image5.scale(0.2);
     image5.rotate(45);
 
     const mask5 = new TVG.Shape();
@@ -410,8 +413,9 @@ const canvas = new TVG.Canvas('#canvas', {
 
     //Transformed Image + Shape Mask Darken
     const image6 = new TVG.Picture();
-    image6.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 }).size(80, 175.78);
+    image6.load(imageData, { type: 'raw', width: 200, height: 300, colorSpace: TVG.ColorSpace.ARGB8888 });
     image6.translate(560, 260);
+    image6.scale(0.2);
     image6.rotate(45);
 
     const mask6 = new TVG.Shape();

@@ -3,7 +3,7 @@ import { ShowcaseExample } from './types';
 export const lottieAssetResolverExample: ShowcaseExample = {
   id: 'lottie-asset-resolver',
   title: 'Lottie Asset Resolver',
-  description: 'Supply external Lottie assets (images, fonts) at runtime via a resolver callback',
+  description: 'Supply external Lottie assets (images, fonts) at runtime',
   category: 'media',
   thumbnail: '/assets/lottie-asset-resolver-thumbnail.png',
   code: `// Native example: LottieAssetResolver.cpp
@@ -40,10 +40,10 @@ function sizing(picture, counter) {
 (async () => {
   //The resolver callback is synchronous, so prefetch the assets to resolve with.
   const [logo, font, resolver1, resolver2] = await Promise.all([
-    fetch('/assets/images/logo.png').then(r => r.arrayBuffer()).then(b => new Uint8Array(b)),
-    fetch('/fonts/SentyCloud.ttf').then(r => r.arrayBuffer()).then(b => new Uint8Array(b)),
-    fetch('/assets/lottie/extensions/resolver1.json').then(r => r.text()),
-    fetch('/assets/lottie/extensions/resolver2.json').then(r => r.text()),
+    fetch('/assets/images/logo.png').then(res => res.bytes()),
+    fetch('/fonts/SentyCloud.ttf').then(res => res.bytes()),
+    fetch('/assets/lottie/extensions/resolver1.json').then(res => res.text()),
+    fetch('/assets/lottie/extensions/resolver2.json').then(res => res.text()),
   ]);
 
   const animations = [];

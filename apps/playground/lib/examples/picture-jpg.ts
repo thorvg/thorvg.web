@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const pictureJpgExample: ShowcaseExample = {
   id: 'picture-jpg',
-  title: 'JPG',
+  title: 'Picture JPG',
   description: 'Load and display JPG images',
   category: 'media',
   thumbnail: '/assets/jpg-thumbnail.png',
@@ -20,11 +20,9 @@ const canvas = new TVG.Canvas('#canvas', {
   height: 600,
 });
 
-//Load jpg file from path
+//Load jpg file
 (async () => {
-  const response = await fetch('/assets/images/test.jpg');
-  const arrayBuffer = await response.arrayBuffer();
-  const data = new Uint8Array(arrayBuffer);
+  const data = await fetch('/assets/images/test.jpg').then(res => res.bytes());
 
   for (let i = 0; i < 7; ++i) {
     const picture = new TVG.Picture();
@@ -36,7 +34,7 @@ const canvas = new TVG.Canvas('#canvas', {
     canvas.add(picture);
   }
 
-  //Open file manually
+  //Open file
   {
     const picture = new TVG.Picture();
     picture.load(data, { type: 'jpg' });

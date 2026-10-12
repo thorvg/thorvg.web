@@ -3,7 +3,7 @@ import { ShowcaseExample } from './types';
 export const textMetricsExample: ShowcaseExample = {
   id: 'text-metrics',
   title: 'Text Metrics',
-  description: 'Type text with a cursor positioned by text and glyph metrics',
+  description: 'Type text with a cursor positioned by glyph metrics',
   category: 'text',
   thumbnail: '/assets/text-metrics-thumbnail.png',
   code: `// Native example: TextMetrics.cpp
@@ -31,8 +31,8 @@ let toggle = true;         //blinking toggle
 let updated = false;
 
 (async () => {
-  const response = await fetch('/fonts/NotoSansKR.ttf');
-  TVG.Font.load('NotoSansKR', new Uint8Array(await response.arrayBuffer()), { type: 'ttf' });
+  const fontData = await fetch('/fonts/NotoSansKR.ttf').then(res => res.bytes());
+  TVG.Font.load('NotoSansKR', fontData, { type: 'ttf' });
 
   // guide line
   const border = 112.5;
