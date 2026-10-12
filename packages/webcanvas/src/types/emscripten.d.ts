@@ -61,7 +61,6 @@ export interface TvgCanvasInstance {
 export interface ThorVGCAPI {
   // Canvas functions
   _tvg_canvas_add(canvas: number, paint: number): number;
-  _tvg_canvas_remove(canvas: number, paint: number): number;
   _tvg_canvas_update(canvas: number): number;
   _tvg_canvas_draw(canvas: number, preserve: number): number;
   _tvg_canvas_sync(canvas: number): number;
@@ -82,7 +81,6 @@ export interface ThorVGCAPI {
   _tvg_paint_ref(paint: number): number;
   _tvg_paint_unref(paint: number, free: number): number;
   _tvg_paint_set_clip(paint: number, clipper: number): number;
-  _tvg_paint_get_clip(paint: number): number;
   _tvg_paint_set_blend_method(paint: number, method: number): number;
   _tvg_paint_set_mask_method(paint: number, target: number, method: number): number;
   _tvg_paint_intersects_region(
@@ -167,7 +165,6 @@ export interface ThorVGCAPI {
   ): number;
   _tvg_shape_set_paint_order(shape: number, strokeFirst: number): number;
   _tvg_shape_set_fill_rule(shape: number, rule: number): number;
-  _tvg_shape_get_fill_rule(shape: number, rulePtr: number): number;
   _tvg_shape_set_trimpath(shape: number, begin: number, end: number, simultaneous: number): number;
   _tvg_shape_reset(shape: number): number;
 
@@ -193,7 +190,6 @@ export interface ThorVGCAPI {
     rpath: string | number,
     copy: number
   ): number;
-  _tvg_picture_load(picture: number, path: string): number;
   _tvg_picture_load_raw(
     picture: number,
     data: number,
@@ -205,12 +201,10 @@ export interface ThorVGCAPI {
   _tvg_picture_set_size(picture: number, w: number, h: number): number;
   _tvg_picture_get_size(picture: number, w: number, h: number): number;
   _tvg_picture_set_origin(picture: number, x: number, y: number): number;
-  _tvg_picture_get_origin(picture: number, x: number, y: number): number;
   _tvg_picture_set_filter(picture: number, method: number): number;
   _tvg_picture_set_accessible(picture: number, accessible: number): number;
   _tvg_picture_set_asset_resolver(picture: number, resolver: number, data: number): number;
   _tvg_picture_get_paint(picture: number, id: number): number;
-  _tvg_paint_rel(paint: number): number;
 
   // Video functions
   _tvg_video_new(): number;
@@ -246,18 +240,15 @@ export interface ThorVGCAPI {
   _tvg_text_set_italic(text: number, shear: number): number;
   _tvg_text_set_outline(text: number, width: number, r: number, g: number, b: number): number;
   _tvg_text_set_gradient(text: number, gradient: number): number;
-  _tvg_text_set_stroke_gradient(text: number, gradient: number): number;
 
   // Font functions
   _tvg_font_load_data(name: number, data: number, size: number, mimetype: number, copy: number): number;
-  _tvg_font_load(name: number, path: string): number;
 
   // Animation functions
   _tvg_animation_new(): number;
   _tvg_animation_del(animation: number): number;
   _tvg_animation_get_picture(animation: number): number;
   _tvg_animation_set_frame(animation: number, frame: number): number;
-  _tvg_animation_get_frame(animation: number): number;
   _tvg_animation_get_total_frame(animation: number, framePtr: number): number;
   _tvg_animation_get_duration(animation: number, durationPtr: number): number;
   _tvg_animation_set_segment(animation: number, begin: number, end: number): number;
