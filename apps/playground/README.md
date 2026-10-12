@@ -15,7 +15,7 @@ Interactive playground for exploring ThorVG WebCanvas examples with real-time co
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - pnpm 10+
 
 ### Launch Playground

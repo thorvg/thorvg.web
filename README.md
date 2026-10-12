@@ -92,7 +92,7 @@ An animation benchmarking app for testing Lottie rendering performance, powered 
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - pnpm 10+
 - Emscripten SDK (for WASM builds)
 - Meson & Ninja (for native builds)

@@ -13,6 +13,10 @@
     "url": "https://github.com/thorvg/thorvg.web/issues"
   },
   "homepage": "https://thorvg.org",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.0.0"
+  },
   "workspaces": [
     "packages/*",
     "apps/*",
