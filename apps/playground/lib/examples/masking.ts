@@ -3,7 +3,7 @@ import { ShowcaseExample } from './types';
 export const maskingExample: ShowcaseExample = {
   id: 'masking',
   title: 'Masking',
-  description: 'Demonstrate Alpha, InvAlpha, Luma, and InvLuma masking with various paint types',
+  description: 'Demonstrate Alpha, InvAlpha, Luma, and InvLuma masking',
   category: 'advanced',
   thumbnail: '/assets/masking-thumbnail.png',
   code: `// Native example: Masking.cpp
@@ -21,13 +21,9 @@ const canvas = new TVG.Canvas('#canvas', {
 });
 
 (async () => {
-  const response = await fetch('/assets/images/rawimage_200x300.raw');
-  const arrayBuffer = await response.arrayBuffer();
-  const imageData = new Uint8Array(arrayBuffer);
+  const imageData = await fetch('/assets/images/rawimage_200x300.raw').then(res => res.bytes());
 
-  const svgResponse = await fetch('/assets/images/cartman.svg');
-  const svgString = await svgResponse.text();
-  const svgData = new TextEncoder().encode(svgString);
+  const svgData = await fetch('/assets/svg/cartman.svg').then(res => res.bytes());
 
   //Masking
   {

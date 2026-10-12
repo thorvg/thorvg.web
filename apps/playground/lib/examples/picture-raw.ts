@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const pictureRawExample: ShowcaseExample = {
   id: 'picture-raw',
-  title: 'Raw',
+  title: 'Picture Raw',
   description: 'Load and display raw ARGB8888 image data',
   category: 'media',
   thumbnail: '/assets/raw-thumbnail.png',
@@ -28,9 +28,7 @@ canvas.add(bg);
 
 //Load raw image data (200x300, ARGB8888)
 (async () => {
-  const response = await fetch('/assets/images/rawimage_200x300.raw');
-  const arrayBuffer = await response.arrayBuffer();
-  const data = new Uint8Array(arrayBuffer);
+  const data = await fetch('/assets/images/rawimage_200x300.raw').then(res => res.bytes());
 
   //Picture 1: Simple display
   const picture = new TVG.Picture();

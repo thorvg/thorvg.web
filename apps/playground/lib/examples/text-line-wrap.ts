@@ -3,7 +3,7 @@ import { ShowcaseExample } from './types';
 export const textLineWrapExample: ShowcaseExample = {
   id: 'text-line-wrap',
   title: 'Text Line Wrap',
-  description: 'Demonstrate text wrapping modes with different alignments',
+  description: 'Demonstrate text wrapping modes',
   category: 'text',
   thumbnail: '/assets/text-line-wrap-thumbnail.png',
   code: `// Native example: TextLineWrap.cpp
@@ -22,9 +22,8 @@ const canvas = new TVG.Canvas('#canvas', {
 
 (async () => {
   //Load font
-  const response = await fetch('/fonts/NotoSansKR.ttf');
-  const buffer = await response.arrayBuffer();
-  TVG.Font.load('NotoSansKR', new Uint8Array(buffer), { type: 'ttf' });
+  const data = await fetch('/fonts/NotoSansKR.ttf').then(res => res.bytes());
+  TVG.Font.load('NotoSansKR', data, { type: 'ttf' });
 
   const size = { x: 172.5, y: 90 };
   

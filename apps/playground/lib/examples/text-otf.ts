@@ -30,9 +30,8 @@ const canvas = new TVG.Canvas('#canvas', {
   //Load a necessary font data.
   const fonts = ['DMSans', 'Pretendard', 'NanumGothicCoding', 'SentyCloud'];
   await Promise.all(fonts.map(async (fontName) => {
-    const response = await fetch(\`/fonts/\${fontName}.otf\`);
-    const buffer = await response.arrayBuffer();
-    TVG.Font.load(fontName, new Uint8Array(buffer), { type: 'otf' });
+    const fontData = await fetch(\`/fonts/\${fontName}.otf\`).then(res => res.bytes());
+    TVG.Font.load(fontName, fontData, { type: 'otf' });
   }));
 
   const text1 = new TVG.Text();

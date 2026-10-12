@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const pictureWebpExample: ShowcaseExample = {
   id: 'picture-webp',
-  title: 'WebP',
+  title: 'Picture WebP',
   description: 'Load and display WebP images',
   category: 'media',
   thumbnail: '/assets/webp-thumbnail.png',
@@ -26,11 +26,9 @@ bg.appendRect(0, 0, 600, 600);    //x, y, w, h
 bg.fill(255, 255, 255);           //r, g, b
 canvas.add(bg);
 
-//Load webp file from path
+//Load webp file
 (async () => {
-  const response = await fetch('/assets/images/test.webp');
-  const arrayBuffer = await response.arrayBuffer();
-  const data = new Uint8Array(arrayBuffer);
+  const data = await fetch('/assets/images/test.webp').then(res => res.bytes());
 
   for (let i = 0; i < 7; ++i) {
     const picture = new TVG.Picture();
@@ -42,7 +40,7 @@ canvas.add(bg);
     canvas.add(picture);
   }
 
-  //Open file manually
+  //Open file
   {
     const picture = new TVG.Picture();
     picture.load(data, { type: 'webp' });

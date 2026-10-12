@@ -21,13 +21,9 @@ const canvas = new TVG.Canvas('#canvas', {
 });
 
 (async () => {
-  const imageResponse = await fetch('/assets/images/rawimage_200x300.raw');
-  const arrayBuffer = await imageResponse.arrayBuffer();
-  const imageData = new Uint8Array(arrayBuffer);
+  const imageData = await fetch('/assets/images/rawimage_200x300.raw').then(res => res.bytes());
 
-  const svgResponse = await fetch('/assets/images/tiger.svg');
-  const svgString = await svgResponse.text();
-  const svgData = new TextEncoder().encode(svgString);
+  const svgData = await fetch('/assets/svg/tiger.svg').then(res => res.bytes());
 
   function blender(name, method, x, y) {
     const text = new TVG.Text();

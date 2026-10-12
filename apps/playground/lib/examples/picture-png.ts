@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const picturePngExample: ShowcaseExample = {
   id: 'picture-png',
-  title: 'PNG',
+  title: 'Picture PNG',
   description: 'Load and display PNG images',
   category: 'media',
   thumbnail: '/assets/png-thumbnail.png',
@@ -26,11 +26,9 @@ bg.appendRect(0, 0, 600, 600);    //x, y, w, h
 bg.fill(255, 255, 255);           //r, g, b
 canvas.add(bg);
 
-//Load png file from path
+//Load png file
 (async () => {
-  const response = await fetch('/assets/images/test.png');
-  const arrayBuffer = await response.arrayBuffer();
-  const data = new Uint8Array(arrayBuffer);
+  const data = await fetch('/assets/images/test.png').then(res => res.bytes());
 
   for (let i = 0; i < 7; ++i) {
     const picture = new TVG.Picture();
@@ -42,7 +40,7 @@ canvas.add(bg);
     canvas.add(picture);
   }
 
-  //Open file manually
+  //Open file
   {
     const picture = new TVG.Picture();
     picture.load(data, { type: 'png' });
