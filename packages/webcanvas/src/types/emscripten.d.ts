@@ -72,7 +72,7 @@ export interface ThorVGCAPI {
   _tvg_paint_rotate(paint: number, angle: number): number;
   _tvg_paint_scale(paint: number, factor: number): number;
   _tvg_paint_set_opacity(paint: number, opacity: number): number;
-  _tvg_paint_get_opacity(paint: number): number;
+  _tvg_paint_get_opacity(paint: number, opacityPtr: number): number;
   _tvg_paint_set_visible(paint: number, visible: number): number;
   _tvg_paint_get_visible(paint: number): number;
   _tvg_paint_get_aabb(paint: number, aabbX: number, aabbY: number, aabbW: number, aabbH: number): number;
