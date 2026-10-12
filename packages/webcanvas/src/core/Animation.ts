@@ -7,7 +7,7 @@ import { getModule } from '../interop/module';
 import { WasmObject } from '../interop/WasmObject';
 import { animationRegistry } from '../interop/registry';
 import { Picture } from './Picture';
-import { checkResult, handleError } from '../common/errors';
+import { checkResult, handleError, ThorVGResultCode } from '../common/errors';
 
 /**
  * @category Animation
@@ -173,7 +173,9 @@ export class Animation extends WasmObject {
       // Setter
       this.#currentFrame = frameNumber;
       const result = Module._tvg_animation_set_frame(this.ptr, frameNumber);
-      checkResult(result, 'frame (set)');
+      if (result !== ThorVGResultCode.Success && result !== ThorVGResultCode.InsufficientCondition) {
+        checkResult(result, 'frame (set)');
+      }
       return this;
     }
 
