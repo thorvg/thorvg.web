@@ -20,121 +20,108 @@ const canvas = new TVG.Canvas('#canvas', {
   height: 600,
 });
 
-let shape, picture, text, tiger, marquee;
-let mx = 0, my = 0;
-const mw = 10, mh = 10;
+//Use a scene for selection effect
+let shape, picture, text, tiger;
+
+let marquee;
+let mx = 0, my = 0, mw = 10, mh = 10;
 
 (async () => {
+  //dash stroke filled shape
+  {
+    shape = new TVG.Shape();
+    shape.moveTo(127.5, 42.5);
+    shape.lineTo(190, 202.5);
+    shape.lineTo(37.5, 100);
+    shape.lineTo(217.5, 100);
+    shape.lineTo(65, 202.5);
+    shape.close();
+    shape.fill(255, 255, 255);
+    shape.fillRule(TVG.FillRule.EvenOdd);
 
-// Dash stroke filled shape (star)
-{
-  shape = new TVG.Shape();
-  shape.moveTo(127.5, 42.5);
-  shape.lineTo(190, 202.5);
-  shape.lineTo(37.5, 100);
-  shape.lineTo(217.5, 100);
-  shape.lineTo(65, 202.5);
-  shape.close();
-  shape.fill(255, 255, 255);
-  shape.fillRule(TVG.FillRule.EvenOdd);
+    shape.stroke({ width: 10, color: [0, 255, 0, 255], cap: TVG.StrokeCap.Butt, dash: [20, 20] });
 
-  shape.stroke({
-    width: 10,
-    color: [0, 255, 0, 255],
-    cap: TVG.StrokeCap.Butt,
-    dash: [20, 20]
-  });
+    shape.scale(1.25);
 
-  shape.scale(1.25);
-
-  canvas.add(shape);
-}
-
-// Clipped, rotated image
-{
-  const response = await fetch('/assets/images/test.jpg');
-  const arrayBuffer = await response.arrayBuffer();
-  const imageData = new Uint8Array(arrayBuffer);
-
-  picture = new TVG.Picture();
-  picture.load(imageData, { type: 'jpg' });
-  picture.scale(0.5);
-  picture.translate(400, 50);
-  picture.rotate(47);
-
-  const clip = new TVG.Shape();
-  clip.appendCircle(450, 175, 100, 100);
-  picture.clip(clip);
-
-  canvas.add(picture);
-
-  // Vector scene (tiger)
-  const svgResponse = await fetch('/assets/images/tiger.svg');
-  const svgString = await svgResponse.text();
-  const svgData = new TextEncoder().encode(svgString);
-
-  tiger = new TVG.Picture();
-  tiger.load(svgData, { type: 'svg' });
-  tiger.translate(350, 320);
-  tiger.scale(0.25);
-
-  canvas.add(tiger);
-
-  // Normal text
-  text = new TVG.Text();
-  text.font('default');
-  text.fontSize(50);
-  text.text('Intersect');
-  text.translate(12.5, 400);
-  text.fill(255, 255, 255);
-
-  canvas.add(text);
-
-  // Marquee
-  marquee = new TVG.Shape();
-  marquee.appendRect(0, 0, mw, mh);
-  marquee.stroke({ width: 1, color: [255, 255, 0, 255] });
-  marquee.fill(255, 255, 0, 50);
-  canvas.add(marquee);
-
-  canvas.render();
-
-  // Mouse move handler
-  const canvasElement = document.querySelector('#canvas');
-  if (canvasElement) {
-    canvasElement.addEventListener('mousemove', (e) => {
-      const rect = canvasElement.getBoundingClientRect();
-
-      // Convert CSS pixel coordinates to canvas logical coordinates
-      const scaleX = 600 / rect.width;
-      const scaleY = 600 / rect.height;
-
-      mx = (e.clientX - rect.left) * scaleX * canvas.dpr - (mw / 2);
-      my = (e.clientY - rect.top) * scaleY * canvas.dpr - (mh / 2);
-    });
+    canvas.add(shape);
   }
 
-  // Animation loop
-  function animate() {
-    // Update marquee position
-    marquee.translate(mx / canvas.dpr, my / canvas.dpr);
+  //clipped, rotated image
+  {
+    picture = new TVG.Picture();
+    const data = await fetch('/assets/images/test.jpg').then(res => res.bytes());
+    picture.load(data, { type: 'jpg' });
 
-    // Reset all opacities
+    picture.translate(400, 50);
+    picture.rotate(47);
+    picture.scale(0.5);
+
+    const clip = new TVG.Shape();
+    clip.appendCircle(450, 175, 100, 100);
+    picture.clip(clip);
+
+    canvas.add(picture);
+  }
+
+  //normal text
+  {
+    const data = await fetch('/fonts/PublicSans-Regular.ttf').then(res => res.bytes());
+    TVG.Font.load('PublicSans-Regular', data, { type: 'ttf' });
+    text = new TVG.Text();
+    text.font('PublicSans-Regular');
+    text.fontSize(50);
+    text.text('Intersect?!');
+    text.translate(12.5, 400);
+    text.fill(255, 255, 255);
+
+    canvas.add(text);
+  }
+
+  //vector scene
+  {
+    tiger = new TVG.Picture();
+    const data = await fetch('/assets/svg/tiger.svg').then(res => res.text());
+    tiger.load(data, { type: 'svg' });
+    tiger.translate(350, 320);
+    tiger.scale(0.25);
+
+    canvas.add(tiger);
+  }
+
+  //marquee
+  {
+    marquee = new TVG.Shape();
+    marquee.appendRect(mx, my, mw, mh);
+    marquee.stroke({ width: 1, color: [255, 255, 0, 255] });
+    marquee.fill(255, 255, 0, 50);
+    canvas.add(marquee);
+  }
+
+  const canvasElement = document.querySelector('#canvas');
+  canvasElement.addEventListener('mousemove', (e) => {
+    const rect = canvasElement.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (600 / rect.width);
+    const y = (e.clientY - rect.top) * (600 / rect.height);
+
+    //center align
+    mx = Math.trunc(x - mw * 0.5);
+    my = Math.trunc(y - mh * 0.5);
+  });
+
+  function animate() {
+    marquee.translate(mx, my);
+
+    //reset
     shape.opacity(255);
     picture.opacity(255);
     text.opacity(255);
     tiger.opacity(255);
 
-    // Check intersections and set opacity
-    if (shape.intersects(mx, my, mw, mh)) {
-      shape.opacity(128);
-    } else if (picture.intersects(mx, my, mw, mh)) {
-      picture.opacity(128);
-    } else if (text.intersects(mx, my, mw, mh)) {
-      text.opacity(128);
-    } else if (tiger.intersects(mx, my, mw, mh)) {
-      tiger.opacity(128);
-    }
+    const dpr = canvas.dpr;
+    if (shape.intersects(mx * dpr, my * dpr, mw * dpr, mh * dpr, true)) shape.opacity(127);
+    else if (picture.intersects(mx * dpr, my * dpr, mw * dpr, mh * dpr, true)) picture.opacity(127);
+    else if (text.intersects(mx * dpr, my * dpr, mw * dpr, mh * dpr, true)) text.opacity(127);
+    else if (tiger.intersects(mx * dpr, my * dpr, mw * dpr, mh * dpr, true)) tiger.opacity(127);
 
     canvas.update();
     canvas.render();
@@ -143,7 +130,6 @@ const mw = 10, mh = 10;
   }
 
   animate();
-}
 })();
 `
 };

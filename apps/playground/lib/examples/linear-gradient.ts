@@ -1,9 +1,9 @@
 import { ShowcaseExample } from './types';
 
-export const gradientsExample: ShowcaseExample = {
-  id: 'gradients',
+export const linearGradientExample: ShowcaseExample = {
+  id: 'linear-gradient',
   title: 'Linear Gradient',
-  description: 'Apply linear and radial gradients to shapes',
+  description: 'Apply linear gradients to shapes',
   category: 'basic',
   thumbnail: '/assets/gradient-thumbnail.png',
   code: `// Native example: LinearGradient.cpp

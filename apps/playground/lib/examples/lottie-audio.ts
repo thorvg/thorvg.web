@@ -29,8 +29,8 @@ const canvas = new TVG.Canvas('#canvas', { width: W, height: H });
 
   //lottie animation
   const animation = new TVG.LottieAnimation();
-  const response = await fetch('/assets/lottie/extensions/audio.json');
-  animation.load(await response.text());
+  const data = await fetch('/assets/lottie/extensions/audio.json').then(res => res.text());
+  animation.load(data);
 
   const picture = animation.picture;
   const { width, height } = picture.size();

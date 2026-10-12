@@ -58,7 +58,9 @@ const startTime = Date.now();
 
 function animate() {
   const elapsed = Date.now() - startTime;
-  const progress = ((elapsed % 2000) / 2000);
+  const duration = 2000; // play time 2 sec.
+  let progress = (elapsed % duration) / duration;
+  if (Math.floor(elapsed / duration) % 2 !== 0) progress = 1 - progress;
 
   //Reset Shape
   solid.reset();

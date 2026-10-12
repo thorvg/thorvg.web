@@ -27,9 +27,7 @@ let fill, tint, trintone;
 
 //blur scene
 (async () => {
-  const response = await fetch('/assets/images/tiger.svg');
-  const svgString = await response.text();
-  const svgData = new TextEncoder().encode(svgString);
+  const svgData = await fetch('/assets/svg/tiger.svg').then(res => res.bytes());
 
   for (let i = 0; i < 3; i++) {
     blur[i] = new TVG.Scene();
@@ -89,7 +87,8 @@ let fill, tint, trintone;
   function animate() {
     const elapsed = Date.now() - startTime;
     const duration = 2500; // 2.5 seconds
-    const progress = ((elapsed % duration) / duration);
+    let progress = (elapsed % duration) / duration;
+    if (Math.floor(elapsed / duration) % 2 !== 0) progress = 1 - progress;
 
     //Apply GaussianBlur post effect (sigma, direction, border option, quality)
     for (let i = 0; i < 3; i++) {

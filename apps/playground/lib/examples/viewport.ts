@@ -20,50 +20,44 @@ const canvas = new TVG.Canvas('#canvas', {
   height: 1024,
 });
 
-const viewportSize = 300;
-const startTime = Date.now();
+const VPORT_SIZE = 300;
 
-//set viewport before canvas become dirty.
-canvas.viewport(0, 0, viewportSize, viewportSize);
+(async () => {
+  //set viewport before canvas become dirty.
+  canvas.viewport(0, 0, VPORT_SIZE, VPORT_SIZE);
 
-const scene = new TVG.Scene();
+  const mask = new TVG.Shape();
+  mask.appendCircle(1024 / 2, 1024 / 2, 1024 / 2, 1024 / 2);
+  mask.fill(255, 255, 255);
+  //Use the opacity for a half-translucent mask.
+  mask.opacity(125);
 
-for (let i = 0; i < 5; i++) {
-  for (let j = 0; j < 5; j++) {
-    const rect = new TVG.Shape();
-    rect.appendRect(i * 220, j * 220, 200, 200, { rx: 20, ry: 20 });
+  const data = await fetch('/assets/svg/tiger.svg').then(res => res.text());
 
-    const gradient = new TVG.LinearGradient(
-      i * 220, j * 220,
-      i * 220 + 200, j * 220 + 200
-    );
-    gradient.setStops(
-      [0, [i * 50, j * 50, 255, 255]],
-      [1, [255 - i * 50, 255 - j * 50, 100, 255]]
-    );
+  const picture = new TVG.Picture();
+  picture.load(data, { type: 'svg' });
+  picture.size(1024, 1024);
+  picture.mask(mask, TVG.MaskMethod.Alpha);
+  canvas.add(picture);
 
-    rect.fill(gradient);
-    scene.add(rect);
-  }
-}
-
-canvas.add(scene);
-canvas.render();
-
-function animate() {
-  const elapsed = Date.now() - startTime;
-  const progress = (elapsed % 2000) / 2000;
-
-  const x = (1024 - viewportSize) * progress;
-  const y = (1024 - viewportSize) * progress;
-
-  canvas.viewport(x, y, viewportSize, viewportSize);
-  canvas.update();
   canvas.render();
 
-  requestAnimationFrame(animate);
-}
+  const startTime = Date.now();
 
-animate();
+  function animate() {
+    const elapsed = Date.now() - startTime;
+    const duration = 2000; // play time 2 sec.
+    let progress = (elapsed % duration) / duration;
+    if (Math.floor(elapsed / duration) % 2 !== 0) progress = 1 - progress;
+
+    canvas.viewport((1024 - VPORT_SIZE) * progress, (1024 - VPORT_SIZE) * progress, VPORT_SIZE, VPORT_SIZE);
+    canvas.update();
+    canvas.render();
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+})();
 `
 };
