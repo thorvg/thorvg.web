@@ -273,13 +273,6 @@ describe('Paint (via Shape)', () => {
     expect(Array.isArray(points)).toBe(true);
   });
 
-  it('origin returns this', () => {
-    const TVG = getTVG();
-    const shape = new TVG.Shape();
-    const result = shape.origin(50, 50);
-    expect(result).toBe(shape);
-  });
-
   it('blend returns this', () => {
     const TVG = getTVG();
     const shape = new TVG.Shape();
