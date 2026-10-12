@@ -73,6 +73,13 @@ describe('Picture', () => {
     expect(result).toBe(picture);
   });
 
+  it('origin returns this', () => {
+    const TVG = getTVG();
+    const picture = new TVG.Picture();
+    const result = picture.origin(0.5, 0.5);
+    expect(result).toBe(picture);
+  });
+
   it('inherits Paint methods', () => {
     const TVG = getTVG();
     const picture = new TVG.Picture();

@@ -128,35 +128,6 @@ export abstract class Paint extends WasmObject {
   }
 
   /**
-   * Set the origin point for transformations (rotation, scale).
-   * The origin is specified as normalized coordinates (0.0 to 1.0).
-   * - (0, 0) = top-left corner
-   * - (0.5, 0.5) = center (default)
-   * - (1, 1) = bottom-right corner
-   *
-   * @param x - Normalized X coordinate (0.0 to 1.0)
-   * @param y - Normalized Y coordinate (0.0 to 1.0)
-   * @returns The Paint instance for method chaining
-   *
-   * @example
-   * ```typescript
-   * const picture = new TVG.Picture();
-   * picture.load(svgData, { type: 'svg' });
-   *
-   * // Set origin to center for rotation around center
-   * picture.origin(0.5, 0.5);
-   * picture.translate(300, 300);
-   * picture.rotate(45);
-   * ```
-   */
-  public origin(x: number, y: number): this {
-    const Module = getModule();
-    const result = Module._tvg_picture_set_origin(this.ptr, x, y);
-    checkResult(result, 'origin');
-    return this;
-  }
-
-  /**
    * Set the blending method for this paint.
    * Blending determines how this paint is combined with the content below it.
    *
