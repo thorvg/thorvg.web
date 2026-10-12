@@ -103,7 +103,7 @@ describe('Animation', () => {
 
   it('segment returns this', () => {
     const anim = createLoadedAnimation();
-    const result = anim.segment(0);
+    const result = anim.segment(0, 10);
     expect(result).toBe(anim);
   });
 

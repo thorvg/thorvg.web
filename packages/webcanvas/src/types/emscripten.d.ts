@@ -260,7 +260,7 @@ export interface ThorVGCAPI {
   _tvg_animation_get_frame(animation: number): number;
   _tvg_animation_get_total_frame(animation: number, framePtr: number): number;
   _tvg_animation_get_duration(animation: number, durationPtr: number): number;
-  _tvg_animation_set_segment(animation: number, segment: number): number;
+  _tvg_animation_set_segment(animation: number, begin: number, end: number): number;
 
   // LottieAnimation functions
   _tvg_lottie_animation_new(): number;

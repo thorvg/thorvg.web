@@ -1099,14 +1099,15 @@ animation.frame(frameNumber);
 
 ### animation.segment()
 
-Sets animation segment/marker (for partial playback).
+Sets the playback segment (for partial playback).
 
 ```typescript
-animation.segment(segmentIndex);
+animation.segment(begin, end);
 ```
 
 **Parameters:**
-- `segmentIndex: number` - Segment index (0-based)
+- `begin: number` - Segment begin frame
+- `end: number` - Segment end frame
 
 **Returns:** `this`
 
@@ -1268,7 +1269,7 @@ const animation = new TVG.LottieAnimation();
 
 ### animation.segment()
 
-Sets the playback segment, by marker name or by segment index.
+Sets the playback segment, by marker name or by frame range.
 
 ```typescript
 // By marker name
@@ -1277,13 +1278,14 @@ animation.segment('walk-cycle');
 // Reset to the full timeline
 animation.segment(null);
 
-// By segment index (inherited from Animation)
-animation.segment(0);
+// By frame range (inherited from Animation)
+animation.segment(0, 60);
 ```
 
 **Parameters:**
 - `marker: string | null` - Marker name, or `null` to reset the segment
-- `segment: number` - Segment index (0-based)
+- `begin: number` - Segment begin frame
+- `end: number` - Segment end frame
 
 **Returns:** `this`
 
