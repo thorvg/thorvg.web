@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const duplicateExample: ShowcaseExample = {
   id: 'duplicate',
-  title: 'Duplication',
+  title: 'Duplicate',
   description: 'Duplicate shapes, scenes, pictures, and objects',
   category: 'advanced',
   thumbnail: '/assets/duplicate-objects-thumbnail.png',
@@ -83,7 +83,7 @@ const canvas = new TVG.Canvas('#canvas', {
 
   //Duplicate Picture - svg
   {
-    const svgResponse = await fetch('/assets/images/2684.svg');
+    const svgResponse = await fetch('/assets/svg/2684.svg');
     const svgData = await svgResponse.text();
   
     const picture1 = new TVG.Picture();

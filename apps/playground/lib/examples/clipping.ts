@@ -21,7 +21,7 @@ const canvas = new TVG.Canvas('#canvas', {
 });
 
 (async () => {
-  const svgResponse = await fetch('/assets/images/cartman.svg');
+  const svgResponse = await fetch('/assets/svg/cartman.svg');
   const svgString = await svgResponse.text();
   const svgData = new TextEncoder().encode(svgString);
 

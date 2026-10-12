@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const pictureWebpExample: ShowcaseExample = {
   id: 'picture-webp',
-  title: 'WebP',
+  title: 'Picture WebP',
   description: 'Load and display WebP images',
   category: 'media',
   thumbnail: '/assets/webp-thumbnail.png',

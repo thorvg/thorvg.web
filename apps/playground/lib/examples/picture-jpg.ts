@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const pictureJpgExample: ShowcaseExample = {
   id: 'picture-jpg',
-  title: 'JPG',
+  title: 'Picture JPG',
   description: 'Load and display JPG images',
   category: 'media',
   thumbnail: '/assets/jpg-thumbnail.png',

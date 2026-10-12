@@ -23,7 +23,7 @@ const canvas = new TVG.Canvas('#canvas', {
 // This example demonstrates two approaches to accessing internal SVG scene nodes.
 (async () => {
   // SVG Picture
-  const svgResponse = await fetch('/assets/images/favorite_on.svg');
+  const svgResponse = await fetch('/assets/svg/favorite_on.svg');
   const svgString = await svgResponse.text();
 
   const picture = new TVG.Picture();

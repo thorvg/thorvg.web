@@ -3,7 +3,7 @@ import { ShowcaseExample } from './types';
 export const videoExample: ShowcaseExample = {
   id: 'video',
   title: 'Video',
-  description: 'Load and play a video with keyboard playback controls',
+  description: 'Load and play a video assets',
   category: 'media',
   thumbnail: '/assets/video-thumbnail.png',
   requiresUserGesture: true,
