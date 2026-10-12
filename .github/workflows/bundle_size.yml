@@ -29,20 +29,18 @@ jobs:
         ref: [main, pr]
 
     steps:
-      - name: Checkout main
+      - name: Checkout code
         uses: actions/checkout@v7
         with:
+          ref: ${{ matrix.ref == 'pr' && format('refs/pull/{0}/merge', github.event.pull_request.number) || '' }}
           submodules: recursive
+          allow-unsafe-pr-checkout: true # fork PRs require reviewers (environment: external)
 
-      - name: Checkout PR merge commit
+      - name: Measure main
         if: matrix.ref == 'pr'
-        env:
-          PR: ${{ github.event.pull_request.number }}
         run: |
-          git fetch --depth=1 origin "refs/pull/$PR/merge"
-          git checkout FETCH_HEAD
-          git checkout "$GITHUB_SHA" -- .github/scripts/bundle-size.mjs
-          git submodule update --init --recursive
+          git fetch --depth=1 origin "$GITHUB_SHA"
+          git checkout FETCH_HEAD -- .github/scripts/bundle-size.mjs
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
