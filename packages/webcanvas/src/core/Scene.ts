@@ -122,7 +122,7 @@ export class Scene extends Paint {
    *
    * @param sigma - Blur intensity (> 0)
    * @param direction - Blur direction: 0 (both), 1 (horizontal), 2 (vertical)
-   * @param border - Border mode: 0 (duplicate), 1 (wrap)
+   * @param border - Reserved for border handling. Currently ignored.
    * @param quality - Blur quality (0-100)
    * @returns The Scene instance for method chaining
    *
