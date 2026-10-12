@@ -77,14 +77,12 @@ export interface AnimationSegment {
  * animation.load(lottieData);
  *
  * // Play specific segment
- * animation.segment({ start: 0, end: 60 });
+ * animation.segment(0, 60);
  *
  * // Listen to frame updates
- * animation.onFrame((frame) => {
+ * animation.play((frame) => {
  *   console.log(`Current frame: ${frame}`);
  * });
- *
- * animation.play();
  * ```
  *
  * @see {@link LottieAnimation} for Lottie advanced features
@@ -184,12 +182,13 @@ export class Animation extends WasmObject {
   }
 
   /**
-   * Set animation segment/marker (for partial playback)
-   * @param segment - Segment index (0-based)
+   * Set the playback segment (for partial playback)
+   * @param begin - Segment begin frame
+   * @param end - Segment end frame
    */
-  public segment(segment: number): this {
+  public segment(begin: number, end: number): this {
     const Module = getModule();
-    const result = Module._tvg_animation_set_segment(this.ptr, segment);
+    const result = Module._tvg_animation_set_segment(this.ptr, begin, end);
     checkResult(result, 'segment');
     return this;
   }

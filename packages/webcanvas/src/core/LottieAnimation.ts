@@ -173,13 +173,14 @@ export class LottieAnimation extends Animation {
    */
   public override segment(marker: string | null): this;
   /**
-   * Set animation segment/marker (for partial playback)
-   * @param segment - Segment index (0-based)
+   * Set the playback segment (for partial playback)
+   * @param begin - Segment begin frame
+   * @param end - Segment end frame
    */
-  public override segment(segment: number): this;
-  public override segment(arg: string | null | number): this {
+  public override segment(begin: number, end: number): this;
+  public override segment(arg: string | null | number, end?: number): this {
     if (typeof arg === 'number') {
-      return super.segment(arg);
+      return super.segment(arg, end as number);
     }
 
     const Module = getModule();
