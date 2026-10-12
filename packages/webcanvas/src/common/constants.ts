@@ -181,7 +181,7 @@ export enum EngineOption {
 export enum SceneEffect {
   /** Reset all previously applied scene effects, restoring the scene to its original state */
   ClearAll = 0,
-  /** Apply a blur effect with a Gaussian filter. Params: sigma (>0), direction (both/horizontal/vertical), border (duplicate/wrap), quality (0-100) */
+  /** Apply a blur effect with a Gaussian filter. Params: sigma (>0), direction (both/horizontal/vertical), border (unused), quality (0-100) */
   GaussianBlur = 1,
   /** Apply a drop shadow effect with Gaussian blur. Params: color RGB (0-255), opacity (0-255), angle (0-360), distance, blur sigma (>0), quality (0-100) */
   DropShadow = 2,
