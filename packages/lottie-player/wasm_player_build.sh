@@ -13,22 +13,22 @@ cd ../../thorvg
 rm -rf build_wasm_player
 
 if [ "$BACKEND" = "wg" ]; then
-  sed "s|EMSDK:|$EMSDK|g" ../wasm/wasm32_wg.txt > /tmp/.wasm_cross.txt
+  sed "s|EMSDK:|$EMSDK|g; s|-sENVIRONMENT=web,worker|-sENVIRONMENT=web|g" ../wasm/wasm32_wg.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, jpg, png, webp, ttf" -Dextra="lottie_exp" -Dthreads=false -Dfile="false" -Dpartial=false -Dengines="wg" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 elif [ "$BACKEND" = "sw" ]; then
-  sed "s|EMSDK:|$EMSDK|g" ../wasm/wasm32_sw.txt > /tmp/.wasm_cross.txt
+  sed "s|EMSDK:|$EMSDK|g; s|-sENVIRONMENT=web,worker|-sENVIRONMENT=web|g" ../wasm/wasm32_sw.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, jpg, png, webp, ttf" -Dextra="lottie_exp" -Dthreads=false -Dpartial=false -Dfile="false" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 elif [ "$BACKEND" = "gl" ]; then
-  sed "s|EMSDK:|$EMSDK|g" ../wasm/wasm32_gl.txt > /tmp/.wasm_cross.txt
+  sed "s|EMSDK:|$EMSDK|g; s|-sENVIRONMENT=web,worker|-sENVIRONMENT=web|g" ../wasm/wasm32_gl.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, jpg, png, webp, ttf" -Dextra="lottie_exp" -Dthreads=false -Dpartial=false -Dengines="gl" -Dfile="false" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 elif [ "$BACKEND" = "sw-lite" ]; then
-  sed "s|EMSDK:|$EMSDK|g" ../wasm/wasm32_sw.txt > /tmp/.wasm_cross.txt
+  sed "s|EMSDK:|$EMSDK|g; s|-sENVIRONMENT=web,worker|-sENVIRONMENT=web|g" ../wasm/wasm32_sw.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, png" -Dextra="" -Dthreads=false -Dpartial=false -Dfile="false" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 elif [ "$BACKEND" = "gl-lite" ]; then
-  sed "s|EMSDK:|$EMSDK|g" ../wasm/wasm32_gl.txt > /tmp/.wasm_cross.txt
+  sed "s|EMSDK:|$EMSDK|g; s|-sENVIRONMENT=web,worker|-sENVIRONMENT=web|g" ../wasm/wasm32_gl.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, png" -Dextra="" -Dthreads=false -Dpartial=false -Dengines="gl" -Dfile="false" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 elif [ "$BACKEND" = "wg-lite" ]; then
-  sed "s|EMSDK:|$EMSDK|g" ../wasm/wasm32_wg.txt > /tmp/.wasm_cross.txt
+  sed "s|EMSDK:|$EMSDK|g; s|-sENVIRONMENT=web,worker|-sENVIRONMENT=web|g" ../wasm/wasm32_wg.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, png" -Dextra="" -Dthreads=false -Dpartial=false -Dengines="wg" -Dfile="false" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 elif [ "$BACKEND" = "pthread" ]; then
   # Use prebuilt OpenMP runtime
@@ -44,7 +44,7 @@ elif [ "$BACKEND" = "pthread" ]; then
   sed "s|'--bind'|'--bind', '-pthread', '-fopenmp', '-L${LIBOMP_DIR}/lib', '-lomp', '-sPTHREAD_POOL_SIZE=${POOL_SIZE}', '-sPTHREAD_POOL_SIZE_STRICT=0', '-sINITIAL_MEMORY=134217728'|g" > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="lottie, jpg, png, webp, ttf" -Dextra="lottie_exp, openmp" -Dthreads=true -Dpartial=false -Dfile="false" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 else
-  sed "s|EMSDK:|$EMSDK|g; s|'-sFILESYSTEM=0', ||g; s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts'|g" ../wasm/wasm32.txt > /tmp/.wasm_cross.txt
+  sed "s|EMSDK:|$EMSDK|g; s|-sENVIRONMENT=web,worker|-sENVIRONMENT=web|g; s|'-sFILESYSTEM=0', ||g; s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts'|g" ../wasm/wasm32.txt > /tmp/.wasm_cross.txt
   meson setup -Db_lto=true -Ddefault_library=static -Dstatic=true -Dloaders="all" -Dsavers="all" -Dextra="lottie_exp" -Dthreads=false -Dpartial=false -Dengines="all" --cross-file /tmp/.wasm_cross.txt build_wasm_player
 fi
 
