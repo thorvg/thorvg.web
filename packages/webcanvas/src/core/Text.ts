@@ -27,6 +27,58 @@ export interface TextOutline {
 }
 
 /**
+ * Describes the font metrics of a text object.
+ *
+ * Provides the basic vertical layout metrics used for text rendering,
+ * such as ascent, descent, and line spacing (linegap).
+ *
+ * @see {@link Text.metrics}
+ * @category Text
+ *
+ * @beta
+ */
+export interface TextMetrics {
+  /** Distance from the baseline to the top of the highest glyph (usually positive). */
+  ascent: number;
+  /** Distance from the baseline to the bottom of the lowest glyph (usually negative, as in TTF). */
+  descent: number;
+  /** Additional spacing recommended between lines (leading). */
+  linegap: number;
+  /** The total vertical advance between lines of text: ascent - descent + linegap (i.e., ascent + |descent| + linegap when descent is negative). */
+  advance: number;
+}
+
+/**
+ * Describes the layout metrics of a glyph.
+ *
+ * Provides the basic layout metrics used for positioning an individual glyph,
+ * including its advance along the baseline direction, bearing relative to the
+ * inline axis origin, and its bounding box in local glyph space.
+ *
+ * The advance value represents the distance the pen position moves along the
+ * baseline (inline direction), regardless of whether the text is laid out
+ * horizontally or vertically.
+ *
+ * The bounding box is defined in the glyph's local coordinate space and is
+ * independent of any layout direction or transformation.
+ *
+ * @see {@link Text.metrics}
+ * @category Text
+ *
+ * @beta
+ */
+export interface GlyphMetrics {
+  /** The advance distance along the baseline (inline) direction. */
+  advance: number;
+  /** The bearing from the origin to the glyph's visible bound along the inline-start direction. */
+  bearing: number;
+  /** The minimum point of the glyph bounding box in local space. */
+  min: { x: number; y: number };
+  /** The maximum point of the glyph bounding box in local space. */
+  max: { x: number; y: number };
+}
+
+/**
  * Text rendering class with font support
  * @category Text
  *
@@ -221,6 +273,95 @@ export class Text extends Paint {
   public lines(): number {
     const Module = getModule();
     return Module._tvg_text_line_count(this.ptr);
+  }
+
+  /**
+   * Retrieves the layout metrics of the text object.
+   *
+   * Returns the font layout values of this text object,
+   * such as ascent, descent, linegap, and line advance.
+   *
+   * The returned values reflect the font size applied to the text object,
+   * but do not include any transformations (e.g., scale, rotation, or translation).
+   *
+   * @returns The font metrics of this text object
+   *
+   * @example
+   * ```typescript
+   * text.font('poppins').fontSize(16);
+   * const { ascent, descent, advance } = text.metrics();
+   * ```
+   *
+   * @see {@link TextMetrics}
+   *
+   * @beta
+   */
+  public metrics(): TextMetrics;
+  /**
+   * Retrieves the layout metrics of a glyph in the text object.
+   *
+   * Returns the horizontal layout values of the specified glyph,
+   * such as advance, left-side bearing, and bounding box.
+   *
+   * The returned values reflect the font size applied to the text object,
+   * but do not include any transformations (e.g., scale, rotation, or translation).
+   *
+   * The input must be a single character.
+   *
+   * @param char - A single character
+   * @returns The layout metrics of the glyph
+   *
+   * @example
+   * ```typescript
+   * // Measure the width of a string
+   * let width = 0;
+   * for (const char of 'Hello') {
+   *   width += text.metrics(char).advance;
+   * }
+   * ```
+   *
+   * @see {@link GlyphMetrics}
+   * @remarks Currently, ThorVG only supports horizontal text layout.
+   *
+   * @beta
+   */
+  public metrics(char: string): GlyphMetrics;
+  public metrics(char?: string): TextMetrics | GlyphMetrics {
+    const Module = getModule();
+
+    if (char === undefined) {
+      const ptr = Module._malloc(16);
+      Module.HEAPU8.fill(0, ptr, ptr + 16);
+      try {
+        const result = Module._tvg_text_get_text_metrics(this.ptr, ptr);
+        checkResult(result, 'metrics');
+        const view = new Float32Array(Module.HEAPF32.buffer, ptr, 4);
+        return { ascent: view[0]!, descent: view[1]!, linegap: view[2]!, advance: view[3]! };
+      } finally {
+        Module._free(ptr);
+      }
+    }
+
+    // utf8 character followed by a null terminator, then the 24 bytes metrics (4 bytes aligned)
+    const charBytes = new TextEncoder().encode(char);
+    const offset = (charBytes.length + 4) & ~3;
+    const ptr = Module._malloc(offset + 24);
+    Module.HEAPU8.fill(0, ptr, ptr + offset + 24);
+    Module.HEAPU8.set(charBytes, ptr);
+
+    try {
+      const result = Module._tvg_text_get_glyph_metrics(this.ptr, ptr, ptr + offset, 0);
+      checkResult(result, 'metrics');
+      const view = new Float32Array(Module.HEAPF32.buffer, ptr + offset, 6);
+      return {
+        advance: view[0]!,
+        bearing: view[1]!,
+        min: { x: view[2]!, y: view[3]! },
+        max: { x: view[4]!, y: view[5]! },
+      };
+    } finally {
+      Module._free(ptr);
+    }
   }
 
   /**
