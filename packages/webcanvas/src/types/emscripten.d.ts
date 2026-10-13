@@ -236,6 +236,8 @@ export interface ThorVGCAPI {
   _tvg_text_layout(text: number, width: number, height: number): number;
   _tvg_text_wrap_mode(text: number, mode: number): number;
   _tvg_text_line_count(text: number): number;
+  _tvg_text_get_text_metrics(text: number, metrics: number): number;
+  _tvg_text_get_glyph_metrics(text: number, ch: number, metrics: number, next: number): number;
   _tvg_text_spacing(text: number, letter: number, line: number): number;
   _tvg_text_set_italic(text: number, shear: number): number;
   _tvg_text_set_outline(text: number, width: number, r: number, g: number, b: number): number;
