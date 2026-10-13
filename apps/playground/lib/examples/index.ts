@@ -23,6 +23,7 @@ import { fontProviderExample } from './font-provider';
 import { textAnimationExample } from './text-animation';
 import { textLayoutExample } from './text-layout';
 import { textLineWrapExample } from './text-line-wrap';
+import { textMetricsExample } from './text-metrics';
 import { pictureSvgExample } from './picture-svg';
 import { pictureJpgExample } from './picture-jpg';
 import { picturePngExample } from './picture-png';
@@ -104,6 +105,7 @@ export const showcaseExamples: ShowcaseExample[] = [
   textAnimationExample,
   textLayoutExample,
   textLineWrapExample,
+  textMetricsExample,
   textOtfExample,
   textTtfExample,
   // Media (alphabetically sorted by title)
