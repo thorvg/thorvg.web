@@ -3,7 +3,6 @@
 import { use, useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import wasmUrl from '../node_modules/@thorvg/webcanvas/dist/thorvg.wasm';
-import { initProfiler } from '../lib/profiler';
 import { loadThorVGModule, getWasmUrl, type ThorVGVersion } from '../lib/thorvg-loader';
 import { type Renderer, RENDERER_LABELS, COUNT_OPTIONS, MIN_SIZE, MAX_SIZE } from '../lib/constants';
 import { type AnimEntry, encodeSeed, decodeSeed, buildAnimList, randomAnimList } from '../lib/seed';
@@ -16,9 +15,11 @@ import {
   BENCH_MEASURE_MS,
   computeBenchResult,
 } from '../lib/benchmark';
+import { type MemorySample, profiler } from '../lib/profiler';
 import { VersionSelector } from '../components/VersionSelector';
 import { BenchmarkModal } from '../components/BenchmarkModal';
 import { DragOverlay } from '../components/DragOverlay';
+import { ProfilerPanel } from '../components/ProfilerPanel';
 
 export default function Home({ searchParams }: {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -50,7 +51,7 @@ export default function Home({ searchParams }: {
 
   const benchPhaseRef = useRef<'idle' | 'warmup' | 'measuring'>('idle');
   const benchTimingsRef = useRef<number[]>([]);
-  const benchMemRef = useRef<number[]>([]);
+  const benchMemRef = useRef<MemorySample[]>([]);
   const benchTimeoutA = useRef<ReturnType<typeof setTimeout> | null>(null);
   const benchTimeoutB = useRef<ReturnType<typeof setTimeout> | null>(null);
   const benchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -106,7 +107,6 @@ export default function Home({ searchParams }: {
     });
 
     setAnimList(list);
-    initProfiler();
   }, []);
 
   // Grid layout
@@ -168,6 +168,7 @@ export default function Home({ searchParams }: {
         try { anim.dispose(); } catch { /* */ }
       }
       animsRef.current = [];
+      profiler.detach();
       if (tvgCanvasRef.current) { try { tvgCanvasRef.current.destroy(); } catch { /* */ } tvgCanvasRef.current = null; }
       if (tvgRef.current) { try { tvgRef.current.term(); } catch { /* */ } tvgRef.current = null; }
 
@@ -184,6 +185,9 @@ export default function Home({ searchParams }: {
       canvasEl.height = canvasH;
 
       try {
+        await profiler.install(renderer);
+        if (cancelled) return;
+
         const v = getParam('v', 'local') as ThorVGVersion;
         const ThorVGModule = await loadThorVGModule(v);
         if (cancelled) return;
@@ -209,6 +213,7 @@ export default function Home({ searchParams }: {
           engineOption: TVG.EngineOption?.None ?? 0,
         });
         tvgCanvasRef.current = tvgCanvas;
+        profiler.attach(canvasEl);
 
         setLoadingStatus('Loading…');
         const fetchResults = await Promise.allSettled(
@@ -301,11 +306,11 @@ export default function Home({ searchParams }: {
           }
 
           tvgCanvas.update().render();
+          profiler.frame();
 
           if (benchPhaseRef.current === 'measuring' && dt > 0) {
             benchTimingsRef.current.push(dt);
-            const mem = (self as any).performance?.memory;
-            if (mem) benchMemRef.current.push(mem.usedJSHeapSize / 1048576);
+            benchMemRef.current.push(profiler.memory());
           }
 
           rafRef.current = requestAnimationFrame(tick);
@@ -328,6 +333,7 @@ export default function Home({ searchParams }: {
         try { anim.dispose(); } catch { /* */ }
       }
       animsRef.current = [];
+      profiler.detach();
       if (tvgCanvasRef.current) { try { tvgCanvasRef.current.destroy(); } catch { /* */ } tvgCanvasRef.current = null; }
       if (tvgRef.current) { try { tvgRef.current.term(); } catch { /* */ } tvgRef.current = null; }
     };
@@ -428,6 +434,7 @@ export default function Home({ searchParams }: {
     }, 100);
 
     benchTimeoutA.current = setTimeout(() => {
+      profiler.resetPeak();
       benchPhaseRef.current = 'measuring';
       setBenchPhase('measuring');
     }, warmupMs);
@@ -567,6 +574,8 @@ export default function Home({ searchParams }: {
           </div>
         </div>
       </div>
+
+      <ProfilerPanel />
 
       {showBench && (
         <BenchmarkModal
