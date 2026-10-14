@@ -23,9 +23,8 @@ var Stats = function () {
 		mode = id;
 	}
 
-	var beginTime = ( performance || Date ).now(), prevTime = beginTime, frames = 0;
+	var prevTime = ( performance || Date ).now(), frames = 0;
 	var fpsPanel = addPanel( new Stats.Panel( 'FPS', '#0ff', '#002' ) );
-	var msPanel = addPanel( new Stats.Panel( 'MS', '#0f0', '#020' ) );
 
 	if ( self.performance && self.performance.memory ) {
 		var memPanel = addPanel( new Stats.Panel( 'MB', '#f08', '#201' ) );
@@ -42,14 +41,9 @@ var Stats = function () {
 		addPanel: addPanel,
 		showPanel: showPanel,
 
-		begin: function () {
-			beginTime = ( performance || Date ).now();
-		},
-
 		end: function () {
 			frames++;
 			var time = ( performance || Date ).now();
-			msPanel.update( time - beginTime, 200 );
 
 			if ( time >= prevTime + 1000 ) {
 				var cur = ( frames * 1000 ) / ( time - prevTime );
@@ -70,10 +64,6 @@ var Stats = function () {
 			}
 
 			return time;
-		},
-
-		update: function () {
-			beginTime = this.end();
 		},
 
 		domElement: container,
@@ -152,28 +142,17 @@ export function initProfiler() {
 	statsFPS.dom.setAttribute( 'data-profiler', 'true' );
 	document.body.appendChild( statsFPS.dom );
 
-	var statsMS = new Stats();
-	statsMS.showPanel( 1 );
-	statsMS.dom.style.cssText = 'position:fixed;bottom:0;left:80px;cursor:pointer;opacity:0.9;z-index:10000';
-	statsMS.dom.setAttribute( 'data-profiler', 'true' );
-	document.body.appendChild( statsMS.dom );
-
 	var statsMB;
 	if ( self.performance && self.performance.memory ) {
 		statsMB = new Stats();
-		statsMB.showPanel( 2 );
-		statsMB.dom.style.cssText = 'position:fixed;bottom:0;left:160px;cursor:pointer;opacity:0.9;z-index:10000';
+		statsMB.showPanel( 1 );
+		statsMB.dom.style.cssText = 'position:fixed;bottom:0;left:80px;cursor:pointer;opacity:0.9;z-index:10000';
 		statsMB.dom.setAttribute( 'data-profiler', 'true' );
 		document.body.appendChild( statsMB.dom );
 	}
 
 	function animate() {
-		statsFPS.begin();
-		statsMS.begin();
-		if ( statsMB ) statsMB.begin();
-
 		statsFPS.end();
-		statsMS.end();
 		if ( statsMB ) statsMB.end();
 
 		requestAnimationFrame( animate );
