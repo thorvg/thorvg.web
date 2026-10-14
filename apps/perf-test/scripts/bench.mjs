@@ -204,8 +204,14 @@ async function main() {
         `  max:  ${r.frameTime.max.toFixed(2)}`,
         `  p95:  ${r.frameTime.p95.toFixed(2)}`,
       ];
-      if (r.memory) {
-        lines.push('', 'Memory (MB)', `  avg:  ${r.memory.avg.toFixed(1)}`, `  peak: ${r.memory.peak.toFixed(1)}`);
+      const memory = r.memory;
+      const row = (label, stat) => stat && `  ${label.padEnd(11)}${stat.avg.toFixed(1).padStart(8)}${stat.peak.toFixed(1).padStart(8)}`;
+      lines.push('', 'Memory (MB)       avg    peak', ...[row('JS', memory.js), row('WASM', memory.wasm), row('GPU', memory.gpu)].filter(Boolean));
+      if (memory.gpu) {
+        lines.push(
+          '', 'GPU breakdown (MB, end of run)', ...Object.entries(memory.gpu.breakdown).map(([category, mb]) => `  ${category}: ${mb.toFixed(1)}`),
+          '', 'GPU resources (end of run)', ...Object.entries(memory.gpu.resources).map(([type, count]) => `  ${type}: ${count}`),
+        );
       }
       lines.push('─'.repeat(40), '');
       console.log(lines.join('\n'));

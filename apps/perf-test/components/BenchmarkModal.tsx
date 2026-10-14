@@ -1,7 +1,7 @@
 'use client';
 
 import { type Renderer, RENDERER_LABELS } from '../lib/constants';
-import { type BenchPhase, type BenchmarkResult, formatReport } from '../lib/benchmark';
+import { type BenchPhase, type BenchmarkResult, type MemoryStat, formatReport } from '../lib/benchmark';
 import { getParam } from '../lib/url-params';
 
 interface Props {
@@ -88,12 +88,29 @@ export function BenchmarkModal({ renderer, count, size, phase, progress, result,
                 <StatCell label="P95 (ms)" value={result.frameTime.p95.toFixed(2)} size="lg" color="text-yellow-400" />
                 <StatCell label="Min (ms)" value={result.frameTime.min.toFixed(2)} color="text-green-400" />
                 <StatCell label="Max (ms)" value={result.frameTime.max.toFixed(2)} color="text-red-400" />
-                {result.memory && (
-                  <>
-                    <StatCell label="Mem avg (MB)" value={result.memory.avg.toFixed(1)} />
-                    <StatCell label="Mem peak (MB)" value={result.memory.peak.toFixed(1)} color="text-orange-400" />
-                  </>
-                )}
+                <div className="bg-white/5 rounded-lg p-3 col-span-2 text-xs">
+                  <div className="grid grid-cols-[1fr_auto_auto] gap-x-6 gap-y-1.5 tabular-nums">
+                    <span className="text-gray-500">Memory (MB)</span>
+                    <span className="text-gray-500 text-right">avg</span>
+                    <span className="text-gray-500 text-right">peak</span>
+                    <MemoryRow label="JS" stat={result.memory.js} color="text-gray-200" />
+                    <MemoryRow label="WASM" stat={result.memory.wasm} color="text-sky-400" />
+                    <MemoryRow label="GPU" stat={result.memory.gpu} color="text-amber-400" />
+                  </div>
+                  {result.memory.gpu && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <div className="text-gray-500 mb-2">GPU resources (end of run)</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {Object.entries(result.memory.gpu.breakdown).map(([category, mb]) => (
+                          <span key={category} className="px-2 py-0.5 bg-white/5 rounded text-gray-300">{category} {mb.toFixed(1)} MB</span>
+                        ))}
+                        {Object.entries(result.memory.gpu.resources).map(([type, count]) => (
+                          <span key={type} className="px-2 py-0.5 bg-amber-400/10 rounded text-amber-400">{type} {count}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               <p className="text-xs text-gray-600 text-center">
                 {result.totalFrames} frames · {result.measureMs / 1000}s window
@@ -126,5 +143,16 @@ function StatCell({ label, value, size = 'sm', color = '' }: { label: string; va
       <div className="text-xs text-gray-500 mb-1">{label}</div>
       <div className={`${size === 'lg' ? 'text-lg' : 'text-sm'} font-bold ${color}`}>{value}</div>
     </div>
+  );
+}
+
+function MemoryRow({ label, stat, color }: { label: string; stat: MemoryStat | null; color: string }) {
+  if (!stat) return null;
+  return (
+    <>
+      <span className="text-gray-400">{label}</span>
+      <span className={`text-right font-semibold ${color}`}>{stat.avg.toFixed(1)}</span>
+      <span className={`text-right font-semibold ${color}`}>{stat.peak.toFixed(1)}</span>
+    </>
   );
 }

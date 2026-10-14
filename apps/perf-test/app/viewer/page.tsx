@@ -69,12 +69,6 @@ function ViewerContent() {
   const [chartData, setChartData] = useState<FrameSample[]>([]);
   const [perfStats, setPerfStats] = useState<PerfStats>({ fps: 0, avg: 0, min: 0, max: 0, total: 0 });
 
-  useEffect(() => {
-    const statsEls = document.querySelectorAll<HTMLElement>('[data-profiler="true"]');
-    statsEls.forEach((el) => { el.style.display = 'none'; });
-    return () => { statsEls.forEach((el) => { el.style.display = ''; }); };
-  }, []);
-
   const [pendingRenderer, setPendingRenderer] = useState<Renderer>(rendererParam);
   const [pendingWidth, setPendingWidth] = useState(widthParam);
   const [pendingHeight, setPendingHeight] = useState(heightParam);
