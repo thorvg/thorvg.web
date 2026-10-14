@@ -163,7 +163,7 @@ function ViewerContent() {
       }
       animRef.current = anim;
 
-      setTotalFrames(info?.totalFrames ?? 0);
+      setTotalFrames(Math.round(info?.totalFrames ?? 0));
       setAnimFps(Math.round(info?.fps ?? 0));
       setIsLoading(false);
 
