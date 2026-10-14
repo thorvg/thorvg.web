@@ -30,8 +30,6 @@ var Stats = function () {
 		var memPanel = addPanel( new Stats.Panel( 'MB', '#f08', '#201' ) );
 	}
 
-	var acc = 0;
-
 	showPanel( 0 );
 
 	return {
@@ -46,14 +44,7 @@ var Stats = function () {
 			var time = ( performance || Date ).now();
 
 			if ( time >= prevTime + 1000 ) {
-				var cur = ( frames * 1000 ) / ( time - prevTime );
-				if ( acc === 0 ) {
-					acc += cur;
-				} else {
-					acc = ( acc + cur ) / 2;
-				}
-
-				fpsPanel.update( acc, 100 );
+				fpsPanel.update( ( frames * 1000 ) / ( time - prevTime ), 100 );
 				prevTime = time;
 				frames = 0;
 
@@ -74,7 +65,7 @@ var Stats = function () {
 
 Stats.Panel = function ( name, fg, bg ) {
 
-	var acc = 0, round = Math.round;
+	var acc = 0, count = 0, round = Math.round;
 	var PR = round( window.devicePixelRatio || 1 );
 
 	var WIDTH = 80 * PR, HEIGHT = 48 * PR,
@@ -108,17 +99,14 @@ Stats.Panel = function ( name, fg, bg ) {
 
 		update: function ( value, maxValue ) {
 
-			if ( acc === 0 ) {
-				acc = value;
-			} else {
-				acc = ( acc + value ) / 2;
-			}
+			acc += value;
+			count ++;
 
 			context.fillStyle = bg;
 			context.globalAlpha = 1;
 			context.fillRect( 0, 0, WIDTH, GRAPH_Y );
 			context.fillStyle = fg;
-			context.fillText( round( value ) + ' ' + name + ' (' + round( acc ) + ')', TEXT_X, TEXT_Y );
+			context.fillText( round( value ) + ' ' + name + ' (' + round( acc / count ) + ')', TEXT_X, TEXT_Y );
 
 			context.drawImage( canvas, GRAPH_X + PR, GRAPH_Y, GRAPH_WIDTH - PR, GRAPH_HEIGHT, GRAPH_X, GRAPH_Y, GRAPH_WIDTH - PR, GRAPH_HEIGHT );
 
