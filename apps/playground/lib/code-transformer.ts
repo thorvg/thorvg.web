@@ -48,10 +48,12 @@ export function transformCodeForExecution(code: string): string {
  */
 export function extractInitConfig(code: string): {
   renderer?: string;
+  threads?: number;
   canvasSize?: { width: number; height: number };
 } {
   const config: {
     renderer?: string;
+    threads?: number;
     canvasSize?: { width: number; height: number };
   } = {};
 
@@ -59,6 +61,11 @@ export function extractInitConfig(code: string): {
   const rendererMatch = code.match(/renderer:\s*['"](\w+)['"]/);
   if (rendererMatch) {
     config.renderer = rendererMatch[1];
+  }
+
+  const threadsMatch = code.match(/threads\s*:\s*(\d+)/);
+  if (threadsMatch) {
+    config.threads = Number(threadsMatch[1]);
   }
 
   // Extract canvas dimensions

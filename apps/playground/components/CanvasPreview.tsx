@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Canvas as TVGCanvas, ThorVGNamespace } from '@thorvg/webcanvas';
 import wasmUrl from "../node_modules/@thorvg/webcanvas/dist/thorvg.wasm";
+import threadWasmUrl from "../node_modules/@thorvg/webcanvas/dist/thread/thorvg.wasm";
+import threadGlueUrl from "../node_modules/@thorvg/webcanvas/dist/thread/webcanvas.esm.js";
 import { CodeSandbox } from '@/lib/code-sandbox';
+import { normalizeThreads, readThreadsFromUrl } from '@/lib/thread-preset';
 import type { PlaygroundWindow } from '@/types/window';
 
 interface CanvasPreviewProps {
@@ -41,11 +44,13 @@ export default function CanvasPreview({
   const [TVG, setTVG] = useState<ThorVGNamespace | null>(null);
   const [canvas, setCanvas] = useState<TVGCanvas | null>(null);
   const [currentRenderer, setCurrentRenderer] = useState<'sw' | 'gl' | 'wg'>('gl');
+  const [currentThreads, setCurrentThreads] = useState(0);
   const [isZoomDragging, setIsZoomDragging] = useState(false);
   const [awaitingGesture, setAwaitingGesture] = useState(false);
   const [pendingRequests, setPendingRequests] = useState(0);
   const sandboxRef = useRef<CodeSandbox | null>(null);
   const originalDPRRef = useRef<number | null>(null);
+  const lastCodeRef = useRef<string | null>(null);
 
   const endRun = () => {
     sandboxRef.current?.dispose();
@@ -54,18 +59,28 @@ export default function CanvasPreview({
   };
 
   // Initialize ThorVG with specified renderer
-  const initThorVG = async (renderer: 'sw' | 'gl' | 'wg') => {
+  const initThorVG = async (renderer: 'sw' | 'gl' | 'wg', threads: number) => {
     try {
-      setStatus({ message: `Initializing ThorVG with ${renderer.toUpperCase()} renderer...`, type: 'info' });
+      const presetLabel = threads > 0 ? ` (${threads} threads)` : '';
+      setStatus({
+        message: `Initializing ThorVG with ${renderer.toUpperCase()} renderer${presetLabel}...`,
+        type: 'info',
+      });
 
       if (originalDPRRef.current === null) {
         originalDPRRef.current = window.devicePixelRatio;
       }
 
-      const { init, ThorVGError, ThorVGResultCode } = await import('@thorvg/webcanvas');
+      const { init, ThorVGError, ThorVGResultCode } =
+        threads > 0
+          ? ((await import(
+              /* webpackIgnore: true */ threadGlueUrl
+            )) as typeof import('@thorvg/webcanvas/thread'))
+          : await import('@thorvg/webcanvas');
       const TVGInstance = await init({
         renderer,
-        locateFile: () => wasmUrl,
+        threads,
+        locateFile: () => threads > 0 ? threadWasmUrl : wasmUrl,
         onError: (error, context) => {
           console.log(error.message);
           console.log('Error operation:', context.operation);
@@ -112,6 +127,7 @@ export default function CanvasPreview({
       setTVG(TVGInstance);
       setCanvas(canvasInstance);
       setCurrentRenderer(renderer);
+      setCurrentThreads(threads);
       setStatus({ message: 'Ready', type: 'success' });
     } catch (error) {
       console.error('Error initializing ThorVG:', error);
@@ -128,7 +144,9 @@ export default function CanvasPreview({
     const urlRenderer = params.get('renderer');
     const renderer = (urlRenderer && ['sw', 'gl', 'wg'].includes(urlRenderer)) ? urlRenderer : 'gl';
 
-    initThorVG(renderer as 'sw' | 'gl' | 'wg');
+    const threads = readThreadsFromUrl(window.location.search);
+
+    initThorVG(renderer as 'sw' | 'gl' | 'wg', threads);
 
     return () => {
       endRun();
@@ -149,17 +167,30 @@ export default function CanvasPreview({
   useEffect(() => {
     if (!code || !TVG || !canvas) return;
 
-    endRun();
+    const codeChanged = lastCodeRef.current !== null && lastCodeRef.current !== code;
+    lastCodeRef.current = code;
 
-    // The example needs audio, which is blocked until the page gets a gesture
-    // (a plain refresh has none). Wait for a click instead of stalling.
-    if (requiresUserGesture && !canStartAudio()) {
-      setAwaitingGesture(true);
-      setStatus({ message: 'Click the canvas to start playback', type: 'info' });
+    const start = () => {
+      endRun();
+
+      // The example needs audio, which is blocked until the page gets a gesture
+      // (a plain refresh has none). Wait for a click instead of stalling.
+      if (requiresUserGesture && !canStartAudio()) {
+        setAwaitingGesture(true);
+        setStatus({ message: 'Click the canvas to start playback', type: 'info' });
+        return;
+      }
+
+      runCode();
+    };
+
+    if (!codeChanged) {
+      start();
       return;
     }
 
-    runCode();
+    const settleTimer = setTimeout(start, 500);
+    return () => clearTimeout(settleTimer);
   }, [code, TVG, canvas]);
 
   // Re-run code when zoom changes to apply new DPR (only when not dragging)
@@ -183,20 +214,18 @@ export default function CanvasPreview({
     const { extractInitConfig } = await import('@/lib/code-transformer');
     const config = extractInitConfig(code);
     const detectedRenderer = (config.renderer as 'sw' | 'gl' | 'wg') || 'gl';
+    const detectedThreads = normalizeThreads(config.threads);
 
-    // If renderer changed, update URL and reload
-    if (detectedRenderer !== currentRenderer && ['sw', 'gl', 'wg'].includes(detectedRenderer)) {
-      setStatus({
-        message: `Switching to ${detectedRenderer.toUpperCase()} renderer...`,
-        type: 'info'
-      });
-
+    // If renderer or threads changed, update URL and reload
+    const rendererChanged =
+      detectedRenderer !== currentRenderer && ['sw', 'gl', 'wg'].includes(detectedRenderer);
+    const threadsChanged = detectedThreads !== currentThreads;
+    if (rendererChanged || threadsChanged) {
       const url = new URL(window.location.href);
       url.searchParams.set('renderer', detectedRenderer);
+      url.searchParams.set('threads', String(detectedThreads));
 
-      setTimeout(() => {
-        window.location.href = url.toString();
-      }, 300);
+      window.location.href = url.toString();
       return;
     }
 
