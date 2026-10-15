@@ -11,6 +11,7 @@ export const lottieExpressionsExample: ShowcaseExample = {
 import { init } from '@thorvg/webcanvas';
 
 const TVG = await init({
+  threads:4,
   renderer: 'gl',
   locateFile: (path) => '/webcanvas/' + path.split('/').pop()
 });

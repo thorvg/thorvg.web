@@ -15,6 +15,15 @@ const nextConfig = {
       type: 'asset/resource',
     });
 
+    // Copy the thread build as an asset to enable worker spawning.
+    config.module.rules.push({
+      test: /dist[\\/]thread[\\/]webcanvas\.esm\.js$/,
+      type: 'asset/resource',
+      generator: {
+        filename: 'static/media/webcanvas-thread-[contenthash:8]/[name][ext]',
+      },
+    });
+
     // Allow .d.ts files to be imported as raw strings
     config.module.rules.push({
       test: /\.d\.ts$/,
@@ -27,7 +36,24 @@ const nextConfig = {
       resolve: { symlinks: false },
     });
 
+    // Keep the workspace symlink path so the raw webcanvas.esm.js import in CanvasPreview is not transpiled
+    config.module.rules.push({
+      test: /components\/CanvasPreview\.tsx$/,
+      resolve: { symlinks: false },
+    });
+
     return config;
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+          { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
+        ],
+      },
+    ];
   },
 };
 

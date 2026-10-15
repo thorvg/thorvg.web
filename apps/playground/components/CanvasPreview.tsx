@@ -2,13 +2,32 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Canvas as TVGCanvas, ThorVGNamespace } from '@thorvg/webcanvas';
+import type * as WebCanvasThread from '@thorvg/webcanvas/thread';
 import wasmUrl from "../node_modules/@thorvg/webcanvas/dist/thorvg.wasm";
+import threadWasmUrl from "../node_modules/@thorvg/webcanvas/dist/thread/thorvg.wasm";
+import threadBuildUrl from "../node_modules/@thorvg/webcanvas/dist/thread/webcanvas.esm.js";
 import { CodeSandbox } from '@/lib/code-sandbox';
+import {
+  isRenderer,
+  normalizeThreads,
+  readRendererFromUrl,
+  readThreadsFromUrl,
+  type Renderer,
+} from '@/lib/url-params';
 import type { PlaygroundWindow } from '@/types/window';
 
 interface CanvasPreviewProps {
   code: string;
   requiresUserGesture?: boolean;
+}
+
+// Init config declared in the editor code, parsed by detectConfigFromCode
+interface DetectedConfig {
+  renderer: Renderer;
+  threads: number;
+  threadsIncomplete: boolean;
+  threadsIgnored: boolean;
+  declaredThreads: number;
 }
 
 const canStartAudio = (): boolean => {
@@ -40,12 +59,14 @@ export default function CanvasPreview({
   const [showGrid, setShowGrid] = useState(false);
   const [TVG, setTVG] = useState<ThorVGNamespace | null>(null);
   const [canvas, setCanvas] = useState<TVGCanvas | null>(null);
-  const [currentRenderer, setCurrentRenderer] = useState<'sw' | 'gl' | 'wg'>('gl');
+  const [currentRenderer, setCurrentRenderer] = useState<Renderer>('gl');
+  const [currentThreads, setCurrentThreads] = useState(0);
   const [isZoomDragging, setIsZoomDragging] = useState(false);
   const [awaitingGesture, setAwaitingGesture] = useState(false);
   const [pendingRequests, setPendingRequests] = useState(0);
   const sandboxRef = useRef<CodeSandbox | null>(null);
   const originalDPRRef = useRef<number | null>(null);
+  const lastCodeRef = useRef<string | null>(null);
 
   const endRun = () => {
     sandboxRef.current?.dispose();
@@ -54,18 +75,28 @@ export default function CanvasPreview({
   };
 
   // Initialize ThorVG with specified renderer
-  const initThorVG = async (renderer: 'sw' | 'gl' | 'wg') => {
+  const initThorVG = async (renderer: Renderer, threads: number) => {
     try {
-      setStatus({ message: `Initializing ThorVG with ${renderer.toUpperCase()} renderer...`, type: 'info' });
+      const presetLabel = threads > 0 ? ` (${threads} threads)` : '';
+      setStatus({
+        message: `Initializing ThorVG with ${renderer.toUpperCase()} renderer${presetLabel}...`,
+        type: 'info',
+      });
 
       if (originalDPRRef.current === null) {
         originalDPRRef.current = window.devicePixelRatio;
       }
 
-      const { init, ThorVGError, ThorVGResultCode } = await import('@thorvg/webcanvas');
+      const { init, ThorVGError, ThorVGResultCode } =
+        threads > 0
+          ? ((await import(
+              /* webpackIgnore: true */ threadBuildUrl
+            )) as typeof WebCanvasThread)
+          : await import('@thorvg/webcanvas');
       const TVGInstance = await init({
         renderer,
-        locateFile: () => wasmUrl,
+        threads,
+        locateFile: () => threads > 0 ? threadWasmUrl : wasmUrl,
         onError: (error, context) => {
           console.log(error.message);
           console.log('Error operation:', context.operation);
@@ -112,6 +143,7 @@ export default function CanvasPreview({
       setTVG(TVGInstance);
       setCanvas(canvasInstance);
       setCurrentRenderer(renderer);
+      setCurrentThreads(threads);
       setStatus({ message: 'Ready', type: 'success' });
     } catch (error) {
       console.error('Error initializing ThorVG:', error);
@@ -124,11 +156,10 @@ export default function CanvasPreview({
 
   // Initialize ThorVG once on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlRenderer = params.get('renderer');
-    const renderer = (urlRenderer && ['sw', 'gl', 'wg'].includes(urlRenderer)) ? urlRenderer : 'gl';
+    const renderer = readRendererFromUrl(window.location.search);
+    const threads = readThreadsFromUrl(window.location.search);
 
-    initThorVG(renderer as 'sw' | 'gl' | 'wg');
+    initThorVG(renderer, threads);
 
     return () => {
       endRun();
@@ -149,17 +180,30 @@ export default function CanvasPreview({
   useEffect(() => {
     if (!code || !TVG || !canvas) return;
 
-    endRun();
+    const codeChanged = lastCodeRef.current !== null && lastCodeRef.current !== code;
+    lastCodeRef.current = code;
 
-    // The example needs audio, which is blocked until the page gets a gesture
-    // (a plain refresh has none). Wait for a click instead of stalling.
-    if (requiresUserGesture && !canStartAudio()) {
-      setAwaitingGesture(true);
-      setStatus({ message: 'Click the canvas to start playback', type: 'info' });
+    const start = () => {
+      endRun();
+
+      // The example needs audio, which is blocked until the page gets a gesture
+      // (a plain refresh has none). Wait for a click instead of stalling.
+      if (requiresUserGesture && !canStartAudio()) {
+        setAwaitingGesture(true);
+        setStatus({ message: 'Click the canvas to start playback', type: 'info' });
+        return;
+      }
+
+      runCode();
+    };
+
+    if (!codeChanged) {
+      start();
       return;
     }
 
-    runCode();
+    const settleTimer = setTimeout(start, 500);
+    return () => clearTimeout(settleTimer);
   }, [code, TVG, canvas]);
 
   // Re-run code when zoom changes to apply new DPR (only when not dragging)
@@ -171,6 +215,68 @@ export default function CanvasPreview({
     }
   }, [zoom, isZoomDragging]);
 
+  // Detect the renderer and threads declared in the code
+  const detectConfigFromCode = async (): Promise<DetectedConfig> => {
+    const { extractInitConfig, importsFromThreadEntry } = await import('@/lib/code-transformer');
+    const config = extractInitConfig(code);
+    const importsThread = importsFromThreadEntry(code);
+    const declaredThreads = normalizeThreads(config.threads);
+
+    return {
+      renderer: (config.renderer as Renderer) || 'gl',
+      threads: importsThread ? declaredThreads : 0,
+      threadsIncomplete: /threads\s*:(?!\s*\d)/.test(code),
+      threadsIgnored: !importsThread && declaredThreads > 0,
+      declaredThreads,
+    };
+  };
+
+  // If renderer or threads changed, update URL and reload
+  const reloadIfConfigChanged = (detected: DetectedConfig): boolean => {
+    const rendererChanged =
+      detected.renderer !== currentRenderer && isRenderer(detected.renderer);
+    const threadsChanged = !detected.threadsIncomplete && detected.threads !== currentThreads;
+    if (!rendererChanged && !threadsChanged) return false;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('renderer', detected.renderer);
+    url.searchParams.set('threads', String(detected.threads));
+
+    window.location.href = url.toString();
+    return true;
+  };
+
+  // Update DPR based on the current zoom level before running code
+  const applyZoomDPR = () => {
+    if (originalDPRRef.current === null) return;
+
+    const newDPR = originalDPRRef.current * (zoom / 100);
+    try {
+      Object.defineProperty(window, 'devicePixelRatio', {
+        get: () => newDPR,
+        configurable: true,
+      });
+    } catch (e) {
+      console.warn('Failed to override devicePixelRatio:', e);
+    }
+  };
+
+  const buildSandboxContext = (sandbox: CodeSandbox, tvg: ThorVGNamespace, target: TVGCanvas) => ({
+    TVG: sandbox.proxyNamespace(tvg),
+    canvas: target,
+    requestAnimationFrame: sandbox.requestAnimationFrame,
+    cancelAnimationFrame: sandbox.cancelAnimationFrame,
+    setTimeout: sandbox.setTimeout,
+    clearTimeout: sandbox.clearTimeout,
+    setInterval: sandbox.setInterval,
+    clearInterval: sandbox.clearInterval,
+    window: sandbox.proxyEventTarget(window),
+    document: sandbox.proxyEventTarget(document),
+    performance,
+    console,
+    fetch: sandbox.fetch,
+  });
+
   const runCode = async () => {
     if (!canvas || !TVG) {
       setStatus({ message: 'ThorVG not initialized yet', type: 'error' });
@@ -179,39 +285,10 @@ export default function CanvasPreview({
 
     setAwaitingGesture(false);
 
-    // Detect renderer from code
-    const { extractInitConfig } = await import('@/lib/code-transformer');
-    const config = extractInitConfig(code);
-    const detectedRenderer = (config.renderer as 'sw' | 'gl' | 'wg') || 'gl';
+    const detected = await detectConfigFromCode();
+    if (reloadIfConfigChanged(detected)) return;
 
-    // If renderer changed, update URL and reload
-    if (detectedRenderer !== currentRenderer && ['sw', 'gl', 'wg'].includes(detectedRenderer)) {
-      setStatus({
-        message: `Switching to ${detectedRenderer.toUpperCase()} renderer...`,
-        type: 'info'
-      });
-
-      const url = new URL(window.location.href);
-      url.searchParams.set('renderer', detectedRenderer);
-
-      setTimeout(() => {
-        window.location.href = url.toString();
-      }, 300);
-      return;
-    }
-
-    // Update DPR based on current zoom level before running code
-    if (originalDPRRef.current !== null) {
-      const newDPR = originalDPRRef.current * (zoom / 100);
-      try {
-        Object.defineProperty(window, 'devicePixelRatio', {
-          get: () => newDPR,
-          configurable: true,
-        });
-      } catch (e) {
-        console.warn('Failed to override devicePixelRatio:', e);
-      }
-    }
+    applyZoomDPR();
 
     endRun();
     const sandbox = new CodeSandbox({ onPendingChange: setPendingRequests });
@@ -229,26 +306,19 @@ export default function CanvasPreview({
       const { transformCodeForExecution } = await import('@/lib/code-transformer');
       const executableCode = transformCodeForExecution(code);
 
-      const context = {
-        TVG: sandbox.proxyNamespace(TVG),
-        canvas,
-        requestAnimationFrame: sandbox.requestAnimationFrame,
-        cancelAnimationFrame: sandbox.cancelAnimationFrame,
-        setTimeout: sandbox.setTimeout,
-        clearTimeout: sandbox.clearTimeout,
-        setInterval: sandbox.setInterval,
-        clearInterval: sandbox.clearInterval,
-        window: sandbox.proxyEventTarget(window),
-        document: sandbox.proxyEventTarget(document),
-        performance,
-        console,
-        fetch: sandbox.fetch,
-      };
+      const context = buildSandboxContext(sandbox, TVG, canvas);
       const executeFunction = new Function(...Object.keys(context), executableCode);
       await executeFunction(...Object.values(context));
 
       if (sandbox.disposed) return;
-      setStatus({ message: 'Code executed successfully', type: 'success' });
+      setStatus(
+        detected.threadsIgnored
+          ? {
+              message: `threads: ${detected.declaredThreads} ignored — import from '@thorvg/webcanvas/thread' to enable multi-threading`,
+              type: 'info',
+            }
+          : { message: 'Code executed successfully', type: 'success' }
+      );
     } catch (error) {
       if (sandbox.disposed) return;
       console.error('Error executing code:', error);
