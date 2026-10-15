@@ -8,9 +8,10 @@ export const lottieExpressionsExample: ShowcaseExample = {
   thumbnail: '/assets/lottie-expressions-thumbnail.png',
   code: `// Native example: LottieExpressions.cpp
 
-import { init } from '@thorvg/webcanvas';
+import { init } from '@thorvg/webcanvas/thread';
 
 const TVG = await init({
+  threads:4,
   renderer: 'gl',
   locateFile: (path) => '/webcanvas/' + path.split('/').pop()
 });

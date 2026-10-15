@@ -6,6 +6,8 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import CanvasPreview from '@/components/CanvasPreview';
 import { getExampleById, showcaseExamples } from '@/lib/examples';
+import { normalizeThreads } from '@/lib/thread-preset';
+import { enableThreadsInCode, disableThreadsInCode } from '@/lib/code-transformer';
 
 const CodeEditor = dynamic(() => import('@/components/CodeEditor'), {
   ssr: false,
@@ -36,15 +38,26 @@ export default function ShowcasePageClient({ id }: { id: string }) {
     const urlRenderer = params.get('renderer');
     setRendererParam(urlRenderer);
 
+    let nextCode = foundExample.code;
+
     if (urlRenderer && ['sw', 'gl', 'wg'].includes(urlRenderer)) {
-      const modifiedCode = foundExample.code.replace(
+      nextCode = nextCode.replace(
         /renderer:\s*['"](?:sw|gl|wg)['"]/,
         `renderer: '${urlRenderer}'`
       );
-      setCode(modifiedCode);
-    } else {
-      setCode(foundExample.code);
     }
+
+    const rawThreads = params.get('threads');
+    const urlThreads = normalizeThreads(rawThreads);
+
+    if (rawThreads !== null) {
+      nextCode =
+        urlThreads > 0
+          ? enableThreadsInCode(nextCode, urlThreads)
+          : disableThreadsInCode(nextCode);
+    }
+
+    setCode(nextCode);
   }, [id, router]);
 
   if (!example) {
