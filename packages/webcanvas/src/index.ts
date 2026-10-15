@@ -244,9 +244,19 @@ async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
   globalThis.__THORVG_THREAD_COUNT = threads;
 
   // Load WASM module
-  Module = await ThorVGModuleFactory({
-    locateFile: locateFile ?? ((path: string) => path.endsWith('.wasm') ? THORVG_WASM_URL : path),
-  }) as unknown as ThorVGModule;
+  const defaultLocateFile = (path: string) => path.endsWith('.wasm') ? THORVG_WASM_URL : path;
+
+  try {
+    Module = await ThorVGModuleFactory({
+      locateFile: locateFile ?? defaultLocateFile,
+    }) as unknown as ThorVGModule;
+  } catch (error) {
+    if (!locateFile) throw error;
+    console.warn('Failed to load WASM from locateFile, falling back to CDN', error);
+    Module = await ThorVGModuleFactory({
+      locateFile: defaultLocateFile,
+    }) as unknown as ThorVGModule;
+  }
 
   // Make Module globally available for class constructors
   globalThis.__ThorVGModule = Module;

@@ -361,14 +361,20 @@ export class BaseLottiePlayer extends LitElement {
 
     if (!wasmModule) {
       _moduleRequested = true;
-      wasmModule = await Module({
-        locateFile: (path: string, prefix: string) => {
-          if (path.endsWith('.wasm')) {
-            return this.wasmUrl || _wasmUrl;
-          }
-          return prefix + path;
+      const locateFile = (wasmUrl: string) => (path: string, prefix: string) => {
+        if (path.endsWith('.wasm')) {
+          return wasmUrl;
         }
-      });
+        return prefix + path;
+      };
+
+      try {
+        wasmModule = await Module({ locateFile: locateFile(this.wasmUrl || _wasmUrl) });
+      } catch (error) {
+        if (!this.wasmUrl) throw error;
+        console.warn('Failed to load WASM from wasmUrl, falling back to CDN', error);
+        wasmModule = await Module({ locateFile: locateFile(_wasmUrl) });
+      }
     }
 
     if (!this.#timer) {
