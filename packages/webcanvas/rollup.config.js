@@ -17,9 +17,21 @@ const commonOutput = {
   sourcemap: true,
 };
 
-const sharedPlugins = (aliasEntries, wasmPath, extraPlugins = []) => [
-  ...(aliasEntries.length ? [alias({ entries: aliasEntries })] : []),
-  ...extraPlugins,
+const threadWorker = () => {
+  return {
+    name: 'thorvg-worker-blob',
+    transform(code, id) {
+      if (!id.endsWith(path.join('dist', 'thread', 'thorvg.js'))) return null;
+      if (!code.includes('mainScriptUrlOrBlob')) this.error(`mainScriptUrlOrBlob not found in ${id}.`);
+      return {
+        code: code.replace(/import\.meta\.url/g, 'location.href'), // replace for bundler compatibility
+        map: null,
+      };
+    },
+  };
+}
+
+const sharedPlugins = ({ thread = false } = {}) => [
   webWorkerLoader({
     targetPlatform: 'browser',
     inline: true,
@@ -31,7 +43,8 @@ const sharedPlugins = (aliasEntries, wasmPath, extraPlugins = []) => [
     values: {
       '__THORVG_VERSION__': process.env.THORVG_VERSION,
       '__PACKAGE_VERSION__': pkg.version,
-      '__WASM_PATH__': wasmPath,
+      '__WASM_PATH__': thread ? 'dist/thread/thorvg.wasm' : 'dist/thorvg.wasm',
+      '__THREAD_SUPPORT__': String(thread),
     },
   }),
   commonjs({
@@ -94,14 +107,11 @@ const createWebCanvasConfig = () => {
         ...commonOutput,
       },
     ],
-    plugins: sharedPlugins([], 'dist/thorvg.wasm'),
+    plugins: sharedPlugins(),
   };
 }
 
 const createThreadConfig = () => {
-  const workerPattern = /new Worker\(new URL\("thorvg\.js",import\.meta\.url\),(\{[^}]*\})\)/;
-  const bundleFile = path.basename(pkg.exports['./thread'].import);
-
   return {
     input: "./src/index.ts",
     treeshake: {
@@ -116,22 +126,11 @@ const createThreadConfig = () => {
         ...commonOutput,
       },
     ],
-    plugins: sharedPlugins([
-      { find: '../dist/thorvg.js', replacement: path.resolve('./dist/thread/thorvg.js') },
-    ], 'dist/thread/thorvg.wasm', [{
-      name: 'thorvg-worker-url',
-      transform(code, id) {
-        if (!id.endsWith(path.join('dist', 'thread', 'thorvg.js'))) return null;
-        if (!workerPattern.test(code)) this.error(`pthread worker not found in ${id}.`);
-        return {
-          code: code.replace(workerPattern, (_, options) =>
-            `(new URL(import.meta.url).origin===location.origin` +
-            `?new Worker(new URL("./${bundleFile}",import.meta.url),${options})` +
-            `:new Worker(URL.createObjectURL(new Blob(['import"'+import.meta.url+'"'],{type:"text/javascript"})),${options}))`),
-          map: null,
-        };
-      },
-    }]),
+    plugins: [
+      alias({ entries: [{ find: '../dist/thorvg.js', replacement: path.resolve('./dist/thread/thorvg.js') }] }),
+      threadWorker(),
+      ...sharedPlugins({ thread: true }),
+    ],
   };
 }
 
