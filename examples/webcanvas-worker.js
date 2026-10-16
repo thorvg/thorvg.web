@@ -4,7 +4,10 @@ import ThorVG from 'https://unpkg.com/@thorvg/webcanvas@latest/dist/webcanvas.es
 self.onmessage = async ({ data }) => {
   const { canvas, renderer, width, height } = data;
 
-  const TVG = await ThorVG.init({ renderer });
+  const TVG = await ThorVG.init({
+    renderer,
+    // locateFile: (path) => '../packages/webcanvas/dist/' + path.split('/').pop(), // for local build
+  });
 
   const tvgCanvas = new TVG.Canvas(canvas, { width, height });
 
