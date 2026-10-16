@@ -4,6 +4,9 @@ import { webWorkerStub } from './test/worker-stub';
 
 export default defineConfig({
   plugins: [webWorkerStub()],
+  define: {
+    __THREAD_SUPPORT__: false,
+  },
   test: {
     environment: 'happy-dom',
     globals: true,
