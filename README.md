@@ -80,7 +80,7 @@ An animation benchmarking app for testing Lottie rendering performance, powered 
 - [Playground](https://www.thorvg.org/playground) - Explore vector graphics interactively.
 
 ### Lottie Player
-- [Basic Usage](./examples/index.html) - Get started with player setup and basic Lottie playback.
+- [Basic Usage](./examples/lottie-player.html) - Get started with player setup and basic Lottie playback.
 
 ### Framework Integration
 - [React Example](./examples/react/)

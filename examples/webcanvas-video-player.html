@@ -73,7 +73,7 @@
             location.href = url;
         };
 
-        // The thread preset needs SharedArrayBuffer, i.e. COOP/COEP headers (see examples/serve.py)
+        // The thread preset needs SharedArrayBuffer, i.e. COOP/COEP headers (see examples/serve.mjs)
         if (!crossOriginIsolated) {
             $('threads').disabled = true;
             useThreads = false;

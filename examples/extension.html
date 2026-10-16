@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>ThorVG Lottie Player</title>
     <meta name="description" content="A web lottie player using ThorVG as a renderer" />
-    <script src="../dist/lottie-player.js"></script>
+    <script src="../packages/lottie-player/dist/lottie-player.js"></script>
     <style>
       .resolver-buttons {
         margin-bottom: 20px;
@@ -63,6 +63,7 @@
       <div class="resolver-buttons">
         <button id="imageResolverBtn" onclick="switchResolver('image')">Image Resolver</button>
         <button id="fontResolverBtn" onclick="switchResolver('font')">Font Resolver</button>
+        <button id="audioResolverBtn" onclick="switchResolver('audio')">Audio Resolver</button>
       </div>
 
       <div class="lottie-container">
@@ -75,7 +76,7 @@
       function getResolverType() {
         const params = new URLSearchParams(window.location.search);
         const type = params.get('type');
-        return type === 'font' ? 'font' : 'image';
+        return type === 'font' || type === 'audio' ? type : 'image';
       }
       
       window.onload = async function() {
@@ -88,23 +89,16 @@
         // Preload assets to fetch immediately when rendering
         const resolverType = getResolverType();
         if (resolverType === 'image') {
-          await loadAsset('/example/resources/extensions/images/logo.png');
-        } else {
+          await loadAsset('./resources/extensions/images/logo.png');
+        } else if (resolverType === 'font') {
           await loadAsset('https://fonts.gstatic.com/s/ubuntu/v15/4iCp6KVjbNBYlgoKejZftWyI.ttf');
         }
       }
 
       function updateButtonStates() {
         const resolverType = getResolverType();
-        const imageBtn = document.getElementById('imageResolverBtn');
-        const fontBtn = document.getElementById('fontResolverBtn');
-        
-        if (resolverType === 'image') {
-          imageBtn.classList.add('active');
-          fontBtn.classList.remove('active');
-        } else {
-          fontBtn.classList.add('active');
-          imageBtn.classList.remove('active');
+        for (const type of ['image', 'font', 'audio']) {
+          document.getElementById(`${type}ResolverBtn`).classList.toggle('active', type === resolverType);
         }
       }
 
@@ -148,7 +142,7 @@
     }
 
     function resolver1(src, data) {
-      const assetPath = new URL(`./resources/extensions/${src}`, window.location.href).pathname;
+      const assetPath = `./resources/extensions/${src.replace(/^\.\//, '')}`;
       if (assetCache.has(assetPath)) {
         const buffer = assetCache.get(assetPath);
         return { 
@@ -160,13 +154,64 @@
       loadAsset(assetPath);
     }
 
+    const audioVoices = new Map();
+
+    function audioResolver(info, data) {
+      let voice = audioVoices.get(info.id);
+      if (!info.active) {
+        if (voice) {
+          voice.active = false;
+          voice.audio.pause();
+        }
+        return;
+      }
+
+      if (!voice) {
+        const src = info.data
+          ? URL.createObjectURL(new Blob([info.data.slice()], { type: info.mimeType || 'audio/wav' }))
+          : info.path;
+        const audio = new Audio(src);
+        audio.loop = true;
+        voice = { audio, active: false };
+        audioVoices.set(info.id, voice);
+      }
+
+      voice.active = true;
+      voice.audio.volume = Math.min(1, info.volume);
+      voice.audio.currentTime = info.offset;
+      voice.audio.play().catch(() => {});
+    }
+
+    function pauseAudio() {
+      for (const voice of audioVoices.values()) {
+        voice.audio.pause();
+      }
+    }
+
+    function resumeAudio() {
+      for (const voice of audioVoices.values()) {
+        if (voice.active) {
+          voice.audio.play().catch(() => {});
+        }
+      }
+    }
+
+    function releaseAudio() {
+      for (const voice of audioVoices.values()) {
+        voice.audio.pause();
+        if (voice.audio.src.startsWith('blob:')) {
+          URL.revokeObjectURL(voice.audio.src);
+        }
+      }
+      audioVoices.clear();
+    }
+
       function createAnimation() {
         if (animation) {
           return;
         }
 
         const resolverType = getResolverType();
-        const animationPath = window.location.href.split('/').slice(0, -1).join('/');
         const lottie = document.querySelector('.lottie');
 
         animation = document.createElement('lottie-player');
@@ -174,16 +219,21 @@
         animation.loop = true;
 
         if (resolverType === 'image') {
-          animation.src = `${animationPath}/resources/extensions/resolver1.json`;
+          animation.src = './resources/extensions/resolver1.json';
           animation.setAssetResolver(resolver1, {test: 'this is from JS Code'});
+        } else if (resolverType === 'audio') {
+          animation.src = './resources/emoji_audio.json';
+          animation.setAudioResolver(audioResolver, {test: 'this is from JS Code'});
+          animation.addEventListener('pause', pauseAudio);
+          animation.addEventListener('stop', pauseAudio);
         } else {
-          animation.src = `${animationPath}/resources/extensions/resolver2.json`;
+          animation.src = './resources/extensions/resolver2.json';
           animation.setAssetResolver(resolver2, {test: 'this is from JS Code'});
         }
 
         animation.style.width = "500px";
         animation.style.height = "500px";
-        animation.wasmUrl = "/dist/thorvg.wasm";
+        animation.wasmUrl = "../packages/lottie-player/dist/thorvg.wasm";
         lottie.appendChild(animation);
 
         const frameRange = document.querySelector('#frameRange');
@@ -227,6 +277,7 @@
 
         animation.destroy();
         animation = undefined;
+        releaseAudio();
       }
 
       function playAnimation() {
@@ -236,6 +287,7 @@
         }
 
         animation.play();
+        resumeAudio();
       }
 
       function toggleLoop(e) {

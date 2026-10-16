@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ThorVG WebCanvas - Multi-threading</title>
+    <meta name="description" content="Render with the @thorvg/webcanvas thread preset" />
+    <style>
+      body { font-family: sans-serif; margin: 24px; }
+      canvas { border: 1px solid #ccc; display: block; margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <h2>ThorVG WebCanvas Multi-threading</h2>
+
+    <label for="threads">Threads</label>
+    <select id="threads">
+      <option value="0">0</option>
+      <option value="2">2</option>
+      <option value="4">4</option>
+      <option value="8">8</option>
+    </select>
+    <span id="fps"></span>
+
+    <p id="notice" hidden>
+      The thread preset requires a cross-origin isolated page (<code>Cross-Origin-Opener-Policy: same-origin</code>, <code>Cross-Origin-Embedder-Policy: require-corp</code>).<br />
+      Run <code>node examples/serve.mjs webcanvas-thread.html</code> from the repository root to open this example in that environment.
+    </p>
+
+    <canvas id="canvas" width="800" height="800"></canvas>
+
+    <script type="module">
+      import ThorVG from 'https://unpkg.com/@thorvg/webcanvas@latest/dist/thread/webcanvas.esm.js';
+      // import ThorVG from '../packages/webcanvas/dist/thread/webcanvas.esm.js'; // for local build
+
+      const select = document.querySelector('#threads');
+      const threads = Number(new URLSearchParams(location.search).get('threads') ?? 4);
+      select.value = threads;
+      select.onchange = () => { location.search = `?threads=${select.value}`; };
+
+      if (!crossOriginIsolated) {
+        document.querySelector('#notice').hidden = false;
+        throw new Error('The thread preset requires a cross-origin isolated page');
+      }
+
+      const canvas = document.querySelector('#canvas');
+      const { width, height } = canvas;
+
+      const TVG = await ThorVG.init({
+        renderer: 'sw',
+        threads,
+        // locateFile: (path) => '../packages/webcanvas/dist/thread/' + path.split('/').pop(), // for local build
+      });
+
+      const tvgCanvas = new TVG.Canvas(canvas, { width, height });
+
+      const COLS = 10;
+      const cell = width / COLS;
+      const roses = [];
+
+      for (let i = 0; i < COLS * COLS; i++) {
+        const k = 2 + (i % 6);
+        const radius = cell * 0.45;
+        const rose = new TVG.Shape();
+        for (let j = 0; j <= 720; j++) {
+          const t = (j / 720) * Math.PI * 2;
+          const r = Math.cos(k * t) * radius;
+          j === 0 ? rose.moveTo(r * Math.cos(t), r * Math.sin(t)) : rose.lineTo(r * Math.cos(t), r * Math.sin(t));
+        }
+        rose.close()
+          .fill(Math.sin(i * 0.3) * 127 + 128, Math.sin(i * 0.3 + 2) * 127 + 128, Math.sin(i * 0.3 + 4) * 127 + 128, 160)
+          .stroke({ width: 2, color: [255, 255, 255, 200] });
+        tvgCanvas.add(rose);
+        roses.push({ rose, x: (i % COLS + 0.5) * cell, y: (Math.floor(i / COLS) + 0.5) * cell, speed: 20 + (i % 7) * 10 });
+      }
+
+      const fps = document.querySelector('#fps');
+      let frames = 0;
+      let last = performance.now();
+
+      const frame = (now) => {
+        const time = now / 1000;
+        roses.forEach(({ rose, x, y, speed }, i) => {
+          rose.translate(x, y).rotate(time * speed).scale(0.8 + Math.sin(time * 2 + i) * 0.2);
+        });
+
+        tvgCanvas.update().render();
+
+        frames++;
+        if (now - last >= 500) {
+          fps.textContent = `${Math.round((frames * 1000) / (now - last))} fps`;
+          frames = 0;
+          last = now;
+        }
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

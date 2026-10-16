@@ -209,12 +209,11 @@ TVG.term();
 
 ## Examples
 
-- [Basic Usage](../../examples/basic-usage.html) - Getting started with shapes
-- [Animation](../../examples/animation-example.html) - Frame-based animations
-- [Scene Composition](../../examples/scene.html) - Hierarchical grouping
-- [Picture Loading](../../examples/picture-example.html) - SVG and images
-- [Text Rendering](../../examples/text-example.html) - Typography
-- [Live Editor](../../examples/live-editor.html) - Interactive playground
+- [Basic Usage](../../examples/webcanvas.html) - Basic Rendering sample
+- [Web Worker](../../examples/webcanvas-worker.html) - Rendering inside a Web Worker via OffscreenCanvas
+- [Multi-threading](../../examples/webcanvas-thread.html) - Multi-threaded rendering via WASM pthreads support
+- [Video Player](../../examples/webcanvas-video-player.html) - Video playback with media integration
+- [Playground](https://thorvg-playground.vercel.app) - Interactive playground
 
 [Back to contents](#contents)
 <br />

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ThorVG Lottie Player - Multi-threading</title>
+    <meta name="description" content="Play Lottie with the @thorvg/lottie-player thread preset" />
+    <style>
+      body { font-family: sans-serif; margin: 24px; }
+      lottie-player { border: 1px solid #ccc; display: block; margin-top: 12px; width: 450px; height: 800px; }
+    </style>
+  </head>
+  <body>
+    <h2>ThorVG Lottie Player Multi-threading</h2>
+
+    <label for="threads">Threads</label>
+    <select id="threads">
+      <option value="0">0</option>
+      <option value="2">2</option>
+      <option value="4">4</option>
+      <option value="8">8</option>
+    </select>
+    <span id="fps"></span>
+
+    <p id="notice" hidden>
+      The thread preset requires a cross-origin isolated page (<code>Cross-Origin-Opener-Policy: same-origin</code>, <code>Cross-Origin-Embedder-Policy: require-corp</code>).<br />
+      Run <code>node examples/serve.mjs lottie-player-thread.html</code> from the repository root to open this example in that environment.
+    </p>
+
+    <script type="module">
+      import { setThreadCount } from 'https://unpkg.com/@thorvg/lottie-player@latest/dist/thread/lottie-player.esm.js';
+      // import { setThreadCount } from '../packages/lottie-player/dist/thread/lottie-player.esm.js'; // for local build
+
+      const select = document.querySelector('#threads');
+      const threads = Number(new URLSearchParams(location.search).get('threads') ?? 4);
+      select.value = threads;
+      select.onchange = () => { location.search = `?threads=${select.value}`; };
+
+      if (!crossOriginIsolated) {
+        document.querySelector('#notice').hidden = false;
+        throw new Error('The thread preset requires a cross-origin isolated page');
+      }
+
+      setThreadCount(threads);
+
+      const player = document.createElement('lottie-player');
+      player.autoPlay = true;
+      player.loop = true;
+      player.src = './resources/samurai-perf.json';
+      // player.wasmUrl = '../packages/lottie-player/dist/thread/thorvg.wasm'; // for local build
+      document.body.appendChild(player);
+
+      const fps = document.querySelector('#fps');
+      let frames = 0;
+      let last = performance.now();
+
+      player.addEventListener('frame', () => {
+        const now = performance.now();
+        frames++;
+        if (now - last >= 500) {
+          fps.textContent = `${Math.round((frames * 1000) / (now - last))} fps`;
+          frames = 0;
+          last = now;
+        }
+      });
+    </script>
+  </body>
+</html>
