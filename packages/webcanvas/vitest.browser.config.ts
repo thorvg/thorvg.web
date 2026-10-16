@@ -13,6 +13,7 @@ const launchArgs =
 export default defineConfig({
   plugins: [webWorkerStub()],
   define: {
+    __THREAD_SUPPORT__: false,
     __TEST_RENDERER: JSON.stringify(renderer),
   },
   test: {
