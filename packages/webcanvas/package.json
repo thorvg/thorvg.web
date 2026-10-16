@@ -27,7 +27,7 @@
   "scripts": {
     "build": "npm run clean && sh ./wasm_wcanvas_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs",
     "build:watch": "npm run clean && sh ./wasm_wcanvas_setup.sh && THORVG_VERSION=$(npm run version --silent) rollup -c --bundleConfigAsCjs --watch",
-    "clean": "rm -rf dist && mkdir dist && touch dist/index.js",
+    "clean": "rm -rf dist && mkdir dist",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:sw": "TEST_RENDERER=sw vitest run --config vitest.browser.config.ts",
