@@ -1,3 +1,4 @@
+[![LFX Active Contributors](https://insights.linuxfoundation.org/api/badge/active-contributors?project=thorvg&repos=https://github.com/thorvg/thorvg.web)](https://insights.linuxfoundation.org/project/thorvg/repository/thorvg_thorvg.web)
 [![CodeFactor](https://www.codefactor.io/repository/github/thorvg/thorvg.web/badge)](https://www.codefactor.io/repository/github/thorvg/thorvg.web)
 [![Socket Badge](https://badge.socket.dev/npm/package/@thorvg/webcanvas)](https://badge.socket.dev/npm/package/@thorvg/webcanvas)
 [![License](https://img.shields.io/badge/licence-MIT-green.svg?style=flat)](LICENSE)
