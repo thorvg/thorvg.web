@@ -1,14 +1,12 @@
-import ThorVG from '../packages/webcanvas/dist/webcanvas.esm.js';
+import ThorVG from 'https://unpkg.com/@thorvg/webcanvas@latest/dist/webcanvas.esm.js';
+// import ThorVG from '../packages/webcanvas/dist/webcanvas.esm.js'; // for local build
 
 self.onmessage = async ({ data }) => {
-  const { canvas, renderer, size } = data;
+  const { canvas, renderer, width, height } = data;
 
-  const TVG = await ThorVG.init({
-    renderer,
-    locateFile: (path) => new URL(`../packages/webcanvas/dist/${path}`, import.meta.url).href,
-  });
+  const TVG = await ThorVG.init({ renderer });
 
-  const tvgCanvas = new TVG.Canvas(canvas, { width: size, height: size });
+  const tvgCanvas = new TVG.Canvas(canvas, { width, height });
 
   const star = new TVG.Shape();
   star.moveTo(0, -166).lineTo(54, -57).lineTo(175, -40).lineTo(88, 44).lineTo(108, 165)
@@ -20,10 +18,9 @@ self.onmessage = async ({ data }) => {
 
   tvgCanvas.add(star);
 
-  const scale = size / 500;
   let rotation = 0;
   const frame = () => {
-    star.scale(scale).translate(size / 2, size / 2).rotate(rotation++);
+    star.translate(width / 2, height / 2).rotate(rotation++);
     tvgCanvas.update().render();
     requestAnimationFrame(frame);
   };
