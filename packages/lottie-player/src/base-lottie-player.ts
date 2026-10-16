@@ -110,8 +110,7 @@ const _parseLottieFromURL = async (url: string): Promise<LottieJson> => {
   }
 
   try {
-    const srcUrl: URL = new URL(url);
-    const result = await fetch(srcUrl.toString());
+    const result = await fetch(url);
     const json = await result.json();
 
     return json;
