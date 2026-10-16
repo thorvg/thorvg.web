@@ -76,8 +76,12 @@
   "keywords": [
     "lottie",
     "animation",
-    "thorvg",
-    "tvg"
+    "web-component",
+    "vector-graphics",
+    "wasm",
+    "webgl",
+    "webgpu",
+    "thorvg"
   ],
   "devDependencies": {
     "@open-wc/testing": "^5.0.0",
