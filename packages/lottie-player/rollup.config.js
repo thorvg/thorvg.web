@@ -44,18 +44,15 @@ const browserImportMetaUrl = () => {
 }
 
 const threadWorker = () => {
-  const workerPattern = /new Worker\(new URL\("thorvg\.js",import\.meta\.url\),(\{[^}]*\})\)/;
-  const bundleFile = path.basename(pkg.exports['./thread'].import);
+  // thread: enable Blob worker via mainScriptUrlOrBlob
+  // https://emscripten.org/docs/api_reference/module.html#Module.mainScriptUrlOrBlob
   return {
-    name: 'thorvg-worker-url',
+    name: 'thorvg-worker-blob',
     transform(code, id) {
       if (!id.endsWith(path.join('dist', 'thread', 'thorvg.js'))) return null;
-      if (!workerPattern.test(code)) this.error(`pthread worker not found in ${id}.`);
+      if (!code.includes('mainScriptUrlOrBlob')) this.error(`mainScriptUrlOrBlob not found in ${id}.`);
       return {
-        code: code.replace(workerPattern, (_, options) =>
-          `(new URL(import.meta.url).origin===location.origin` +
-          `?new Worker(new URL("./${bundleFile}",import.meta.url),${options})` +
-          `:new Worker(URL.createObjectURL(new Blob(['import"'+import.meta.url+'"'],{type:"text/javascript"})),${options}))`),
+        code: code.replace(/import\.meta\.url/g, 'location.href'), // used for bundler compatibility
         map: null,
       };
     },
@@ -150,6 +147,7 @@ const presetMap = {
   [PresetModule.THREAD]: {
     path: '/dist/thread',
     renderer: 'sw',
+    thread: true,
     input: "./src/lottie-thread-player.ts",
     options: {
       exportConditions: ['node'],
@@ -161,7 +159,7 @@ const presetMap = {
   },
 }
 
-const resolveCommonPlugins = (config) => [
+const resolveCommonPlugins = ({ thread = false, ...config }) => [
   browserImportMetaUrl(),
   replace({
     include: ['src/**/*.ts'],
@@ -170,6 +168,7 @@ const resolveCommonPlugins = (config) => [
       '__WASM_PATH__': pkg.version + config.path,
       '__THORVG_VERSION__': process.env.THORVG_VERSION,
       '__RENDERER__': config.renderer,
+      '__THREAD_SUPPORT__': String(thread),
     },
   }),
   commonjs({
