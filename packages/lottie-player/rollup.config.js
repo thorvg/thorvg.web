@@ -3,7 +3,6 @@ import { dts } from "rollup-plugin-dts";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import terser from "@rollup/plugin-terser";
-import nodePolyfills from 'rollup-plugin-polyfill-node';
 import replace from '@rollup/plugin-replace';
 import alias from '@rollup/plugin-alias';
 import pkg from './package.json';
@@ -11,7 +10,6 @@ import path from 'path';
 
 const name = 'lottie-player';
 const globals = {
-  url: "url",
   lit: "lit",
   "lit/decorators.js": "lit/decorators.js",
 };
@@ -162,7 +160,6 @@ const resolveCommonPlugins = (config) => [
       '__RENDERER__': config.renderer,
     },
   }),
-  nodePolyfills(),
   commonjs({
     include: /node_modules/
   }),

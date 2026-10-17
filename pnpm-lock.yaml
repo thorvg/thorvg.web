@@ -242,9 +242,6 @@ importers:
       rollup-plugin-dts:
         specifier: ^6.4.1
         version: 6.4.1(rollup@4.62.3)(typescript@5.9.3)
-      rollup-plugin-polyfill-node:
-        specifier: ^0.13.0
-        version: 0.13.0(rollup@4.62.3)
       rollup-plugin-swc3:
         specifier: ^0.12.1
         version: 0.12.1(@swc/core@1.15.46(@swc/helpers@0.5.23))(rollup@4.62.3)
@@ -1058,15 +1055,6 @@ packages:
     engines: {node: '>=16.0.0 || 14 >= 14.17'}
     peerDependencies:
       rollup: ^2.68.0||^3.0.0||^4.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-
-  '@rollup/plugin-inject@5.0.5':
-    resolution: {integrity: sha512-2+DEJbNBoPROPkgTDNe8/1YXWcqxbN5DTjASVIOx8HS+pITXushyNiBV56RB08zuptzz8gT3YfkqriTBVycepg==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
     peerDependenciesMeta:
       rollup:
         optional: true
@@ -3651,11 +3639,6 @@ packages:
       rollup: ^3.29.4 || ^4
       typescript: ^4.5 || ^5.0 || ^6.0
 
-  rollup-plugin-polyfill-node@0.13.0:
-    resolution: {integrity: sha512-FYEvpCaD5jGtyBuBFcQImEGmTxDTPbiHjJdrYIp+mFIwgXiXabxvKUK7ZT9P31ozu2Tqm9llYQMRWsfvTMTAOw==}
-    peerDependencies:
-      rollup: ^1.20.0 || ^2.0.0 || ^3.0.0 || ^4.0.0
-
   rollup-plugin-swc3@0.12.1:
     resolution: {integrity: sha512-iNV1T432XvyejZ19/41C2gLbXxEOiiJynPPAFF0WzwwFT5FHx7SstAp0yjJRLyrbZjfIhoWJVl3hX3c3Stv/GQ==}
     engines: {node: '>=16'}
@@ -4900,14 +4883,6 @@ snapshots:
       is-reference: 1.2.1
       magic-string: 0.30.21
       picomatch: 4.0.5
-    optionalDependencies:
-      rollup: 4.62.3
-
-  '@rollup/plugin-inject@5.0.5(rollup@4.62.3)':
-    dependencies:
-      '@rollup/pluginutils': 5.4.0(rollup@4.62.3)
-      estree-walker: 2.0.2
-      magic-string: 0.30.21
     optionalDependencies:
       rollup: 4.62.3
 
@@ -7537,11 +7512,6 @@ snapshots:
       typescript: 5.9.3
     optionalDependencies:
       '@babel/code-frame': 7.29.7
-
-  rollup-plugin-polyfill-node@0.13.0(rollup@4.62.3):
-    dependencies:
-      '@rollup/plugin-inject': 5.0.5(rollup@4.62.3)
-      rollup: 4.62.3
 
   rollup-plugin-swc3@0.12.1(@swc/core@1.15.46(@swc/helpers@0.5.23))(rollup@4.62.3):
     dependencies:
