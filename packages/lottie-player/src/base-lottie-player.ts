@@ -366,7 +366,12 @@ export class BaseLottiePlayer extends LitElement {
             return this.wasmUrl || _wasmUrl;
           }
           return prefix + path;
-        }
+        },
+        ...(__THREAD_SUPPORT__ ? {
+          get mainScriptUrlOrBlob() {
+            return new Blob([`(${Module})()`], { type: 'text/javascript' });
+          },
+        } : {}),
       });
     }
 
