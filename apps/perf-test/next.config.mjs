@@ -16,15 +16,6 @@ const nextConfig = {
   },
   outputFileTracingRoot: path.join(__dirname, '../../'),
   webpack: (config) => {
-    if (typeof nextRuntime === 'undefined') {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        module: false,
-        url: false,
-      };
-    }
-
     config.module.rules.push({
       test: /\.wasm$/,
       loader: 'file-loader',
