@@ -17,9 +17,21 @@ const commonOutput = {
   sourcemap: true,
 };
 
+const browserImportMetaUrl = () => {
+  // cjs/umd: remove rollup's require("url") shim
+  return {
+    name: 'browser-import-meta-url',
+    resolveImportMeta(property, { format }) {
+      if (property !== 'url' || format === 'es') return null;
+      return 'location.href';
+    },
+  };
+}
+
 const sharedPlugins = (aliasEntries, wasmPath, extraPlugins = []) => [
   ...(aliasEntries.length ? [alias({ entries: aliasEntries })] : []),
   ...extraPlugins,
+  browserImportMetaUrl(),
   webWorkerLoader({
     targetPlatform: 'browser',
     inline: true,

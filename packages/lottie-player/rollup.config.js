@@ -32,6 +32,17 @@ const PresetModule = {
   THREAD: "lottie-player-thread",
 }
 
+const browserImportMetaUrl = () => {
+  // cjs/umd: remove rollup's require("url") shim
+  return {
+    name: 'browser-import-meta-url',
+    resolveImportMeta(property, { format }) {
+      if (property !== 'url' || format === 'es') return null;
+      return 'location.href';
+    },
+  };
+}
+
 const threadWorker = () => {
   const workerPattern = /new Worker\(new URL\("thorvg\.js",import\.meta\.url\),(\{[^}]*\})\)/;
   const bundleFile = path.basename(pkg.exports['./thread'].import);
@@ -151,6 +162,7 @@ const presetMap = {
 }
 
 const resolveCommonPlugins = (config) => [
+  browserImportMetaUrl(),
   replace({
     include: ['src/**/*.ts'],
     preventAssignment: true,
