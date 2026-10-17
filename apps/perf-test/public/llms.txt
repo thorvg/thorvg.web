@@ -1,0 +1,25 @@
+# ThorVG Web Performance Test
+
+> A browser-based performance testing tool for ThorVG WebCanvas, supporting Software, WebGL, and WebGPU renderers.
+
+Use this application to compare ThorVG rendering performance with multiple Lottie animations. It provides reproducible test configurations and reports FPS, frame time, memory usage, and loading performance.
+
+## Pages
+
+- [Performance Test](https://thorvg-perf-test.vercel.app/): Run multiple Lottie animations on a single canvas and compare Software, WebGL, and WebGPU rendering performance.
+- [Animation Viewer](https://thorvg-perf-test.vercel.app/viewer): Inspect an individual Lottie animation with real-time performance charts and playback controls.
+
+## Features
+
+- Software, WebGL, and WebGPU renderer selection
+- Configurable animation count and canvas size
+- FPS, frame-time, memory, and loading measurements
+- Seed-based reproducible animation sets
+- ThorVG version selection
+- Automated headless benchmarks with Playwright
+
+## Project
+
+- [ThorVG Web repository](https://github.com/thorvg/thorvg.web): Source code and development documentation.
+- [Performance test source](https://github.com/thorvg/thorvg.web/tree/main/apps/perf-test): Source code for this application.
+- [ThorVG website](https://www.thorvg.org/): ThorVG project documentation and resources.
