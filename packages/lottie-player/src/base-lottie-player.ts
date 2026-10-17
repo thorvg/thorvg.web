@@ -361,12 +361,7 @@ export class BaseLottiePlayer extends LitElement {
     if (!wasmModule) {
       _moduleRequested = true;
       wasmModule = await Module({
-        locateFile: (path: string, prefix: string) => {
-          if (path.endsWith('.wasm')) {
-            return this.wasmUrl || _wasmUrl;
-          }
-          return prefix + path;
-        }
+        locateFile: () => this.wasmUrl || _wasmUrl,
       });
     }
 

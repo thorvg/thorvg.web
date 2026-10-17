@@ -245,7 +245,7 @@ async function init(options: InitOptions = {}): Promise<ThorVGNamespace> {
 
   // Load WASM module
   Module = await ThorVGModuleFactory({
-    locateFile: locateFile ?? ((path: string) => path.endsWith('.wasm') ? THORVG_WASM_URL : path),
+    locateFile: locateFile ?? (() => THORVG_WASM_URL),
   }) as unknown as ThorVGModule;
 
   // Make Module globally available for class constructors
