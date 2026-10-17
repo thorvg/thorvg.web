@@ -17,9 +17,20 @@ const commonOutput = {
   sourcemap: true,
 };
 
+const browserImportMetaUrl = () => {
+  return {
+    name: 'browser-import-meta-url',
+    resolveImportMeta(property, { format }) {
+      if (property !== 'url' || format === 'es') return null;
+      return 'location.href';
+    },
+  };
+}
+
 const sharedPlugins = (aliasEntries, wasmPath, extraPlugins = []) => [
   ...(aliasEntries.length ? [alias({ entries: aliasEntries })] : []),
   ...extraPlugins,
+  browserImportMetaUrl(),
   webWorkerLoader({
     targetPlatform: 'browser',
     inline: true,
