@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const pictureRawExample: ShowcaseExample = {
   id: 'picture-raw',
-  title: 'Raw',
+  title: 'Picture Raw',
   description: 'Load and display raw ARGB8888 image data',
   category: 'media',
   thumbnail: '/assets/raw-thumbnail.png',

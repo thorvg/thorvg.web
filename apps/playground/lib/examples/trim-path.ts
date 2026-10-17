@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const trimPathExample: ShowcaseExample = {
   id: 'trim-path',
-  title: 'Path Trimming',
+  title: 'Trim Path',
   description: 'Trim paths to show only portions of shapes',
   category: 'basic',
   thumbnail: '/assets/trimpath-thumbnail.png',

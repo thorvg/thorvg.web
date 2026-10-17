@@ -2,8 +2,8 @@ import { ShowcaseExample } from './types';
 
 export const pictureSvgExample: ShowcaseExample = {
   id: 'picture-svg',
-  title: 'SVG',
-  description: 'Load and display the Ghostscript Tiger SVG',
+  title: 'Picture SVG',
+  description: 'Load and display a SVG image',
   category: 'media',
   thumbnail: '/assets/svg-picture-thumbnail.png',
   code: `// Native example: PictureSvg.cpp
@@ -20,16 +20,35 @@ const canvas = new TVG.Canvas('#canvas', {
   height: 600,
 });
 
-//Load SVG from file
 (async () => {
-  const response = await fetch('/assets/images/tiger.svg');
-  const tigerSvg = await response.text();
+  //The default font for fallback in case
+  const fontResponse = await fetch('/fonts/PublicSans-Regular.ttf');
+  TVG.Font.load('PublicSans-Regular', new Uint8Array(await fontResponse.arrayBuffer()), { type: 'ttf' });
 
-  const tiger = new TVG.Picture();
-  tiger.load(tigerSvg, { type: 'svg' })
-    .size(600, 600);
+  const response = await fetch('/assets/svg/logo.svg');
+  const data = await response.text();
 
-  canvas.add(tiger);
+  const opacity = 36;
+
+  //Load svg file from path
+  for (let i = 0; i < 7; ++i) {
+    const picture = new TVG.Picture();
+    picture.load(data, { type: 'svg' });
+    picture.translate(i * 112.5, i * 112.5);
+    picture.rotate(30 * i);
+    picture.size(150, 150);
+    picture.opacity(opacity + opacity * i);
+    canvas.add(picture);
+  }
+
+  //Open file manually
+  const picture = new TVG.Picture();
+  picture.load(data, { type: 'svg' });
+
+  picture.translate(300, 0);
+  picture.scale(0.3);
+  canvas.add(picture);
+
   canvas.render();
 })();
 `

@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const sceneExample: ShowcaseExample = {
   id: 'scene',
-  title: 'Scene Hierarchy',
+  title: 'Scene',
   description: 'Group shapes together using scenes for hierarchical organization',
   category: 'basic',
   thumbnail: '/assets/scene-hierarchy-thumbnail.png',

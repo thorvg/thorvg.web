@@ -3,7 +3,7 @@ import { ShowcaseExample } from './types';
 export const fillSpreadExample: ShowcaseExample = {
   id: 'fill-spread',
   title: 'Fill Spread',
-  description: 'Demonstrate gradient spread modes: pad, reflect, and repeat',
+  description: 'Demonstrate gradient spread modes',
   category: 'basic',
   thumbnail: '/assets/fill-spread-thumbnail.png',
   code: `// Native example: FillSpread.cpp

@@ -33,7 +33,7 @@ let scene1, scene2, scene3;
   {
     scene1 = new TVG.Scene();
 
-    const response = await fetch('/assets/images/thorvg-logo-clear.svg');
+    const response = await fetch('/assets/svg/thorvg-logo-clear.svg');
     const svgString = await response.text();
     const svgData = new TextEncoder().encode(svgString);
 
@@ -51,7 +51,7 @@ let scene1, scene2, scene3;
   {
     scene2 = new TVG.Scene();
 
-    const response = await fetch('/assets/images/152932619-bd3d6921-72df-4f09-856b-f9743ae32a14.svg');
+    const response = await fetch('/assets/svg/152932619-bd3d6921-72df-4f09-856b-f9743ae32a14.svg');
     const svgString = await response.text();
     const svgData = new TextEncoder().encode(svgString);
 
@@ -72,7 +72,7 @@ let scene1, scene2, scene3;
   {
     scene3 = new TVG.Scene();
 
-    const response = await fetch('/assets/images/circles1.svg');
+    const response = await fetch('/assets/svg/circles1.svg');
     const svgString = await response.text();
     const svgData = new TextEncoder().encode(svgString);
 

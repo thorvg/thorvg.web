@@ -69,7 +69,7 @@ const mw = 10, mh = 10;
   canvas.add(picture);
 
   // Vector scene (tiger)
-  const svgResponse = await fetch('/assets/images/tiger.svg');
+  const svgResponse = await fetch('/assets/svg/tiger.svg');
   const svgString = await svgResponse.text();
   const svgData = new TextEncoder().encode(svgString);
 

@@ -2,7 +2,7 @@ import { ShowcaseExample } from './types';
 
 export const pathExample: ShowcaseExample = {
   id: 'path',
-  title: 'Path Drawing',
+  title: 'Path',
   description: 'Draw shapes using path commands',
   category: 'basic',
   thumbnail: '/assets/path-drawing-thumbnail.png',

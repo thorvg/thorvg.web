@@ -27,7 +27,7 @@ let fill, tint, trintone;
 
 //blur scene
 (async () => {
-  const response = await fetch('/assets/images/tiger.svg');
+  const response = await fetch('/assets/svg/tiger.svg');
   const svgString = await response.text();
   const svgData = new TextEncoder().encode(svgString);
 
