@@ -97,7 +97,6 @@
     "eslint-plugin-wc": "^3.1.0",
     "rollup": "^4.62.3",
     "rollup-plugin-dts": "^6.4.1",
-    "rollup-plugin-polyfill-node": "^0.13.0",
     "rollup-plugin-swc3": "^0.12.1",
     "typescript": "^5.9.3"
   },
