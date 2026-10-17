@@ -27,14 +27,6 @@ const nextConfig = {
       resolve: { symlinks: false },
     });
 
-    // Add fallbacks for node modules not available in browser
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      module: false,
-      fs: false,
-      path: false,
-    };
-
     return config;
   },
 };
