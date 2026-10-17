@@ -6,7 +6,8 @@
 import { getModule, createFunction, deleteFunction } from '../interop/module';
 import { callbackRegistry } from '../interop/registry';
 import { Animation } from './Animation';
-import { LottieAudio } from './media/Audio';
+import { createLottieAudio } from './media/Audio';
+import type { LottieAudio } from './media/Audio';
 import { checkResult, handleError, ThorVGResultCode } from '../common/errors';
 
 /**
@@ -401,7 +402,7 @@ export class LottieAnimation extends Animation {
       this.#audio?.dispose();
       this.#audio = null;
     } else if (!this.#audio && this.#resolverPtr) {
-      this.#audio = new LottieAudio();
+      this.#audio = createLottieAudio();
     }
 
     return this;
@@ -477,7 +478,7 @@ export class LottieAnimation extends Animation {
     const Module = getModule();
 
     this.#audio?.dispose();
-    this.#audio = this.#resolver ? null : new LottieAudio();
+    this.#audio = this.#resolver ? null : createLottieAudio();
     this.#audioData.clear();
 
     if (!this.#resolverPtr) {
