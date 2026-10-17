@@ -467,11 +467,11 @@ player.addEventListener('load', () => {
 
 ### Framework-specific Examples
 
-Check the usage of each preset in the `example/{framework}` directory:
+Check the usage of each preset in the `examples/{framework}` directory:
 
-- [ThorVG React Example](example/react/)
-- [ThorVG Vue Example](example/vue/)
-- [ThorVG Svelte Example](example/svelte/)
+- [ThorVG React Example](../../examples/react/)
+- [ThorVG Vue Example](../../examples/vue/)
+- [ThorVG Svelte Example](../../examples/svelte/)
 
 ### Build Testing
 
@@ -487,7 +487,7 @@ This will automatically detect framework projects in the `example/` directory an
 The build testing script is located in `./build-test/`.
 
 ### Local Examples
-[Lottie Player Example](../../examples/index.html) demonstrates player setup and basic Lottie playback with WebGL and the Non-Lite Default bundle. Source comments explain how to switch renderers and use Lite presets.
+[Lottie Player Example](../../examples/lottie-player.html) demonstrates player setup and basic Lottie playback with WebGL and the Non-Lite Default bundle. Source comments explain how to switch renderers and use Lite presets.
 
 [Back to contents](#contents)
 <br />

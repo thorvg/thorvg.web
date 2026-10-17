@@ -166,7 +166,6 @@
         
         const animationsToLoad = Math.min(lottieFiles.length, MAX_ANIMATIONS);
         const animationSize = `${window.innerWidth / NUM_PER_ROW}px`;
-        const animationPath = window.location.href.split('/').slice(0, -1).join('/');
 
         for (let i = 0; i < animationsToLoad; i++) {
           const div = document.createElement('div');
@@ -175,7 +174,7 @@
           const player = document.createElement('lottie-player');
           player.autoPlay = true;
           player.loop = true;
-          player.src = `${animationPath}/resources/${lottieFiles[i]}`;
+          player.src = `./resources/${lottieFiles[i]}`;
           player.wasmUrl = "../packages/lottie-player/dist/thorvg.wasm";
           player.renderConfig = { enableDevicePixelRatio: true, renderer: 'sw' };
           player.style.width = animationSize;
