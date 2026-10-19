@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/metadata";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "ThorVG Playground",
-  description: "Interactive playground for ThorVG WebCanvas examples",
-};
+export const generateMetadata = () => buildPageMetadata({
+  title: 'ThorVG Playground',
+  description: 'Interactive playground for ThorVG',
+});
 
 export default function RootLayout({
   children,
