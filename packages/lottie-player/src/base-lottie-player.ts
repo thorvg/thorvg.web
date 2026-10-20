@@ -29,7 +29,7 @@ type LottieJson = Record<string, unknown>;
 
 const THORVG_VERSION = '__THORVG_VERSION__';
 const DEFAULT_RENDERER = '__RENDERER__';
-const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@__WASM_PATH__/thorvg.wasm';
+const _wasmUrl = 'https://unpkg.com/@thorvg/lottie-player@__PACKAGE_VERSION__/__WASM_PATH__';
 export let wasmModule: MainModule | null = null;
 let _moduleRequested: boolean = false;
 
