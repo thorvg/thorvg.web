@@ -1,0 +1,2 @@
+option('thorvg_build_dir', type : 'string', value : 'build_wasm_player',
+       description : 'ThorVG build directory, relative to the thorvg submodule root')
