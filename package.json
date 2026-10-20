@@ -24,6 +24,7 @@
   ],
   "scripts": {
     "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
     "clean": "pnpm -r clean",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
