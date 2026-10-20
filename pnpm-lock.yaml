@@ -106,6 +106,9 @@ importers:
       postcss:
         specifier: ^8.5.23
         version: 8.5.23
+      raw-loader:
+        specifier: ^4.0.2
+        version: 4.0.2(webpack@5.111.1(postcss@8.5.23))
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.19(yaml@2.9.0)
@@ -3538,6 +3541,12 @@ packages:
   raw-body@2.5.3:
     resolution: {integrity: sha512-s4VSOf6yN0rvbRZGxs8Om5CWj6seneMwK3oDb4lWDH0UPhWcxwOWw5+qk24bxq87szX1ydrwylIOp2uG1ojUpA==}
     engines: {node: '>= 0.8'}
+
+  raw-loader@4.0.2:
+    resolution: {integrity: sha512-ZnScIV3ag9A4wPX/ZayxL/jZH+euYb6FcUinPcgiQW0+UBtEv0O6Q3lGd3cqJ+GHH+rksEv3Pj99oxJ3u3VIKA==}
+    engines: {node: '>= 10.13.0'}
+    peerDependencies:
+      webpack: ^4.0.0 || ^5.0.0
 
   react-aria@3.52.1:
     resolution: {integrity: sha512-fdZZruC9/x/joCg0mhKGs5aHpwrXLCSZ4GOJmhhYyiE0ffyEsk9MLFt9LCOCF9tn8ErTD+UDQP4oDUSlZkmpCg==}
@@ -7112,6 +7121,16 @@ snapshots:
     dependencies:
       brace-expansion: 1.1.21
 
+  minimizer-webpack-plugin@5.12.0(postcss@8.5.23)(webpack@5.111.1(postcss@8.5.23)):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      jest-worker: 27.5.1
+      schema-utils: 4.5.0
+      terser: 5.51.2
+      webpack: 5.111.1(postcss@8.5.23)
+    optionalDependencies:
+      postcss: 8.5.23
+
   minimizer-webpack-plugin@5.12.0(webpack@5.111.1):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
@@ -7378,6 +7397,12 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.4.24
       unpipe: 1.0.0
+
+  raw-loader@4.0.2(webpack@5.111.1(postcss@8.5.23)):
+    dependencies:
+      loader-utils: 2.0.4
+      schema-utils: 3.3.0
+      webpack: 5.111.1(postcss@8.5.23)
 
   react-aria@3.52.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
@@ -8083,6 +8108,43 @@ snapshots:
       graceful-fs: 4.2.11
       mime-db: 1.54.0
       minimizer-webpack-plugin: 5.12.0(webpack@5.111.1)
+      schema-utils: 4.5.0
+      tapable: 2.3.3
+      watchpack: 2.5.2
+      webpack-sources: 3.6.0
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@napi-rs/image'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - imagemin
+      - lightningcss
+      - postcss
+      - sharp
+      - svgo
+      - uglify-js
+
+  webpack@5.111.1(postcss@8.5.23):
+    dependencies:
+      '@types/estree': 1.0.9
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      browserslist: 4.29.3
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.26.0
+      es-module-lexer: 2.3.2
+      events: 3.3.0
+      graceful-fs: 4.2.11
+      mime-db: 1.54.0
+      minimizer-webpack-plugin: 5.12.0(postcss@8.5.23)(webpack@5.111.1(postcss@8.5.23))
       schema-utils: 4.5.0
       tapable: 2.3.3
       watchpack: 2.5.2

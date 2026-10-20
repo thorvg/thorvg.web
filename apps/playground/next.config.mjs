@@ -7,27 +7,12 @@ const __dirname = path.dirname(__filename);
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, '../../'),
-  webpack: (config) => {
-    config.experiments = { ...config.experiments, asyncWebAssembly: true };
-
-    config.module.rules.push({
-      test: /\.wasm$/,
-      type: 'asset/resource',
-    });
-
-    // Allow .d.ts files to be imported as raw strings
-    config.module.rules.push({
-      test: /\.d\.ts$/,
-      type: 'asset/source',
-    });
-
-    // Keep the workspace symlink path so the raw webcanvas.d.ts import in CodeEditor is not transpiled
-    config.module.rules.push({
-      test: /components\/CodeEditor\.tsx$/,
-      resolve: { symlinks: false },
-    });
-
-    return config;
+  turbopack: {
+    rules: {
+      '*.wasm': { type: 'asset' },
+      // Allow .d.ts files to be imported as raw strings
+      '*.d.ts': { condition: { query: '?raw' }, loaders: ['raw-loader'], as: '*.js' },
+    },
   },
 };
 
