@@ -70,5 +70,11 @@ jobs:
           ls -lah packages/lottie-player/dist/
           echo "✅ Lottie Player build completed successfully"
 
+      - name: Lint
+        run: pnpm --filter @thorvg/lottie-player lint
+
+      - name: Type check
+        run: pnpm --filter @thorvg/lottie-player typecheck
+
       - name: Run component tests
         run: pnpm --filter @thorvg/lottie-player test
