@@ -56,6 +56,12 @@ jobs:
         working-directory: ./packages/lottie-player
         run: pnpm run build
 
+      - name: Lint
+        run: pnpm --filter @thorvg/lottie-player lint
+
+      - name: Type check
+        run: pnpm --filter @thorvg/lottie-player typecheck
+
       - name: Run component tests
         run: pnpm --filter @thorvg/lottie-player test
 
