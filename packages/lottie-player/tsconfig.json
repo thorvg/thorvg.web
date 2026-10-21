@@ -1,11 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
-    "paths": {
-      "@dist/*": [  
-        "dist/*"
-      ]
-    },
     "target": "es2022",
     "lib": [
       "es2022",
@@ -14,8 +8,7 @@
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "module": "esnext",
-    "moduleResolution": "node",
-    "allowJs": true,
+    "moduleResolution": "bundler",
     "checkJs": false,
     "declaration": true,
     "declarationMap": true,
@@ -38,5 +31,5 @@
     "node_modules",
     "example",
     "dist"
-  ],
+  ]
 }
