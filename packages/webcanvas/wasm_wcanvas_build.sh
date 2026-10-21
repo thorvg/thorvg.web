@@ -35,17 +35,13 @@ rm -rf build_wasm_wcanvas
 
 if [ "$MODE" = "pthread" ]; then
   sed "s|EMSDK:|$EMSDK/|g" ../wasm/wasm32.txt | \
-    sed "s|, '-fno-exceptions'||g" | \
-    sed "s|'-fno-exceptions', ||g" | \
     sed "s|, '-sEXPORTED_RUNTIME_METHODS=[^']*'||g" | \
     sed "s|cpp_args = \[|cpp_args = ['-pthread', |g" | \
-    sed "s|'--bind'|'--bind', '-pthread', '--emit-tsd=thorvg.d.ts', '-sPTHREAD_POOL_SIZE=(typeof globalThis[\"__THORVG_THREAD_COUNT\"] !== \"undefined\" ? globalThis[\"__THORVG_THREAD_COUNT\"] : (typeof navigator !== \"undefined\" \&\& navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4))', '-sPTHREAD_POOL_SIZE_STRICT=0', '-sINITIAL_MEMORY=134217728', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sDISABLE_EXCEPTION_CATCHING=0', '-sDISABLE_EXCEPTION_THROWING=0', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
+    sed "s|'--bind'|'--bind', '-pthread', '--emit-tsd=thorvg.d.ts', '-sPTHREAD_POOL_SIZE=(typeof globalThis[\"__THORVG_THREAD_COUNT\"] !== \"undefined\" ? globalThis[\"__THORVG_THREAD_COUNT\"] : (typeof navigator !== \"undefined\" \&\& navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4))', '-sPTHREAD_POOL_SIZE_STRICT=0', '-sINITIAL_MEMORY=134217728', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
 else
   sed "s|EMSDK:|$EMSDK/|g" ../wasm/wasm32.txt | \
-    sed "s|, '-fno-exceptions'||g" | \
-    sed "s|'-fno-exceptions', ||g" | \
     sed "s|, '-sEXPORTED_RUNTIME_METHODS=[^']*'||g" | \
-    sed "s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sDISABLE_EXCEPTION_CATCHING=0', '-sDISABLE_EXCEPTION_THROWING=0', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
+    sed "s|'--bind'|'--bind', '--emit-tsd=thorvg.d.ts', '-sEXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}', '-sEXPORTED_RUNTIME_METHODS=${EXPORTED_RUNTIME_METHODS}', '-sALLOW_TABLE_GROWTH=1', '-sINITIAL_TABLE=128'|g" > /tmp/.wasm_webcanvas_cross.txt
 fi
 
 meson setup \
