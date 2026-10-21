@@ -28,7 +28,8 @@
     "clean": "pnpm -r clean",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "lint:fix": "pnpm -r lint:fix"
+    "lint:fix": "pnpm -r lint:fix",
+    "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

@@ -70,6 +70,12 @@ jobs:
           ls -lah packages/webcanvas/dist/
           echo "✅ WebCanvas build completed successfully"
 
+      - name: Lint
+        run: pnpm --filter @thorvg/webcanvas lint
+
+      - name: Type check
+        run: pnpm --filter @thorvg/webcanvas typecheck
+
       - name: Run unit tests
         run: pnpm --filter @thorvg/webcanvas test
 

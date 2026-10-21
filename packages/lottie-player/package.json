@@ -61,6 +61,7 @@
     "test": "THORVG_VERSION=$(npm run version --silent) web-test-runner tests/**/*.test.ts",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
+    "typecheck": "tsc --noEmit",
     "version": "sed -n -e 4p ../../thorvg/meson.build | sed 's/..$//' | sed -r 's/.{19}//'"
   },
   "repository": {
