@@ -33,6 +33,15 @@ const _downloadFile = (fileName: string, blob: Blob) => {
   document.body.removeChild(link);
 };
 
+/**
+ * Output size for saver.
+ * @beta
+ */
+interface SaveSize {
+  width: number;
+  height: number;
+}
+
 @customElement('lottie-player')
 export class LottiePlayer extends BaseLottiePlayer {
   /**
@@ -55,22 +64,28 @@ export class LottiePlayer extends BaseLottiePlayer {
   /**
    * Save current animation to png image
    * @since 1.0
+   * @param size - (Beta) Output size. Defaults to the animation size.
    */
-  public async save2png(src: string): Promise<void> {
+  public async save2png(src: string, size?: SaveSize): Promise<void> {
     if (!wasmModule) {
       throw new Error(`Unable to save. Module is not initialized.`);
     }
 
-    const [width, height] = this.size;
-
     const bytes = await parseSrc(src, this.fileType);
     const saver = new wasmModule.TvgLottieAnimation('sw', '');
-    const isLoaded = saver.load(bytes, this.fileType, width, height);
+    const isLoaded = saver.load(bytes, this.fileType, 0, 0);
     if (!isLoaded) {
       const error = saver.error();
       saver.delete();
       throw new Error(`Unable to save. Error: ${error}`);
     }
+
+    let [width, height] = saver.size();
+    size ??= { width, height };
+    const scale = Math.min(size.width / width, size.height / height);
+    width *= scale;
+    height *= scale;
+    saver.resize(width, height);
 
     saver.frame(this.currentFrame);
     saver.update();
@@ -99,15 +114,16 @@ export class LottiePlayer extends BaseLottiePlayer {
   /**
    * Save current animation to gif image
    * @since 1.0
+   * @param size - (Beta) Output size. Defaults to 600x600.
    */
-  public async save2gif(src: string): Promise<void> {
+  public async save2gif(src: string, size: SaveSize = { width: 600, height: 600 }): Promise<void> {
     if (!wasmModule) {
       throw new Error(`Unable to save. Module is not initialized.`);
     }
 
     const saver = new wasmModule.TvgLottieAnimation('sw', '');
     const bytes = await parseSrc(src, 'json');
-    const isExported = saver.save(bytes, 'gif');
+    const isExported = saver.save(bytes, 'gif', size.width, size.height);
     if (!isExported) {
       const error = saver.error();
       saver.delete();
