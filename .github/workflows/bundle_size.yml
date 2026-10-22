@@ -9,7 +9,10 @@ on:
       - 'wasm/**'
       - 'thorvg'
       - 'pnpm-lock.yaml'
+      - '!**/test*/**'
+      - '!**/docs/**'
       - '!**/*.md'
+      - '!**/.gitignore'
 
 permissions:
   contents: read
