@@ -208,6 +208,14 @@ describe('Lottie Player', () => {
     it('save2gif', async () => {
       return player.save2gif(ANIMATION);
     });
+
+    it('save2png with size', () => {
+      return player.save2png(ANIMATION, 600, 200);
+    });
+
+    it('save2gif with size', () => {
+      return player.save2gif(ANIMATION, 600, 200);
+    });
   });
 
   describe('Error paths', () => {

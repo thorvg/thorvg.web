@@ -56,12 +56,15 @@ export class LottiePlayer extends BaseLottiePlayer {
    * Save current animation to png image
    * @since 1.0
    */
-  public async save2png(src: string): Promise<void> {
+  public async save2png(src: string, width?: number, height?: number): Promise<void> {
     if (!wasmModule) {
       throw new Error(`Unable to save. Module is not initialized.`);
     }
 
-    const [width, height] = this.size;
+    const [w, h] = this.size;
+    const scale = width || height ? Math.min((width ?? Infinity) / w, (height ?? Infinity) / h) : 1;
+    width = Math.round(w * scale);
+    height = Math.round(h * scale);
 
     const bytes = await parseSrc(src, this.fileType);
     const saver = new wasmModule.TvgLottieAnimation('sw', '');
@@ -100,14 +103,14 @@ export class LottiePlayer extends BaseLottiePlayer {
    * Save current animation to gif image
    * @since 1.0
    */
-  public async save2gif(src: string): Promise<void> {
+  public async save2gif(src: string, width?: number, height?: number): Promise<void> {
     if (!wasmModule) {
       throw new Error(`Unable to save. Module is not initialized.`);
     }
 
     const saver = new wasmModule.TvgLottieAnimation('sw', `#${this.canvas!.id}`);
     const bytes = await parseSrc(src, 'json');
-    const isExported = saver.save(bytes, 'gif');
+    const isExported = saver.save(bytes, 'gif', width ?? 0, height ?? 0);
     if (!isExported) {
       const error = saver.error();
       saver.delete();
