@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'packages/lottie-player/**'
+      - 'wasm/**'
+      - 'thorvg'
       - 'pnpm-lock.yaml'
       - '.github/workflows/build-player.yml'
       - '!**/*.md'
@@ -14,6 +16,8 @@ on:
       - main
     paths:
       - 'packages/lottie-player/**'
+      - 'wasm/**'
+      - 'thorvg'
       - 'pnpm-lock.yaml'
       - '.github/workflows/build-player.yml'
       - '!**/*.md'
