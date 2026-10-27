@@ -1,4 +1,4 @@
-import { Input, BufferSource, MP4, QTFF, MATROSKA, WEBM, MPEG_TS, VideoSampleSink, AudioSampleSink } from 'mediabunny';
+import { Input, BufferSource, MP4, QTFF, MATROSKA, WEBM, VideoSampleSink, AudioSampleSink } from 'mediabunny';
 import type { VideoSample } from 'mediabunny';
 
 const MAX_FRAMES = 3;
@@ -86,7 +86,7 @@ async function convert(sample: VideoSample, w: number, h: number): Promise<Array
 }
 
 function openInput(): Input {
-  return new Input({ source: new BufferSource(bytes!.buffer), formats: [MP4, QTFF, MATROSKA, WEBM, MPEG_TS] });
+  return new Input({ source: new BufferSource(bytes!.buffer), formats: [MP4, QTFF, MATROSKA, WEBM] });
 }
 
 async function videoLoop(myGen: number, startTime: number): Promise<void> {
