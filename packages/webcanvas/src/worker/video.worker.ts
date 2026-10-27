@@ -10,7 +10,6 @@ let bytes: Uint8Array | null = null;
 let videoGen = 0;
 let audioGen = 0;
 let audioStartTime = 0;
-let target: { width: number; height: number } | null = null;
 let playhead = 0;
 let copyToUsable = true;
 let feederPort: MessagePort | null = null;
@@ -61,12 +60,6 @@ function resetSlots(): void {
   pending?.();
 }
 
-function decodeDims(srcW: number, srcH: number): { w: number; h: number } {
-  if (!target) return { w: srcW, h: srcH };
-  const scale = Math.min(1, Math.max(target.width / srcW, target.height / srcH));
-  return { w: Math.max(1, Math.round(srcW * scale)), h: Math.max(1, Math.round(srcH * scale)) };
-}
-
 async function convert(sample: VideoSample, w: number, h: number): Promise<ArrayBuffer> {
   if (copyToUsable && sample.rotation === 0 && w === sample.codedWidth && h === sample.codedHeight) {
     try {
@@ -108,7 +101,8 @@ async function videoLoop(myGen: number, startTime: number): Promise<void> {
         continue;
       }
 
-      const { w, h } = decodeDims(sample.displayWidth, sample.displayHeight);
+      const w = sample.displayWidth;
+      const h = sample.displayHeight;
       await reserve();
       if (myGen !== videoGen) { sample.close(); return; }
 
@@ -181,13 +175,10 @@ async function announce(): Promise<void> {
     const audioTrack = await input.getPrimaryAudioTrack();
     const hasAudio = !!audioTrack && (await audioTrack.canDecode());
     const duration = await input.computeDuration();
-    const { w, h } = decodeDims(videoTrack.displayWidth, videoTrack.displayHeight);
     self.postMessage({
       type: 'ready',
       width: videoTrack.displayWidth,
       height: videoTrack.displayHeight,
-      decodeWidth: w,
-      decodeHeight: h,
       duration,
       hasAudio,
       sampleRate: hasAudio ? audioTrack!.sampleRate : 0,
@@ -206,7 +197,6 @@ self.onmessage = ({ data }: MessageEvent) => {
       videoGen = 0;
       audioGen = 0;
       audioStartTime = 0;
-      target = null;
       playhead = 0;
       resetSlots();
       announce();
@@ -220,10 +210,6 @@ self.onmessage = ({ data }: MessageEvent) => {
     case 'ack': {
       if (typeof data.time === 'number') playhead = data.time;
       ack();
-      break;
-    }
-    case 'resize': {
-      target = data.width > 0 && data.height > 0 ? { width: data.width, height: data.height } : null;
       break;
     }
     case 'restart': {
