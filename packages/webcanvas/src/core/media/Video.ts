@@ -65,8 +65,6 @@ export class Video {
   #rafId: number | null = null;
   #videoGen = 0;
   #audioGen = 0;
-  #targetWidth = 0;
-  #targetHeight = 0;
   #frameTime: number | null = null;
   #frameWidth = 0;
   #frameHeight = 0;
@@ -139,8 +137,6 @@ export class Video {
     this.#frameHeight = 0;
     this.#frame = null;
     this.#duration = 0;
-    this.#targetWidth = 0;
-    this.#targetHeight = 0;
     this.#frameTime = null;
 
     return new Promise<void>((resolve, reject) => {
@@ -163,9 +159,9 @@ export class Video {
           }
           case 'ready': {
             self.#duration = data.duration;
-            self.#frameWidth = data.decodeWidth;
-            self.#frameHeight = data.decodeHeight;
-            self.#frame = new Uint8Array(data.decodeWidth * data.decodeHeight * 4);
+            self.#frameWidth = data.width;
+            self.#frameHeight = data.height;
+            self.#frame = new Uint8Array(data.width * data.height * 4);
             if (!self.#attach()) {
               self.#abortLoad = null;
               reject(new Error('Failed to bind the video to the media loader'));
@@ -365,16 +361,6 @@ export class Video {
     this.#worker?.postMessage({ type: 'resync', videoGen: this.#videoGen, time: time });
   }
 
-  /** Sync resolution between the video and the picture */
-  #resize(): void {
-    const size = this.picture?.size();
-    if (!size || !size.width || !size.height) return;
-    if (size.width === this.#targetWidth && size.height === this.#targetHeight) return;
-    this.#targetWidth = size.width;
-    this.#targetHeight = size.height;
-    this.#worker?.postMessage({ type: 'resize', width: size.width, height: size.height });
-  }
-
   /** Update the state to the WASM module */
   #updateState(): void {
     const Module = getModule();
@@ -400,7 +386,6 @@ export class Video {
    * Note: canvas.update() and canvas.render() is managed by this method
    */
   #tick = (): void => {
-    if (this.#loaded) this.#resize();
     this.#control();
 
     const now = this.#audio?.now() ?? null;
@@ -430,6 +415,7 @@ export class Video {
 
   #push(frame: VideoFrame): void {
     if (!this.#loaded || !this.#bound) return;
+    if (frame.width !== this.#frameWidth || frame.height !== this.#frameHeight) return;
 
     const bytes = new Uint8Array(frame.rgba);
     if (bytes.byteLength !== frame.width * frame.height * 4) {
@@ -437,8 +423,6 @@ export class Video {
       return;
     }
 
-    this.#frameWidth = frame.width;
-    this.#frameHeight = frame.height;
     this.#frame = bytes;
   }
 
