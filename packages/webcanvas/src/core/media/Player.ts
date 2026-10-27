@@ -25,10 +25,13 @@ interface QueuedFrame {
 class MediaPlayer implements WebMediaPlayer {
   #worker: Worker | null;
   #queue: QueuedFrame[] = [];
-  #metadata: { width: number; height: number; duration: number } | null = null;
+  #width = 0;
+  #height = 0;
+  #duration = 0;
   #format: AudioFormat | null = null;
   #audio: AudioSink | null = null;
   #disposed = false;
+  #ready = false;
 
   #playing = false;
   #autoplay = true;
@@ -52,6 +55,7 @@ class MediaPlayer implements WebMediaPlayer {
   #gestureOff: (() => void) | null = null;
 
   constructor(bytes: Uint8Array) {
+    this.#metadata(bytes);
     this.#lastSync = performance.now();
     this.#worker = createVideoWorker();
     this.#worker.onmessage = (event: MessageEvent) => this.#onMessage(event);
@@ -63,18 +67,20 @@ class MediaPlayer implements WebMediaPlayer {
     if (this.#disposed) return null;
     this.#lastSync = performance.now();
     if (this.#stalled) this.#wake();
-    if (!this.#metadata) return null;
+
+    const state = { width: this.#width, height: this.#height, duration: this.#duration };
+    if (!this.#ready) return state;
 
     const due = this.#advance();
-    if (!due) return this.#metadata;
-    return { ...this.#metadata, data: new Uint8Array(due.frame.rgba), time: due.time };
+    if (!due) return state;
+    return { ...state, data: new Uint8Array(due.frame.rgba), time: due.time };
   }
 
   play(): void {
     if (this.#disposed) return;
     this.#autoplay = true;
     this.#pinned = false;
-    if (!this.#metadata || this.#playing) return;
+    if (!this.#ready || this.#playing) return;
     this.#playing = true;
     this.#lastSync = performance.now();
     this.#audio?.play();
@@ -97,7 +103,7 @@ class MediaPlayer implements WebMediaPlayer {
     this.#pinned = false;
     this.#lastSeek = Number.NaN;
     this.#unwatch();
-    if (this.#metadata) this.#restart(0);
+    if (this.#ready) this.#restart(0);
     else this.#time = 0;
     this.#audio?.pause();
   }
@@ -114,7 +120,7 @@ class MediaPlayer implements WebMediaPlayer {
     this.#lastSeek = time;
     this.#pinned = false;
 
-    if (!this.#metadata) {
+    if (!this.#ready) {
       this.#time = time; // applied when metadata arrives
       return;
     }
@@ -157,11 +163,65 @@ class MediaPlayer implements WebMediaPlayer {
     this.#queue = [];
   }
 
+  /** Fetch the video metadata from MP4 file */
+  #metadata(bytes: Uint8Array): void {
+    const fourcc = (view: DataView, pos: number): string =>
+      String.fromCharCode(view.getUint8(pos), view.getUint8(pos + 1), view.getUint8(pos + 2), view.getUint8(pos + 3));
+
+    const boxes = (parent: DataView, type: string): DataView[] => {
+      const found: DataView[] = [];
+      for (let pos = 0; pos + 8 <= parent.byteLength;) {
+        const size = parent.getUint32(pos) || parent.byteLength - pos;
+        if (size < 8) break;
+        if (fourcc(parent, pos + 4) === type) {
+          found.push(new DataView(parent.buffer, parent.byteOffset + pos + 8, Math.min(size, parent.byteLength - pos) - 8));
+        }
+        pos += size;
+      }
+      return found;
+    };
+
+    const box = (parent: DataView, ...path: string[]) =>
+      path.reduce<DataView | undefined>((view, type) => view && boxes(view, type)[0], parent);
+
+    const file = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const moov = fourcc(file, 4) === 'ftyp' ? box(file, 'moov') : undefined;
+    const mvhd = moov && box(moov, 'mvhd');
+    if (!moov || !mvhd) return;
+
+    // fetch duration
+    const long = mvhd.getUint8(0) === 1;
+    const timescale = mvhd.getUint32(long ? 20 : 12);
+    const duration = long ? mvhd.getUint32(24) * 2 ** 32 + mvhd.getUint32(28) : mvhd.getUint32(16);
+    if (timescale) this.#duration = duration / timescale;
+
+    for (const trak of boxes(moov, 'trak')) {
+      const tkhd = box(trak, 'tkhd');
+      const hdlr = box(trak, 'mdia', 'hdlr');
+      const stsd = box(trak, 'mdia', 'minf', 'stbl', 'stsd');
+      if (!tkhd || !hdlr || !stsd || fourcc(hdlr, 8) !== 'vide') continue;
+
+      // fetch size
+      const width = stsd.getUint16(40);
+      const height = stsd.getUint16(42);
+      if (!width || !height) return;
+
+      const matrix = tkhd.getUint8(0) === 1 ? 52 : 40;
+      const quarter = Math.round(Math.atan2(tkhd.getInt32(matrix + 4), tkhd.getInt32(matrix)) / (Math.PI / 2));
+      const rotated = quarter % 2 !== 0;
+      this.#width = rotated ? height : width;
+      this.#height = rotated ? width : height;
+    }
+  }
+
   #onMessage({ data }: MessageEvent): void {
     if (this.#disposed) return;
     switch (data.type) {
       case 'ready': {
-        this.#metadata = { width: data.decodeWidth, height: data.decodeHeight, duration: data.duration };
+        this.#width = data.decodeWidth;
+        this.#height = data.decodeHeight;
+        this.#duration = data.duration;
+        this.#ready = true;
         this.#format = data.hasAudio ? { sampleRate: data.sampleRate, channels: data.channels } : null;
         this.#attach(this.#format);
         if (this.#time > 0) this.#restart(this.#time);
@@ -193,8 +253,8 @@ class MediaPlayer implements WebMediaPlayer {
 
   #clamp(seconds: number): number {
     const time = Math.max(0, seconds);
-    if (!this.#metadata?.duration) return time;
-    return Math.min(time, this.#metadata.duration);
+    if (!this.#duration) return time;
+    return Math.min(time, this.#duration);
   }
 
   /** Advance the clock, handling end-of-media, and return the latest due frame */
@@ -203,7 +263,7 @@ class MediaPlayer implements WebMediaPlayer {
     if (running && this.#queue.length > 0) this.#audio?.videoReady();
 
     let now = this.#now();
-    const duration = this.#metadata!.duration;
+    const duration = this.#duration;
     if (running && duration && now >= duration - END_GAP) {
       if (this.#looping) {
         this.#restart(0);
@@ -228,8 +288,7 @@ class MediaPlayer implements WebMediaPlayer {
       frame = this.#queue.shift()!;
       this.#ack();
     }
-    if (!frame) return null;
-    if (frame.width !== this.#metadata!.width || frame.height !== this.#metadata!.height) return null;
+    if (!frame || frame.width !== this.#width || frame.height !== this.#height) return null;
 
     this.#posterPending = false;
     this.#frameTime = frame.timeSec;
