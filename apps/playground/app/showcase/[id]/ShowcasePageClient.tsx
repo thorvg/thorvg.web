@@ -6,6 +6,11 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import CanvasPreview from '@/components/CanvasPreview';
 import { getExampleById, showcaseExamples } from '@/lib/examples';
+import {
+  buildExampleUrl,
+  readRendererParam,
+  type Renderer,
+} from '@/lib/url-params';
 
 const CodeEditor = dynamic(() => import('@/components/CodeEditor'), {
   ssr: false,
@@ -22,7 +27,7 @@ export default function ShowcasePageClient({ id }: { id: string }) {
   const [example, setExample] = useState(getExampleById(id));
   const [code, setCode] = useState(example?.code || '');
   const [copied, setCopied] = useState(false);
-  const [rendererParam, setRendererParam] = useState<string | null>(null);
+  const [rendererParam, setRendererParam] = useState<Renderer | null>(null);
 
   useEffect(() => {
     const foundExample = getExampleById(id);
@@ -32,19 +37,19 @@ export default function ShowcasePageClient({ id }: { id: string }) {
     }
     setExample(foundExample);
 
-    const params = new URLSearchParams(window.location.search);
-    const urlRenderer = params.get('renderer');
+    const urlRenderer = readRendererParam(window.location.search);
     setRendererParam(urlRenderer);
 
-    if (urlRenderer && ['sw', 'gl', 'wg'].includes(urlRenderer)) {
-      const modifiedCode = foundExample.code.replace(
+    let nextCode = foundExample.code;
+
+    if (urlRenderer) {
+      nextCode = nextCode.replace(
         /renderer:\s*['"](?:sw|gl|wg)['"]/,
         `renderer: '${urlRenderer}'`
       );
-      setCode(modifiedCode);
-    } else {
-      setCode(foundExample.code);
     }
+
+    setCode(nextCode);
   }, [id, router]);
 
   if (!example) {
@@ -78,10 +83,6 @@ export default function ShowcasePageClient({ id }: { id: string }) {
   const prevExample = currentIndex > 0 ? showcaseExamples[currentIndex - 1] : null;
   const nextExample =
     currentIndex < showcaseExamples.length - 1 ? showcaseExamples[currentIndex + 1] : null;
-
-  const buildExampleUrl = (exampleId: string) => {
-    return rendererParam ? `/showcase/${exampleId}?renderer=${rendererParam}` : `/showcase/${exampleId}`;
-  };
 
   return (
     <div className="h-screen flex flex-col">
@@ -197,7 +198,7 @@ export default function ShowcasePageClient({ id }: { id: string }) {
         <div>
           {prevExample ? (
             <Link
-              href={buildExampleUrl(prevExample.id)}
+              href={buildExampleUrl(prevExample.id, rendererParam)}
               className="text-[#4a9eff] hover:underline flex items-center gap-1"
             >
               <svg
@@ -227,7 +228,7 @@ export default function ShowcasePageClient({ id }: { id: string }) {
         <div>
           {nextExample ? (
             <Link
-              href={buildExampleUrl(nextExample.id)}
+              href={buildExampleUrl(nextExample.id, rendererParam)}
               className="text-[#4a9eff] hover:underline flex items-center gap-1"
             >
               Next: {nextExample.title}
