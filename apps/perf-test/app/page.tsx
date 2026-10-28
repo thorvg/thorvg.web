@@ -15,11 +15,11 @@ import {
   BENCH_MEASURE_MS,
   computeBenchResult,
 } from '../lib/benchmark';
-import { type MemorySample, profiler } from '../lib/profiler';
+import type Profiler from '@thorvg/profiler';
+import { type MemorySample, loadProfiler } from '../lib/profiler';
 import { VersionSelector } from '../components/VersionSelector';
 import { BenchmarkModal } from '../components/BenchmarkModal';
 import { DragOverlay } from '../components/DragOverlay';
-import { ProfilerPanel } from '../components/ProfilerPanel';
 
 export default function Home({ searchParams }: {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -52,6 +52,7 @@ export default function Home({ searchParams }: {
   const benchPhaseRef = useRef<'idle' | 'warmup' | 'measuring'>('idle');
   const benchTimingsRef = useRef<number[]>([]);
   const benchMemRef = useRef<MemorySample[]>([]);
+  const profilerRef = useRef<Profiler | null>(null);
   const benchTimeoutA = useRef<ReturnType<typeof setTimeout> | null>(null);
   const benchTimeoutB = useRef<ReturnType<typeof setTimeout> | null>(null);
   const benchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -155,6 +156,12 @@ export default function Home({ searchParams }: {
     return () => { window.removeEventListener('pagehide', stopLoop); };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      profilerRef.current?.dom.remove();
+    };
+  }, []);
+
   // TVG setup
   useEffect(() => {
     if (animList.length === 0 || !canvasRef.current || !containerRef.current) return;
@@ -168,7 +175,6 @@ export default function Home({ searchParams }: {
         try { anim.dispose(); } catch { /* */ }
       }
       animsRef.current = [];
-      profiler.detach();
       if (tvgCanvasRef.current) { try { tvgCanvasRef.current.destroy(); } catch { /* */ } tvgCanvasRef.current = null; }
       if (tvgRef.current) { try { tvgRef.current.term(); } catch { /* */ } tvgRef.current = null; }
 
@@ -185,8 +191,10 @@ export default function Home({ searchParams }: {
       canvasEl.height = canvasH;
 
       try {
-        await profiler.install(renderer);
+        const profiler = await loadProfiler();
         if (cancelled) return;
+        profilerRef.current = profiler;
+        document.body.appendChild(profiler.dom);
 
         const v = getParam('v', 'local') as ThorVGVersion;
         const ThorVGModule = await loadThorVGModule(v);
@@ -213,7 +221,6 @@ export default function Home({ searchParams }: {
           engineOption: TVG.EngineOption?.None ?? 0,
         });
         tvgCanvasRef.current = tvgCanvas;
-        profiler.attach(canvasEl);
 
         setLoadingStatus('Loading…');
         const fetchResults = await Promise.allSettled(
@@ -333,7 +340,6 @@ export default function Home({ searchParams }: {
         try { anim.dispose(); } catch { /* */ }
       }
       animsRef.current = [];
-      profiler.detach();
       if (tvgCanvasRef.current) { try { tvgCanvasRef.current.destroy(); } catch { /* */ } tvgCanvasRef.current = null; }
       if (tvgRef.current) { try { tvgRef.current.term(); } catch { /* */ } tvgRef.current = null; }
     };
@@ -434,7 +440,7 @@ export default function Home({ searchParams }: {
     }, 100);
 
     benchTimeoutA.current = setTimeout(() => {
-      profiler.resetPeak();
+      profilerRef.current?.resetPeak();
       benchPhaseRef.current = 'measuring';
       setBenchPhase('measuring');
     }, warmupMs);
@@ -574,8 +580,6 @@ export default function Home({ searchParams }: {
           </div>
         </div>
       </div>
-
-      <ProfilerPanel />
 
       {showBench && (
         <BenchmarkModal

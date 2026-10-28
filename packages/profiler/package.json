@@ -1,0 +1,65 @@
+{
+  "name": "@thorvg/profiler",
+  "version": "1.0.0",
+  "description": "Web FPS and memory (JS, WASM, GPU) profiler",
+  "main": "./dist/profiler.cjs.js",
+  "module": "./dist/profiler.esm.js",
+  "types": "./dist/profiler.d.ts",
+  "unpkg": "./dist/profiler.js",
+  "jsdelivr": "./dist/profiler.js",
+  "exports": {
+    ".": {
+      "types": "./dist/profiler.d.ts",
+      "import": "./dist/profiler.esm.js",
+      "require": "./dist/profiler.cjs.js"
+    }
+  },
+  "sideEffects": true,
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && rollup -c",
+    "dev": "rollup -c --watch",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "typecheck": "tsc --noEmit",
+    "serve": "npx --yes http-server -c-1 -p 5240 ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thorvg/thorvg.web.git",
+    "directory": "packages/profiler"
+  },
+  "author": "Jinny You <jinny@lottiefiles.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/thorvg/thorvg.web/issues"
+  },
+  "homepage": "https://thorvg.org",
+  "keywords": [
+    "thorvg",
+    "profiler",
+    "fps",
+    "memory",
+    "webgl",
+    "webgpu",
+    "wasm"
+  ],
+  "dependencies": {
+    "webgl-memory": "^1.1.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@swc/core": "^1.15.46",
+    "rollup": "^4.62.3",
+    "rollup-plugin-dts": "^6.4.1",
+    "rollup-plugin-swc3": "^0.12.1",
+    "typescript": "^5.9.3"
+  }
+}
