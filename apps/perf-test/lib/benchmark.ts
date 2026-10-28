@@ -1,5 +1,5 @@
 import { type Renderer, RENDERER_LABELS } from './constants';
-import { type MemorySample, toMB } from './profiler';
+import { type MemorySample, toMB } from './perfMonitor';
 
 export type BenchPhase = 'idle' | 'warmup' | 'measuring' | 'done';
 
