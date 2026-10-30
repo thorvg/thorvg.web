@@ -8,6 +8,7 @@ on:
       - main
     paths:
       - 'packages/webcanvas/**'
+      - 'packages/profiler/**'
       - 'apps/perf-test/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/perf-test.yml'

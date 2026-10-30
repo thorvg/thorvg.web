@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>@thorvg/profiler example</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0b0f17; color: #e5e7eb; font: 14px system-ui, sans-serif; }
+    nav { position: fixed; z-index: 1; top: 12px; left: 12px; display: flex; gap: 8px; }
+    nav a { color: #9ca3af; text-decoration: none; padding: 4px 10px; border: 1px solid #374151; border-radius: 6px; background: rgba(17, 24, 39, 0.9); }
+    nav a.active { color: #00deb5; border-color: #00deb5; }
+    canvas { display: block; width: 100vw; height: 100vh; }
+  </style>
+  <script src="../dist/profiler.js"></script>
+</head>
+<body>
+  <nav>
+    <a href="?renderer=sw">sw</a>
+    <a href="?renderer=gl">gl</a>
+    <a href="?renderer=wg">wg</a>
+  </nav>
+  <canvas id="canvas"></canvas>
+  <script type="module">
+    import ThorVG from 'https://cdn.jsdelivr.net/npm/@thorvg/webcanvas@latest/dist/webcanvas.esm.js';
+
+    const profiler = new ThorVGProfiler();
+    document.body.appendChild(profiler.dom);
+    window.profiler = profiler;
+
+    const renderer = new URLSearchParams(location.search).get('renderer') ?? 'gl';
+    document.querySelector(`nav a[href="?renderer=${renderer}"]`)?.classList.add('active');
+
+    const TVG = await ThorVG.init({
+      renderer,
+      locateFile: (path) => `https://cdn.jsdelivr.net/npm/@thorvg/webcanvas@latest/dist/${path}`,
+    });
+
+    const width = innerWidth;
+    const height = innerHeight;
+    const canvas = new TVG.Canvas('#canvas', { renderer, width, height });
+
+    const shapes = [];
+    for (let i = 0; i < 400; i++) {
+      const shape = new TVG.Shape();
+      const size = 12 + Math.random() * 36;
+      shape.appendRect(-size / 2, -size / 2, size, size, { rx: size / 5, ry: size / 5 });
+      shape.fill(Math.random() * 255, 200 + Math.random() * 55, 180 + Math.random() * 75, 200);
+      canvas.add(shape);
+      shapes.push({ shape, x: Math.random() * width, y: Math.random() * height, speed: 30 + Math.random() * 120 });
+    }
+
+    function loop(time) {
+      const t = time / 1000;
+      for (const { shape, x, y, speed } of shapes) shape.translate(x, y).rotate((t * speed) % 360);
+      canvas.update().render();
+      profiler.frame();
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

@@ -25,6 +25,14 @@ interface CanvasContext {
   canvas: { width: number; height: number };
 }
 
+interface GPUGlobals {
+  GPUDevice?: { prototype: object };
+  GPUBuffer: { prototype: object };
+  GPUTexture: { prototype: object };
+  GPUQuerySet: { prototype: object };
+  GPUCanvasContext: { prototype: object };
+}
+
 interface Entry {
   category: Category;
   bytes: number;
@@ -58,13 +66,14 @@ const resources: Record<Category, number> = { buffer: 0, texture: 0, canvas: 0, 
 let total = 0;
 let peak = 0;
 let installed = false;
+let tracking = false;
 
 function textureBytes(texture: TextureShape): number {
   const texel = kBytesPerTexel[texture.format];
   if (texel === undefined) {
     if (!warned.has(texture.format)) {
       warned.add(texture.format);
-      console.warn(`webgpu-memory: unknown texture format '${texture.format}', counted as 0 bytes`);
+      console.warn(`@thorvg/profiler: unknown texture format '${texture.format}', counted as 0 bytes`);
     }
     return 0;
   }
@@ -91,6 +100,7 @@ function ownerOf(device: Device): Set<Entry> {
   if (!owner) {
     const set = new Set<Entry>();
     devices.set(device, set);
+    tracking = true;
     device.lost.then(() => {
       for (const entry of set) release(entry);
     });
@@ -131,33 +141,34 @@ function free(object: object): void {
   if (entry) release(entry);
 }
 
-function wrap(proto: any, name: string, after: (self: any, result: any, args: any[]) => void): void {
-  const original = proto[name];
-  proto[name] = function (this: unknown, ...args: unknown[]) {
+function wrap<S, R, A extends unknown[] = unknown[]>(proto: object, name: string, after: (self: S, result: R, args: A) => void): void {
+  const methods = proto as Record<string, (this: unknown, ...args: unknown[]) => unknown>;
+  const original = methods[name]!;
+  methods[name] = function (this: unknown, ...args: unknown[]) {
     const result = original.apply(this, args);
-    after(this, result, args);
+    after(this as S, result as R, args as A);
     return result;
   };
 }
 
 export function install(): void {
-  const g = globalThis as any;
+  const g = globalThis as unknown as GPUGlobals;
   if (installed || !g.GPUDevice) return;
   installed = true;
 
-  wrap(g.GPUDevice.prototype, 'createBuffer', (device, buffer) => track(buffer, device, 'buffer', buffer.size));
-  wrap(g.GPUDevice.prototype, 'createTexture', (device, texture) => track(texture, device, 'texture', textureBytes(texture)));
-  wrap(g.GPUDevice.prototype, 'createQuerySet', (device, querySet) => track(querySet, device, 'querySet', querySet.count * 8));
+  wrap(g.GPUDevice.prototype, 'createBuffer', (device: Device, buffer: { size: number }) => track(buffer, device, 'buffer', buffer.size));
+  wrap(g.GPUDevice.prototype, 'createTexture', (device: Device, texture: TextureShape) => track(texture, device, 'texture', textureBytes(texture)));
+  wrap(g.GPUDevice.prototype, 'createQuerySet', (device: Device, querySet: { count: number }) => track(querySet, device, 'querySet', querySet.count * 8));
   wrap(g.GPUBuffer.prototype, 'destroy', free);
   wrap(g.GPUTexture.prototype, 'destroy', free);
   wrap(g.GPUQuerySet.prototype, 'destroy', free);
 
-  wrap(g.GPUCanvasContext.prototype, 'configure', (context, _, [config]) => {
+  wrap(g.GPUCanvasContext.prototype, 'configure', (context: CanvasContext, _: unknown, [config]: [{ device: Device; format: string }]) => {
     free(context);
     track(context, config.device, 'canvas', canvasBytes(context, config.format));
   });
   wrap(g.GPUCanvasContext.prototype, 'unconfigure', free);
-  wrap(g.GPUCanvasContext.prototype, 'getCurrentTexture', (context, texture) => {
+  wrap(g.GPUCanvasContext.prototype, 'getCurrentTexture', (context: CanvasContext, texture: TextureShape) => {
     const entry = entries.get(context);
     if (entry?.live) resize(entry, textureBytes(texture) * kTexturesPerCanvas);
   });
@@ -169,4 +180,8 @@ export function usage(): WebGPUMemoryUsage {
 
 export function resetPeak(): void {
   peak = total;
+}
+
+export function active(): boolean {
+  return tracking;
 }
