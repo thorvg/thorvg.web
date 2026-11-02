@@ -22,8 +22,7 @@ import type { MimeType } from '../common/constants';
  *                reference, or a `Text` for a font reference. Use `instanceof`
  *                to tell them apart.
  * @param src - The asset source string exactly as authored in the file.
- * @returns `true` if you resolved the asset; `false` to let the engine fall
- *          back to its own resolution.
+ * @returns `true` if you resolved the asset, `false` otherwise.
  *
  * @category Picture
  *
@@ -190,7 +189,7 @@ export class Picture extends Paint {
     this.#resolver = callback;
 
     if (!callback) {
-      const result = Module._tvg_picture_set_asset_resolver(this.ptr, 0, 0);
+      const result = Module._tvg_picture_set_asset_resolver(this.ptr, 0, 0, 1);
       if (result !== ThorVGResultCode.Success && result !== ThorVGResultCode.InsufficientCondition) {
         checkResult(result, 'resolver');
       }
@@ -215,7 +214,7 @@ export class Picture extends Paint {
 
     this.#resolverPtr = funcPtr;
     callbackRegistry.register(this, funcPtr, this);
-    checkResult(Module._tvg_picture_set_asset_resolver(this.ptr, funcPtr, 0), 'resolver');
+    checkResult(Module._tvg_picture_set_asset_resolver(this.ptr, funcPtr, 0, 1), 'resolver');
     return this;
   }
 
