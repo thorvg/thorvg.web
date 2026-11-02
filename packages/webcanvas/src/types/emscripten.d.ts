@@ -203,7 +203,7 @@ export interface ThorVGCAPI {
   _tvg_picture_set_origin(picture: number, x: number, y: number): number;
   _tvg_picture_set_filter(picture: number, method: number): number;
   _tvg_picture_set_accessible(picture: number, accessible: number): number;
-  _tvg_picture_set_asset_resolver(picture: number, resolver: number, data: number): number;
+  _tvg_picture_set_asset_resolver(picture: number, resolver: number, data: number, fallback: number): number;
   _tvg_picture_get_paint(picture: number, id: number): number;
 
   // Video functions

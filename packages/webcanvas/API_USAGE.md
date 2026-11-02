@@ -751,7 +751,7 @@ type AssetResolver = (paint: Paint, src: string) => boolean;
 ```
 
 The callback receives the paint needing the asset.
-Return `true` if you resolved it, or `false` to let the engine fall back to its own resolution.
+Return `true` if you resolved it, or `false` otherwise.
 
 **Returns:** `this`
 
