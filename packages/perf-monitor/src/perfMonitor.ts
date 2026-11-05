@@ -134,7 +134,10 @@ export default class PerfMonitor {
     ui.details.hidden = !(this.#open && this.#sampled);
     if (!mem) return;
 
-    ui.fps.set(`${Math.round(this.#fps)} (${Math.round(this.#avg('fps'))})`, history.fps);
+    const fps = Math.round(this.#fps);
+    const avg = Math.round(this.#avg('fps'));
+    ui.fps.element.dataset.tooltip = `[${this.#sum.fps.count}]: ${fps} / ${avg} fps`;
+    ui.fps.set(`${fps} (${avg})`, history.fps);
     ui.mem.set(`${Math.round(history.total[history.total.length - 1]!)} MB (${Math.round(this.#avg('total'))})`, history.total);
 
     const mb = (value: number | null, key: Key) => (value === null ? 'n/a' : `${toMB(value).toFixed(1)} MB (${this.#avg(key).toFixed(1)})`);
