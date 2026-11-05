@@ -62,7 +62,7 @@ export interface ThorVGCAPI {
   // Canvas functions
   _tvg_canvas_add(canvas: number, paint: number): number;
   _tvg_canvas_update(canvas: number): number;
-  _tvg_canvas_draw(canvas: number, preserve: number): number;
+  _tvg_canvas_draw(canvas: number, clear: number): number;
   _tvg_canvas_sync(canvas: number): number;
   _tvg_canvas_set_viewport(canvas: number, x: number, y: number, w: number, h: number): number;
 
