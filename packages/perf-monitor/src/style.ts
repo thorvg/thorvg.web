@@ -81,6 +81,7 @@ button.cell:hover { background: rgba(255, 255, 255, 0.05); }
 .metric .label { color: #6b7280; }
 .metric .value { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .metric svg { flex-shrink: 0; }
+.metric[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 100%; padding: 4px 8px; background: rgba(17, 24, 39, 0.95); }
 
 @media (min-width: 640px) {
   .cell { min-width: 172px; }
