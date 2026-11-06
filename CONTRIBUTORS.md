@@ -8,6 +8,9 @@ For definitions and responsibilities of each project role, see [Roles & Responsi
 ## Maintainer
 - Jinny You @tinyjin
 
+## Core Contributor
+- Soongeon Noh @Nor-s
+
 ## Contributors
 - Abdelrahman Ashraf @theashraf
 - JaeDeok Kim @Howl-Kim
@@ -20,7 +23,6 @@ For definitions and responsibilities of each project role, see [Roles & Responsi
 - Seungwon Lee @nowgnuesLeee
 - Yujin Lee @Ujaa
 - Yukyung Lee @nunomi0
-- Soongeon Noh @Nor-s
 - Jay WenJie @wenjieshen
 - JaeHyun Hwang @hd1534
 - DaHee Chae @chae-dahee
