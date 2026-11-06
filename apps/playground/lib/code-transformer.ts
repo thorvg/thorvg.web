@@ -48,10 +48,12 @@ export function transformCodeForExecution(code: string): string {
  */
 export function extractInitConfig(code: string): {
   renderer?: string;
+  threads?: number;
   canvasSize?: { width: number; height: number };
 } {
   const config: {
     renderer?: string;
+    threads?: number;
     canvasSize?: { width: number; height: number };
   } = {};
 
@@ -59,6 +61,11 @@ export function extractInitConfig(code: string): {
   const rendererMatch = code.match(/renderer:\s*['"](\w+)['"]/);
   if (rendererMatch) {
     config.renderer = rendererMatch[1];
+  }
+
+  const threadsMatch = code.match(/threads\s*:\s*(\d+)/);
+  if (threadsMatch) {
+    config.threads = Number(threadsMatch[1]);
   }
 
   // Extract canvas dimensions
@@ -72,6 +79,34 @@ export function extractInitConfig(code: string): {
   }
 
   return config;
+}
+
+// True when the code imports from the thread entry ('@thorvg/webcanvas/thread').
+export function importsFromThreadEntry(code: string): boolean {
+  return /from\s*['"]@thorvg\/webcanvas\/thread['"]/.test(code);
+}
+
+// Rewrite the code to import '@thorvg/webcanvas/thread' and set threads: N.
+export function enableThreadsInCode(code: string, threads: number): string {
+  const THREADS_OPTION = /threads\s*:\s*\d+/;
+  const INIT_OPTIONS_START = /(await\s+init\s*\(\s*\{)/;
+  const DEFAULT_ENTRY_IMPORT = /(from\s*['"])@thorvg\/webcanvas(['"])/;
+
+  const withThreadsOption = THREADS_OPTION.test(code)
+    ? code.replace(THREADS_OPTION, `threads: ${threads}`)
+    : code.replace(INIT_OPTIONS_START, `$1\n  threads: ${threads},`);
+
+  return withThreadsOption.replace(DEFAULT_ENTRY_IMPORT, '$1@thorvg/webcanvas/thread$2');
+}
+
+// Rewrite the code back to import '@thorvg/webcanvas' and remove the threads option.
+export function disableThreadsInCode(code: string): string {
+  const THREADS_OPTION_LINE = /^[ \t]*threads\s*:\s*\d+\s*,?[ \t]*\r?\n/m;
+  const THREAD_ENTRY_IMPORT = /(from\s*['"])@thorvg\/webcanvas\/thread(['"])/;
+
+  return code
+    .replace(THREADS_OPTION_LINE, '')
+    .replace(THREAD_ENTRY_IMPORT, '$1@thorvg/webcanvas$2');
 }
 
 /**
