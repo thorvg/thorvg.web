@@ -92,9 +92,7 @@
         let H = window.innerHeight;
         const canvas = new TVG.Canvas('#canvas', { width: W, height: H });
 
-        const video = new TVG.Video();
-        canvas.add(video);
-
+        let video = null;
         let natural = null;
         let duration = 0;
 
@@ -256,6 +254,12 @@
         async function loadSource(bytes) {
             loading.style.display = 'flex';
             loading.textContent = 'Preparing decoder…';
+            if (video) {
+                canvas.remove(video);
+                video.dispose();
+            }
+            video = new TVG.Video();
+            canvas.add(video);
             await video.load(bytes);
             natural = { ...video.picture.size() };
             duration = video.duration();
@@ -318,7 +322,7 @@
         loadFromUrl(VIDEO_URL);
 
         // debugging convenience
-        window.__demo = { TVG, canvas, video };
+        window.__demo = { TVG, canvas, get video() { return video; } };
     </script>
 </body>
 </html>
