@@ -7,5 +7,5 @@ webgl.install();
 webgpu.install();
 wasm.install();
 
-export type { GpuMemory, MemorySample } from './types';
+export type { GpuMemory, MemorySample, PerfMonitorOptions } from './types';
 export default PerfMonitor;

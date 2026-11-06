@@ -1,4 +1,4 @@
-import type { GpuMemory, MemorySample } from './types';
+import type { GpuMemory, MemorySample, PerfMonitorOptions } from './types';
 import * as webgl from './webgl';
 import * as webgpu from './webgpu';
 import * as wasmMemory from './wasm';
@@ -29,8 +29,10 @@ export default class PerfMonitor {
   };
   #ui: { details: HTMLElement; arrow: HTMLElement; fps: Metric; mem: Metric; js: Row; wasm: Row; gpu: Row };
 
-  constructor() {
-    const { host, details, bar } = shell();
+  constructor(options: PerfMonitorOptions = {}) {
+    const { position = 'bottom-left' } = options;
+    const { host, root, details, bar } = shell();
+    root.dataset.position = position;
     this.dom = host;
 
     const fps = metric('FPS', '#00deb5', sparkline('#00deb5', { min: 0 }));
