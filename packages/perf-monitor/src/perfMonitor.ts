@@ -86,6 +86,27 @@ export default class PerfMonitor {
     webgpu.resetPeak();
   }
 
+  reset(): void {
+    clearInterval(this.#timer);
+    this.#frames = 0;
+    this.#windowFrames = 0;
+    this.#windowStart = performance.now();
+    this.#fps = 0;
+    this.#sampled = false;
+    for (const key of Object.keys(this.#history) as Key[]) {
+      this.#history[key].length = 0;
+      this.#sum[key] = { acc: 0, count: 0 };
+    }
+    this.resetPeak();
+    this.#ui.fps.set('–', []);
+    this.#ui.mem.set('–', []);
+    this.#ui.js.set('n/a', []);
+    this.#ui.wasm.set('n/a', []);
+    this.#ui.gpu.set('n/a', []);
+    this.#render();
+    this.#timer = setInterval(() => this.#sample(), SAMPLE_MS);
+  }
+
   dispose(): void {
     clearInterval(this.#timer);
     cancelAnimationFrame(this.#raf);
