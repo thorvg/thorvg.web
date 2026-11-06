@@ -525,8 +525,9 @@ export class Canvas {
    * ```
    */
   public viewport(x: number, y: number, w: number, h: number): this {
+    const dpr = this.#enableDevicePixelRatio ? this.#currentDPR : 1;
     const Module = getModule();
-    const result = Module._tvg_canvas_set_viewport(this.#ptr, x, y, w, h);
+    const result = Module._tvg_canvas_set_viewport(this.#ptr, x * dpr, y * dpr, w * dpr, h * dpr);
     checkResult(result, 'viewport');
     return this;
   }
