@@ -53,6 +53,8 @@ import { checkResult, handleError } from '../common/errors';
 import type { TvgCanvasInstance } from '../types/emscripten';
 import { getGlobalRenderer } from '../index';
 
+const CANVAS_TARGET = '!thorvg-canvas';
+
 /**
  * Configuration options for Canvas initialization.
  *
@@ -209,7 +211,9 @@ export class Canvas {
 
     // Create TvgCanvas with physical dimensions and the configured thread count.
     const threadCount = getThreadCount();
-    this.#engine = new Module.TvgCanvas(renderer, surface.key, physicalWidth, physicalHeight, threadCount, engineOption);
+    Module.specialHTMLTargets[CANVAS_TARGET] = surface.canvas;
+    this.#engine = new Module.TvgCanvas(renderer, CANVAS_TARGET, physicalWidth, physicalHeight, threadCount, engineOption);
+    delete Module.specialHTMLTargets[CANVAS_TARGET];
 
     // Check for errors
     const error = this.#engine.error();
@@ -576,7 +580,6 @@ export class Canvas {
       if (this.#renderer === 'sw') {
         this.#target.clear();
       }
-      this.#target.dispose();
       this.#target = null;
     }
   }

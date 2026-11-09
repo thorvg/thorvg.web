@@ -1,15 +1,7 @@
 import type { CanvasTarget } from '../../common/constants';
-import { getModule, hasModule } from '../../interop/module';
-
-let selectorKey = 0; // counter for special HTML targets
 
 export abstract class Surface {
-  public readonly key: string;
-
-  constructor(canvas: CanvasTarget) {
-    this.key = `!thorvg-${++selectorKey}`;
-    getModule().specialHTMLTargets[this.key] = canvas;
-  }
+  constructor(public readonly canvas: CanvasTarget) {}
 
   public dpr(): number {
     return 1;
@@ -20,10 +12,4 @@ export abstract class Surface {
   public abstract present(buffer: Uint8Array, width: number, height: number): void;
 
   public abstract clear(): void;
-
-  public dispose(): void {
-    if (hasModule()) {
-      delete getModule().specialHTMLTargets[this.key];
-    }
-  }
 }
