@@ -267,6 +267,14 @@ describe('Lottie Player', () => {
       expect(await resultPromise).to.equal('load');
       expect(hasPixels(player)).to.equal(true);
     });
+
+    it('Lottie JSON string loads and renders pixels', async () => {
+      const json = JSON.stringify(await (await fetch(ANIMATION)).json());
+      const resultPromise = waitForLoadOrError(player);
+      player.load(json);
+      expect(await resultPromise).to.equal('load');
+      expect(hasPixels(player)).to.equal(true);
+    });
   });
 
   describe('Lifecycle', () => {

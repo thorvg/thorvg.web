@@ -128,13 +128,12 @@ const _parseImageFromURL = async (url: string): Promise<ArrayBuffer> => {
 
 const _parseJSON = async (data: string): Promise<string> => {
   try {
-    data = JSON.parse(data);
+    JSON.parse(data); // check if data is JSON, URL otherwise
+    return data;
   } catch {
-    const json = await _parseLottieFromURL(data as string);
-    data = JSON.stringify(json);
+    const json = await _parseLottieFromURL(data);
+    return JSON.stringify(json);
   }
-
-  return data;
 };
 
 export const parseSrc = async (src: string | object | ArrayBuffer, fileType: FileType): Promise<Uint8Array> => {
