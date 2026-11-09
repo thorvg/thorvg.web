@@ -209,9 +209,7 @@ const _initModule = async (engine: Renderer) => {
   }
 };
 
-const _generateUID = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2);
-};
+const _canvasTarget = '!thorvg-canvas';
 
 export class BaseLottiePlayer extends LitElement {
   /**
@@ -387,7 +385,10 @@ export class BaseLottiePlayer extends LitElement {
       return;
     }
 
-    this.TVG = new wasmModule.TvgLottieAnimation(engine, `#${this.canvas!.id}`, this.threads);
+    const targets = wasmModule.specialHTMLTargets as Record<string, unknown>;
+    targets[_canvasTarget] = this.canvas!;
+    this.TVG = new wasmModule.TvgLottieAnimation(engine, _canvasTarget, this.threads);
+    delete targets[_canvasTarget];
 
     if (this.src) {
       this.load(this.src, this.fileType);
@@ -441,9 +442,8 @@ export class BaseLottiePlayer extends LitElement {
   }
 
   protected override firstUpdated(): void {
-    this.canvas = this.querySelector('.thorvg') as HTMLCanvasElement;
+    this.canvas = this.renderRoot.querySelector('.thorvg') as HTMLCanvasElement;
 
-    this.canvas.id = `thorvg-${_generateUID()}`;
     this.canvas.width = this.canvas.offsetWidth;
     this.canvas.height = this.canvas.offsetHeight;
 
@@ -462,7 +462,7 @@ export class BaseLottiePlayer extends LitElement {
 
   protected override createRenderRoot(): HTMLElement | DocumentFragment {
     this.style.display = 'block';
-    return this;
+    return super.createRenderRoot();
   }
 
   #startLoop(): void {
