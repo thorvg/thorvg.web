@@ -105,7 +105,7 @@ export class LottiePlayer extends BaseLottiePlayer {
       throw new Error(`Unable to save. Module is not initialized.`);
     }
 
-    const saver = new wasmModule.TvgLottieAnimation('sw', `#${this.canvas!.id}`);
+    const saver = new wasmModule.TvgLottieAnimation('sw', '');
     const bytes = await parseSrc(src, 'json');
     const isExported = saver.save(bytes, 'gif');
     if (!isExported) {
