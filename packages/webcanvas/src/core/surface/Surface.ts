@@ -1,3 +1,4 @@
+import type { CanvasTarget } from '../../common/constants';
 import { getModule, hasModule } from '../../interop/module';
 
 let selectorKey = 0; // counter for special HTML targets
@@ -5,7 +6,7 @@ let selectorKey = 0; // counter for special HTML targets
 export abstract class Surface {
   public readonly key: string;
 
-  protected constructor(canvas: HTMLCanvasElement | OffscreenCanvas) {
+  constructor(canvas: CanvasTarget) {
     this.key = `!thorvg-${++selectorKey}`;
     getModule().specialHTMLTargets[this.key] = canvas;
   }
