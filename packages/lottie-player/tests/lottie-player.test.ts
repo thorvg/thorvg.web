@@ -31,7 +31,7 @@ function waitForLoadOrError(el: LottiePlayer): Promise<'load' | 'error'> {
 }
 
 function hasPixels(player: LottiePlayer): boolean {
-  const src = player.querySelector('.thorvg') as HTMLCanvasElement | null;
+  const src = player.shadowRoot?.querySelector('.thorvg') as HTMLCanvasElement | null;
   if (!src || src.width === 0 || src.height === 0) return false;
 
   const ctx2d = src.getContext('2d');
