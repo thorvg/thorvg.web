@@ -45,6 +45,7 @@ import { sceneBlendingExample } from './scene-blending';
 import { sceneEffectsExample } from './scene-effects';
 import { sceneTransformExample } from './scene-transform';
 import { shapesExample } from './shapes';
+import { smartRenderExample } from './smart-render';
 import { strokeExample } from './stroke';
 import { strokeLineExample } from './stroke-line';
 import { strokeMiterlimitExample } from './stroke-miterlimit';
@@ -98,6 +99,7 @@ export const showcaseExamples: ShowcaseExample[] = [
   maskingMethodsExample,
   motionBlurExample,
   sceneEffectsExample,
+  smartRenderExample,
   viewportExample,
   // Text (alphabetically sorted by title)
   fontProviderExample,
