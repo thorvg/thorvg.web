@@ -52,6 +52,8 @@
     </div>
 
     <script type="module">
+        import PerfMonitor from 'https://esm.sh/gh/thorvg/thorvg.web/packages/perf-monitor/src/index.ts';
+
         const $ = (id) => document.getElementById(id);
         const loading = $('loading');
 
@@ -162,58 +164,20 @@
         $('vol').oninput = (e) => video.volume(Number(e.target.value));
         $('mute').onchange = (e) => video.mute(e.target.checked);
 
-        // ----- stats.js (FPS / MS / MB panels, same setup as benchmark.html) -----
-        let stats = null;
+        let monitor = null;
 
-        function loadStatsScript() {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://mrdoob.github.io/stats.js/build/stats.min.js';
-                script.crossOrigin = 'anonymous'; // COEP-safe
-                script.onload = resolve;
-                script.onerror = () => reject(new Error('failed to load stats.js'));
-                document.head.appendChild(script);
-            });
-        }
-
-        function createStats() {
-            const panels = [];
-            const add = (panel, left) => {
-                const s = new Stats();
-                s.showPanel(panel); // 0: fps, 1: ms, 2: mb
-                s.dom.style.cssText = `position:fixed;top:0;left:${left}px;cursor:pointer;opacity:0.9;z-index:10000`;
-                document.body.appendChild(s.dom);
-                panels.push(s);
-            };
-            add(0, 0);
-            add(1, 80);
-            if (self.performance && self.performance.memory) add(2, 160);
-            return { panels, rafId: 0 };
-        }
-
-        async function toggleStats(on) {
+        function toggleStats(on) {
             const url = new URL(location.href);
             if (on) url.searchParams.set('stats', '1');
             else url.searchParams.delete('stats');
             history.replaceState(null, '', url); // survives renderer/threads reloads
 
-            if (on) {
-                try {
-                    if (!window.Stats) await loadStatsScript();
-                } catch {
-                    $('stats').checked = false;
-                    return;
-                }
-                if (!stats) stats = createStats();
-                for (const s of stats.panels) s.dom.style.display = 'block';
-                const loop = () => {
-                    for (const s of stats.panels) { s.begin(); s.end(); }
-                    stats.rafId = requestAnimationFrame(loop);
-                };
-                stats.rafId = requestAnimationFrame(loop);
-            } else if (stats) {
-                cancelAnimationFrame(stats.rafId);
-                for (const s of stats.panels) s.dom.style.display = 'none';
+            if (on && !monitor) {
+                monitor = new PerfMonitor();
+                document.body.appendChild(monitor.dom);
+            } else if (!on && monitor) {
+                monitor.dispose();
+                monitor = null;
             }
         }
 
