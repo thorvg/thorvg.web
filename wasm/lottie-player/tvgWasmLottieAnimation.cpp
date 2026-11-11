@@ -434,14 +434,14 @@ public:
         updated = true;
     }
 
-    bool save(string data, string mimetype)
+    bool save(string data, string mimetype, float w, float h)
     {
-        if (mimetype == "gif") return save2Gif(data);
+        if (mimetype == "gif") return save2Gif(data, w, h);
         errorMsg = "Invalid mimetype";
         return false;
     }
 
-    bool save2Gif(string data)
+    bool save2Gif(string data, float w, float h)
     {
 #ifdef THORVG_GIF_SAVER_SUPPORT
         errorMsg = NoError;
@@ -469,16 +469,8 @@ public:
             return false;
         }
 
-        //gif resolution (600x600)
-        constexpr float GIF_SIZE = 600;
-
         //transform
-        float width, height;
-        animation->picture()->size(&width, &height);
-        float scale;
-        if (width > height) scale = GIF_SIZE / width;
-        else scale = GIF_SIZE / height;
-        animation->picture()->size(width * scale, height * scale);
+        animation->picture()->size(w, h);
 
         //set a white opaque background
         auto bg = tvg::Shape::gen();
@@ -487,7 +479,7 @@ public:
             return false;
         }
         bg->fill(255, 255, 255, 255);
-        bg->appendRect(0, 0, GIF_SIZE, GIF_SIZE);
+        bg->appendRect(0, 0, w, h);
 
         if (saver->background(bg) != Result::Success) {
             errorMsg = "background() fail";
