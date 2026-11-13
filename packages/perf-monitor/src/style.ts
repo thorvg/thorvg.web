@@ -3,6 +3,9 @@ export default `
 
 .root {
   position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   left: 12px;
   bottom: 12px;
   z-index: 10000;
@@ -12,6 +15,10 @@ export default `
   user-select: none;
   -webkit-user-select: none;
 }
+
+.root[data-position$="right"] { left: auto; right: 12px; align-items: flex-end; }
+.root[data-position^="top"] { bottom: auto; top: 12px; flex-direction: column-reverse; }
+.root[data-position^="top"] .details { margin-bottom: 0; margin-top: 8px; }
 
 .box {
   background: rgba(17, 24, 39, 0.95);

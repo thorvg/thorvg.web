@@ -1,3 +1,7 @@
+export interface PerfMonitorOptions {
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+}
+
 export interface GpuMemory {
   total: number;
   peak: number;
