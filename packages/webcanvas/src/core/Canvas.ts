@@ -244,7 +244,6 @@ export class Canvas {
     // Add main Scene to canvas
     const result = Module._tvg_canvas_add(this.#ptr, this.#mainScene.ptr);
     checkResult(result, 'add main scene');
-    Module._tvg_paint_ref(this.#mainScene.ptr);
   }
 
   /**

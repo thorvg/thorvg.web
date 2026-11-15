@@ -41,14 +41,11 @@ export abstract class WasmObject {
     }
     this.#disposed = true;
 
-    if (this.#ptr) {
-      this._cleanup(this.#ptr);
-      this.#ptr = 0;
-    }
-
     if (this.#registryToken) {
+      if (this.#ptr) this._cleanup(this.#ptr);
       this.#registryToken.ptr = 0;
     }
+    this.#ptr = 0;
   }
 
   /**

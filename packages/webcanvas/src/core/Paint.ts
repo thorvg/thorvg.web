@@ -1,4 +1,5 @@
 import { WasmObject } from '../interop/WasmObject';
+import type { RegistryToken } from '../interop/registry';
 import { getModule, allocString } from '../interop/module';
 import { checkResult } from '../common/errors';
 import type { BlendMethod, MaskMethod } from '../common/constants';
@@ -67,6 +68,11 @@ export abstract class Paint extends WasmObject {
    */
   static registerType(type: number, factory: PaintFactory): void {
     paintFactories.set(type, factory);
+  }
+
+  constructor(ptr: number, registry?: FinalizationRegistry<RegistryToken>) {
+    super(ptr, registry);
+    if (registry) getModule()._tvg_paint_ref(ptr);
   }
 
   protected _cleanup(ptr: number): void {
@@ -371,7 +377,6 @@ export abstract class Paint extends WasmObject {
     const Module = getModule();
     const result = Module._tvg_paint_set_clip(this.ptr, clipper.ptr);
     checkResult(result, 'clip');
-    Module._tvg_paint_ref(clipper.ptr);
     return this;
   }
 
@@ -402,7 +407,6 @@ export abstract class Paint extends WasmObject {
     const Module = getModule();
     const result = Module._tvg_paint_set_mask_method(this.ptr, target.ptr, method);
     checkResult(result, 'mask');
-    Module._tvg_paint_ref(target.ptr);
     return this;
   }
 
