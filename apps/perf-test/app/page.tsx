@@ -15,7 +15,7 @@ import {
   BENCH_MEASURE_MS,
   computeBenchResult,
 } from '../lib/benchmark';
-import type PerfMonitor from '@thorvg/perf-monitor';
+import PerfMonitor from '@thorvg/perf-monitor';
 import { type MemorySample, loadPerfMonitor } from '../lib/perfMonitor';
 import { VersionSelector } from '../components/VersionSelector';
 import { BenchmarkModal } from '../components/BenchmarkModal';
@@ -191,7 +191,7 @@ export default function Home({ searchParams }: {
       canvasEl.height = canvasH;
 
       try {
-        const perfMonitor = await loadPerfMonitor();
+        let perfMonitor = await loadPerfMonitor();
         if (cancelled) return;
         perfMonitorRef.current = perfMonitor;
         document.body.appendChild(perfMonitor.dom);
@@ -261,6 +261,12 @@ export default function Home({ searchParams }: {
         applyLayout(loaded.length);
         setIsLoading(false);
         setLoadingStatus('');
+
+        // Recreate the monitor so the FPS average excludes asset loading.
+        perfMonitor.dispose();
+        perfMonitor = new PerfMonitor();
+        perfMonitorRef.current = perfMonitor;
+        document.body.appendChild(perfMonitor.dom);
 
         const startTime = performance.now();
         let lastTs = 0;
