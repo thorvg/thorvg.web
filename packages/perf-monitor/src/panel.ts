@@ -94,19 +94,16 @@ export function row(label: string, color: string, hint: string): Row {
   };
 }
 
-export function shell(): { host: HTMLElement; root: HTMLElement; details: HTMLElement; bar: HTMLElement } {
-  const host = document.createElement('div');
-  host.setAttribute('data-thorvg-perf-monitor', '');
+export function shell(): { host: HTMLElement; details: HTMLElement; bar: HTMLElement } {
+  const host = el('div', 'thorvg-perf-monitor');
   const shadow = host.attachShadow({ mode: 'open' });
   const style = document.createElement('style');
   style.textContent = STYLE;
-  const root = el('div', 'root');
   const details = el('div', 'box details');
   details.hidden = true;
   const bar = el('div', 'box bar');
-  root.append(details, bar);
-  shadow.append(style, root);
-  return { host, root, details, bar };
+  shadow.append(style, details, bar);
+  return { host, details, bar };
 }
 
 export { el };

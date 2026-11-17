@@ -43,6 +43,7 @@ export default class PerfMonitor {
     memCell.title = 'Total memory in MB, JS + WASM + GPU';
     memCell.append(mem.element, arrow);
     memCell.addEventListener('click', () => {
+      if (!this.#open) this.#anchor();
       this.#open = !this.#open;
       this.#render();
     });
@@ -90,6 +91,12 @@ export default class PerfMonitor {
     clearInterval(this.#timer);
     cancelAnimationFrame(this.#raf);
     this.dom.remove();
+  }
+
+  #anchor(): void {
+    const r = this.dom.getBoundingClientRect();
+    this.dom.toggleAttribute('data-top', r.top + r.height / 2 < innerHeight / 2);
+    this.dom.toggleAttribute('data-right', r.left + r.width / 2 > innerWidth / 2);
   }
 
   #tick = () => {
