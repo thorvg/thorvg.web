@@ -1,8 +1,11 @@
 export default `
-:host { all: initial; }
-
-.root {
+:host {
+  all: initial;
   position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   left: 12px;
   bottom: 12px;
   z-index: 10000;
@@ -12,6 +15,9 @@ export default `
   user-select: none;
   -webkit-user-select: none;
 }
+
+:host([data-top]) { flex-direction: column-reverse; }
+:host([data-right]) { align-items: flex-end; }
 
 .box {
   background: rgba(17, 24, 39, 0.95);
@@ -25,7 +31,6 @@ export default `
 .details {
   width: 320px;
   max-width: 100%;
-  margin-bottom: 8px;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -75,6 +80,7 @@ button.cell {
 button.cell:hover { background: rgba(255, 255, 255, 0.05); }
 
 .arrow { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #6b7280; }
+:host([data-top]) .arrow { transform: translateY(-50%) rotate(180deg); }
 
 .metric { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 4px; }
 .metric > div { display: flex; align-items: center; gap: 8px; }

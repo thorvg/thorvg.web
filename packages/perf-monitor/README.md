@@ -34,3 +34,24 @@ Add this before your app scripts.
 </script>
 ```
 
+## Customization
+
+The monitor defaults to the bottom-left corner. 
+Override `.thorvg-perf-monitor` to customize its position:
+
+```css
+/* top-left */
+.thorvg-perf-monitor { top: 12px; right: auto; bottom: auto; left: 12px; }
+
+/* top-right */
+.thorvg-perf-monitor { top: 12px; right: 12px; bottom: auto; left: auto; }
+
+/* bottom-left */
+.thorvg-perf-monitor { top: auto; right: auto; bottom: 12px; left: 12px; }
+
+/* bottom-right */
+.thorvg-perf-monitor { top: auto; right: 12px; bottom: 12px; left: auto; }
+```
+
+The details panel opens toward the center of the viewport and aligns to the nearest horizontal edge.
+
