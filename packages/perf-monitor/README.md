@@ -34,3 +34,21 @@ Add this before your app scripts.
 </script>
 ```
 
+## CSS
+
+The monitor defaults to the bottom-left corner. 
+Override `.thorvg-perf-monitor` to customize its position:
+
+```css
+.thorvg-perf-monitor {
+  top: 12px;
+  right: 12px;
+  bottom: auto;
+  left: auto;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+}
+```
+
+Use `column-reverse` at the top so details expand downward, and `flex-end` on the right to keep the panels aligned.
+

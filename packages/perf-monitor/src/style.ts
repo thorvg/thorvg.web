@@ -1,8 +1,11 @@
 export default `
-:host { all: initial; }
-
-.root {
+:host {
+  all: initial;
   position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   left: 12px;
   bottom: 12px;
   z-index: 10000;
@@ -25,7 +28,6 @@ export default `
 .details {
   width: 320px;
   max-width: 100%;
-  margin-bottom: 8px;
   padding: 12px;
   display: flex;
   flex-direction: column;
