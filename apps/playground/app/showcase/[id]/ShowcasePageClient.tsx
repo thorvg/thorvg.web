@@ -10,7 +10,9 @@ import { getExampleById, showcaseExamples } from '@/lib/examples';
 import {
   buildExampleUrl,
   readRendererParam,
+  readThreadsParam,
 } from '@/lib/url-params';
+import { enableThreadsInCode, disableThreadsInCode } from '@/lib/code-transformer';
 
 const CodeEditor = dynamic(() => import('@/components/CodeEditor'), {
   ssr: false,
@@ -47,6 +49,15 @@ export default function ShowcasePageClient({ id }: { id: string }) {
         /renderer:\s*['"](?:sw|gl|wg)['"]/,
         `renderer: '${urlRenderer}'`
       );
+    }
+
+    const urlThreads = readThreadsParam(window.location.search);
+
+    if (urlThreads !== null) {
+      nextCode =
+        urlThreads > 0
+          ? enableThreadsInCode(nextCode, urlThreads)
+          : disableThreadsInCode(nextCode);
     }
 
     setCode(nextCode);

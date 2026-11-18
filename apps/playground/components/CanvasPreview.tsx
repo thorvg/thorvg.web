@@ -2,11 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Canvas as TVGCanvas, RendererType, ThorVGNamespace } from '@thorvg/webcanvas';
+import type * as WebCanvasThread from '@thorvg/webcanvas/thread';
 import wasmUrl from "../node_modules/@thorvg/webcanvas/dist/thorvg.wasm";
+import threadWasmUrl from "../node_modules/@thorvg/webcanvas/dist/thread/thorvg.wasm";
+import threadBuildUrl from "../node_modules/@thorvg/webcanvas/dist/thread/webcanvas.esm.js?url";
 import { CodeSandbox } from '@/lib/code-sandbox';
 import {
   isRenderer,
+  normalizeThreads,
   readRendererFromUrl,
+  readThreadsFromUrl,
 } from '@/lib/url-params';
 import type { PlaygroundWindow } from '@/types/window';
 
@@ -45,6 +50,7 @@ export default function CanvasPreview({
   const [TVG, setTVG] = useState<ThorVGNamespace | null>(null);
   const [canvas, setCanvas] = useState<TVGCanvas | null>(null);
   const [currentRenderer, setCurrentRenderer] = useState<RendererType>('gl');
+  const [currentThreads, setCurrentThreads] = useState(0);
   const [isZoomDragging, setIsZoomDragging] = useState(false);
   const [awaitingGesture, setAwaitingGesture] = useState(false);
   const [pendingRequests, setPendingRequests] = useState(0);
@@ -59,18 +65,25 @@ export default function CanvasPreview({
   };
 
   // Initialize ThorVG with specified renderer
-  const initThorVG = async (renderer: RendererType) => {
+  const initThorVG = async (renderer: RendererType, threads: number) => {
     try {
-      setStatus({ message: `Initializing ThorVG with ${renderer.toUpperCase()} renderer...`, type: 'info' });
+      const presetLabel = threads > 0 ? ` (${threads} threads)` : '';
+      setStatus({ message: `Initializing ThorVG with ${renderer.toUpperCase()} renderer${presetLabel}...`, type: 'info' });
 
       if (originalDPRRef.current === null) {
         originalDPRRef.current = window.devicePixelRatio;
       }
 
-      const { init, ThorVGError, ThorVGResultCode } = await import('@thorvg/webcanvas');
+      const { init, ThorVGError, ThorVGResultCode } =
+        threads > 0
+          ? ((await import(
+              /* turbopackIgnore: true */ threadBuildUrl
+            )) as typeof WebCanvasThread)
+          : await import('@thorvg/webcanvas');
       const TVGInstance = await init({
         renderer,
-        locateFile: () => wasmUrl,
+        threads,
+        locateFile: () => threads > 0 ? threadWasmUrl : wasmUrl,
         onError: (error, context) => {
           console.log(error.message);
           console.log('Error operation:', context.operation);
@@ -117,6 +130,7 @@ export default function CanvasPreview({
       setTVG(TVGInstance);
       setCanvas(canvasInstance);
       setCurrentRenderer(renderer);
+      setCurrentThreads(threads);
       setStatus({ message: 'Ready', type: 'success' });
     } catch (error) {
       console.error('Error initializing ThorVG:', error);
@@ -130,8 +144,9 @@ export default function CanvasPreview({
   // Initialize ThorVG once on mount
   useEffect(() => {
     const renderer = readRendererFromUrl(window.location.search);
+    const threads = readThreadsFromUrl(window.location.search);
 
-    initThorVG(renderer);
+    initThorVG(renderer, threads);
 
     return () => {
       endRun();
@@ -187,14 +202,16 @@ export default function CanvasPreview({
     }
   }, [zoom, isZoomDragging]);
 
-  // Detect the renderer declared in the code
+  // Detect the renderer and threads declared in the code
   const detectConfigFromCode = async () => {
     const { extractInitConfig } = await import('@/lib/code-transformer');
     const config = extractInitConfig(code);
     const renderer = config.renderer ?? 'gl';
+    const threadsIncomplete = /threads\s*:(?!\s*\d)/.test(code);
 
     return {
       renderer: isRenderer(renderer) ? renderer : currentRenderer,
+      threads: threadsIncomplete ? currentThreads : normalizeThreads(config.threads),
     };
   };
 
@@ -239,10 +256,11 @@ export default function CanvasPreview({
 
     const detected = await detectConfigFromCode();
 
-    // If the renderer changed, update URL and reload
-    if (detected.renderer !== currentRenderer) {
+    // If renderer or threads changed, update URL and reload
+    if (detected.renderer !== currentRenderer || detected.threads !== currentThreads) {
       const url = new URL(window.location.href);
       url.searchParams.set('renderer', detected.renderer);
+      url.searchParams.set('threads', String(detected.threads));
       window.location.href = url.toString();
       return;
     }
