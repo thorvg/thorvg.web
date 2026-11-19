@@ -111,6 +111,7 @@ function matchCategory(category) {
   if (category.includes('text')) return 'text';
   if (category.includes('accessor')) return 'accessor';
   if (category.includes('animation')) return 'animation';
+  if (category.includes('video')) return 'video';
   if (category.includes('gradient')) return 'gradients';
   if (category.includes('font')) return 'font';
   if (category.includes('constant')) return 'constants';
@@ -151,11 +152,25 @@ function mapParameters(parameters) {
   }));
 }
 
+function mapTypeParameters(typeParameters) {
+  if (!typeParameters) return [];
+  return typeParameters.map(tp => ({
+    name: tp.name,
+    constraint: tp.type ? getTypeString(tp.type) : '',
+    comment: getCommentText(tp.comment)
+  }));
+}
+
+function formatTypeParamName(tp) {
+  return tp.constraint ? `${tp.name} extends ${tp.constraint}` : tp.name;
+}
+
 function mapSignature(sig) {
   return {
     comment: getCommentText(sig.comment),
     examples: getExamples(sig.comment),
     parameters: mapParameters(sig.parameters),
+    typeParameters: mapTypeParameters(sig.typeParameters),
     returnType: getTypeString(sig.type),
     returns: getReturnsText(sig.comment)
   };
@@ -182,6 +197,7 @@ function createEmptyApis() {
     text: [],
     animation: [],
     lottieAnimation: [],
+    video: [],
     gradients: [],
     font: [],
     accessor: [],
@@ -269,6 +285,8 @@ function processItem(apis, reflection, parentName = '', parentCategory = null, p
   let constructorInfo = null;
   let destroyInfo = null;
   let propertiesInfo = [];
+  let membersInfo = [];
+  const isEnum = reflection.kind === ReflectionKind.Enum;
   const isClassOrInterface =
     reflection.kind === ReflectionKind.Class ||
     reflection.kind === ReflectionKind.Interface;
@@ -307,6 +325,16 @@ function processItem(apis, reflection, parentName = '', parentCategory = null, p
       }));
   }
 
+  if (isEnum && reflection.children) {
+    membersInfo = reflection.children
+      .filter(child => child.kind === ReflectionKind.EnumMember && !shouldSkipReflection(child, child.name))
+      .map(member => ({
+        name: member.name,
+        value: getTypeString(member.type),
+        comment: getCommentText(member.comment)
+      }));
+  }
+
   apis[category].push({
     id,
     name: fullName,
@@ -316,16 +344,18 @@ function processItem(apis, reflection, parentName = '', parentCategory = null, p
     comment: comment || (primary ? primary.comment : ''),
     examples: examples.length > 0 ? examples : (primary ? primary.examples : []),
     parameters: primary ? primary.parameters : [],
+    typeParameters: primary ? primary.typeParameters : [],
     returnType: primary ? primary.returnType : type,
     returns: (primary && primary.returns) || returns || '',
     constructor: constructorInfo,
     destroy: destroyInfo,
     properties: propertiesInfo,
+    members: membersInfo,
     parent: parentName,
     beta
   });
 
-  if (reflection.children) {
+  if (reflection.children && !isEnum) {
     reflection.children.forEach(child => {
       processItem(apis, child, fullName, category, beta);
     });
@@ -415,6 +445,18 @@ function generateDisplayFunction() {
             return html + '</ul>';
         }
 
+        function renderTypeParamsList(typeParams) {
+            if (!typeParams || typeParams.length === 0) return '';
+            let html = '<h3>Type Parameters</h3><ul class="params">';
+            typeParams.forEach(tp => {
+                const name = tp.constraint ? tp.name + ' extends ' + tp.constraint : tp.name;
+                html += \`<li><code>\${escapeHtml(name)}</code>\`;
+                if (tp.comment) html += \` - \${renderInlineMarkdown(tp.comment)}\`;
+                html += '</li>';
+            });
+            return html + '</ul>';
+        }
+
         function renderReturns(sig) {
             if (!sig) return '';
             const type = sig.returnType;
@@ -470,6 +512,17 @@ function generateDisplayFunction() {
             return html;
         }
 
+        function renderMembers(api) {
+            if (!api.members || api.members.length === 0) return '';
+            let html = '';
+            api.members.forEach(member => {
+                html += \`<h2>\${escapeHtml(member.name)}</h2>\`;
+                html += \`<p class="meta"><strong>Value:</strong> <code>\${escapeHtml(member.value)}</code></p>\`;
+                if (member.comment) html += \`<div class="description">\${renderMarkdown(member.comment)}</div>\`;
+            });
+            return html;
+        }
+
         function displayAPI(id) {
             let api = null;
             for (const category in apiData) {
@@ -504,6 +557,8 @@ function generateDisplayFunction() {
             if (isClassLike) html += renderSection(api.constructor, 'Constructor');
             if (isClassLike) html += renderSection(api.destroy, 'Destroy');
             html += renderProperties(api);
+            html += renderMembers(api);
+            html += renderTypeParamsList(api.typeParameters);
             html += renderParamsList(api.parameters);
             html += renderExamples(api.examples);
 
@@ -578,6 +633,7 @@ const categoryTitles = {
   text: 'Text',
   animation: 'Animation',
   lottieAnimation: 'Lottie Animation',
+  video: 'Video',
   gradients: 'Gradients',
   font: 'Font',
   accessor: 'Accessor',
@@ -624,6 +680,15 @@ function renderParams(params) {
   for (const p of params) {
     const def = p.defaultValue ? ` (default: \`${p.defaultValue}\`)` : '';
     out += `- \`${formatParamName(p)}\` \`${p.type}\`${def}${p.comment ? ' — ' + p.comment : ''}\n`;
+  }
+  return out;
+}
+
+function renderTypeParams(typeParams) {
+  if (!typeParams || typeParams.length === 0) return '';
+  let out = '\n**Type Parameters:**\n';
+  for (const tp of typeParams) {
+    out += `- \`${formatTypeParamName(tp)}\`${tp.comment ? ' — ' + tp.comment : ''}\n`;
   }
   return out;
 }
@@ -677,9 +742,19 @@ function renderLlmsProperties(properties) {
   return out + '\n';
 }
 
+function renderLlmsMembers(members) {
+  if (!members || members.length === 0) return '';
+  let out = `**Members:**\n`;
+  for (const member of members) {
+    out += `- \`${member.name}\` = \`${member.value}\`${member.comment ? ' — ' + member.comment : ''}\n`;
+  }
+  return out + '\n';
+}
+
 function renderLlmsMethod(parentName, method) {
   let out = `\n#### ${parentName}.${method.shortName}${method.beta ? ' *(beta)*' : ''}\n\n`;
   if (method.comment) out += `${method.comment}\n`;
+  out += renderTypeParams(method.typeParameters);
   out += renderParams(method.parameters);
   out += renderReturnsLlms(method);
   out += renderExamples(method.examples);
@@ -695,6 +770,7 @@ function renderLlmsItem(item, children) {
     out += renderParams(item.constructor.parameters) + '\n';
   }
   out += renderLlmsProperties(item.properties);
+  out += renderLlmsMembers(item.members);
   out += renderExamples(item.examples);
   for (const method of children.filter(c => c.parent === item.name)) {
     out += renderLlmsMethod(item.name, method);

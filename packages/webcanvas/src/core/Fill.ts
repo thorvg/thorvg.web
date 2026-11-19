@@ -9,6 +9,10 @@ import { gradientRegistry } from '../interop/registry';
 import type { GradientSpread } from '../common/constants';
 
 /**
+ * The color of a gradient color stop, given as `[r, g, b, a]`.
+ * Each channel is in the range [0 ~ 255], where an alpha of 0 is completely transparent and 255 is opaque.
+ * The relative position of the color is given separately as `offset` to `addStop()` and `setStops()`.
+ *
  * @category Gradients
  */
 export type ColorStop = readonly [number, number, number, number];

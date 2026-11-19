@@ -265,20 +265,16 @@ export type MimeType = 'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' |
  * - **Rendering**: CPU-based software rendering
  * - **Performance**: Slower, but works everywhere
  * - **Compatibility**: All browsers and devices
- * - **Best for**: Maximum compatibility, simple graphics, server-side rendering
  *
- * ### `'gl'` - WebGL Renderer (Recommended)
+ * ### `'gl'` - WebGL Renderer (Default)
  * - **Rendering**: GPU-accelerated using WebGL 2.0
  * - **Performance**: Excellent performance with wide browser support
  * - **Compatibility**: Chrome 56+, Firefox 51+, Safari 15+, Edge 79+
- * - **Best for**: Production applications, interactive graphics, animations
- * - **Recommended for most use cases**
  *
  * ### `'wg'` - WebGPU Renderer
  * - **Rendering**: Next-generation GPU API
  * - **Performance**: Best performance for complex scenes
  * - **Compatibility**: Chrome 113+, Edge 113+ (limited support)
- * - **Best for**: Maximum performance, modern browsers only
  *
  * @example
  * ```typescript
@@ -299,7 +295,7 @@ export type MimeType = 'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' |
  * const TVG = await ThorVG.init({ renderer: 'sw' });
  * ```
  *
- * @category Other
+ * @category Initialization
  */
 export type RendererType = 'sw' | 'gl' | 'wg';
 
@@ -310,6 +306,6 @@ export type RendererType = 'sw' | 'gl' | 'wg';
  * - `OffscreenCanvas` - an offscreen canvas that transferred to a Web Worker
  *
  * @beta
- * @category Other
+ * @category Canvas
  */
 export type CanvasTarget = HTMLCanvasElement | OffscreenCanvas;

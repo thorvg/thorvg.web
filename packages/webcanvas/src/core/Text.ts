@@ -19,11 +19,15 @@ export interface TextLayout {
 }
 
 /**
+ * The outline (stroke) rendered around the glyphs of a text.
+ *
  * @category Text
  */
 export interface TextOutline {
+  /** The width of the outline. Must be a positive value. A width of 0 disables the outline. */
   width: number;
-  color: readonly [number, number, number]; // RGB
+  /** The RGB color of the outline, given as `[r, g, b]`. Each channel is in the range [0 ~ 255]. */
+  color: readonly [number, number, number];
 }
 
 /**

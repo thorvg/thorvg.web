@@ -10,19 +10,28 @@ import { Picture } from './Picture';
 import { checkResult, handleError, ThorVGResultCode } from '../common/errors';
 
 /**
+ * The playback information of an animation, returned by `Animation.info()`.
+ *
  * @category Animation
  */
 export interface AnimationInfo {
+  /** The total number of frames in the animation. Frame numbering starts from 0. */
   totalFrames: number;
-  duration: number; // in seconds
+  /** The duration of the animation in seconds. */
+  duration: number;
+  /** The number of frames per second, calculated as `totalFrames / duration`. */
   fps: number;
 }
 
 /**
+ * The playback segment of an animation, given in frames.
+ *
  * @category Animation
  */
 export interface AnimationSegment {
+  /** Segment begin frame. */
   start: number;
+  /** Segment end frame. It should not be lower than `start`. */
   end: number;
 }
 
