@@ -168,9 +168,12 @@ jobs:
           name: dist-webcanvas-${{ github.run_id }}
           path: packages/webcanvas/dist/
 
-      - name: Publish to npm
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Stage publish to npm
         working-directory: ./packages/webcanvas
-        run: pnpm publish --dry-run --access public --no-git-checks
+        run: npm stage publish --access public
 
   gpr-release:
     name: Release to GitHub Packages

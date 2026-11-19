@@ -124,6 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate
     permissions:
+      id-token: write
       contents: read
 
     steps:
@@ -151,9 +152,12 @@ jobs:
           name: dist-lottie-player-${{ github.run_id }}
           path: packages/lottie-player/dist/
 
-      - name: Publish to npm
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Stage publish to npm
         working-directory: ./packages/lottie-player
-        run: pnpm publish --dry-run --access public --no-git-checks
+        run: npm stage publish --access public
 
   gpr-release:
     name: Release to GitHub Packages
