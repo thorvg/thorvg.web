@@ -1,16 +1,24 @@
 /**
- * ThorVG error result codes returned by native WASM operations.
+ * ThorVG error result codes.
  *
  * @category Error Handling
  */
 export enum ThorVGResultCode {
+  /** The value returned in case of a correct request execution. */
   Success = 0,
+  /** The value returned in the event of a problem with the arguments given to the API - e.g. empty paths or null pointers. */
   InvalidArguments = 1,
+  /** The value returned in case the request cannot be processed - e.g. asking for properties of an object, which does not exist. */
   InsufficientCondition = 2,
+  /** The value returned in case of unsuccessful memory allocation. */
   FailedAllocation = 3,
+  /** The value returned in the event of bad memory handling - e.g. failing in pointer releasing or casting. */
   MemoryCorruption = 4,
+  /** The value returned in case of choosing unsupported engine features (options). */
   NotSupported = 5,
+  /** The value returned when an underlying system operation fails. */
   SystemError = 6,
+  /** The value returned in all other cases. */
   Unknown = 255,
 }
 
@@ -31,6 +39,7 @@ export class ThorVGError extends Error {
     this.operation = operation;
   }
 
+  /** @internal */
   public static fromCode(code: ThorVGResultCode, operation: string): ThorVGError {
     const messages: Record<ThorVGResultCode, string> = {
       [ThorVGResultCode.Success]: 'Success',

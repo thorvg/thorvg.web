@@ -4,7 +4,7 @@ import { checkResult } from '../common/errors';
 import type { BlendMethod, MaskMethod } from '../common/constants';
 
 /**
- * @category Shapes
+ * @category Paint
  */
 export interface Bounds {
   x: number;
@@ -38,7 +38,7 @@ export interface Point {
  * | e31  e32  e33 |
  * ```
  *
- * @category Shapes
+ * @category Paint
  */
 export interface Matrix {
   e11: number;
@@ -263,7 +263,12 @@ export abstract class Paint extends WasmObject {
   }
 
   /**
-   * Duplicate this paint object
+   * Duplicates the object.
+   *
+   * Creates a new object and sets its all properties as in the original object.
+   *
+   * @typeParam T - The Paint subclass type of the created object
+   * @returns The created object
    */
   public duplicate<T extends Paint>(): T {
     const Module = getModule();
