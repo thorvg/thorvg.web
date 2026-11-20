@@ -70,7 +70,7 @@ const THORVG_WASM_URL = 'https://unpkg.com/@thorvg/webcanvas@__PACKAGE_VERSION__
 export interface InitOptions {
   /** Optional function to locate WASM files. If not provided, assumes WASM files are in the same directory as the JavaScript bundle. */
   locateFile?: (path: string) => string;
-  /** Renderer type: 'sw' (Software), 'gl' (WebGL), or 'wg' (WebGPU). Default: 'gl'. WebGPU provides best performance but requires Chrome 113+ or Edge 113+. */
+  /** Renderer type: 'sw' (Software), 'gl' (WebGL), or 'wg' (WebGPU). Default: 'gl'. */
   renderer?: RendererType;
   /** Global error handler for all ThorVG operations. If provided, errors will be passed to this handler instead of being thrown. */
   onError?: ErrorHandler;
@@ -170,8 +170,7 @@ async function initEngine(engineType: RendererType = 'gl'): Promise<void> {
  * @param options.locateFile - Optional function to locate WASM files. If not provided, assumes
  *                              WASM files are in the same directory as the JavaScript bundle.
  * @param options.renderer - Renderer type: 'sw' (Software), 'gl' (WebGL), or 'wg' (WebGPU).
- *                           Default: 'gl'. WebGPU provides best performance but requires
- *                           Chrome 113+ or Edge 113+.
+ *                           Default: 'gl'.
  * @param options.threads - Number of worker threads. Only effective with the thread preset.
  *                          Ignored in the default preset. Default: 0 (single-threaded).
  *
