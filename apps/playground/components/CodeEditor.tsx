@@ -85,6 +85,9 @@ export default function CodeEditor({ code, onChange, readOnly = false }: CodeEdi
     const thorvgTypes = `declare module '@thorvg/webcanvas' {
 ${webcanvasTypes}
 }
+declare module '@thorvg/webcanvas/thread' {
+  export * from '@thorvg/webcanvas';
+}
 
 // Global declarations for playground context with proper types
 declare const TVG: import('@thorvg/webcanvas').ThorVGNamespace;
