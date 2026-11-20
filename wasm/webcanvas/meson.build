@@ -17,7 +17,7 @@ thorvg_inc = include_directories(
     '../../thorvg/src/common',
     '../../thorvg/src/bindings/capi',
     '../../thorvg/src/renderer',
-    '../../thorvg/src/loaders',
+    '../../thorvg/src/modules',
     '../../thorvg/build_wasm_wcanvas',
     '../common'
 )

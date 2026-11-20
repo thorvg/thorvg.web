@@ -14,7 +14,7 @@ thorvg_lib = thorvg_dir + '/build_wasm_player/src/libthorvg-1.a'
 
 thorvg_inc = include_directories(
     '../../thorvg/inc',
-    '../../thorvg/src/loaders/lottie',
+    '../../thorvg/src/modules/lottie',
     '../../thorvg/build_wasm_player',
     '../common'
 )
