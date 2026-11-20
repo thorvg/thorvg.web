@@ -274,7 +274,7 @@ export type MimeType = 'svg' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'raw' | 'lot' |
  * ### `'wg'` - WebGPU Renderer
  * - **Rendering**: Next-generation GPU API
  * - **Performance**: Best performance for complex scenes
- * - **Compatibility**: Chrome 113+, Edge 113+ (limited support)
+ * - **Compatibility**: Chrome 113+, Edge 113+, Safari 26+, Firefox 141+ (Windows), Firefox 145+ (Apple Silicon)
  *
  * @example
  * ```typescript
