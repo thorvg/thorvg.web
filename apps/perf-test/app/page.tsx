@@ -21,6 +21,21 @@ import { VersionSelector } from '../components/VersionSelector';
 import { BenchmarkModal } from '../components/BenchmarkModal';
 import { DragOverlay } from '../components/DragOverlay';
 
+function maxCanvasDimension(canvas: HTMLCanvasElement, renderer: Renderer): number {
+  if (renderer === 'gl') {
+    const gl = canvas.getContext('webgl2')!;
+    return Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
+  }
+  if (renderer === 'wg') {
+    const context = canvas.getContext('webgpu') as unknown as {
+      getConfiguration?(): { device: { limits: { maxTextureDimension2D: number } } };
+    };
+    // Older WebGPU contexts don't expose getConfiguration(). ThorVG requests the default limits.
+    return context.getConfiguration?.().device.limits.maxTextureDimension2D ?? 8192;
+  }
+  return Infinity;
+}
+
 export default function Home({ searchParams }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
@@ -37,17 +52,14 @@ export default function Home({ searchParams }: {
   const animsRef = useRef<{
     anim: any; info: any; name: string; url: string;
     picture: any; visible: boolean;
-    posX: number; gridY: number; xOff: number; yOff: number;
+    posX: number; posY: number; xOff: number; yOff: number;
   }[]>([]);
   const rafRef = useRef<number>(0);
   const colsRef = useRef<number>(1);
   const itemSizeRef = useRef<number>(150);
   const scrollOffsetRef = useRef<number>(0);
   const pendingLayoutRef = useRef(false);
-  const canvasWRef = useRef<number>(0);
-  const canvasHRef = useRef<number>(0);
   const [gridHeight, setGridHeight] = useState(0);
-  const [canvasCssHeight, setCanvasCssHeight] = useState(0);
 
   const benchPhaseRef = useRef<'idle' | 'warmup' | 'measuring'>('idle');
   const benchTimingsRef = useRef<number[]>([]);
@@ -110,34 +122,6 @@ export default function Home({ searchParams }: {
     setAnimList(list);
   }, []);
 
-  // Grid layout
-  const applyLayout = useCallback((total: number) => {
-    const cellSize = itemSizeRef.current;
-    const cols = Math.max(1, Math.floor(containerRef.current!.clientWidth / cellSize));
-    const canvasW = cols * cellSize;
-    const gridH = Math.ceil(total / cols) * cellSize;
-    const headerH = headerRef.current?.offsetHeight ?? 0;
-    const canvasH = Math.min(gridH, Math.max(0, window.innerHeight - headerH));
-
-    colsRef.current = cols;
-    setGridHeight(gridH);
-    setCanvasCssHeight(canvasH);
-
-    const list = animsRef.current;
-    for (let i = 0; i < list.length; i++) {
-      const entry = list[i];
-      entry.posX = (i % cols) * cellSize + entry.xOff;
-      entry.gridY = Math.floor(i / cols) * cellSize;
-    }
-
-    if (canvasW !== canvasWRef.current || canvasH !== canvasHRef.current) {
-      canvasWRef.current = canvasW;
-      canvasHRef.current = canvasH;
-      tvgCanvasRef.current?.resize(canvasW, canvasH);
-    }
-    return { cellSize, canvasW, canvasH };
-  }, []);
-
   useEffect(() => {
     const onResize = () => { pendingLayoutRef.current = true; };
     window.addEventListener('resize', onResize);
@@ -182,13 +166,7 @@ export default function Home({ searchParams }: {
       setLoadingStatus('Loading…');
       setDisplayVersion('');
 
-      const tvgDpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
-      itemSizeRef.current = size / tvgDpr;
-      const { cellSize, canvasW, canvasH } = applyLayout(animList.length);
-
       const canvasEl = canvasRef.current!;
-      canvasEl.width = canvasW;
-      canvasEl.height = canvasH;
 
       try {
         const perfMonitor = await loadPerfMonitor();
@@ -214,13 +192,51 @@ export default function Home({ searchParams }: {
           : version
         );
 
+        // Create the context before querying the limits of the device ThorVG selected.
         const tvgCanvas = new TVG.Canvas('#tvg-main-canvas', {
-          width: canvasW,
-          height: canvasH,
-          enableDevicePixelRatio: true,
+          width: 1,
+          height: 1,
+          enableDevicePixelRatio: false,
           engineOption: TVG.EngineOption?.None ?? 0,
         });
         tvgCanvasRef.current = tvgCanvas;
+
+        const maxDimension = maxCanvasDimension(canvasEl, renderer);
+        let devicePixelRatio = window.devicePixelRatio;
+        const cellSize = size / (1 + (devicePixelRatio - 1) * 0.75);
+        itemSizeRef.current = cellSize;
+        let renderScale = 1;
+        let canvasH = 0;
+
+        const applyLayout = (total: number) => {
+          const cols = Math.max(1, Math.floor(containerRef.current!.clientWidth / cellSize));
+          const canvasW = cols * cellSize;
+          const gridH = Math.ceil(total / cols) * cellSize;
+          const headerH = headerRef.current!.offsetHeight;
+          canvasH = Math.min(gridH, Math.max(0, window.innerHeight - headerH));
+          colsRef.current = cols;
+          setGridHeight(gridH);
+
+          // Keep layout and hit testing in CSS pixels. Only the backing resolution is capped.
+          devicePixelRatio = window.devicePixelRatio;
+          const dpr = 1 + (devicePixelRatio - 1) * 0.75;
+          renderScale = Math.min(dpr, maxDimension / Math.max(canvasW, canvasH));
+          if (canvasH > 0) {
+            const width = Math.max(1, Math.floor(canvasW * renderScale));
+            const height = Math.max(1, Math.floor(canvasH * renderScale));
+            if (width !== canvasEl.width || height !== canvasEl.height) tvgCanvas.resize(width, height);
+          }
+          canvasEl.style.width = `${canvasW}px`;
+          canvasEl.style.height = `${canvasH}px`;
+          canvasEl.style.top = `${headerH}px`;
+
+          for (const [i, entry] of animsRef.current.entries()) {
+            entry.picture?.scale(renderScale);
+            entry.posX = ((i % cols) * cellSize + entry.xOff) * renderScale;
+            entry.posY = (Math.floor(i / cols) * cellSize + entry.yOff) * renderScale;
+          }
+        };
+        applyLayout(animList.length);
 
         setLoadingStatus('Loading…');
         const fetchResults = await Promise.allSettled(
@@ -253,7 +269,7 @@ export default function Home({ searchParams }: {
             pic.size(displayW, displayH);
             // not added to canvas yet — tick will add when visible
           }
-          loaded.push({ anim, info, name: animList[i].name, url: animList[i].url, picture: pic, visible: false, posX: 0, gridY: 0, xOff, yOff });
+          loaded.push({ anim, info, name: animList[i].name, url: animList[i].url, picture: pic, visible: false, posX: 0, posY: 0, xOff, yOff });
         }
 
         if (cancelled) return;
@@ -269,15 +285,14 @@ export default function Home({ searchParams }: {
           const dt = lastTs > 0 ? ts - lastTs : 0;
           lastTs = ts;
 
-          if (pendingLayoutRef.current) {
+          if (pendingLayoutRef.current || devicePixelRatio !== window.devicePixelRatio) {
             pendingLayoutRef.current = false;
-            if (animsRef.current.length) applyLayout(animsRef.current.length);
+            applyLayout(animsRef.current.length);
           }
 
-          const cellSize = itemSizeRef.current;
           const cols = colsRef.current;
           const scrollEl = scrollAreaRef.current;
-          if (!scrollEl) {
+          if (!scrollEl || canvasH === 0) {
             rafRef.current = requestAnimationFrame(tick);
             return;
           }
@@ -285,6 +300,7 @@ export default function Home({ searchParams }: {
           const canvasRect = canvasEl.getBoundingClientRect();
           const offsetGridToCanvas = scrollRect.top - canvasRect.top;
           scrollOffsetRef.current = offsetGridToCanvas;
+          const renderOffsetY = offsetGridToCanvas * renderScale;
 
           // visible grid Y range (in grid coords)
           const visTopGrid = -offsetGridToCanvas;
@@ -305,7 +321,7 @@ export default function Home({ searchParams }: {
             }
 
             if (shouldShow && entry.picture) {
-              entry.picture.translate(entry.posX, entry.gridY + offsetGridToCanvas + entry.yOff);
+              entry.picture.translate(entry.posX, entry.posY + renderOffsetY);
               if (entry.info?.totalFrames > 0) {
                 entry.anim.frame((elapsed * entry.info.fps) % entry.info.totalFrames);
               }
@@ -613,11 +629,7 @@ export default function Home({ searchParams }: {
             ref={canvasRef}
             id="tvg-main-canvas"
             onClick={handleCanvasClick}
-            style={{
-              position: 'sticky',
-              top: `${headerRef.current?.offsetHeight ?? 0}px`,
-              height: canvasCssHeight ? `${canvasCssHeight}px` : undefined,
-            }}
+            style={{ position: 'sticky' }}
             className={`cursor-pointer transition-opacity duration-300 block ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             title="Click any animation to open the detailed viewer"
           />

@@ -123,8 +123,7 @@ export class Canvas {
   #mainScene: Scene | null = null;
   #logicalWidth: number = 0;
   #logicalHeight: number = 0;
-  #physicalWidth: number = 0;
-  #physicalHeight: number = 0;
+  #lastRequestedDPR: number = 1;
   #currentDPR: number = 1;
   #needsUpdate: boolean = false;
 
@@ -198,40 +197,32 @@ export class Canvas {
       handleError(`Failed to create canvas with ${renderer} renderer: HTML canvas element not found`, 'Canvas constructor');
       return;
     }
-    this.#target = surface;
-
     // Calculate DPR and physical dimensions
     const dpr = enableDevicePixelRatio ? surface.dpr() : 1;
+    this.#lastRequestedDPR = dpr;
     this.#currentDPR = dpr;
 
     const physicalWidth = width * dpr;
     const physicalHeight = height * dpr;
-    this.#physicalWidth = physicalWidth;
-    this.#physicalHeight = physicalHeight;
 
     // Create TvgCanvas with physical dimensions and the configured thread count.
     const threadCount = getThreadCount();
     Module.specialHTMLTargets[CANVAS_TARGET] = surface.canvas;
-    this.#engine = new Module.TvgCanvas(renderer, CANVAS_TARGET, physicalWidth, physicalHeight, threadCount, engineOption);
+    const engine = new Module.TvgCanvas(renderer, CANVAS_TARGET, physicalWidth, physicalHeight, threadCount, engineOption);
     delete Module.specialHTMLTargets[CANVAS_TARGET];
-
-    // Check for errors
-    const error = this.#engine.error();
-    if (error !== 'None') {
-      handleError(`Failed to create canvas with ${renderer} renderer: ${error}`, 'Canvas constructor');
-      return;
-    }
-
-    // Get canvas pointer
-    this.#ptr = this.#engine.ptr();
-
-    if (this.#ptr === 0) {
-      handleError(`Failed to create canvas with ${renderer} renderer: engine pointer is 0`, 'Canvas constructor');
+    const error = engine.error();
+    const ptr = engine.ptr();
+    if (error !== 'None' || !ptr) {
+      engine.delete();
+      handleError(`Failed to create canvas with ${renderer} renderer: ${error === 'None' ? 'engine pointer is 0' : error}`, 'Canvas constructor');
       return;
     }
 
     // Set the target dimensions
-    this.#target.resize(width, height, physicalWidth, physicalHeight);
+    this.#engine = engine;
+    this.#ptr = ptr;
+    this.#target = surface;
+    surface.resize(width, height, physicalWidth, physicalHeight);
 
     // Create main Scene
     this.#mainScene = new Scene();
@@ -385,6 +376,7 @@ export class Canvas {
    * For animated content, always call update() before render().
    */
   public update(): this {
+    if (!this.#ptr) return this;
     const Module = getModule();
     const result = Module._tvg_canvas_update(this.#ptr);
     checkResult(result, 'update');
@@ -433,29 +425,9 @@ export class Canvas {
 
     if (this.#enableDevicePixelRatio) {
       const dpr = this.#target.dpr();
-
-      // Apply new DPR when it's changed
-      if (dpr !== this.#currentDPR) {
-        this.#currentDPR = dpr;
-
-        // Update main Scene scale with new DPR
-        const matrix = {
-          e11: dpr, e12: 0, e13: 0,
-          e21: 0, e22: dpr, e23: 0,
-          e31: 0, e32: 0, e33: 1,
-        };
-        this.#mainScene.transform(matrix);
-      }
-
-      // Calculate physical dimensions
-      const physicalWidth = this.#logicalWidth * dpr;
-      const physicalHeight = this.#logicalHeight * dpr;
-
-      // Update target dimensions if changed
-      if (
-        this.#physicalWidth !== physicalWidth ||
-        this.#physicalHeight !== physicalHeight
-      ) {
+      if (dpr !== this.#lastRequestedDPR) {
+        // Report a rejected DPR change once while rendering the last valid target.
+        this.#lastRequestedDPR = dpr;
         this.resize(this.#logicalWidth, this.#logicalHeight);
       }
     }
@@ -494,17 +466,22 @@ export class Canvas {
    * ```
    */
   public resize(width: number, height: number): this {
-    // Update logical dimensions
+    if (!this.#engine || !this.#target) return this;
+    const dpr = this.#enableDevicePixelRatio ? this.#target.dpr() : 1;
+    const physicalWidth = width * dpr;
+    const physicalHeight = height * dpr;
+    if (!this.#engine.resize(physicalWidth, physicalHeight)) {
+      handleError(`Cannot resize ${this.#renderer} canvas to ${physicalWidth} × ${physicalHeight} pixels`, 'resize');
+      return this;
+    }
+
     this.#logicalWidth = width;
     this.#logicalHeight = height;
-
-    if (this.#target) {
-      const dpr = this.#enableDevicePixelRatio ? this.#currentDPR : 1;
-      this.#physicalWidth = width * dpr;
-      this.#physicalHeight = height * dpr;
-
-      this.#target.resize(width, height, this.#physicalWidth, this.#physicalHeight);
-      this.#engine?.resize(this.#physicalWidth, this.#physicalHeight);
+    this.#lastRequestedDPR = dpr;
+    this.#target.resize(width, height, physicalWidth, physicalHeight);
+    if (dpr !== this.#currentDPR) {
+      this.#currentDPR = dpr;
+      this.#mainScene!.scale(dpr);
     }
 
     return this;
