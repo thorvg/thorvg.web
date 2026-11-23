@@ -161,9 +161,7 @@ struct TvgWgEngine : TvgEngineMethod
             };
 
             const WGPURequestAdapterOptions requestAdapterOptions{
-                // Chromium on Windows ignores this hint and warns when it is present.
-                .powerPreference = EM_ASM_INT({ return navigator.userAgent.includes('Windows') && navigator.userAgent.includes('Chrome/'); })
-                    ? WGPUPowerPreference_Undefined : WGPUPowerPreference_HighPerformance
+                .powerPreference = WGPUPowerPreference_HighPerformance
             };
             const WGPURequestAdapterCallbackInfo requestAdapterCallback{
                 .mode = WGPUCallbackMode_AllowSpontaneous,
