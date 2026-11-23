@@ -25,7 +25,6 @@
 #include "tvgWasmDefaultFont.h"
 #include <emscripten.h>
 #include <emscripten/bind.h>
-#include <algorithm>
 #include <string>
 
 using namespace tvg;
@@ -38,11 +37,9 @@ EMSCRIPTEN_DECLARE_VAL_TYPE(Uint8Array);
 
 struct TvgEngineMethod
 {
-    uint32_t maxTargetSize = UINT32_MAX;
-
     virtual ~TvgEngineMethod() {}
     virtual Canvas* init(string& selector, uint32_t threads, EngineOption op) = 0;
-    virtual Result resize(Canvas* canvas, uint32_t w, uint32_t h) = 0;
+    virtual void resize(Canvas* canvas, uint32_t w, uint32_t h) = 0;
     virtual Uint8Array output(uint32_t w, uint32_t h)
     {
         return Uint8Array(val(typed_memory_view<uint8_t>(0, nullptr)));
@@ -73,16 +70,13 @@ struct TvgSwEngine : TvgEngineMethod
         return SwCanvas::gen(op);
     }
 
-    Result resize(Canvas* canvas, uint32_t w, uint32_t h) override
+    void resize(Canvas* canvas, uint32_t w, uint32_t h) override
     {
-        if (w > SIZE_MAX / sizeof(uint32_t) / h) return Result::InvalidArguments;
-        auto next = static_cast<uint32_t*>(std::malloc(w * h * sizeof(uint32_t)));
-        auto result = static_cast<SwCanvas*>(canvas)->target(next, w, w, h, ColorSpace::ABGR8888S);
-        if (result == Result::Success) {
-            std::free(buffer);
-            buffer = reinterpret_cast<uint8_t*>(next);
-        } else std::free(next);
-        return result;
+        if (!canvas) return;
+
+        std::free(buffer);
+        buffer = (uint8_t*)std::malloc(w * h * sizeof(uint32_t));
+        static_cast<SwCanvas*>(canvas)->target((uint32_t*)buffer, w, w, h, ColorSpace::ABGR8888S);
     }
 
     Uint8Array output(uint32_t w, uint32_t h) override
@@ -130,19 +124,17 @@ struct TvgWgEngine : TvgEngineMethod
 
         if (!surface) return nullptr;
 
-        WGPULimits limits{};
-        wgpuDeviceGetLimits(device, &limits);
-        maxTargetSize = limits.maxTextureDimension2D;
-
         if (Initializer::init(threads) != Result::Success) return nullptr;
         loadFont();
 
         return WgCanvas::gen(op);
     }
 
-    Result resize(Canvas* canvas, uint32_t w, uint32_t h) override
+    void resize(Canvas* canvas, uint32_t w, uint32_t h) override
     {
-        return static_cast<WgCanvas*>(canvas)->target({instance, adapter, device}, surface, w, h, ColorSpace::ABGR8888);
+        if (!canvas) return;
+
+        static_cast<WgCanvas*>(canvas)->target({instance, adapter, device}, surface, w, h, ColorSpace::ABGR8888);
     }
 
     static int init()
@@ -168,12 +160,10 @@ struct TvgWgEngine : TvgEngineMethod
                 *((WGPUAdapter*)userdata1) = adapter;
             };
 
-            // Chromium on Windows ignores this hint and warns when it is present.
-            const bool ignoresPowerPreference = EM_ASM_INT({
-                return navigator.userAgent.includes('Windows') && navigator.userAgent.includes('Chrome/');
-            });
             const WGPURequestAdapterOptions requestAdapterOptions{
-                .powerPreference = ignoresPowerPreference ? WGPUPowerPreference_Undefined : WGPUPowerPreference_HighPerformance
+                // Chromium on Windows ignores this hint and warns when it is present.
+                .powerPreference = EM_ASM_INT({ return navigator.userAgent.includes('Windows') && navigator.userAgent.includes('Chrome/'); })
+                    ? WGPUPowerPreference_Undefined : WGPUPowerPreference_HighPerformance
             };
             const WGPURequestAdapterCallbackInfo requestAdapterCallback{
                 .mode = WGPUCallbackMode_AllowSpontaneous,
@@ -236,7 +226,6 @@ struct TvgWgEngine : TvgEngineMethod
 
 #ifdef THORVG_GL_ENGINE_SUPPORT
 
-#include <GLES3/gl3.h>
 #include <emscripten/html5_webgl.h>
 
 struct TvgGlEngine : TvgEngineMethod
@@ -269,10 +258,6 @@ struct TvgGlEngine : TvgEngineMethod
         if (context == 0) return nullptr;
 
         emscripten_webgl_make_context_current(context);
-        GLint textureSize = 0, renderbufferSize = 0;
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &textureSize);
-        glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &renderbufferSize);
-        maxTargetSize = std::min(textureSize, renderbufferSize);
 
         if (Initializer::init(threads) != Result::Success) return nullptr;
         loadFont();
@@ -280,9 +265,11 @@ struct TvgGlEngine : TvgEngineMethod
         return GlCanvas::gen(op);
     }
 
-    Result resize(Canvas* canvas, uint32_t w, uint32_t h) override
+    void resize(Canvas* canvas, uint32_t w, uint32_t h) override
     {
-        return static_cast<GlCanvas*>(canvas)->target(
+        if (!canvas) return;
+
+        static_cast<GlCanvas*>(canvas)->target(
             nullptr, nullptr, (void*)context, 0, w, h, ColorSpace::ABGR8888S
         );
     }
@@ -312,7 +299,7 @@ public:
         if (engine) delete engine;
     }
 
-    explicit TvgCanvas(string engineType = "sw", string selector = "", double w = 0, double h = 0, uint32_t threads = 0, uint32_t engineOption = static_cast<uint32_t>(EngineOption::SmartRender)) {
+    explicit TvgCanvas(string engineType = "sw", string selector = "", uint32_t w = 0, uint32_t h = 0, uint32_t threads = 0, uint32_t engineOption = static_cast<uint32_t>(EngineOption::SmartRender)) {
         errorMsg = "None";
 
 #ifdef THORVG_CPU_ENGINE_SUPPORT
@@ -336,26 +323,24 @@ public:
             return;
         }
 
-        if (!resize(w, h)) errorMsg = "Invalid canvas target";
+        resize(w, h);
     }
 
     string error() {
         return errorMsg;
     }
 
-    bool resize(double requestedWidth, double requestedHeight) {
+    bool resize(uint32_t w, uint32_t h) {
         if (!canvas || !engine) return false;
-        const double end = static_cast<double>(engine->maxTargetSize) + 1;
-        if (!(requestedWidth >= 1 && requestedWidth < end && requestedHeight >= 1 && requestedHeight < end)) return false;
-        auto w = static_cast<uint32_t>(requestedWidth);
-        auto h = static_cast<uint32_t>(requestedHeight);
         if (width == w && height == h) return true;
 
         canvas->sync();
-        if (engine->resize(canvas, w, h) != Result::Success) return false;
 
         width = w;
         height = h;
+
+        engine->resize(canvas, w, h);
+
         return true;
     }
 
@@ -396,7 +381,7 @@ EMSCRIPTEN_BINDINGS(thorvg_webcanvas) {
     emscripten::function("term", &term);
 
     class_<TvgCanvas>("TvgCanvas")
-        .constructor<string, string, double, double, uint32_t, uint32_t>()
+        .constructor<string, string, uint32_t, uint32_t, uint32_t, uint32_t>()
         .function("error", &TvgCanvas::error)
         .function("resize", &TvgCanvas::resize)
         .function("clear", &TvgCanvas::clear)

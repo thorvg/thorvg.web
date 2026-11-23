@@ -21,21 +21,6 @@ import { VersionSelector } from '../components/VersionSelector';
 import { BenchmarkModal } from '../components/BenchmarkModal';
 import { DragOverlay } from '../components/DragOverlay';
 
-function maxCanvasDimension(canvas: HTMLCanvasElement, renderer: Renderer): number {
-  if (renderer === 'gl') {
-    const gl = canvas.getContext('webgl2')!;
-    return Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
-  }
-  if (renderer === 'wg') {
-    const context = canvas.getContext('webgpu') as unknown as {
-      getConfiguration?(): { device: { limits: { maxTextureDimension2D: number } } };
-    };
-    // Older WebGPU contexts don't expose getConfiguration(). ThorVG requests the default limits.
-    return context.getConfiguration?.().device.limits.maxTextureDimension2D ?? 8192;
-  }
-  return Infinity;
-}
-
 export default function Home({ searchParams }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
@@ -52,7 +37,7 @@ export default function Home({ searchParams }: {
   const animsRef = useRef<{
     anim: any; info: any; name: string; url: string;
     picture: any; visible: boolean;
-    posX: number; posY: number; xOff: number; yOff: number;
+    posX: number; gridY: number; xOff: number; yOff: number;
   }[]>([]);
   const rafRef = useRef<number>(0);
   const colsRef = useRef<number>(1);
@@ -122,6 +107,39 @@ export default function Home({ searchParams }: {
     setAnimList(list);
   }, []);
 
+  // Grid layout
+  const applyLayout = useCallback((total: number, maxDimension: number) => {
+    const cellSize = itemSizeRef.current;
+    const cols = Math.max(1, Math.floor(containerRef.current!.clientWidth / cellSize));
+    const canvasW = cols * cellSize;
+    const gridH = Math.ceil(total / cols) * cellSize;
+    const headerH = headerRef.current?.offsetHeight ?? 0;
+    const canvasH = Math.min(gridH, Math.max(0, window.innerHeight - headerH));
+
+    colsRef.current = cols;
+    setGridHeight(gridH);
+    const dpr = 1 + (window.devicePixelRatio - 1) * 0.75;
+    const renderScale = Math.min(dpr, maxDimension / Math.max(canvasW, canvasH));
+
+    const list = animsRef.current;
+    for (let i = 0; i < list.length; i++) {
+      const entry = list[i];
+      entry.picture?.scale(renderScale);
+      entry.posX = (i % cols) * cellSize + entry.xOff;
+      entry.gridY = Math.floor(i / cols) * cellSize;
+    }
+
+    // Limit the backing resolution while keeping the full grid in CSS pixels.
+    const el = canvasRef.current!;
+    const width = Math.max(1, Math.floor(canvasW * renderScale));
+    const height = Math.max(1, Math.floor(canvasH * renderScale));
+    if (canvasH > 0 && (el.width !== width || el.height !== height)) tvgCanvasRef.current.resize(width, height);
+    el.style.width = `${canvasW}px`;
+    el.style.height = `${canvasH}px`;
+    el.style.top = `${headerH}px`;
+    return canvasH > 0 ? renderScale : 0;
+  }, []);
+
   useEffect(() => {
     const onResize = () => { pendingLayoutRef.current = true; };
     window.addEventListener('resize', onResize);
@@ -166,6 +184,10 @@ export default function Home({ searchParams }: {
       setLoadingStatus('Loading…');
       setDisplayVersion('');
 
+      const tvgDpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
+      const cellSize = size / tvgDpr;
+      itemSizeRef.current = cellSize;
+
       const canvasEl = canvasRef.current!;
 
       try {
@@ -192,7 +214,6 @@ export default function Home({ searchParams }: {
           : version
         );
 
-        // Create the context before querying the limits of the device ThorVG selected.
         const tvgCanvas = new TVG.Canvas('#tvg-main-canvas', {
           width: 1,
           height: 1,
@@ -200,43 +221,6 @@ export default function Home({ searchParams }: {
           engineOption: TVG.EngineOption?.None ?? 0,
         });
         tvgCanvasRef.current = tvgCanvas;
-
-        const maxDimension = maxCanvasDimension(canvasEl, renderer);
-        let devicePixelRatio = window.devicePixelRatio;
-        const cellSize = size / (1 + (devicePixelRatio - 1) * 0.75);
-        itemSizeRef.current = cellSize;
-        let renderScale = 1;
-        let canvasH = 0;
-
-        const applyLayout = (total: number) => {
-          const cols = Math.max(1, Math.floor(containerRef.current!.clientWidth / cellSize));
-          const canvasW = cols * cellSize;
-          const gridH = Math.ceil(total / cols) * cellSize;
-          const headerH = headerRef.current!.offsetHeight;
-          canvasH = Math.min(gridH, Math.max(0, window.innerHeight - headerH));
-          colsRef.current = cols;
-          setGridHeight(gridH);
-
-          // Keep layout and hit testing in CSS pixels. Only the backing resolution is capped.
-          devicePixelRatio = window.devicePixelRatio;
-          const dpr = 1 + (devicePixelRatio - 1) * 0.75;
-          renderScale = Math.min(dpr, maxDimension / Math.max(canvasW, canvasH));
-          if (canvasH > 0) {
-            const width = Math.max(1, Math.floor(canvasW * renderScale));
-            const height = Math.max(1, Math.floor(canvasH * renderScale));
-            if (width !== canvasEl.width || height !== canvasEl.height) tvgCanvas.resize(width, height);
-          }
-          canvasEl.style.width = `${canvasW}px`;
-          canvasEl.style.height = `${canvasH}px`;
-          canvasEl.style.top = `${headerH}px`;
-
-          for (const [i, entry] of animsRef.current.entries()) {
-            entry.picture?.scale(renderScale);
-            entry.posX = ((i % cols) * cellSize + entry.xOff) * renderScale;
-            entry.posY = (Math.floor(i / cols) * cellSize + entry.yOff) * renderScale;
-          }
-        };
-        applyLayout(animList.length);
 
         setLoadingStatus('Loading…');
         const fetchResults = await Promise.allSettled(
@@ -269,12 +253,18 @@ export default function Home({ searchParams }: {
             pic.size(displayW, displayH);
             // not added to canvas yet — tick will add when visible
           }
-          loaded.push({ anim, info, name: animList[i].name, url: animList[i].url, picture: pic, visible: false, posX: 0, posY: 0, xOff, yOff });
+          loaded.push({ anim, info, name: animList[i].name, url: animList[i].url, picture: pic, visible: false, posX: 0, gridY: 0, xOff, yOff });
         }
 
         if (cancelled) return;
         animsRef.current = loaded;
-        applyLayout(loaded.length);
+        let maxDimension = renderer === 'wg' ? 8192 : Infinity; // WebCanvas requests the default WebGPU limits.
+        if (renderer === 'gl') {
+          const gl = canvasEl.getContext('webgl2')!;
+          maxDimension = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
+        }
+        let devicePixelRatio = window.devicePixelRatio;
+        let renderScale = applyLayout(loaded.length, maxDimension);
         setIsLoading(false);
         setLoadingStatus('');
 
@@ -287,12 +277,14 @@ export default function Home({ searchParams }: {
 
           if (pendingLayoutRef.current || devicePixelRatio !== window.devicePixelRatio) {
             pendingLayoutRef.current = false;
-            applyLayout(animsRef.current.length);
+            devicePixelRatio = window.devicePixelRatio;
+            renderScale = applyLayout(animsRef.current.length, maxDimension);
           }
 
+          const cellSize = itemSizeRef.current;
           const cols = colsRef.current;
           const scrollEl = scrollAreaRef.current;
-          if (!scrollEl || canvasH === 0) {
+          if (!scrollEl || renderScale === 0) {
             rafRef.current = requestAnimationFrame(tick);
             return;
           }
@@ -300,7 +292,6 @@ export default function Home({ searchParams }: {
           const canvasRect = canvasEl.getBoundingClientRect();
           const offsetGridToCanvas = scrollRect.top - canvasRect.top;
           scrollOffsetRef.current = offsetGridToCanvas;
-          const renderOffsetY = offsetGridToCanvas * renderScale;
 
           // visible grid Y range (in grid coords)
           const visTopGrid = -offsetGridToCanvas;
@@ -321,7 +312,7 @@ export default function Home({ searchParams }: {
             }
 
             if (shouldShow && entry.picture) {
-              entry.picture.translate(entry.posX, entry.posY + renderOffsetY);
+              entry.picture.translate(entry.posX * renderScale, (entry.gridY + offsetGridToCanvas + entry.yOff) * renderScale);
               if (entry.info?.totalFrames > 0) {
                 entry.anim.frame((elapsed * entry.info.fps) % entry.info.totalFrames);
               }

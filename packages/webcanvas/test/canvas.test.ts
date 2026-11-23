@@ -64,19 +64,6 @@ describe('Canvas', () => {
     expect(result).toBe(canvas);
   });
 
-  it('preserves the last valid target when a resize is rejected', () => {
-    const element = document.querySelector<HTMLCanvasElement>('#test-canvas')!;
-    canvas.resize(80, 60);
-    const { width, height } = element;
-    for (const invalidHeight of [0, 2 ** 32 + 60]) {
-      expect(() => canvas.resize(80, invalidHeight)).toThrow(/Cannot resize/);
-      expect([element.width, element.height]).toEqual([width, height]);
-    }
-    canvas.resize(120, 90);
-    expect(element.width).toBe(Math.floor(120 * canvas.dpr));
-    expect(element.height).toBe(Math.floor(90 * canvas.dpr));
-  });
-
   it('viewport returns this', () => {
     const result = canvas.viewport(0, 0, 400, 300);
     expect(result).toBe(canvas);
