@@ -63,7 +63,6 @@
       <div class="resolver-buttons">
         <button id="imageResolverBtn" onclick="switchResolver('image')">Image Resolver</button>
         <button id="fontResolverBtn" onclick="switchResolver('font')">Font Resolver</button>
-        <button id="audioResolverBtn" onclick="switchResolver('audio')">Audio Resolver</button>
       </div>
 
       <div class="lottie-container">
@@ -76,7 +75,7 @@
       function getResolverType() {
         const params = new URLSearchParams(window.location.search);
         const type = params.get('type');
-        return type === 'font' || type === 'audio' ? type : 'image';
+        return type === 'font' ? type : 'image';
       }
       
       window.onload = async function() {
@@ -97,7 +96,7 @@
 
       function updateButtonStates() {
         const resolverType = getResolverType();
-        for (const type of ['image', 'font', 'audio']) {
+        for (const type of ['image', 'font']) {
           document.getElementById(`${type}ResolverBtn`).classList.toggle('active', type === resolverType);
         }
       }
@@ -154,58 +153,6 @@
       loadAsset(assetPath);
     }
 
-    const audioVoices = new Map();
-
-    function audioResolver(info, data) {
-      let voice = audioVoices.get(info.id);
-      if (!info.active) {
-        if (voice) {
-          voice.active = false;
-          voice.audio.pause();
-        }
-        return;
-      }
-
-      if (!voice) {
-        const src = info.data
-          ? URL.createObjectURL(new Blob([info.data.slice()], { type: info.mimeType || 'audio/wav' }))
-          : info.path;
-        const audio = new Audio(src);
-        audio.loop = true;
-        voice = { audio, active: false };
-        audioVoices.set(info.id, voice);
-      }
-
-      voice.active = true;
-      voice.audio.volume = Math.min(1, info.volume);
-      voice.audio.currentTime = info.offset;
-      voice.audio.play().catch(() => {});
-    }
-
-    function pauseAudio() {
-      for (const voice of audioVoices.values()) {
-        voice.audio.pause();
-      }
-    }
-
-    function resumeAudio() {
-      for (const voice of audioVoices.values()) {
-        if (voice.active) {
-          voice.audio.play().catch(() => {});
-        }
-      }
-    }
-
-    function releaseAudio() {
-      for (const voice of audioVoices.values()) {
-        voice.audio.pause();
-        if (voice.audio.src.startsWith('blob:')) {
-          URL.revokeObjectURL(voice.audio.src);
-        }
-      }
-      audioVoices.clear();
-    }
-
       function createAnimation() {
         if (animation) {
           return;
@@ -221,11 +168,6 @@
         if (resolverType === 'image') {
           animation.src = './resources/extensions/resolver1.json';
           animation.setAssetResolver(resolver1, {test: 'this is from JS Code'});
-        } else if (resolverType === 'audio') {
-          animation.src = './resources/emoji_audio.json';
-          animation.setAudioResolver(audioResolver, {test: 'this is from JS Code'});
-          animation.addEventListener('pause', pauseAudio);
-          animation.addEventListener('stop', pauseAudio);
         } else {
           animation.src = './resources/extensions/resolver2.json';
           animation.setAssetResolver(resolver2, {test: 'this is from JS Code'});
@@ -277,7 +219,6 @@
 
         animation.destroy();
         animation = undefined;
-        releaseAudio();
       }
 
       function playAnimation() {
@@ -287,7 +228,6 @@
         }
 
         animation.play();
-        resumeAudio();
       }
 
       function toggleLoop(e) {

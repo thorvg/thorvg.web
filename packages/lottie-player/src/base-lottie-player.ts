@@ -39,7 +39,7 @@ export interface LibraryVersion {
 }
 
 // Audio resolver event payload
-export interface AudioInfo {
+interface AudioInfo {
   id: number;
   active: boolean;
   offset: number;
@@ -334,8 +334,6 @@ export class BaseLottiePlayer extends LitElement {
   #assetResolverCallback?: (src: string, data: unknown) => { name: string, buffer: ArrayBuffer, mimetype: string };
   #assetResolverData?: unknown;
   //Audio
-  #audioResolverCallback?: (info: AudioInfo, data: unknown) => void;
-  #audioResolverData?: unknown;
   #audioCtx?: AudioContext;
   #audioMasterGain?: GainNode;
   #volume: number = 1;
@@ -499,8 +497,7 @@ export class BaseLottiePlayer extends LitElement {
     for (const id of [...this.#audioVoices.keys()]) {
       this.#stopVoice(id);
     }
-    const audioFn = this.#audioResolverCallback ?? this.#audioResolver.bind(this);
-    this.TVG.setAudioResolver(audioFn, this.#audioResolverCallback ? this.#audioResolverData : null);
+    this.TVG.setAudioResolver(this.#audioResolver.bind(this), null);
 
     this.#render();
     this.dispatchEvent(new CustomEvent(PlayerEvent.Load));
@@ -748,8 +745,7 @@ export class BaseLottiePlayer extends LitElement {
     }
 
     if (this.currentState === 'stopped') {
-      const audioFn = this.#audioResolverCallback ?? this.#audioResolver.bind(this);
-      this.TVG.setAudioResolver(audioFn, this.#audioResolverCallback ? this.#audioResolverData : null);
+      this.TVG.setAudioResolver(this.#audioResolver.bind(this), null);
       this.#resumeAudio();
     }
 
@@ -941,16 +937,6 @@ export class BaseLottiePlayer extends LitElement {
 
     if (this.TVG) {
       this.TVG.setAssetResolver(callback, data);
-    }
-  }
-
-  public setAudioResolver(callback: ((info: AudioInfo, data: unknown) => void) | null, data: unknown | null): void {
-    this.#audioResolverCallback = callback ?? undefined;
-    this.#audioResolverData = data;
-
-    if (this.TVG) {
-      const fn = callback ?? this.#audioResolver.bind(this);
-      this.TVG.setAudioResolver(fn, callback ? data : null);
     }
   }
 

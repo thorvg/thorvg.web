@@ -49,4 +49,4 @@ export class LottiePlayer extends BaseLottiePlayer {
   }
 }
 
-export type { AudioInfo, FileType, LibraryVersion, PlayMode, PlayerState } from './base-lottie-player';
+export type { FileType, LibraryVersion, PlayMode, PlayerState } from './base-lottie-player';
