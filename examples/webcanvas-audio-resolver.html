@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ThorVG WebCanvas - Web Worker Lottie Audio</title>
+    <meta name="description" content="Render a Lottie with @thorvg/webcanvas inside a Web Worker and play its audio layers on the main thread via the audio resolver" />
+    <style>
+      body { font-family: sans-serif; margin: 24px; }
+      canvas { border: 1px solid #ccc; display: block; margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <h2>ThorVG WebCanvas Lottie Audio in a Web Worker</h2>
+
+    <label for="renderer">Renderer</label>
+    <select id="renderer">
+      <option value="gl">WebGL (gl)</option>
+      <option value="wg">WebGPU (wg)</option>
+      <option value="sw">Software (sw)</option>
+    </select>
+    <button id="toggle" disabled>Play</button>
+
+    <canvas id="canvas" width="720" height="300"></canvas>
+
+    <script type="module">
+      const RESYNC = 0.12;
+      const STALL_MS = 400;
+
+      const select = document.querySelector('#renderer');
+      const toggle = document.querySelector('#toggle');
+      const renderer = new URLSearchParams(location.search).get('renderer') || 'gl';
+      select.value = renderer;
+      select.onchange = () => { location.search = `?renderer=${select.value}`; };
+
+      const ctx = new AudioContext();
+      const master = ctx.createGain();
+      master.connect(ctx.destination);
+
+      const voices = new Map();
+      let playing = false;
+      let frame = 0;
+      let fps = 0;
+      let lastTick = 0;
+
+      function createVoice(id) {
+        const gain = ctx.createGain();
+        gain.connect(master);
+        const voice = {
+          gain,
+          buffer: null,
+          source: null,
+          active: false,
+          baseFrame: 0,
+          baseOffset: 0,
+          startOffset: 0,
+          startedAt: 0,
+        };
+        voices.set(id, voice);
+        return voice;
+      }
+
+      function voiceOf(id) {
+        return voices.get(id) ?? createVoice(id);
+      }
+
+      async function decode(voice, src, mimeType) {
+        let bytes;
+        if (typeof src === 'string') {
+          bytes = await fetch(new URL(src, new URL('resources/', location.href))).then((res) => res.arrayBuffer());
+        } else {
+          bytes = src.slice().buffer;
+        }
+        try {
+          voice.buffer = await ctx.decodeAudioData(bytes);
+        } catch (e) {
+          console.error(`Failed to decode the audio layer (${mimeType ?? 'unknown'})`, e);
+          return;
+        }
+        if (playing && voice.active) startVoice(voice, expected(voice));
+      }
+
+      function expected(voice) {
+        if (fps <= 0) return voice.baseOffset;
+        return voice.baseOffset + (frame - voice.baseFrame) / fps;
+      }
+
+      function position(voice) {
+        if (!voice.source) return null;
+        return voice.startOffset + (ctx.currentTime - voice.startedAt);
+      }
+
+      function stopVoice(voice) {
+        const source = voice.source;
+        if (!source) return;
+        voice.source = null;
+        source.onended = null;
+        source.stop();
+        source.disconnect();
+      }
+
+      function startVoice(voice, offset) {
+        stopVoice(voice);
+        if (!voice.buffer || offset < 0 || offset >= voice.buffer.duration) return;
+
+        const source = ctx.createBufferSource();
+        source.buffer = voice.buffer;
+        source.connect(voice.gain);
+        source.onended = () => {
+          if (voice.source === source) voice.source = null;
+        };
+        source.start(0, offset);
+
+        voice.source = source;
+        voice.startOffset = offset;
+        voice.startedAt = ctx.currentTime;
+      }
+
+      function stopAll() {
+        for (const voice of voices.values()) stopVoice(voice);
+      }
+
+      function sync() {
+        for (const voice of voices.values()) {
+          if (!voice.active || !voice.buffer) continue;
+          const want = expected(voice);
+          const have = position(voice);
+          if (have === null || Math.abs(want - have) > RESYNC) startVoice(voice, want);
+        }
+      }
+
+      setInterval(() => {
+        if (playing && performance.now() - lastTick > STALL_MS) stopAll();
+      }, 200);
+
+      const canvas = document.querySelector('#canvas');
+      const { width, height } = canvas;
+      const offscreen = canvas.transferControlToOffscreen();
+      const worker = new Worker('webcanvas-audio-resolver.js', { type: 'module' });
+
+      worker.onmessage = ({ data }) => {
+        switch (data.type) {
+          case 'ready': {
+            toggle.disabled = false;
+            break;
+          }
+          case 'source': {
+            decode(voiceOf(data.id), data.src, data.mimeType);
+            break;
+          }
+          case 'audio': {
+            const voice = voiceOf(data.id);
+            voice.active = data.active;
+            voice.baseFrame = data.frame;
+            voice.baseOffset = data.offset;
+            if (!data.active) {
+              stopVoice(voice);
+              break;
+            }
+            voice.gain.gain.value = data.volume;
+            if (playing && voice.buffer && !voice.source) startVoice(voice, data.offset);
+            break;
+          }
+          case 'tick': {
+            playing = true;
+            frame = data.frame;
+            fps = data.fps;
+            lastTick = performance.now();
+            sync();
+            break;
+          }
+          case 'pause': {
+            playing = false;
+            stopAll();
+            break;
+          }
+        }
+      };
+
+      worker.postMessage({ type: 'init', canvas: offscreen, renderer, width, height }, [offscreen]);
+
+      let started = false;
+      toggle.onclick = () => {
+        ctx.resume();
+        started = !started;
+        toggle.textContent = started ? 'Pause' : 'Play';
+        worker.postMessage({ type: started ? 'play' : 'pause' });
+      };
+    </script>
+  </body>
+</html>
