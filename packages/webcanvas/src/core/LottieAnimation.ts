@@ -6,7 +6,7 @@
 import { getModule, createFunction, deleteFunction } from '../interop/module';
 import { callbackRegistry } from '../interop/registry';
 import { Animation } from './Animation';
-import { LottieAudio } from './media/Audio';
+import { LottieAudio, type AudioInfo } from './media/Audio';
 import { checkResult, handleError, ThorVGResultCode } from '../common/errors';
 
 /**
@@ -37,40 +37,6 @@ export interface LottieMarker {
   /** Ending frame of the marker */
   end: number;
 }
-
-/**
- * Describes the current state of a Lottie audio layer.
- *
- * This structure is provided to the audio resolver callback and contains
- * the information required to synchronize audio playback with the animation
- * timeline.
- *
- * @category LottieAnimation
- * @see {@link AudioResolver}
- * @beta
- */
-export interface AudioInfo {
-  /** Audio source: a file path/URL, or the embedded raw bytes. */
-  src: string | Uint8Array;
-  /** MIME type string; valid when the source is embedded; may be `null`. */
-  mimeType: string | null;
-  /** Position within the audio file in seconds; valid when `active`. */
-  offset: number;
-  /** Volume [0, 1]; valid when `active`. */
-  volume: number;
-  /** `true` while the layer is within its playback range. */
-  active: boolean;
-}
-
-/**
- * Audio resolver callback
- *
- * @param info - Current state of the audio layer.
- *
- * @category LottieAnimation
- * @beta
- */
-export type AudioResolver = (info: AudioInfo) => void;
 
 /**
  * Animation controller with the Lottie extensions: markers, slots, etc.
@@ -105,7 +71,6 @@ export type AudioResolver = (info: AudioInfo) => void;
  */
 export class LottieAnimation extends Animation {
   #audio: LottieAudio | null = null;
-  #resolver: AudioResolver | null = null;
   #resolverPtr: number | null = null;
   #audioData = new Map<number, Uint8Array>();
 
@@ -360,6 +325,11 @@ export class LottieAnimation extends Animation {
    * The recommended range is [0.0, 2.0].
    *
    * @param value - Master playback volume.
+   *
+   * @remarks
+   * Audio playback requires the main thread. Inside a Web Worker, the
+   * audio layers are muted.
+   *
    * @beta
    */
   public volume(value: number): this;
@@ -368,42 +338,6 @@ export class LottieAnimation extends Animation {
     if (value === undefined) return Module._tvg_lottie_animation_get_volume(this.ptr);
     const result = Module._tvg_lottie_animation_set_volume(this.ptr, value);
     checkResult(result, 'volume');
-    return this;
-  }
-
-  /**
-   * Sets the audio resolver callback for the Lottie audio layers.
-   *
-   * The built-in backend stops while a resolver is set, so the resolver takes
-   * on every audio layer of the animation.
-   *
-   * @param callback - The resolver, or `null` to hand the layers back to the
-   *                   built-in backend.
-   *
-   * @example
-   * ```typescript
-   * animation.resolver((info) => {
-   *   if (info.active) {
-   *     //Start or seek playback of info.src.
-   *   } else {
-   *     //Stop playback of info.src.
-   *   }
-   * });
-   * ```
-   *
-   * @see {@link AudioResolver}
-   * @beta
-   */
-  public resolver(callback: AudioResolver | null): this {
-    this.#resolver = callback;
-
-    if (callback) {
-      this.#audio?.dispose();
-      this.#audio = null;
-    } else if (!this.#audio && this.#resolverPtr) {
-      this.#audio = new LottieAudio();
-    }
-
     return this;
   }
 
@@ -477,7 +411,7 @@ export class LottieAnimation extends Animation {
     const Module = getModule();
 
     this.#audio?.dispose();
-    this.#audio = this.#resolver ? null : new LottieAudio();
+    this.#audio = new LottieAudio();
     this.#audioData.clear();
 
     if (!this.#resolverPtr) {
@@ -490,8 +424,7 @@ export class LottieAnimation extends Animation {
         const info = anim.#readAudio(infoPtr);
         if (!info) return;
 
-        if (anim.#resolver) anim.#resolver(info);
-        else anim.#audio?.resolve(info, anim.frame());
+        anim.#audio?.resolve(info, anim.frame());
       });
 
       this.#resolverPtr = funcPtr;
