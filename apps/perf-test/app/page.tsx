@@ -21,6 +21,8 @@ import { VersionSelector } from '../components/VersionSelector';
 import { BenchmarkModal } from '../components/BenchmarkModal';
 import { DragOverlay } from '../components/DragOverlay';
 
+const INITIAL_CANVAS_SIZE = 4;
+
 export default function Home({ searchParams }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
@@ -107,39 +109,6 @@ export default function Home({ searchParams }: {
     setAnimList(list);
   }, []);
 
-  // Grid layout
-  const applyLayout = useCallback((total: number, maxDimension: number) => {
-    const cellSize = itemSizeRef.current;
-    const cols = Math.max(1, Math.floor(containerRef.current!.clientWidth / cellSize));
-    const canvasW = cols * cellSize;
-    const gridH = Math.ceil(total / cols) * cellSize;
-    const headerH = headerRef.current?.offsetHeight ?? 0;
-    const canvasH = Math.min(gridH, Math.max(0, window.innerHeight - headerH));
-
-    colsRef.current = cols;
-    setGridHeight(gridH);
-    const dpr = 1 + (window.devicePixelRatio - 1) * 0.75;
-    const renderScale = Math.min(dpr, maxDimension / Math.max(canvasW, canvasH));
-
-    const list = animsRef.current;
-    for (let i = 0; i < list.length; i++) {
-      const entry = list[i];
-      entry.picture?.scale(renderScale);
-      entry.posX = (i % cols) * cellSize + entry.xOff;
-      entry.gridY = Math.floor(i / cols) * cellSize;
-    }
-
-    // Limit the backing resolution while keeping the full grid in CSS pixels.
-    const el = canvasRef.current!;
-    const width = Math.max(1, Math.floor(canvasW * renderScale));
-    const height = Math.max(1, Math.floor(canvasH * renderScale));
-    if (canvasH > 0 && (el.width !== width || el.height !== height)) tvgCanvasRef.current.resize(width, height);
-    el.style.width = `${canvasW}px`;
-    el.style.height = `${canvasH}px`;
-    el.style.top = `${headerH}px`;
-    return canvasH > 0 ? renderScale : 0;
-  }, []);
-
   useEffect(() => {
     const onResize = () => { pendingLayoutRef.current = true; };
     window.addEventListener('resize', onResize);
@@ -184,10 +153,6 @@ export default function Home({ searchParams }: {
       setLoadingStatus('Loading…');
       setDisplayVersion('');
 
-      const tvgDpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
-      const cellSize = size / tvgDpr;
-      itemSizeRef.current = cellSize;
-
       const canvasEl = canvasRef.current!;
 
       try {
@@ -214,13 +179,15 @@ export default function Home({ searchParams }: {
           : version
         );
 
+        let devicePixelRatio = window.devicePixelRatio;
         const tvgCanvas = new TVG.Canvas('#tvg-main-canvas', {
-          width: 1,
-          height: 1,
-          enableDevicePixelRatio: false,
+          width: INITIAL_CANVAS_SIZE,
+          height: INITIAL_CANVAS_SIZE,
           engineOption: TVG.EngineOption?.None ?? 0,
         });
         tvgCanvasRef.current = tvgCanvas;
+        const cellSize = size / tvgCanvas.dpr;
+        itemSizeRef.current = cellSize;
 
         setLoadingStatus('Loading…');
         const fetchResults = await Promise.allSettled(
@@ -263,8 +230,43 @@ export default function Home({ searchParams }: {
           const gl = canvasEl.getContext('webgl2')!;
           maxDimension = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
         }
-        let devicePixelRatio = window.devicePixelRatio;
-        let renderScale = applyLayout(loaded.length, maxDimension);
+        const applyLayout = () => {
+          const cols = Math.max(1, Math.floor(containerRef.current!.clientWidth / cellSize));
+          const canvasW = cols * cellSize;
+          const gridH = Math.ceil(loaded.length / cols) * cellSize;
+          const headerH = headerRef.current?.offsetHeight ?? 0;
+          const canvasH = Math.min(gridH, Math.max(0, window.innerHeight - headerH));
+          colsRef.current = cols;
+          setGridHeight(gridH);
+
+          let renderScale = 0;
+          if (canvasH > 0) {
+            if (devicePixelRatio !== window.devicePixelRatio) {
+              tvgCanvas.resize(INITIAL_CANVAS_SIZE, INITIAL_CANVAS_SIZE).render();
+              devicePixelRatio = window.devicePixelRatio;
+            }
+            const dpr = tvgCanvas.dpr;
+            renderScale = Math.min(1, maxDimension / (Math.max(canvasW, canvasH) * dpr));
+            const minSize = Math.ceil(1 / dpr);
+            const width = Math.max(minSize, canvasW * renderScale);
+            const height = Math.max(minSize, canvasH * renderScale);
+            if (canvasEl.width !== Math.floor(width * dpr) || canvasEl.height !== Math.floor(height * dpr)) {
+              tvgCanvas.resize(width, height);
+            }
+            for (let i = 0; i < loaded.length; i++) {
+              const entry = loaded[i];
+              entry.picture?.scale(renderScale);
+              entry.posX = (i % cols) * cellSize + entry.xOff;
+              entry.gridY = Math.floor(i / cols) * cellSize;
+            }
+          }
+          canvasEl.style.width = `${canvasW}px`;
+          canvasEl.style.height = `${canvasH}px`;
+          canvasEl.style.top = `${headerH}px`;
+          return renderScale;
+        };
+
+        let renderScale = applyLayout();
         setIsLoading(false);
         setLoadingStatus('');
 
@@ -275,13 +277,11 @@ export default function Home({ searchParams }: {
           const dt = lastTs > 0 ? ts - lastTs : 0;
           lastTs = ts;
 
-          if (pendingLayoutRef.current || devicePixelRatio !== window.devicePixelRatio) {
+          if (pendingLayoutRef.current || (renderScale > 0 && devicePixelRatio !== window.devicePixelRatio)) {
             pendingLayoutRef.current = false;
-            devicePixelRatio = window.devicePixelRatio;
-            renderScale = applyLayout(animsRef.current.length, maxDimension);
+            renderScale = applyLayout();
           }
 
-          const cellSize = itemSizeRef.current;
           const cols = colsRef.current;
           const scrollEl = scrollAreaRef.current;
           if (!scrollEl || renderScale === 0) {
