@@ -90,6 +90,14 @@ function getExamples(comment) {
   return comment.getTags('@example').map(tag => commentPartsText(tag.content));
 }
 
+function getRemarks(comment) {
+  if (!comment?.getTags) return '';
+  return comment.getTags('@remarks')
+    .map(tag => commentPartsText(tag.content).trim())
+    .filter(Boolean)
+    .join('\n\n');
+}
+
 function getReturnsText(comment) {
   if (!comment?.getTag) return '';
   const tag = comment.getTag('@returns') || comment.getTag('@return');
@@ -169,6 +177,7 @@ function mapSignature(sig) {
   return {
     comment: getCommentText(sig.comment),
     examples: getExamples(sig.comment),
+    remarks: getRemarks(sig.comment),
     parameters: mapParameters(sig.parameters),
     typeParameters: mapTypeParameters(sig.typeParameters),
     returnType: getTypeString(sig.type),
@@ -179,11 +188,17 @@ function mapSignature(sig) {
 function pickPrimarySignature(signatures) {
   if (!signatures || signatures.length === 0) return null;
   if (signatures.length === 1) return signatures[0];
-  return [...signatures].sort((a, b) => {
+  const primary = [...signatures].sort((a, b) => {
     const paramDelta = (b.parameters?.length || 0) - (a.parameters?.length || 0);
     if (paramDelta !== 0) return paramDelta;
     return (b.returns?.length || 0) - (a.returns?.length || 0);
   })[0];
+  return {
+    ...primary,
+    comment: primary.comment || signatures.find(sig => sig.comment)?.comment || '',
+    examples: [...new Set(signatures.flatMap(sig => sig.examples))],
+    remarks: primary.remarks || signatures.find(sig => sig.remarks)?.remarks || ''
+  };
 }
 
 function createEmptyApis() {
@@ -264,6 +279,7 @@ function processItem(apis, reflection, parentName = '', parentCategory = null, p
   const type = getTypeString(reflection.type);
   const comment = getCommentText(reflection.comment);
   const examples = getExamples(reflection.comment);
+  const remarks = getRemarks(reflection.comment);
   const returns = getReturnsText(reflection.comment);
 
   let primary = null;
@@ -274,7 +290,7 @@ function processItem(apis, reflection, parentName = '', parentCategory = null, p
     const setter = reflection.setSignature && !commentHasModifier(reflection.setSignature.comment, '@internal')
       ? mapSignature(reflection.setSignature)
       : null;
-    primary = setter || getter;
+    primary = pickPrimarySignature([getter, setter].filter(Boolean));
   } else if (reflection.signatures?.length > 0) {
     const publicSigs = reflection.signatures
       .filter(sig => !commentHasModifier(sig.comment, '@internal'))
@@ -343,6 +359,7 @@ function processItem(apis, reflection, parentName = '', parentCategory = null, p
     type,
     comment: comment || (primary ? primary.comment : ''),
     examples: examples.length > 0 ? examples : (primary ? primary.examples : []),
+    remarks: remarks || (primary ? primary.remarks : ''),
     parameters: primary ? primary.parameters : [],
     typeParameters: primary ? primary.typeParameters : [],
     returnType: primary ? primary.returnType : type,
@@ -486,16 +503,22 @@ function generateDisplayFunction() {
             return html;
         }
 
+        function renderRemarks(remarks) {
+            if (!remarks) return '';
+            return \`<h2>Note</h2><div class="description">\${renderMarkdown(remarks)}</div>\`;
+        }
+
         function renderSection(section, title) {
             if (!section) return '';
             const hasComment = !!section.comment;
             const hasParams = section.parameters && section.parameters.length > 0;
             const hasReturns = !!(section.returns || (section.returnType && section.returnType !== 'void' && section.returnType !== 'any'));
-            if (!hasComment && !hasParams && !hasReturns) return '';
+            if (!hasComment && !hasParams && !hasReturns && !section.remarks) return '';
             let html = \`<h2>\${title}</h2>\`;
             if (hasComment) html += \`<div class="description">\${renderMarkdown(section.comment)}</div>\`;
             html += renderParamsList(section.parameters);
             html += renderReturns(section);
+            if (section.remarks) html += \`<div class="description">\${renderMarkdown(section.remarks)}</div>\`;
             return html;
         }
 
@@ -560,6 +583,7 @@ function generateDisplayFunction() {
             html += renderMembers(api);
             html += renderTypeParamsList(api.typeParameters);
             html += renderParamsList(api.parameters);
+            html += renderRemarks(api.remarks);
             html += renderExamples(api.examples);
 
             content.innerHTML = html;
@@ -703,6 +727,11 @@ function renderReturnsLlms(item) {
   return out + '\n';
 }
 
+function renderRemarksLlms(remarks) {
+  if (!remarks) return '';
+  return `\n**Note:**\n${remarks}\n`;
+}
+
 function renderExamples(examples) {
   if (!examples || examples.length === 0) return '';
   let out = '\n**Example:**\n';
@@ -757,6 +786,7 @@ function renderLlmsMethod(parentName, method) {
   out += renderTypeParams(method.typeParameters);
   out += renderParams(method.parameters);
   out += renderReturnsLlms(method);
+  out += renderRemarksLlms(method.remarks);
   out += renderExamples(method.examples);
   return out;
 }
@@ -771,6 +801,7 @@ function renderLlmsItem(item, children) {
   }
   out += renderLlmsProperties(item.properties);
   out += renderLlmsMembers(item.members);
+  out += renderRemarksLlms(item.remarks);
   out += renderExamples(item.examples);
   for (const method of children.filter(c => c.parent === item.name)) {
     out += renderLlmsMethod(item.name, method);
@@ -934,11 +965,9 @@ async function main() {
 
   const llmsTxt = generateLlmsTxt(apis);
   fs.writeFileSync(path.join(docsDir, 'llms.txt'), llmsTxt);
-  fs.copyFileSync(path.join(docsDir, 'llms.txt'), path.join(packageRoot, 'llms.txt'));
 
   const llmsFullTxt = generateLlmsFullTxt(apis);
   fs.writeFileSync(path.join(docsDir, 'llms-full.txt'), llmsFullTxt);
-  fs.copyFileSync(path.join(docsDir, 'llms-full.txt'), path.join(packageRoot, 'llms-full.txt'));
 
   const items = Object.values(apis).flat();
   const colorStop = items.find(item => item.shortName === 'ColorStop' && !item.parent);
