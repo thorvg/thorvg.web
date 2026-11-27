@@ -1,6 +1,13 @@
-import type { AudioInfo } from '../LottieAnimation';
 import { handleError } from '../../common/errors';
 import { getWorkletUrl } from '../../worker/audio.worklet';
+
+export interface AudioInfo {
+  src: string | Uint8Array;
+  mimeType: string | null;
+  offset: number;
+  volume: number;
+  active: boolean;
+}
 
 export interface AudioFormat {
   sampleRate: number;

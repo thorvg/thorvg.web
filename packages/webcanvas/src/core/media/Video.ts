@@ -38,6 +38,10 @@ export interface VideoResource {
  * The Video owns a Picture internally and manages frame updates
  * @category Video
  *
+ * @remarks
+ * Audio playback requires the main thread. Inside a Web Worker, the video
+ * plays without sound.
+ *
  * @example
  * ```typescript
  * const video = new TVG.Video();
