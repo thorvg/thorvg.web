@@ -47,7 +47,6 @@ export default function Home({ searchParams }: {
   const canvasWRef = useRef<number>(0);
   const canvasHRef = useRef<number>(0);
   const [gridHeight, setGridHeight] = useState(0);
-  const [canvasCssHeight, setCanvasCssHeight] = useState(0);
 
   const benchPhaseRef = useRef<'idle' | 'warmup' | 'measuring'>('idle');
   const benchTimingsRef = useRef<number[]>([]);
@@ -111,17 +110,19 @@ export default function Home({ searchParams }: {
   }, []);
 
   // Grid layout
-  const applyLayout = useCallback((total: number) => {
+  const applyLayout = useCallback((total: number, limit: number) => {
     const cellSize = itemSizeRef.current;
-    const cols = Math.max(1, Math.floor(containerRef.current!.clientWidth / cellSize));
-    const canvasW = cols * cellSize;
+    const cols = Math.max(1, Math.floor(Math.min(containerRef.current!.clientWidth, limit) / cellSize));
+    const canvasW = Math.min(cols * cellSize, limit);
     const gridH = Math.ceil(total / cols) * cellSize;
     const headerH = headerRef.current?.offsetHeight ?? 0;
-    const canvasH = Math.min(gridH, Math.max(0, window.innerHeight - headerH));
+    const availableH = Math.max(0, window.innerHeight - headerH);
+    const visibleH = Math.min(gridH, availableH, limit);
+    const minHeight = Math.ceil(1 / Math.min(tvgCanvasRef.current.dpr, window.devicePixelRatio));
+    const canvasH = visibleH > 0 ? Math.max(minHeight, visibleH) : 0;
 
     colsRef.current = cols;
-    setGridHeight(gridH);
-    setCanvasCssHeight(canvasH);
+    setGridHeight(gridH + (gridH > visibleH ? availableH - visibleH : 0));
 
     const list = animsRef.current;
     for (let i = 0; i < list.length; i++) {
@@ -133,9 +134,9 @@ export default function Home({ searchParams }: {
     if (canvasW !== canvasWRef.current || canvasH !== canvasHRef.current) {
       canvasWRef.current = canvasW;
       canvasHRef.current = canvasH;
-      tvgCanvasRef.current?.resize(canvasW, canvasH);
+      if (canvasH > 0) tvgCanvasRef.current.resize(canvasW, canvasH);
     }
-    return { cellSize, canvasW, canvasH };
+    canvasRef.current!.style.height = `${visibleH}px`;
   }, []);
 
   useEffect(() => {
@@ -182,13 +183,7 @@ export default function Home({ searchParams }: {
       setLoadingStatus('Loading…');
       setDisplayVersion('');
 
-      const tvgDpr = 1 + ((window.devicePixelRatio - 1) * 0.75);
-      itemSizeRef.current = size / tvgDpr;
-      const { cellSize, canvasW, canvasH } = applyLayout(animList.length);
-
       const canvasEl = canvasRef.current!;
-      canvasEl.width = canvasW;
-      canvasEl.height = canvasH;
 
       try {
         const perfMonitor = await loadPerfMonitor();
@@ -214,13 +209,17 @@ export default function Home({ searchParams }: {
           : version
         );
 
+        let displayDpr = window.devicePixelRatio;
         const tvgCanvas = new TVG.Canvas('#tvg-main-canvas', {
-          width: canvasW,
-          height: canvasH,
+          width: 4,
+          height: 4,
           enableDevicePixelRatio: true,
           engineOption: TVG.EngineOption?.None ?? 0,
         });
         tvgCanvasRef.current = tvgCanvas;
+        canvasWRef.current = 0;
+        const cellSize = size / tvgCanvas.dpr;
+        itemSizeRef.current = cellSize;
 
         setLoadingStatus('Loading…');
         const fetchResults = await Promise.allSettled(
@@ -258,7 +257,12 @@ export default function Home({ searchParams }: {
 
         if (cancelled) return;
         animsRef.current = loaded;
-        applyLayout(loaded.length);
+        let maxDimension = renderer === 'wg' ? 8192 : Infinity;
+        if (renderer === 'gl') {
+          const gl = canvasEl.getContext('webgl2')!;
+          maxDimension = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
+        }
+        pendingLayoutRef.current = true;
         setIsLoading(false);
         setLoadingStatus('');
 
@@ -269,15 +273,17 @@ export default function Home({ searchParams }: {
           const dt = lastTs > 0 ? ts - lastTs : 0;
           lastTs = ts;
 
-          if (pendingLayoutRef.current) {
-            pendingLayoutRef.current = false;
-            if (animsRef.current.length) applyLayout(animsRef.current.length);
+          const dprChanged = displayDpr !== window.devicePixelRatio;
+          if (pendingLayoutRef.current || (dprChanged && canvasHRef.current > 0)) {
+            const dpr = dprChanged ? Math.max(1, tvgCanvas.dpr, window.devicePixelRatio) : tvgCanvas.dpr;
+            applyLayout(animsRef.current.length, Math.floor(maxDimension / dpr));
+            pendingLayoutRef.current = dprChanged && canvasHRef.current > 0;
           }
 
           const cellSize = itemSizeRef.current;
           const cols = colsRef.current;
           const scrollEl = scrollAreaRef.current;
-          if (!scrollEl) {
+          if (!scrollEl || !canvasHRef.current) {
             rafRef.current = requestAnimationFrame(tick);
             return;
           }
@@ -313,6 +319,7 @@ export default function Home({ searchParams }: {
           }
 
           tvgCanvas.update().render();
+          displayDpr = window.devicePixelRatio;
           perfMonitor.frame();
 
           if (benchPhaseRef.current === 'measuring' && dt > 0) {
@@ -616,7 +623,6 @@ export default function Home({ searchParams }: {
             style={{
               position: 'sticky',
               top: `${headerRef.current?.offsetHeight ?? 0}px`,
-              height: canvasCssHeight ? `${canvasCssHeight}px` : undefined,
             }}
             className={`cursor-pointer transition-opacity duration-300 block ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             title="Click any animation to open the detailed viewer"
