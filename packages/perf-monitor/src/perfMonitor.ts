@@ -66,6 +66,10 @@ export default class PerfMonitor {
       this.#frames = 0;
       this.#windowFrames = 0;
       this.#windowStart = performance.now();
+      for (const key of Object.keys(this.#history) as Key[]) {
+        this.#history[key] = [];
+        this.#sum[key] = { acc: 0, count: 0 };
+      }
     }
     this.#frames++;
   }
